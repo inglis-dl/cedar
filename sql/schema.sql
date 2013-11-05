@@ -181,40 +181,6 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `curry`.`user`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `curry`.`user` ;
-
-CREATE  TABLE IF NOT EXISTS `curry`.`user` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `update_timestamp` TIMESTAMP NOT NULL ,
-  `create_timestamp` TIMESTAMP NOT NULL ,
-  `name` VARCHAR(45) NOT NULL ,
-  `language` ENUM('en','fr','either') NOT NULL DEFAULT 'en' ,
-  `cohort` ENUM('track','comp','either') NOT NULL DEFAULT 'track' ,
-  PRIMARY KEY (`id`) ,
-  UNIQUE INDEX `uq_name` (`name` ASC) )
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `curry`.`participant`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `curry`.`participant` ;
-
-CREATE  TABLE IF NOT EXISTS `curry`.`participant` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `update_timestamp` TIMESTAMP NOT NULL ,
-  `create_timestamp` TIMESTAMP NOT NULL ,
-  `uid` VARCHAR(8) NOT NULL ,
-  `language` ENUM('en','fr') NOT NULL DEFAULT 'en' ,
-  `cohort` ENUM('track','comp') NOT NULL DEFAULT 'track' ,
-  PRIMARY KEY (`id`) ,
-  UNIQUE INDEX `uq_uid` (`uid` ASC) )
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `curry`.`recording`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `curry`.`recording` ;
@@ -228,9 +194,9 @@ CREATE  TABLE IF NOT EXISTS `curry`.`recording` (
   PRIMARY KEY (`id`) ,
   UNIQUE INDEX `uq_file_name` (`file_name` ASC) ,
   INDEX `fk_participant_id` (`participant_id` ASC) ,
-  CONSTRAINT `fk_recording_participant_id`
+  CONSTRAINT `fk_recording_participant1`
     FOREIGN KEY (`participant_id` )
-    REFERENCES `curry`.`participant` (`id` )
+    REFERENCES `cenozo`.`participant` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -337,12 +303,12 @@ CREATE  TABLE IF NOT EXISTS `curry`.`test_entry` (
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_test_entry_user_id`
     FOREIGN KEY (`user_id` )
-    REFERENCES `curry`.`user` (`id` )
+    REFERENCES `cenozo`.`user` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_test_entry_participant_id`
     FOREIGN KEY (`participant_id` )
-    REFERENCES `curry`.`participant` (`id` )
+    REFERENCES `cenozo`.`participant` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
