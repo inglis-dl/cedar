@@ -1,0 +1,11 @@
+- setup curry/web/settings.ini.php
+- setup curry/web/settings.local.ini.php from a copy of settings.local.ini.php.sample
+- create roles for cenozo db using roles.sql
+- use sed to change the default name of curry and cenozo db's as required:
+sed -e "s/\(curry\|cenozo\)/dean_\1/g" roles.sql | mysql dean_curry
+- log into mastodon, add a service with name="curry", title="Curry"
+Version="0,1,0" or whatever version is in curry/web/settings.ini.php
+- view details about service "curry" , add Cohort list (tracking, comprehensive)
+and Role List entries (administrator, typist)
+- create a site in Mastodon: eg., McMaster (curry)
+- add user to User List in Mastodon
