@@ -1,11 +1,43 @@
-- setup curry/web/settings.ini.php
-- setup curry/web/settings.local.ini.php from a copy of settings.local.ini.php.sample
-- create roles for cenozo db using roles.sql
-- use sed to change the default name of curry and cenozo db's as required:
-sed -e "s/\(curry\|cenozo\)/dean_\1/g" roles.sql | mysql dean_curry
-- log into mastodon, add a service with name="curry", title="Curry"
-Version="0,1,0" or whatever version is in curry/web/settings.ini.php
-- view details about service "curry" , add Cohort list (tracking, comprehensive)
+design of cenozo based application - general
+
+- design database in mysql workbench
+
+- open sabretooth's .mwb file and  remove non-essential sabretooth tables as required
+to create a template .mwb file for your app
+
+- import your app's db design.sql into the template and edit as required
+
+- export forward engineer, filtering out all cenozo table objects,
+turn off views and triggers as required to schema.sql
+
+- create db in mysql:
+create database name_myapp;
+grant all on name_myapp.* to 'name'@'localhost';
+
+- import the schema.sql into mysql:
+sed -e "s/\`\(myapp\|cenozo\)\`/\`name_\1\`/g" schema.sql | mysql name_app
+
+- import the cenozo/sql/operations.sql into name_app db:
+sed -e "s/\(myapp\|cenozo\)/name_\1/g" operations.sql | mysql name_myapp
+
+- setup myapp/web/settings.ini.php
+
+- setup myapp/web/settings.local.ini.php from a copy of settings.local.ini.php.sample
+
+- create roles for myapp db using a customized copy of cenozo/sql/roles.sql
+
+- use sed to change the default name of myapp and cenozo db's as required:
+sed -e "s/\(myapp\|cenozo\)/name_\1/g" roles.sql | mysql name_myapp
+
+- log into mastodon, add a service with name="myapp", title="Curry"
+Version="0.1.0" or whatever version is in myapp/web/settings.ini.php
+
+- view details about service "myapp" , add Cohort list (tracking, comprehensive)
 and Role List entries (administrator, typist)
-- create a site in Mastodon: eg., McMaster (curry)
-- add user to User List in Mastodon
+
+- create a site in Mastodon: eg., McMaster (myapp)
+
+- add an administrator level user to User List in Mastodon
+
+- create base classes for all tables in myapp db that have a primary id column
+(use cenozo/api/database/event.class.php as a stub)
