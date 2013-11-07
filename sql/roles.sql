@@ -29,11 +29,6 @@ AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "widget" AND subject = "activity" AND operation.name = "chart"
-AND role.name IN ( "administrator" );
-
-INSERT INTO role_has_operation( role_id, operation_id )
-SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "activity" AND operation.name = "list"
 AND role.name IN ( "administrator" );
 
@@ -322,6 +317,16 @@ AND role.name IN ( "administrator" );
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "user" AND operation.name = "view"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "user" AND operation.name = "add_cohort"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "user" AND operation.name = "delete_cohort"
 AND role.name IN ( "administrator" );
 
 COMMIT;

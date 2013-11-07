@@ -134,5 +134,11 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "user", "set_password", true, "Sets a user's password." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "user", "view", true, "View a user's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "user", "add_cohort", true, "A form to add a cohort to a user." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "user", "new_cohort", true, "Add a cohort to a user." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "user", "delete_cohort", true, "Remove a user's cohort type." );
 
 COMMIT;

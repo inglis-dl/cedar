@@ -17,8 +17,8 @@ grant all on name_myapp.* to 'name'@'localhost';
 - import the schema.sql into mysql:
 sed -e "s/\`\(myapp\|cenozo\)\`/\`name_\1\`/g" schema.sql | mysql name_app
 
-- import the cenozo/sql/operations.sql into name_app db:
-sed -e "s/\(myapp\|cenozo\)/name_\1/g" operations.sql | mysql name_myapp
+- import the customized cenozo/sql/operations.sql from myapp/sql into name_app db:
+mysql name_myapp < operations.sql
 
 - setup myapp/web/settings.ini.php
 
@@ -41,3 +41,7 @@ and Role List entries (administrator, typist)
 
 - create base classes for all tables in myapp db that have a primary id column
 (use cenozo/api/database/event.class.php as a stub)
+
+- creating UI elements: use existing examples where possible from sabretooth
+define the operation that you need (operations.sql), then add those to 
+roles.sql to give permission for cenozo to run them for the user
