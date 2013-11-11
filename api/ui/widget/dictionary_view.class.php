@@ -71,5 +71,19 @@ class dictionary_view extends \cenozo\ui\widget\base_view
     $this->set_item( 'name', $this->get_record()->name, true );
     $this->set_item( 'words', $this->get_record()->get_word_count() );
     $this->set_item( 'description', $this->get_record()->description );
+
+    try 
+    {   
+      $this->word_list->process();
+      $this->set_variable( 'word_list', $this->word_list->get_variables() );
+    }   
+    catch( \cenozo\exception\permission $e ) {}
   }
+
+  /** 
+   * The dictionary list widget.
+   * @var word_list
+   * @access protected
+   */
+  protected $word_list = NULL;
 }
