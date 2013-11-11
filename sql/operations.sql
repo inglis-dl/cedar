@@ -39,7 +39,7 @@ VALUES( "widget", "dictionary", "list", true, "List dictionarys in the system." 
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "dictionary", "new", true, "Add a new dictionary to the system." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "widget", "dictionary", "view", true, "View a dictionary's details." );:
+VALUES( "widget", "dictionary", "view", true, "View a dictionary's details." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "dictionary", "add_word", true, "A form to add a new word to a dictionary." );
 INSERT INTO operation( type, subject, name, restricted, description )
