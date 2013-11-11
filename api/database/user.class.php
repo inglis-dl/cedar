@@ -35,16 +35,12 @@ class user extends \cenozo\database\user
 
   /**
    * Adds one or more cohorts so a user.
-   * This method effectively overrides the parent add_records() method so that grouping can also
-   * be included.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param int|array(int) $cohort_ids A single or array of cohort ids
    * @access public
    */
-  public function add_cohort( $cohort_ids, $grouping )
+  public function add_cohort( $cohort_ids )
   {
-    parent::add_cohort( $cohort_ids );
-
     // do nothing if the user has no primary key
     if( is_null( $this->id ) ) return;
 
