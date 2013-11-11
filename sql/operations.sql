@@ -27,6 +27,24 @@ VALUES( "push", "cohort", "new", true, "Add a new cohort to the system." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "cohort", "view", true, "View a cohort's details." );
 
+-- dictionary
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "dictionary", "add", true, "View a form for creating a new dictionary." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "dictionary", "delete", true, "Removes a dictionary from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "dictionary", "edit", true, "Edits a dictionary's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "dictionary", "list", true, "List dictionarys in the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "dictionary", "new", true, "Add a new dictionary to the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "dictionary", "view", true, "View a dictionary's details." );:
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "dictionary", "add_word", true, "A form to add a new word to a dictionary." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "dictionary", "delete_word", true, "Remove words from a dictionary." );
+
 -- notes
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "note", "delete", true, "Removes a note from the system." );
@@ -140,5 +158,19 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "user", "new_cohort", true, "Add a cohort to a user." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "user", "delete_cohort", true, "Remove a user's cohort type." );
+
+-- word
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "word", "add", true, "View a form for creating a new word." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "word", "delete", true, "Removes a word from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "word", "edit", true, "Edits a word's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "word", "list", true, "Lists a dictionary's words." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "word", "new", true, "Creates a new dictionary word." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "word", "view", true, "View the details of a dictionary's words." );
 
 COMMIT;
