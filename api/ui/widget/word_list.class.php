@@ -39,8 +39,8 @@ class word_list extends \cenozo\ui\widget\base_list
     parent::prepare();
     
     $this->add_column( 'word', 'string', 'Word', false );
-    $this->add_column( 'language', 'enum', 'Language', true );
-    $this->add_column( 'dictionary', 'string', 'Dictionary', true );
+    $this->add_column( 'language', 'string', 'Language', false );
+    $this->add_column( 'dictionary', 'string', 'Dictionary', false );
   }
   
   /**

@@ -41,7 +41,3 @@ and Role List entries (administrator, typist)
 
 - create base classes for all tables in myapp db that have a primary id column
 (use cenozo/api/database/event.class.php as a stub)
-
-- creating UI elements: use existing examples where possible from sabretooth
-define the operation that you need (operations.sql), then add those to 
-roles.sql to give permission for cenozo to run them for the user

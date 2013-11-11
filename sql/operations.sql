@@ -85,6 +85,10 @@ VALUES( "widget", "self", "status", false, "The current user's status." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "self", "timezone_calculator", false, "A timezone calculator widget." );
 
+-- service
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "service", "list", true, "List services in the system." );
+
 -- setting
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "setting", "edit", true, "Edits a setting's details." );
@@ -157,7 +161,7 @@ VALUES( "widget", "user", "add_cohort", true, "A form to add a cohort to a user.
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "user", "new_cohort", true, "Add a cohort to a user." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "push", "user", "delete_cohort", true, "Remove a user's cohort type." );
+VALUES( "push", "user", "delete_cohort", true, "Remove a user's cohort." );
 
 -- word
 INSERT INTO operation( type, subject, name, restricted, description )

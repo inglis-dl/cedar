@@ -342,6 +342,32 @@ CREATE  TABLE IF NOT EXISTS `curry`.`test_entry_word` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+
+-- -----------------------------------------------------
+-- Table `curry`.`user_has_cohort`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `curry`.`user_has_cohort` ;
+
+CREATE  TABLE IF NOT EXISTS `curry`.`user_has_cohort` (
+  `user_id` INT UNSIGNED NOT NULL ,
+  `cohort_id` INT UNSIGNED NOT NULL ,
+  `update_timestamp` TIMESTAMP NOT NULL ,
+  `create_timestamp` TIMESTAMP NOT NULL ,
+  PRIMARY KEY (`user_id`, `cohort_id`) ,
+  INDEX `fk_cohort_id` (`cohort_id` ASC) ,
+  INDEX `fk_user_id` (`user_id` ASC) ,
+  CONSTRAINT `fk_user_has_cohort_user_id`
+    FOREIGN KEY (`user_id` )
+    REFERENCES `cenozo`.`user` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_user_has_cohort_cohort_id`
+    FOREIGN KEY (`cohort_id` )
+    REFERENCES `cenozo`.`cohort` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
 USE `cenozo`;
 
 DELIMITER $$

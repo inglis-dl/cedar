@@ -6,7 +6,7 @@
  * @filesource
  */
 
-namespace cenozo\ui\widget;
+namespace curry\ui\widget;
 use cenozo\lib, cenozo\log;
 
 /**
@@ -27,25 +27,6 @@ class user_add_cohort extends \cenozo\ui\widget\base_add_list
   {
     parent::__construct( 'user', 'cohort', $args );
   }
-
-  /**
-   * Finish setting the variables in a widget.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @access protected
-   
-  protected function setup()
-  {
-    parent::setup();
-
-    $user_class_name = lib::get_class_name( 'database\user' );
-
-    $db_service = lib::create( 'database\service', $this->get_argument( 'service_id' ) );
-    $cohort_id_list = array();
-    foreach( $db_service->get_cohort_list() as $db_cohort ) $cohort_id_list[] = $db_cohort->id;
-
-    $this->set_variable( 'cohort_list', $cohort_list );
-  }*/
 
   /**
    * Overrides the cohort list widget's method.

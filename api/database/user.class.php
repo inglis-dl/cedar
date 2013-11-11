@@ -49,15 +49,11 @@ class user extends \cenozo\database\user
     // cohort_ids may be a single integer, make sure it is an array
     if( !is_array( $cohort_ids ) ) $cohort_ids = array( $cohort_ids );
 
-    database::$debug = true;
     static::db()->execute( sprintf(
       'UPDATE user_has_cohort '.
       'WHERE user_id = %s '.
       'AND cohort_id IN ( %s )',
       $database_class_name::format_string( $this->id ),
       $database_class_name::format_string( implode( ',', $cohort_ids ) ) ) );
-    database::$debug = false;
   }
 }
-
-
