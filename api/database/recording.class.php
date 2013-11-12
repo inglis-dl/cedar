@@ -6,7 +6,7 @@
  * @filesource
  */
 
-namespace cenozo\database;
+namespace curry\database;
 use cenozo\lib, cenozo\log, curry\util;
 
 /**
