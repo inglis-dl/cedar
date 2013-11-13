@@ -41,7 +41,7 @@ class word_add extends \cenozo\ui\widget\base_view
     // add items to the view
     $this->add_item( 'dictionary_id', 'hidden' );
     $this->add_item( 'language', 'enum', 'Language' );
-    $this->add_item( 'word', 'text', 'Word' );
+    $this->add_item( 'word', 'string', 'Word' );
   }
 
   /**

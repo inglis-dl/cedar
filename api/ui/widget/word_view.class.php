@@ -39,9 +39,9 @@ class word_view extends \cenozo\ui\widget\base_view
     parent::prepare();
     
     // add items to the view
-    $this->add_item( 'word', 'text', 'Word' );
+    $this->add_item( 'word', 'string', 'Word' );
     $this->add_item( 'language', 'string', 'Language' );
-    $this->add_item( 'dictionary', 'text', 'Dictionary' );
+    $this->add_item( 'dictionary', 'string', 'Dictionary' );
   }
 
   /**
