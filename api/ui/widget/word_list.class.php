@@ -38,9 +38,8 @@ class word_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
-    $this->add_column( 'word', 'string', 'Word', false );
-    $this->add_column( 'language', 'string', 'Language', false );
-    $this->add_column( 'dictionary', 'string', 'Dictionary', false );
+    $this->add_column( 'word', 'string', 'Word', true );
+    $this->add_column( 'language', 'string', 'Language', true );
   }
   
   /**
@@ -55,13 +54,9 @@ class word_list extends \cenozo\ui\widget\base_list
 
     foreach( $this->get_record_list() as $record )
     {
-      // get the dictionary
-      $db_dictionary = lib::create( 'database\dictionary', $record->dictionary_id );
-
       $this->add_row( $record->id,
         array( 'word' => $record->word,
-               'language' => $record->language,
-               'dictionary' => $db_dictionary->name ) );
+               'language' => $record->language ) );
     }
   }
 }
