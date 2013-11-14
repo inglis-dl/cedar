@@ -40,7 +40,7 @@ class dictionary_report extends \cenozo\ui\pull\base_report
     parent::prepare();
 
     // check to see if a dictionary-specific template exists for this report
-    $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'id' ) );
+    $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'dictionary_id' ) );
     $filename = sprintf( '%s/report/%s_%s.xls',
                          DOC_PATH,
                          $this->get_full_name(),
@@ -60,7 +60,7 @@ class dictionary_report extends \cenozo\ui\pull\base_report
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
     $word_class_name = lib::get_class_name( 'database\word' );
 
-    $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'id' ) );
+    $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'dictionary_id' ) );
     $word_count = $db_dictionary->get_word_count();
 
     // loop through all the words
