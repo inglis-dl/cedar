@@ -49,12 +49,11 @@ class dictionary_view extends \cenozo\ui\widget\base_view
     $this->word_list->set_heading( 'Dictionary words' );
 
     $operation_class_name = lib::get_class_name( 'database\operation' );
-    $db_operation = $operation_class_name::get_operation( 'push', 'dictionary', 'import' );
+    $db_operation = $operation_class_name::get_operation( 'widget', 'dictionary', 'import' );
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) ) 
     {   
-      $this->add_action( 'import_words', 'Import', $db_operation,
+      $this->add_action( 'import', 'Import', $db_operation,
         'Import words from a CSV file into the dictionary' );
-      $this->set_variable( 'import_words', true );
     }
   }
 
@@ -67,15 +66,7 @@ class dictionary_view extends \cenozo\ui\widget\base_view
   protected function setup()
   {
     parent::setup();
-
-    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
-
-    // create enum arrays
-    $dictionarys = array();
-    foreach( $dictionary_class_name::select() as $db_dictionary )
-      if( $db_dictionary->id != $this->get_record()->id )
-        $dictionarys[$db_dictionary->id] = $db_dictionary->name;
-
+    
     // set the view's items
     $this->set_item( 'name', $this->get_record()->name, true );
     $this->set_item( 'words', $this->get_record()->get_word_count() );

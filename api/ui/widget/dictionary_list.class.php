@@ -54,7 +54,6 @@ class dictionary_list extends \cenozo\ui\widget\base_list
     
     foreach( $this->get_record_list() as $record )
     {
-
       // assemble the row for this record
       $this->add_row( $record->id,
         array( 'name' => $record->name,

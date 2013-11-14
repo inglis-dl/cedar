@@ -52,14 +52,7 @@ class dictionary_add extends \cenozo\ui\widget\base_view
   protected function setup()
   {
     parent::setup();
-
-    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
     
-    // create enum arrays
-    $dictionarys = array();
-    foreach( $dictionary_class_name::select() as $db_dictionary )
-      $dictionarys[$db_dictionary->id] = $db_dictionary->name;
-
     // set the view's items
     $this->set_item( 'name', '', true );
     $this->set_item( 'description', '' );
