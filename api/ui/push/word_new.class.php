@@ -47,7 +47,7 @@ class word_new extends \cenozo\ui\push\base_new
       if( count( str_word_count( $word, 1 ) ) > 1 )
       {
         throw lib::create( 'exception\notice',
-          'Multiple word are not allowed.', __METHOD__ );
+          'Multiple word entries are not allowed.', __METHOD__ );
       }
       if( preg_match( '#[0-9]#', $word ) )
       {  
