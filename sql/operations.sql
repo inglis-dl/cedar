@@ -45,7 +45,11 @@ VALUES( "widget", "dictionary", "add_word", true, "A form to add a new word to a
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "dictionary", "delete_word", true, "Remove words from a dictionary." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "push", "dictionary", "import_words", true, "Import words into a dictionary from a file." );
+VALUES( "push", "dictionary", "import", true, "Import words into a dictionary from a file." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "dictionary", "import", true, "Get a dictionary to import words into." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "dictionary", "import", true, "View a form to import words into a dictionary." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "dictionary", "report", true, "Download a dictionary report." );
 
