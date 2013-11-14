@@ -47,9 +47,18 @@ class dictionary_view extends \cenozo\ui\widget\base_view
     $this->word_list = lib::create( 'ui\widget\word_list', $this->arguments );
     $this->word_list->set_parent( $this );
     $this->word_list->set_heading( 'Dictionary words' );
+
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+    $db_operation = $operation_class_name::get_operation( 'push', 'dictionary', 'import' );
+    if( lib::create( 'business\session' )->is_allowed( $db_operation ) ) 
+    {   
+      $this->add_action( 'import_words', 'Import', $db_operation,
+        'Import words from a CSV file into the dictionary' );
+      $this->set_variable( 'import_words', true );
+    }
   }
 
-  /**
+ /**
    * Finish setting the variables in a widget.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>

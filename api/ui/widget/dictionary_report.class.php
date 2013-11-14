@@ -40,7 +40,7 @@ class dictionary_report extends \cenozo\ui\widget\base_report
 
     $this->add_parameter( 'dictionary_id', 'enum', 'Dictionary' );
     $this->set_variable( 'description',
-      'This report provides a list of dictionarys based on any of the provided restrictions.' );
+      'This report provides a list of the words contained in a dictionary.' );
   }
 
   /**
