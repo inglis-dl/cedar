@@ -40,7 +40,8 @@ class dictionary_view extends \cenozo\ui\widget\base_view
 
     // create an associative array with everything we want to display about the dictionary
     $this->add_item( 'name', 'string', 'Name' );
-    $this->add_item( 'words', 'constant', 'Number of words' );
+    $this->add_item( 'words_en', 'constant', 'Number of English words' );
+    $this->add_item( 'words_fr', 'constant', 'Number of French words' );
     $this->add_item( 'description', 'text', 'Description' );
 
     // create the word sub-list widget
@@ -67,10 +68,18 @@ class dictionary_view extends \cenozo\ui\widget\base_view
   {
     parent::setup();
     
+    $db_dictionary = $this->get_record();
+    $modifier_en = lib::create( 'database\modifier' );
+    $modifier_en->where('language','=','en');
+    $modifier_fr = lib::create( 'database\modifier' );
+    $modifier_fr->where('language','=','fr');
+
     // set the view's items
-    $this->set_item( 'name', $this->get_record()->name, true );
-    $this->set_item( 'words', $this->get_record()->get_word_count() );
-    $this->set_item( 'description', $this->get_record()->description );
+    $this->set_item( 'name', $db_dictionary->name, true );
+    $this->set_item( 'words_en', $db_dictionary->get_word_count( $modifier_en ) );
+    $this->set_item( 'words_fr', $db_dictionary->get_word_count( $modifier_fr ) );
+    $this->set_item( 'description', $db_dictionary->description );
+    $this->set_variable( 'dictionary_id', $db_dictionary->id );
 
     try 
     {   

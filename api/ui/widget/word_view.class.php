@@ -57,13 +57,11 @@ class word_view extends \cenozo\ui\widget\base_view
     $word_class_name = lib::get_class_name( 'database\word' );
     $languages = $word_class_name::get_enum_values( 'language' );
     $languages = array_combine( $languages, $languages );
-
-    // create enum arrays
-    $num_words = $this->get_record()->get_dictionary()->get_word_count();
+    $db_word = $this->get_record();
 
     // set the view's items
-    $this->set_item( 'word', $this->get_record()->word, true );
-    $this->set_item( 'language', $this->get_record()->language, false, $languages );
-    $this->set_item( 'dictionary', $this->get_record()->get_dictionary()->name, true );
+    $this->set_item( 'word', $db_word->word, true );
+    $this->set_item( 'language', $db_word->language, false, $languages );
+    $this->set_item( 'dictionary', $db_word->get_dictionary()->name, true );
   }
 }
