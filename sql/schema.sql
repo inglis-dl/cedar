@@ -4,6 +4,82 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='';
 
 DROP SCHEMA IF EXISTS `curry` ;
 CREATE SCHEMA IF NOT EXISTS `curry` DEFAULT CHARACTER SET utf8 ;
+
+-- -----------------------------------------------------
+-- Table `curry`.`dictionary`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `curry`.`dictionary` ;
+
+CREATE  TABLE IF NOT EXISTS `curry`.`dictionary` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `update_timestamp` TIMESTAMP NOT NULL ,
+  `create_timestamp` TIMESTAMP NOT NULL ,
+  `name` VARCHAR(45) NOT NULL ,
+  `description` TEXT NULL DEFAULT NULL ,
+  PRIMARY KEY (`id`) ,
+  UNIQUE INDEX `uq_name` (`name` ASC) )
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `curry`.`test`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `curry`.`test` ;
+
+CREATE  TABLE IF NOT EXISTS `curry`.`test` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `update_timestamp` TIMESTAMP NOT NULL ,
+  `create_timestamp` TIMESTAMP NOT NULL ,
+  `name` VARCHAR(45) NOT NULL ,
+  `dictionary_id` INT UNSIGNED NULL DEFAULT NULL ,
+  `intrusion_dictionary_id` INT UNSIGNED NULL DEFAULT NULL ,
+  `variant_dictionary_id` INT UNSIGNED NULL DEFAULT NULL ,
+  `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words' ,
+  PRIMARY KEY (`id`) ,
+  INDEX `fk_dictionary_id` (`dictionary_id` ASC) ,
+  INDEX `fk_intrusion_dictionary_id` (`intrusion_dictionary_id` ASC) ,
+  INDEX `fk_variant_dictionary_id` (`variant_dictionary_id` ASC) ,
+  UNIQUE INDEX `uq_name` (`name` ASC) ,
+  CONSTRAINT `fk_test_dictionary_id`
+    FOREIGN KEY (`dictionary_id` )
+    REFERENCES `curry`.`dictionary` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_intrusion_dictionary_id`
+    FOREIGN KEY (`intrusion_dictionary_id` )
+    REFERENCES `curry`.`dictionary` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_variant_dictionary_id`
+    FOREIGN KEY (`variant_dictionary_id` )
+    REFERENCES `curry`.`dictionary` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `curry`.`word`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `curry`.`word` ;
+
+CREATE  TABLE IF NOT EXISTS `curry`.`word` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+  `update_timestamp` TIMESTAMP NOT NULL ,
+  `create_timestamp` TIMESTAMP NOT NULL ,
+  `dictionary_id` INT UNSIGNED NOT NULL ,
+  `language` ENUM('en','fr') NOT NULL DEFAULT 'en' ,
+  `word` VARCHAR(45) NOT NULL ,
+  PRIMARY KEY (`id`) ,
+  INDEX `fk_dictionary_id` (`dictionary_id` ASC) ,
+  UNIQUE INDEX `uq_word` (`word` ASC) ,
+  CONSTRAINT `fk_word_dictionary_id`
+    FOREIGN KEY (`dictionary_id` )
+    REFERENCES `curry`.`dictionary` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
 USE `curry` ;
 
 -- -----------------------------------------------------
@@ -197,82 +273,6 @@ CREATE  TABLE IF NOT EXISTS `curry`.`recording` (
   CONSTRAINT `fk_recording_participant1`
     FOREIGN KEY (`participant_id` )
     REFERENCES `cenozo`.`participant` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `curry`.`dictionary`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `curry`.`dictionary` ;
-
-CREATE  TABLE IF NOT EXISTS `curry`.`dictionary` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `update_timestamp` TIMESTAMP NOT NULL ,
-  `create_timestamp` TIMESTAMP NOT NULL ,
-  `name` VARCHAR(45) NOT NULL ,
-  `description` TEXT NULL DEFAULT NULL ,
-  PRIMARY KEY (`id`) ,
-  UNIQUE INDEX `uq_name` (`name` ASC) )
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `curry`.`word`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `curry`.`word` ;
-
-CREATE  TABLE IF NOT EXISTS `curry`.`word` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `update_timestamp` TIMESTAMP NOT NULL ,
-  `create_timestamp` TIMESTAMP NOT NULL ,
-  `dictionary_id` INT UNSIGNED NOT NULL ,
-  `language` ENUM('en','fr') NOT NULL DEFAULT 'en' ,
-  `word` VARCHAR(45) NOT NULL ,
-  PRIMARY KEY (`id`) ,
-  INDEX `fk_dictionary_id` (`dictionary_id` ASC) ,
-  UNIQUE INDEX `uq_word` (`word` ASC) ,
-  CONSTRAINT `fk_word_dictionary_id`
-    FOREIGN KEY (`dictionary_id` )
-    REFERENCES `curry`.`dictionary` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `curry`.`test`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `curry`.`test` ;
-
-CREATE  TABLE IF NOT EXISTS `curry`.`test` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT ,
-  `update_timestamp` TIMESTAMP NOT NULL ,
-  `create_timestamp` TIMESTAMP NOT NULL ,
-  `name` VARCHAR(45) NOT NULL ,
-  `dictionary_id` INT UNSIGNED NULL DEFAULT NULL ,
-  `intrusion_dictionary_id` INT UNSIGNED NULL DEFAULT NULL ,
-  `variant_dictionary_id` INT UNSIGNED NULL DEFAULT NULL ,
-  `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words' ,
-  PRIMARY KEY (`id`) ,
-  INDEX `fk_dictionary_id` (`dictionary_id` ASC) ,
-  INDEX `fk_intrusion_dictionary_id` (`intrusion_dictionary_id` ASC) ,
-  INDEX `fk_variant_dictionary_id` (`variant_dictionary_id` ASC) ,
-  UNIQUE INDEX `uq_name` (`name` ASC) ,
-  CONSTRAINT `fk_test_dictionary_id`
-    FOREIGN KEY (`dictionary_id` )
-    REFERENCES `curry`.`dictionary` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_test_intrusion_dictionary_id`
-    FOREIGN KEY (`intrusion_dictionary_id` )
-    REFERENCES `curry`.`dictionary` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_test_variant_dictionary_id`
-    FOREIGN KEY (`variant_dictionary_id` )
-    REFERENCES `curry`.`dictionary` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
