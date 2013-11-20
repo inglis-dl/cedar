@@ -41,84 +41,127 @@ class dictionary_import extends \cenozo\ui\pull
 
     // now process the data
     $word_array = array();
-    $multiple_word_count = 0;
-    $invalid_word_count = 0;
     $duplicate_word_count = 0; 
     $unique_word_count = 0;
+    $dictionary_word_count = 0;
+    $error_count = 0;
 
-    log::debug( $file_data );
-    die();
+    $word_class_name = lib::get_class_name( 'database\word' );
+    $languages = $word_class_name::get_enum_values( 'language' );
     
-    foreach( preg_split( '/[\n\r]+/', $file_data ) as $line )
-    {   
-      $values = str_getcsv( $line );
+    $this->data = array();
+    $this->data['error_count'] = $error_count;
+    $this->data['error_entries'] = array();
 
-      if( 1 == count( $values ) ) 
+    $row = 0;
+    foreach( preg_split( '/[\n\r]+/', $file_data ) as $line )
+    {
+      $row++;
+      
+      $row_entry = array_filter( str_getcsv( $line ) );
+      $row_entry_count = count( $row_entry );
+
+      if( 2 == $row_entry_count ) 
       {   
-        $word = strtolower( $values[0] );
-        if( count( str_word_count( $word, 1 ) ) > 1 ) 
+        $word = strtolower( $row_entry[0] );
+        $error = false;
+
+        if( count( str_word_count( $word, 1 ) ) > 1 ||
+            preg_match( '#[0-9]#', $word ) ) 
         {
-           $multiple_word_count++;
-           continue;
+          $this->data['error_entries'][] = 
+            'Error: invalid word entry "' . $word . '" on line ' 
+            . $row . ': "' . implode( '", "', $row_entry ) . '"';
+          $error_count++;
+          $error = true;
         }
-        if( preg_match( '#[0-9]#', $word ) ) 
+        $language = strtolower( $row_entry[1] );
+        if( !in_array( $language, $languages ) )
         {
-          $invalid_word_count++;
-          continue;
-        }   
-        $word_array[] = $word;
-      }   
+          $this->data['error_entries'][] = 
+            'Error: invalid language code "' . $language . '" on line ' 
+            . $row . ': "' . implode( '", "', $row_entry ) . '"';
+          $error_count++;  
+          $error = true;
+        }
+
+        if( !$error ) $word_array[] = array( $word, $language );
+      }
+      else
+      {
+        if( $row_entry_count != 0 )
+        {
+          $this->data['error_entries'][] =
+            'Error: invalid number of elements ( ' . $row_entry_count . ' ) on line ' 
+            . $row . ': "' . implode( '", "', $row_entry ) . '"';
+          $error_count++;  
+        }
+      }  
+    }
+    $this->data['error_count'] = $error_count;
+
+    $unique = array_unique( $word_array, SORT_REGULAR );
+    $word_array = array();
+    foreach( $unique as $key => $value )
+    {
+      $word_array[$value[0]] = $value[1];
     }
 
-    $word_array = array_unique( array_filter( $word_array ), SORT_STRING );
+    $unique_word_count = count( $word_array );
 
-    $this->data = array();
-    $this->data[ 'multiple_word_count' ] = $multiple_word_count;
-    $this->data[ 'invalid_word_count' ] = $invalid_word_count;
+    $this->data[ 'dictionary_word_count' ] = 0;
     $this->data[ 'duplicate_word_count' ] = $duplicate_word_count;
     $this->data[ 'unique_word_count' ] = $unique_word_count;
-    $this->data[ 'unique_word_entries' ] = '';
+    $this->data[ 'unique_word_entries' ] = $word_array;
 
     if( count( $word_array ) > 0 ) 
-    {
+    {      
       $id = $this->get_argument( 'id' );
-      $db_dictionary = lib::create( 'database\dictionary', $id ); 
-      if( $db_dictionary->get_word_count() > 0 )
+      $db_dictionary = lib::create( 'database\dictionary', $id );
+      $dictionary_word_count = $db_dictionary->get_word_count();
+      $this->data[ 'dictionary_word_count' ] = $dictionary_word_count;
+      if( $dictionary_word_count > 0 )
       {
-        $words_en = array();
-        $words_fr = array();
+        $word_class_name = lib::get_class_name( 'database\word' );
+        $languages = $word_class_name::get_enum_values( 'language' );
+        $unique_word_count = 0;
+        $word_array_final = array();
 
-        // loop through all the words
-        $word_mod_en = lib::create( 'database\modifier' );
-        $word_mod_en->where( 'word.dictionary_id', '=', $id );
-        $word_mod_en->where( 'word.language', '=', 'en' );
-        foreach( $word_class_name::select( $word_mod_en ) as $db_word )
-        {   
-          $words_en[] = $db_word->word;
-        } 
+        foreach( $languages as $language )
+        {
+          $candidate_words = array_keys( $word_array, $language );
+          $candidate_word_count = count( $candidate_words ); 
+          if( $candidate_word_count > 0 )
+          {
+            $dictionary_words = array();
+            $modifier = lib::create( 'database\modifier' );
+            $modifier->where( 'word.dictionary_id', '=', $id );
+            $modifier->where( 'word.language', '=', $language );
+            foreach( $word_class_name::select( $modifier ) as $db_word )
+            {   
+              $dictionary_words[] = $db_word->word;
+            }
 
-        $word_mod_fr = lib::create( 'database\modifier' );
-        $word_mod_fr->where( 'word.dictionary_id', '=', $id );
-        $word_mod_fr->where( 'word.language', '=', 'fr' );
-        foreach( $word_class_name::select( $word_mod_fr ) as $db_word )
-        {   
-          $words_fr[] = $db_word->word;
-        } 
+            if( count( $dictionary_words ) > 0 )
+            {
+              $unique_words = array_diff( $candidate_words, $dictionary_words );
+              $unique_count = count( $unique_words );
+              if( $unique_count > 0 )
+              {
+                $language_values = array_fill( 0, $unique_count, $language );
+                $word_array_final[] = array_combine( $unique_words, $language_values );
+                $unique_word_count += $unique_count;
+                $duplicate_word_count += $candidate_word_count - $unique_count;
+              }
+            }  
+          }          
+        }
 
-
-        $this->data['existing en']=$words_en;
-        $this->data['existing fr']=$words_fr;
-
-        $word_array_unique = array_diff( $word_array, $word_list );
-        $unique_word_count = count( $word_array_unique );
-        $duplicate_word_count = count( $word_array ) - $unique_word_count;
         $this->data[ 'duplicate_word_count' ] = $duplicate_word_count;
         $this->data[ 'unique_word_count' ] = $unique_word_count;
-        $this->data[ 'unique_word_entries' ] = $word_array_unique;
+        $this->data[ 'unique_word_entries' ] = $word_array_final;        
       }
     }
-    log::debug( $this->data );
-    die();
   }
   
   /** 

@@ -27,29 +27,41 @@
           var args = new Object();
           args.file_data = e.target.result;
           args.id = "{{ dictionary_id }}";
+          var allow_proceed = false;
           var data = ajax_pull( "dictionary", "import", args );
+          console.log(data); 
+          if( undefined != data ) {
+            var err_count = data.error_count;
+            var html = '<table style="width:90%; margin-left:10%; margin-right:10%; text-align:left">';
+            if( err_count != 0 ) {
+              html += '<tr><td class="heading"> ERRORS </td></tr>';
+              var err_entries = data.error_entries;
+              for( var i = 0; i < err_count; i++ ) {
+                html += '<tr><td>' + err_entries[i] + '</td></tr>';
+              }
+            }
+            if( data.unique_word_count > 0 ) {
+              allow_proceed = true;
+            }                          
+
+            html += '<tr><td class="heading"> WORDS </td></tr>' +
+                    '<tr><td>Number of existing dictionary words: ' + data.dictionary_word_count + '</td></tr>' +
+                    '<tr><td>Number of duplcate words: ' + data.duplicate_word_count + '</td></tr>' +
+                    '<tr><td>Number of unique words: ' + data.unique_word_count + '</td></tr>';
+
+            html += '</table>';
+            
+            html += '<div class="spacer" style="text-align: right">' +
+                    '<button id="{{ widget.full }}__proceed" style="width:120px"' +
+                    ( allow_proceed ? '' : ' disabled' ) +
+                    '>Proceed</button>' +
+                    '</div>';
+            $( "#{{ widget.full }}__results" ).html( html );
+            $( "#{{ widget.full }}__proceed" ).button();
+          }
         };
         reader.readAsBinaryString( file );
 /*
-        if( undefined != data ) {
-          var html = '<table style="width:34%; margin-left:33%; margin-right:33%">';
-          for( var key in data )
-          {
-            html += '<tr><td class="heading">' + key +
-                    '</td><td>' + data[key] +
-                    '</td></tr>';
-            if( 0 < data[key] ) allow_proceed = true;
-          }
-          html += '</table>' +
-                  '<div class="spacer" style="text-align: right">' +
-                  '<button id="{{ widget.full }}__proceed" style="width:120px"' +
-                  ( allow_proceed ? '' : ' disabled' ) +
-                  '>Proceed</button>' +
-                  '</div>';
-          $( "#{{ widget.full }}__results" ).html( html );
-          $( "#{{ widget.full }}__proceed" ).button();
-        }
-
         $( "#{{ widget.full }}__proceed" ).click( function () {
           var args = new Object();
           $( "#{{ widget.full }}_form :input" ).each( function() {
@@ -74,8 +86,14 @@
 {% block widget %}
   <div class="ui-widget ui-widget-content app-widget-content">
     <div class="spacer">
-      Upload new words using a CSV (comma separated values) file where
-      all words are enclosed by double quotes (&quot;)
+      <p>
+        Upload new words using a CSV (comma separated values) file where
+        all words are enclosed by double quotes (&quot;). There must be 
+        only two columns: a word column and a language code column. The 
+        language code must be one of "en" (English) or "fr" (French). Files
+        can be comprised of words of different languages ( e.g., one line of a 
+        csv file could be  "curtain","en" ).
+      </p>
     </div>
     <form id="{{ widget.full }}__form" action="" enctype="multipart/form-data">
       <input type="hidden" name="MAX_FILE_SIZE" value="64000000" />
@@ -97,6 +115,8 @@
 
     {% from 'macros.twig' import confirm_buttons %}
     {{ confirm_buttons( slot, widget.full, 'proceed', false, 'left', true ) }}
+    <div id="{{ widget.full }}__results">
+    </div>
   </div>
 {% endblock widget %}
 
