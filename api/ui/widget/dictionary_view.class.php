@@ -40,8 +40,16 @@ class dictionary_view extends \cenozo\ui\widget\base_view
 
     // create an associative array with everything we want to display about the dictionary
     $this->add_item( 'name', 'string', 'Name' );
-    $this->add_item( 'words_en', 'constant', 'Number of English words' );
-    $this->add_item( 'words_fr', 'constant', 'Number of French words' );
+
+    $word_class_name = lib::get_class_name( 'database\word' );
+    $languages = $word_class_name::get_enum_values( 'language' );
+    
+    foreach( $languages as $language )
+    {
+      $language_item = 'words_' . $language;
+      $language_item_description = 'Number of ' . $language . ' words';
+      $this->add_item( $language_item, 'constant', $language_item_description );
+    }   
     $this->add_item( 'description', 'text', 'Description' );
 
     // create the word sub-list widget
@@ -67,17 +75,21 @@ class dictionary_view extends \cenozo\ui\widget\base_view
   protected function setup()
   {
     parent::setup();
-    
-    $db_dictionary = $this->get_record();
-    $modifier_en = lib::create( 'database\modifier' );
-    $modifier_en->where('language','=','en');
-    $modifier_fr = lib::create( 'database\modifier' );
-    $modifier_fr->where('language','=','fr');
 
     // set the view's items
+    $db_dictionary = $this->get_record();
     $this->set_item( 'name', $db_dictionary->name, true );
-    $this->set_item( 'words_en', $db_dictionary->get_word_count( $modifier_en ) );
-    $this->set_item( 'words_fr', $db_dictionary->get_word_count( $modifier_fr ) );
+
+    $word_class_name = lib::get_class_name( 'database\word' );
+    $languages = $word_class_name::get_enum_values( 'language' );    
+    foreach( $languages as $language )
+    {
+      $language_item = 'words_' . $language;
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'language','=', $language );
+      $this->set_item( $language_item, $db_dictionary->get_word_count( $modifier ) );
+    }
+
     $this->set_item( 'description', $db_dictionary->description );
     $this->set_variable( 'dictionary_id', $db_dictionary->id );
 
