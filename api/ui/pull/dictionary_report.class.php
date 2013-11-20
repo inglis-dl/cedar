@@ -10,9 +10,9 @@ namespace curry\ui\pull;
 use cenozo\lib, cenozo\log, curry\util;
 
 /**
- * Mailout required report data.
+ * pull: dictionary report
  * 
- * @abstract
+ * Generate a report file containing the list of words in a dictionary.
  */
 class dictionary_report extends \cenozo\ui\pull\base_report
 {
