@@ -57,23 +57,22 @@ class dictionary_report extends \cenozo\ui\pull\base_report
   {
     $this->report->set_orientation( 'landscape' );
 
-    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
-    $word_class_name = lib::get_class_name( 'database\word' );
-
     $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'dictionary_id' ) );
-    $word_count = $db_dictionary->get_word_count();
 
     // loop through all the words
     $word_mod = lib::create( 'database\modifier' );
     $word_mod->where( 'word.dictionary_id', '=', $db_dictionary->id );
     $word_mod->order( 'word.language' );
     $contents = array();
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     foreach( $word_class_name::select( $word_mod ) as $db_word )
     {
       $contents[] = array( $db_word->word, $db_word->language );
     }
 
-    $this->add_title( strtoupper($db_dictionary->name) . 
+    $word_count = $db_dictionary->get_word_count();
+    $this->add_title( strtoupper( $db_dictionary->name ) . 
                       ' Dictionary ( ' . $word_count . ' entries )' );
 
     // create the content and header arrays using the data
