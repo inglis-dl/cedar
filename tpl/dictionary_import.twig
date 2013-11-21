@@ -17,7 +17,7 @@
         }
 
         $( "#{{ widget.full }}__import" ).button( { disabled: "" == $(this).val() } );
-      } );
+      } ); // end change
 
       $( "#{{ widget.full }}__form" ).bind( "submit", function(e) {
         e.preventDefault();
@@ -29,7 +29,6 @@
           args.id = "{{ dictionary_id }}";
           var allow_proceed = false;
           var data = ajax_pull( "dictionary", "import", args );
-          console.log(data); 
           if( undefined != data ) {
             var err_count = data.error_count;
             var html = '<table style="width:90%; margin-left:10%; margin-right:10%; text-align:left">';
@@ -42,7 +41,8 @@
             }
             if( data.unique_word_count > 0 ) {
               allow_proceed = true;
-            }                          
+              window.word_list = data.unique_word_entries;
+            }               
 
             html += '<tr><td class="heading"> WORDS </td></tr>' +
                     '<tr><td>Number of existing dictionary words: ' + data.dictionary_word_count + '</td></tr>' +
@@ -59,26 +59,21 @@
             $( "#{{ widget.full }}__results" ).html( html );
             $( "#{{ widget.full }}__proceed" ).button();
           }
-        };
+          
+          $( "#{{ widget.full }}__proceed" ).click( function () {
+            var args = new Object();
+            args.word_list = window.word_list;
+            args.dictionary_id = "{{ dictionary_id }}";
+            console.log(args);
+            if( ajax_push( "dictionary", "import", args ) ) {
+              // let the user know the operation is complete and delete the proceed button
+              $(this).remove();
+              alert( "The operation was successful." );
+            }
+          } ); // end proceed click
+        }; // end reader onload
         reader.readAsBinaryString( file );
-/*
-        $( "#{{ widget.full }}__proceed" ).click( function () {
-          var args = new Object();
-          $( "#{{ widget.full }}_form :input" ).each( function() {
-            var id_string = $(this).attr( "id" );
-            var param_name = id_string.substring( id_string.lastIndexOf('__') + 2 );
-            if( "update" != param_name )
-              args[param_name] = "checkbox" == $(this).attr( "type" )
-                               ? ( $(this).is( ":checked" ) ? 1 : 0 )
-                               : $(this).val();
-          } );
-          if( ajax_push( "dictionary", "import", args ) ) {
-            // let the user know the operation is complete and delete the proceed button
-            $(this).remove();
-            alert( "The operation was successful." );
-          }
-        } );*/
-      } ); 
+      } ); // end bind submit
     } );
   </script>
 {% endblock javascript %}
@@ -112,7 +107,6 @@
         </tr>
       </table>
     </form>
-
     {% from 'macros.twig' import confirm_buttons %}
     {{ confirm_buttons( slot, widget.full, 'proceed', false, 'left', true ) }}
     <div id="{{ widget.full }}__results">
