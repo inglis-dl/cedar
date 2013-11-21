@@ -44,11 +44,13 @@ class word_edit extends \cenozo\ui\push\base_edit
     if( array_key_exists( 'word', $columns ) ) 
     {   
       $word = strtolower( $columns['word'] );
+      /*
       if( count( str_word_count( $word ) ) > 1 ) 
       {   
         throw lib::create( 'exception\notice',
           'Multiple word entries are not allowed.', __METHOD__ );
-      }   
+      }
+      */
       if( preg_match( '#[0-9]#', $word ) ) 
       {   
         throw lib::create( 'exception\notice',

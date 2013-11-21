@@ -66,7 +66,7 @@ class dictionary_import extends \cenozo\ui\pull
         $word = strtolower( $row_entry[0] );
         $error = false;
 
-        if( count( str_word_count( $word, 1 ) ) > 1 ||
+        if( /*count( str_word_count( $word, 1 ) ) > 1 ||*/
             preg_match( '#[0-9]#', $word ) ) 
         {
           $this->data['error_entries'][] = 
