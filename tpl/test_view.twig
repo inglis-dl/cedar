@@ -1,0 +1,16 @@
+{##
+ # test_view.twig
+ # 
+ # View test details.
+ # @author Dean Inglis <inglisd@mcmaster.ca>
+ # @see base_view.twig for parameters
+ #}
+{% extends "base_view.twig" %}
+
+{% block record %}
+
+  {{ parent() }}
+  {% from 'macros.twig' import include_list %}
+  {{ include_list( 'dictionary', dictionary_list|default(false), true ) }}
+
+{% endblock record %}
