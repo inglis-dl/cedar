@@ -2,7 +2,7 @@
 /**
  * settings.local.ini.php
  * 
- * Defines local initialization settings for curry, overriding default settings found in
+ * Defines local initialization settings for cedar, overriding default settings found in
  * settings.ini.php
  */
 
@@ -13,7 +13,7 @@ $SETTINGS['general']['development_mode'] = true;
 
 // the file path to the framework and application
 $SETTINGS['path']['CENOZO'] = '/path/to/cenozo';
-$SETTINGS['path']['APPLICATION'] = '/path/to/curry';
+$SETTINGS['path']['APPLICATION'] = '/path/to/cedar';
 
 // the path to the log file
 $SETTINGS['path']['LOG_FILE'] = $SETTINGS['path']['APPLICATION'].'/log';

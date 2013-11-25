@@ -29,7 +29,7 @@ mysql name_myapp < operations.sql
 - use sed to change the default name of myapp and cenozo db's as required:
 sed -e "s/\(myapp\|cenozo\)/name_\1/g" roles.sql | mysql name_myapp
 
-- log into mastodon, add a service with name="myapp", title="Curry"
+- log into mastodon, add a service with name="myapp", title="Cedar"
 Version="0.1.0" or whatever version is in myapp/web/settings.ini.php
 
 - view details about service "myapp" , add Cohort list (tracking, comprehensive)
@@ -37,7 +37,9 @@ and Role List entries (administrator, typist)
 
 - create a site in Mastodon: eg., McMaster (myapp)
 
-- add an administrator level user to User List in Mastodon
+- add an administrator level user (and other roles as required) to User List in Mastodon
+
+- in the site list view, choose users to grant access to the new site along with roles
 
 - create base classes for all tables in myapp db that have a primary id column
 (use cenozo/api/database/event.class.php as a stub)

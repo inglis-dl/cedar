@@ -6,8 +6,8 @@
  * @filesource
  */
 
-namespace curry\ui\pull;
-use cenozo\lib, cenozo\log, curry\util;
+namespace cedar\ui\pull;
+use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * pull: dictionary report

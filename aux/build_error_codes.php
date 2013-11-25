@@ -20,7 +20,7 @@ function print_exception_block( $lists, $type )
     foreach( $method_list as $method_name )
     {
       printf( "define( '%s__%s__%s__ERRNO',\n".
-              "        %s_CURRY_BASE_ERRNO + %d );\n",
+              "        %s_CEDAR_BASE_ERRNO + %d );\n",
               strtoupper( $type ),
               strtoupper( $class_name ),
               strtoupper( $method_name ),
@@ -93,7 +93,7 @@ foreach( $grep_line_list as $grep_line )
     // make sure a match was found
     if( false === $start || false === $end ) continue;
     $class_name =
-      'curry_'.str_replace( '/', '_', substr( $grep_line, $start, $end - $start ) );
+      'cedar_'.str_replace( '/', '_', substr( $grep_line, $start, $end - $start ) );
 
     // get the method name
     $start_match = 'function ';
@@ -123,14 +123,14 @@ print <<<OUTPUT
 /**
  * Error number category defines.
  */
-define( 'ARGUMENT_CURRY_BASE_ERRNO',   150000 );
-define( 'DATABASE_CURRY_BASE_ERRNO',   250000 );
-define( 'LDAP_CURRY_BASE_ERRNO',       350000 );
-define( 'NOTICE_CURRY_BASE_ERRNO',     450000 );
-define( 'PERMISSION_CURRY_BASE_ERRNO', 550000 );
-define( 'RUNTIME_CURRY_BASE_ERRNO',    650000 );
-define( 'SYSTEM_CURRY_BASE_ERRNO',     750000 );
-define( 'TEMPLATE_CURRY_BASE_ERRNO',   850000 );
+define( 'ARGUMENT_CEDAR_BASE_ERRNO',   150000 );
+define( 'DATABASE_CEDAR_BASE_ERRNO',   250000 );
+define( 'LDAP_CEDAR_BASE_ERRNO',       350000 );
+define( 'NOTICE_CEDAR_BASE_ERRNO',     450000 );
+define( 'PERMISSION_CEDAR_BASE_ERRNO', 550000 );
+define( 'RUNTIME_CEDAR_BASE_ERRNO',    650000 );
+define( 'SYSTEM_CEDAR_BASE_ERRNO',     750000 );
+define( 'TEMPLATE_CEDAR_BASE_ERRNO',   850000 );
 
 /**
  * "argument" error codes

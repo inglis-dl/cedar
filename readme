@@ -1,4 +1,4 @@
-Curry
+Cedar
 ==========
 
 Web-based computer-assisted double data entry management software which
@@ -22,7 +22,7 @@ web/
   This is the public web directory that a web server links to.
 
 doc/
-  All documentation for Curry is found here including the apigen generated API
+  All documentation for Cedar is found here including the apigen generated API
   documentation and design documents.
 
 sql/

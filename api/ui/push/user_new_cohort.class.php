@@ -6,7 +6,7 @@
  * @filesource
  */
 
-namespace curry\ui\push;
+namespace cedar\ui\push;
 use cenozo\lib, cenozo\log;
 
 /**

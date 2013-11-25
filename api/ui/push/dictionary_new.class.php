@@ -6,8 +6,8 @@
  * @filesource
  */
 
-namespace curry\ui\push;
-use cenozo\lib, cenozo\log, curry\util;
+namespace cedar\ui\push;
+use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: dictionary new

@@ -6,7 +6,7 @@
  * @filesource
  */
 
-namespace curry;
+namespace cedar;
 use cenozo\lib;
 
 /**

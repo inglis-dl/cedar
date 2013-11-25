@@ -1,6 +1,6 @@
 A) DEPENDENCIES
 ===============
-The following software must be installed prior to installing curry:
+The following software must be installed prior to installing cedar:
 
 - LAMP setup with PHP 5.3.2+
 - PECL Http
@@ -25,28 +25,28 @@ recommended for development.
 
 B) SETUP DATABASE
 =================
-To create your Curry database, first run the schema and initial_data scripts found
+To create your Cedar database, first run the schema and initial_data scripts found
 in Cenozo's sql/ directory:
 
 cat schema.sql initial_data.sql | mysql -u <username> -p <database>
 (where <username> is your username and <database> is your database name)
 
 Next, run the schema, initial_data and sample_data sql scripts found in
-Curry's sql/ directory:
+Cedar's sql/ directory:
 
 cat schema.sql initial_data.sql sample_data.sql | mysql -u <username> -p <database>
 (where <username> is your username and <database> is your database name)
 
 You should edit sample_data.sql so that it has at least one user with the administrator role.
 
-Patches to the database may be performed from within a Curry sql/updgrade sub-directory:
+Patches to the database may be performed from within a Cedar sql/updgrade sub-directory:
 mysql -u <username> -p <database> < patch_database.sql
 
 
 C) SETUP INI FILE
 =================
-Curry needs to know where to find things, passwords, etc.  This is all done in a local ini
-file.  To set yours up go into Curry's web/ directory and copy the sample local ini file to
+Cedar needs to know where to find things, passwords, etc.  This is all done in a local ini
+file.  To set yours up go into Cedar's web/ directory and copy the sample local ini file to
 your working local ini file:
 
 cp settings.local.ini.php.sample settings.local.ini.php
@@ -57,12 +57,12 @@ username and password are set according to what was mentioned in the previous st
 
 D) SETUP WEBROOT
 ================
-Create a symbolic link to Curry's web/ directory in a web-accessible place:
+Create a symbolic link to Cedar's web/ directory in a web-accessible place:
 
 cd /var/www/<username>
-ln -s /path/to/curry/web curry
+ln -s /path/to/cedar/web cedar
 
-Curry uses HTTP authentication to manage the logging in/out of users.  Make sure that your
+Cedar uses HTTP authentication to manage the logging in/out of users.  Make sure that your
 webserver is configured to require HTTP authentication for the root web directory.
 
 Copy the aux/reload.html file to the root of your web server.  This is necessary in order to

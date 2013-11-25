@@ -6,8 +6,8 @@
  * @filesource
  */
 
-namespace curry\ui\widget;
-use cenozo\lib, cenozo\log, curry\util;
+namespace cedar\ui\widget;
+use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * widget dictionary view

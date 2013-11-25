@@ -6,8 +6,8 @@
  * @filesource
  */
 
-namespace curry\database;
-use cenozo\lib, cenozo\log, curry\util;
+namespace cedar\database;
+use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * word: record

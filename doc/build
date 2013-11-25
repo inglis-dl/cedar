@@ -2,11 +2,11 @@
 # 
 # build
 # 
-# Builds API documentation for Curry using apigen
-# @author Patrick Emond <emondpd@mcmaster.ca>
+# Builds API documentation for Cedar using apigen
+# @author Dean Inglis <inglisd@mcmaster.ca>
 
-# get the path to cenozo
-cenozo_path=`grep "\['path'\]\['CENOZO'\]" ../web/settings.local.ini.php | sed -e "s#.* = '\(.*\)';#\1#"`
+# get the path to cedar
+cedar_path=`grep "\['path'\]\['CEDAR'\]" ../web/settings.local.ini.php | sed -e "s#.* = '\(.*\)';#\1#"`
 
 # generate the documentation
-apigen --source "$cenozo_path/api,../api" --config apigen.conf
+apigen --source "$cedar_path/api,../api" --config apigen.conf

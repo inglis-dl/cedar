@@ -9,14 +9,14 @@
 /**
  * Error number category defines.
  */
-define( 'ARGUMENT_CURRY_BASE_ERRNO',   150000 );
-define( 'DATABASE_CURRY_BASE_ERRNO',   250000 );
-define( 'LDAP_CURRY_BASE_ERRNO',       350000 );
-define( 'NOTICE_CURRY_BASE_ERRNO',     450000 );
-define( 'PERMISSION_CURRY_BASE_ERRNO', 550000 );
-define( 'RUNTIME_CURRY_BASE_ERRNO',    650000 );
-define( 'SYSTEM_CURRY_BASE_ERRNO',     750000 );
-define( 'TEMPLATE_CURRY_BASE_ERRNO',   850000 );
+define( 'ARGUMENT_CEDAR_BASE_ERRNO',   150000 );
+define( 'DATABASE_CEDAR_BASE_ERRNO',   250000 );
+define( 'LDAP_CEDAR_BASE_ERRNO',       350000 );
+define( 'NOTICE_CEDAR_BASE_ERRNO',     450000 );
+define( 'PERMISSION_CEDAR_BASE_ERRNO', 550000 );
+define( 'RUNTIME_CEDAR_BASE_ERRNO',    650000 );
+define( 'SYSTEM_CEDAR_BASE_ERRNO',     750000 );
+define( 'TEMPLATE_CEDAR_BASE_ERRNO',   850000 );
 
 /**
  * "argument" error codes

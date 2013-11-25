@@ -6,7 +6,7 @@
  * @filesource
  */
 
-namespace curry\ui\widget;
+namespace cedar\ui\widget;
 use cenozo\lib, cenozo\log;
 
 /**
