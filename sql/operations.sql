@@ -141,6 +141,14 @@ VALUES( "widget", "system_message", "show", false, "Displays appropriate system 
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "system_message", "view", true, "View a system message's details." );
 
+-- test
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test", "edit", true, "Edits a test's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test", "list", true, "List tests in the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test", "view", true, "View a test's details." );
+
 -- user
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "user", "add", true, "View a form for creating a new user." );

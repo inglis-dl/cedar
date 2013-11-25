@@ -334,6 +334,23 @@ SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "system_message" AND operation.name = "view"
 AND role.name IN ( "administrator" );
 
+-- test
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "test" AND operation.name = "edit"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "test" AND operation.name = "list"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "test" AND operation.name = "view"
+AND role.name IN ( "administrator" );
+
 -- user
 
 INSERT INTO role_has_operation( role_id, operation_id )
