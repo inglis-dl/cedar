@@ -29,6 +29,7 @@
           args.id = "{{ dictionary_id }}";
           var allow_proceed = false;
           var data = ajax_pull( "dictionary", "import", args );
+          /*
           if( undefined != data ) {
             var err_count = data.error_count;
             var html = '<table style="width:90%; margin-left:10%; margin-right:10%; text-align:left">';
@@ -41,7 +42,7 @@
             }
             if( data.unique_word_count > 0 ) {
               allow_proceed = true;
-              window.word_list = data.unique_word_entries;
+              //window.word_list = data.unique_word_entries;
             }               
 
             html += '<tr><td class="heading"> WORDS </td></tr>' +
@@ -62,15 +63,15 @@
           
           $( "#{{ widget.full }}__proceed" ).click( function () {
             var args = new Object();
-            args.word_list = window.word_list;
+            args.word_list = '';//window.word_list;
             args.dictionary_id = "{{ dictionary_id }}";
-            console.log(args);
             if( ajax_push( "dictionary", "import", args ) ) {
               // let the user know the operation is complete and delete the proceed button
               $(this).remove();
               alert( "The operation was successful." );
             }
-          } ); // end proceed click
+          } ); // end proceed click 
+          */
         }; // end reader onload
         reader.readAsBinaryString( file );
       } ); // end bind submit
