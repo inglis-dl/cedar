@@ -43,3 +43,7 @@ and Role List entries (administrator, typist)
 
 - create base classes for all tables in myapp db that have a primary id column
 (use cenozo/api/database/event.class.php as a stub)
+
+- create a symbolic link public_html in your root user directory
+- create symbolic links to cenozo and your app's repository web folders
+- create the log file in the root of your app's repository: touch log, chmod 666 log
