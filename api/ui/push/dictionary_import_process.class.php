@@ -36,9 +36,10 @@ class dictionary_import_process extends \cenozo\ui\push
   protected function execute()
   {
     parent::execute();
-    
+
     $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'dictionary_id' ) );
-    $word_list = $this->get_argument( 'word_list' );
+    $db_dictionary_import = lib::create( 'database\dictionary_import', $this->get_argument( 'id' ) );
+    $word_list = (array)util::json_decode( $db_dictionary_import->serialization  );
     foreach( $word_list as $word => $language )
     {
       $db_new_word = lib::create( 'database\word' );
@@ -47,7 +48,7 @@ class dictionary_import_process extends \cenozo\ui\push
       $db_new_word->language = $language;    
       $db_new_word->save();
     }
-    $this->get_record()->processed = true;
-    $this->get_record()->save();
+    $db_dictionary_import->processed = true;
+    $db_dictionary_import->save();
   }
 }
