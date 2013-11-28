@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`word` (
   `word` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_dictionary_id` (`dictionary_id` ASC),
-  UNIQUE INDEX `uq_word` (`word` ASC),
+  UNIQUE INDEX `uq_dictionary_id_word` (`word` ASC, `dictionary_id` ASC),
   CONSTRAINT `fk_word_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
