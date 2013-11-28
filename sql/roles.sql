@@ -113,12 +113,12 @@ AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "push" AND subject = "dictionary" AND operation.name = "import"
+WHERE type = "pull" AND subject = "dictionary" AND operation.name = "report"
 AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "pull" AND subject = "dictionary" AND operation.name = "import"
+WHERE type = "widget" AND subject = "dictionary" AND operation.name = "report"
 AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
@@ -126,14 +126,26 @@ SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "dictionary" AND operation.name = "import"
 AND role.name IN ( "administrator" );
 
+-- dictionary_import
+
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "pull" AND subject = "dictionary" AND operation.name = "report"
+WHERE type = "push" AND subject = "dictionary_import" AND operation.name = "delete"
 AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "widget" AND subject = "dictionary" AND operation.name = "report"
+WHERE type = "push" AND subject = "dictionary_import" AND operation.name = "new"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "dictionary_import" AND operation.name = "process"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "pull" AND subject = "dictionary_import" AND operation.name = "process"
 AND role.name IN ( "administrator" );
 
 -- event

@@ -2,6 +2,9 @@ SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='';
 
+DROP SCHEMA IF EXISTS `cedar` ;
+CREATE SCHEMA IF NOT EXISTS `cedar` DEFAULT CHARACTER SET utf8 ;
+USE `cedar` ;
 
 -- -----------------------------------------------------
 -- Table `cedar`.`setting`
@@ -397,6 +400,31 @@ CREATE TABLE IF NOT EXISTS `cedar`.`ranked_word_set` (
   CONSTRAINT `fk_ranked_word_set_word_fr_id`
     FOREIGN KEY (`word_fr_id`)
     REFERENCES `cedar`.`word` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`dictionary_import`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`dictionary_import` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`dictionary_import` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `md5` VARCHAR(45) NOT NULL,
+  `data` MEDIUMBLOB NOT NULL,
+  `dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
+  `serialization` MEDIUMBLOB NULL DEFAULT NULL,
+  `processed` TINYINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uq_md5` (`md5` ASC),
+  INDEX `fk_dictionary_id` (`dictionary_id` ASC),
+  CONSTRAINT `fk_dictionary_import_dictionary_id`
+    FOREIGN KEY (`dictionary_id`)
+    REFERENCES `cedar`.`dictionary` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

@@ -7,6 +7,7 @@
 {% extends "widget.twig" %}
 
 {% block javascript %}
+  <script type="text/javascript" src="{{ constant('JS_URL') }}/md5.js"></script>
   <script type="text/javascript">
     $( function() {
       $( "#{{ widget.full }}__file" ).change( function() {
@@ -22,59 +23,48 @@
       $( "#{{ widget.full }}__form" ).bind( "submit", function(e) {
         e.preventDefault();
         var file = document.getElementById( "{{ widget.full }}__file" ).files[0];
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          var args = new Object();
-          args.file_data = e.target.result;
-          args.id = "{{ dictionary_id }}";
-          var allow_proceed = false;
-          var data = ajax_pull( "dictionary", "import", args );
-          /*
-          if( undefined != data ) {
-            var err_count = data.error_count;
-            var html = '<table style="width:90%; margin-left:10%; margin-right:10%; text-align:left">';
-            if( err_count != 0 ) {
-              html += '<tr><td class="heading"> ERRORS </td></tr>';
-              var err_entries = data.error_entries;
-              for( var i = 0; i < err_count; i++ ) {
-                html += '<tr><td>' + err_entries[i] + '</td></tr>';
+        ajax_push(
+          "dictionary_import",
+          "new",
+          file,
+          function( request ) {
+            if( 200 == request.status ) {
+              var reader = new FileReader();
+              reader.onload = function(e) {
+                md5 = hex_md5( e.target.result );
+                var args = new Object();
+                args.md5 = md5;
+                args.dictionary_id = {{ id }};
+
+                var results = ajax_pull("dictionary_import", "process", args );
+
+                console.log(results);
+
+                slot_load(
+                  {{ slot }}, "{{ widget.subject }}", "{{ widget.name }}", { md5: md5 } );
               }
+              reader.readAsBinaryString( file );
             }
-            if( data.unique_word_count > 0 ) {
-              allow_proceed = true;
-              //window.word_list = data.unique_word_entries;
-            }               
-
-            html += '<tr><td class="heading"> WORDS </td></tr>' +
-                    '<tr><td>Number of existing dictionary words: ' + data.dictionary_word_count + '</td></tr>' +
-                    '<tr><td>Number of duplcate words: ' + data.duplicate_word_count + '</td></tr>' +
-                    '<tr><td>Number of unique words: ' + data.unique_word_count + '</td></tr>';
-
-            html += '</table>';
-            
-            html += '<div class="spacer" style="text-align: right">' +
-                    '<button id="{{ widget.full }}__proceed" style="width:120px"' +
-                    ( allow_proceed ? '' : ' disabled' ) +
-                    '>Proceed</button>' +
-                    '</div>';
-            $( "#{{ widget.full }}__results" ).html( html );
-            $( "#{{ widget.full }}__proceed" ).button();
           }
-          
-          $( "#{{ widget.full }}__proceed" ).click( function () {
-            var args = new Object();
-            args.word_list = '';//window.word_list;
-            args.dictionary_id = "{{ dictionary_id }}";
-            if( ajax_push( "dictionary", "import", args ) ) {
-              // let the user know the operation is complete and delete the proceed button
-              $(this).remove();
-              alert( "The operation was successful." );
-            }
-          } ); // end proceed click 
-          */
-        }; // end reader onload
-        reader.readAsBinaryString( file );
-      } ); // end bind submit
+        );
+      } );
+        
+
+      {% if md5 %}
+        // cancel button
+        $( "#{{ widget.full }}_cancel" ).click( function() {
+          if( ajax_push( "dictionary_import", "delete", { id: "{{ id }}" } ) )
+            alert("Cancelled");
+            //slot_load( {{ slot }}, "dictionary", "list" );
+        } );
+
+        // proceed button
+        $( "#{{ widget.full }}_proceed" ).click( function() {
+          if( ajax_push( "dictionary_import", "process", { id: "{{ id }}" } ) )
+            alert("Processed");
+            //slot_load( {{ slot }}, "dictionary", "list" );
+        } );
+      {% endif %}
     } );
   </script>
 {% endblock javascript %}
@@ -108,10 +98,10 @@
         </tr>
       </table>
     </form>
-    {% from 'macros.twig' import confirm_buttons %}
-    {{ confirm_buttons( slot, widget.full, 'proceed', false, 'left', true ) }}
-    <div id="{{ widget.full }}__results">
-    </div>
+    {% if md5 %}
+      {% from 'macros.twig' import confirm_buttons %}
+      {{ confirm_buttons( slot, widget.full, ['cancel','proceed'], false, 'left', true ) }}
+    {% endif %}  
   </div>
 {% endblock widget %}
 
