@@ -40,7 +40,7 @@ class test_view extends \cenozo\ui\widget\base_view
 
     $this->add_item( 'name', 'constant', 'Name' );
     $this->add_item( 'dictionary_id', 'enum', 'Primary Dictionary' );
-    if( $this->get_record()->strict )
+    if( !$this->get_record()->strict )
     {
       $this->add_item( 'variant_dictionary_id', 'enum', 'Variant Dictionary' );
       $this->add_item( 'intrusion_dictionary_id', 'enum', 'Intrusion Dictionary' );
