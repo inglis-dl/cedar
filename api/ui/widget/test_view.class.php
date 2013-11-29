@@ -38,13 +38,13 @@ class test_view extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
 
-    // create an associative array with everything we want to display about the test
-    $this->add_item( 'name', 'string', 'Name' );
-
-    // create the dictionary sub-list widget
-    $this->dictionary_list = lib::create( 'ui\widget\dictionary_list', $this->arguments );
-    $this->dictionary_list->set_parent( $this );
-    $this->dictionary_list->set_heading( 'Dictionaries' );
+    $this->add_item( 'name', 'constant', 'Name' );
+    $this->add_item( 'dictionary_id', 'enum', 'Primary Dictionary' );
+    if( $this->get_record()->strict )
+    {
+      $this->add_item( 'variant_dictionary_id', 'enum', 'Variant Dictionary' );
+      $this->add_item( 'intrusion_dictionary_id', 'enum', 'Intrusion Dictionary' );
+    }   
   }
 
  /**
@@ -57,24 +57,25 @@ class test_view extends \cenozo\ui\widget\base_view
   {
     parent::setup();
 
+    $record = $this->get_record();
+    $this->set_variable( 'test_id', $record->id );
+
     // set the view's items
-    $db_test = $this->get_record();
-    $this->set_item( 'name', $db_test->name, true );
+    $this->set_item( 'name', $record->name, true );
 
-    $this->set_variable( 'test_id', $db_test->id );
+    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
 
-    try 
-    {   
-      $this->dictionary_list->process();
-      $this->set_variable( 'dictionary_list', $this->dictionary_list->get_variables() );
-    }   
-    catch( \cenozo\exception\permission $e ) {}
+    $dictionary_list = array();
+    foreach( $dictionary_class_name::select() as $db_dictionary )
+       $dictionary_list[$db_dictionary->id] = $db_dictionary->name;
+
+    $this->set_item( 'dictionary_id', $record->dictionary_id, false, $dictionary_list );
+    if( !$record->strict )
+    {
+      $this->set_item( 'variant_dictionary_id', 
+        $record->variant_dictionary_id, false, $dictionary_list );
+      $this->set_item( 'intrusion_dictionary_id', 
+        $record->intrusion_dictionary_id, false, $dictionary_list );
+    }  
   }
-
-  /** 
-   * The test list widget.
-   * @var dictionary_list
-   * @access protected
-   */
-  protected $dictionary_list = NULL;
 }
