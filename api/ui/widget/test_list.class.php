@@ -37,12 +37,23 @@ class test_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
+
+    $allow_primary_sort = true;
+    $test_class_name = lib::get_class_name( 'database\test');
+    foreach( $test_class_name::select() as $db_test )
+    {
+      if( is_null( $db_test->dictionary_id ) )
+      {
+        $allow_primary_sort = false;
+        break;
+      }
+    }
     
     $this->add_column( 'name', 'string', 'Name', true );
     $this->add_column( 'strict', 'constant', 'Strict', true );
-    $this->add_column( 'dictionary', 'string', 'Primary Dictionary', true );
-    $this->add_column( 'variant_dictionary', 'string', 'Variant Dictionary', true );
-    $this->add_column( 'intrusion_dictionary', 'string', 'Intrusion Dictionary', true );
+    $this->add_column( 'dictionary', 'string', 'Primary Dictionary', $allow_primary_sort );
+    $this->add_column( 'variant_dictionary', 'string', 'Variant Dictionary' );
+    $this->add_column( 'intrusion_dictionary', 'string', 'Intrusion Dictionary' );
   }
   
   /**
