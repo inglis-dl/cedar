@@ -78,12 +78,12 @@ AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "widget" AND subject = "dictionary" AND operation.name = "add_word"
+WHERE type = "push" AND subject = "dictionary" AND operation.name = "delete"
 AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "push" AND subject = "dictionary" AND operation.name = "delete"
+WHERE type = "widget" AND subject = "dictionary" AND operation.name = "add_word"
 AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
@@ -361,6 +361,16 @@ AND role.name IN ( "administrator" );
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "test" AND operation.name = "view"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "test" AND operation.name = "add_dictionary"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "test" AND operation.name = "delete_dictionary"
 AND role.name IN ( "administrator" );
 
 -- user

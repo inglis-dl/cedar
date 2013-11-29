@@ -154,6 +154,10 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test", "list", true, "List tests in the system." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test", "view", true, "View a test's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test", "add_dictionary", true, "A form to add a dictionary to a test." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test", "delete_dictionary", true, "Remove a dictionary from a test." );
 
 -- user
 INSERT INTO operation( type, subject, name, restricted, description )
