@@ -39,6 +39,10 @@ class test_list extends \cenozo\ui\widget\base_list
     parent::prepare();
     
     $this->add_column( 'name', 'string', 'Name', true );
+    $this->add_column( 'strict', 'constant', 'Strict', true );
+    $this->add_column( 'dictionary', 'string', 'Primary Dictionary', true );
+    $this->add_column( 'variant_dictionary', 'string', 'Variant Dictionary', true );
+    $this->add_column( 'intrusion_dictionary', 'string', 'Intrusion Dictionary', true );
   }
   
   /**
@@ -51,11 +55,28 @@ class test_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
     
+    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
+
+    $dictionary_list = array();
+    foreach( $dictionary_class_name::select() as $db_dictionary )
+       $dictionary_list[$db_dictionary->id] = $db_dictionary->name;
+
     foreach( $this->get_record_list() as $record )
     {
       // assemble the row for this record
       $this->add_row( $record->id,
-        array( 'name' => $record->name ) );
+        array( 
+          'name' => $record->name,
+          'strict' => ( $record->strict ? 'yes' : 'no' ),
+          'dictionary' =>  ( is_null( $record->dictionary_id ) ? '(none)' :
+             $dictionary_list[ $record->dictionary_id ] ),
+           'variant_dictionary' => ( is_null( $record->variant_dictionary_id ) ? 
+             ( $record->strict ? 'N/A' : '(none)' ) :
+             $dictionary_list[ $record->variant_dictionary_id ] ),
+           'intrusion_dictionary' => ( is_null( $record->intrusion_dictionary_id ) ?
+             ( $record->strict ? 'N/A' : '(none)' ) :
+             $dictionary_list[ $record->intrusion_dictionary_id ] ) )
+        );
     }
   }
 }
