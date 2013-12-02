@@ -42,18 +42,22 @@ class dictionary_import_process extends \cenozo\ui\pull
 
     $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
     $db_dictionary_import = $dictionary_import_class_name::get_unique_record( 'md5', $md5 );    
+
     if( !is_null( $db_dictionary_import ) )
     {   
       if( $db_dictionary_import->processed )
        throw lib::create( 'exception\notice',
          'This file has already been imported.', __METHOD__ );
     }
+
     $file_data = $db_dictionary_import->data;
+
     if( is_null( $file_data ) )
     {
       throw lib::create( 'exception\notice',
        'There is no file data in the import record.', __METHOD__ );
     }
+
     $db_dictionary_import->dictionary_id = $dictionary_id;
 
     // now process the data
