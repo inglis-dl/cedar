@@ -61,7 +61,6 @@ class dictionary_import_process extends \cenozo\ui\pull
     $db_dictionary_import->dictionary_id = $dictionary_id;
 
     // now process the data
-    $word_array = array();
     $duplicate_word_count = 0;
     $unique_word_count = 0;
     $dictionary_word_count = 0;
@@ -69,7 +68,7 @@ class dictionary_import_process extends \cenozo\ui\pull
 
     $word_class_name = lib::get_class_name( 'database\word' );
     $languages = $word_class_name::get_enum_values( 'language' );
-    
+    $word_array = array();
     $this->data = array();
     $this->data['id'] = $db_dictionary_import->id;
     $this->data['error_count'] = $error_count;
@@ -109,16 +108,22 @@ class dictionary_import_process extends \cenozo\ui\pull
 
         if( !$error )
         {
-          if( in_array( $word, array_keys( $word_array ) ) )
+          $found = false;
+          foreach( $word_array as $key => $value )
           {
-            $duplicate_input_count++;
-            $this->data['error_entries'][] =
-              'Error: dupicate input entry (ignored) "' . $word . '" on line ' 
-              . $row . ': "' . implode( '", "', $row_entry ) . '"';
-            $error_count++;  
-          }  
-          else           
-            $word_array[ $word ] = $language;
+            if( $value[0] == $word && $value[1] == $language )
+            {
+              $duplicate_input_count++;
+              $this->data['error_entries'][] =
+                'Error: dupicate input entry (ignored) "' . $word . '" on line ' 
+                . $row . ': "' . implode( '", "', $row_entry ) . '"';
+              $error_count++;
+              $found = true;
+            }  
+          } 
+
+          if( !$found )
+            $word_array[] = array( $word, $language );
         }
       }
       else
@@ -147,13 +152,16 @@ class dictionary_import_process extends \cenozo\ui\pull
       $this->data[ 'dictionary_word_count' ] = $dictionary_word_count;
       if( $dictionary_word_count > 0 )
       {
-        $word_class_name = lib::get_class_name( 'database\word' );
-        $languages = $word_class_name::get_enum_values( 'language' );
         $unique_word_count = 0;
         $word_array_final = array();
         foreach( $languages as $language )
         {
-          $candidate_words = array_keys( $word_array, $language );
+          $candidate_words = array();
+          foreach( $word_array as $key => $value )
+          {
+            if( $value[1] == $language )
+              $candidate_words[] = $value[0];
+          }
           $candidate_word_count = count( $candidate_words ); 
           if( $candidate_word_count > 0 )
           {
@@ -177,8 +185,9 @@ class dictionary_import_process extends \cenozo\ui\pull
             $unique_count = count( $unique_words );
             if( $unique_count > 0 )
             {
-              $language_values = array_fill( 0, $unique_count, $language );
-              $word_array_final[] = array_combine( $unique_words, $language_values );
+              foreach( $unique_words as $word )
+                $word_array_final[] = array( $word, $language );
+
               $unique_word_count += $unique_count;
               $duplicate_word_count += $candidate_word_count - $unique_count;
             }
@@ -193,7 +202,6 @@ class dictionary_import_process extends \cenozo\ui\pull
     {
       $db_dictionary_import->serialization = util::json_encode( $word_array_final );
     }
-
     $db_dictionary_import->save();
   }
   

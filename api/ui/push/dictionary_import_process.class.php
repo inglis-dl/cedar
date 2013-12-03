@@ -40,20 +40,17 @@ class dictionary_import_process extends \cenozo\ui\push
     $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'dictionary_id' ) );
     $db_dictionary_import = lib::create( 'database\dictionary_import', $this->get_argument( 'id' ) );
     
-    $word_list = util::array_cast_recursive(
-      util::json_decode( $db_dictionary_import->serialization ) );
-    
-    if( count( $word_list ) == 1 && is_array( $word_list[0] ) ) 
-      $word_list = $word_list[0];  
+    $word_list = util::json_decode( $db_dictionary_import->serialization );
 
-    foreach( $word_list as $word => $language )
+    foreach( $word_list as $key => $value )
     {
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
-      $db_new_word->word = $word;
-      $db_new_word->language = $language;    
+      $db_new_word->word = $value[0];
+      $db_new_word->language = $value[1];    
       $db_new_word->save();
     }
+
     $db_dictionary_import->processed = true;
     $db_dictionary_import->save();
   }
