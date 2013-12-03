@@ -71,6 +71,20 @@ VALUES( "widget", "note", "list", false, "Displays a list of notes." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "note", "new", false, "Creates a new note." );
 
+-- ranked_word_set
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "ranked_word_set", "add", true, "View a form for creating a new ranked word set." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "ranked_word_set", "delete", true, "Removes a ranked word set from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "ranked_word_set", "edit", true, "Edits a ranked word set's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "ranked_word_set", "list", true, "List ranked word sets in the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "ranked_word_set", "new", true, "Add a new ranked word set to the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "ranked_word_set", "view", true, "View a ranked word set's details." );
+
 -- role
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "role", "list", true, "List roles in the system." );
@@ -158,6 +172,10 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test", "add_dictionary", true, "A form to add a dictionary to a test." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test", "delete_dictionary", true, "Remove a dictionary from a test." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test", "add_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test", "delete_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
 
 -- user
 INSERT INTO operation( type, subject, name, restricted, description )

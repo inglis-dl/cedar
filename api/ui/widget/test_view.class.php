@@ -44,7 +44,12 @@ class test_view extends \cenozo\ui\widget\base_view
     {
       $this->add_item( 'variant_dictionary_id', 'enum', 'Variant Dictionary' );
       $this->add_item( 'intrusion_dictionary_id', 'enum', 'Intrusion Dictionary' );
-    }   
+    }
+
+    // create the ranked_word_list sub-list widget
+    $this->ranked_word_set_list = lib::create( 'ui\widget\ranked_word_set_list', $this->arguments );
+    $this->ranked_word_set_list->set_parent( $this );
+    $this->ranked_word_set_list->set_heading( 'Ranked Words' );
   }
 
  /**
@@ -76,6 +81,22 @@ class test_view extends \cenozo\ui\widget\base_view
         $record->variant_dictionary_id, false, $dictionary_list );
       $this->set_item( 'intrusion_dictionary_id', 
         $record->intrusion_dictionary_id, false, $dictionary_list );
-    }  
+    }
+
+    try
+    {
+      $this->ranked_word_set_list->process();
+      $this->set_variable( 'ranked_word_set_list', $this->ranked_word_set_list->get_variables() );
+    }
+    catch( \cenozo\exception\permission $e ) {}
+
   }
+
+  /**
+   * The ranked_word_set list widget.
+   * @var ranked_word_set_list
+   * @access protected
+   */
+  protected $ranked_word_set_list = NULL;
+
 }
