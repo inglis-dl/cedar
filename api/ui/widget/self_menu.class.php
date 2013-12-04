@@ -25,6 +25,6 @@ class self_menu extends \cenozo\ui\widget\self_menu
   {
     parent::prepare();
     
-    $this->exclude_list( array( 'word', 'ranked_word_set', 'services' ) );
+    $this->exclude_list( array( 'word', 'ranked_word_set', 'service' ) );
   }
 }
