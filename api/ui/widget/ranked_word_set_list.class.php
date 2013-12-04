@@ -41,8 +41,8 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'rank', 'number', 'Rank', true );
 
     $word_class_name = lib::get_class_name( 'database\word' );
-    $languages = $word_class_name::get_enum_values( 'language' );
-    foreach( $languages as $language )
+    $this->languages = $word_class_name::get_enum_values( 'language' );
+    foreach( $this->languages as $language )
     {   
       $this->add_column( 'word_' . $language, 'string', 'Word (' . 
         ($language == "en" ? 'English' : 'French')  . ')', false );
@@ -59,18 +59,26 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
     
-    $word_class_name = lib::get_class_name( 'database\word' );
-    
     foreach( $this->get_record_list() as $record )
     {
-      // assemble the row for this record
-      $db_word_en = lib::create( 'database\word', $record->word_en_id );
-      $db_word_fr = lib::create( 'database\word', $record->word_fr_id );
+      $row_array[ 'rank' ] = $record->rank;
+      foreach( $this->languages as $language )
+      {
+        $word_id = 'word_' . $language . '_id';
+        $db_word = lib::create( 'database\word', $record->$word_id );
+        $row_array[ 'word_' . $language ] = $db_word ? $db_word->word : '';
+      }
 
-      $this->add_row( $record->id,
-        array( 'rank' => $record->rank,
-               'word_en' => $db_word_en ? $db_word_en->word : '',
-               'word_fr' => $db_word_fr ? $db_word_fr->word : '') );
+      $this->add_row( $record->id, $row_array );
     }
   }
+
+  /**
+   * The languages.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected $languages = null;
+
 }

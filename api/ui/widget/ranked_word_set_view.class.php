@@ -31,7 +31,6 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
    * Processes arguments, preparing them for the operation.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
    * @access protected
    */
   protected function prepare()
@@ -42,11 +41,16 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'rank', 'enum', 'Rank' );
 
     $word_class_name = lib::get_class_name( 'database\word' );
-    $languages = $word_class_name::get_enum_values( 'language' );
-    foreach( $languages as $language )
-    {   
-      $this->add_item( 'word_' . $language . '_id', 'enum', 'Word (' . 
-        ($language == "en" ? 'English' : 'French')  . ')' );
+    $this->languages = $word_class_name::get_enum_values( 'language' );
+    foreach( $this->languages as $language )
+    {
+      $description = 'Unknown';
+      if( $language == 'en' )
+        $description = 'English';
+      elseif ( $language == 'fr' )
+        $description = 'French';
+
+      $this->add_item( 'word_' . $language . '_id', 'enum', 'Word (' . $description  . ')' );
     }
   }
 
@@ -54,6 +58,7 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
    * Finish setting the variables in a widget.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
    * @access protected
    */
   protected function setup()
@@ -63,27 +68,27 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
     $record = $this->get_record();
     $db_test = $record->get_test();
     $db_dictionary = $db_test->get_dictionary();
-
     $word_class_name = lib::get_class_name( 'database\word' );
-    $languages = $word_class_name::get_enum_values( 'language' );
-
     $words = array();
-    if( $db_dictionary )
+    $dictionary_word_count = $db_dictionary->get_word_count();
+    if( $dictionary_word_count > ( count( $this->languages ) -1 ) )
     {
-      $dictionary_word_count = $db_dictionary->get_word_count();
-      if( $dictionary_word_count > 0 )
+      foreach( $this->languages as $language )
       {
-        foreach( $languages as $language )
+        $modifier = lib::create( 'database\modifier' );
+        $modifier->where( 'word.dictionary_id', '=', $db_dictionary->id );
+        $modifier->where( 'word.language', '=', $language );
+        foreach( $word_class_name::select( $modifier ) as $db_word )
         {
-          $modifier = lib::create( 'database\modifier' );
-          $modifier->where( 'word.dictionary_id', '=', $db_dictionary->id );
-          $modifier->where( 'word.language', '=', $language );
-          foreach( $word_class_name::select( $modifier ) as $db_word )
-          {
-            $words[$language][$db_word->id] = $db_word->word;
-          }
+          $words[$language][$db_word->id] = $db_word->word;
         }
       }
+    }
+    else
+    {
+      throw lib::create( 'exception\notice',
+        'The primary dictionary must contain at least one word of each language.', 
+         __METHOD__ );        
     }
 
     $num_ranked_word_sets = $db_test->get_ranked_word_set_count();
@@ -94,10 +99,19 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
     // set the view's items
     $this->set_item( 'rank', $record->rank, true, $ranks );
 
-    foreach( $languages as $language )
+    foreach( $this->languages as $language )
     {
       $word_list = $words[$language]; 
       $this->set_item( 'word_' . $language . '_id', '', false, $word_list );
     }
   }
+
+  /** 
+   * The languages.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected $languages = null;
+
 }
