@@ -42,13 +42,18 @@ class dictionary_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'name', 'string', 'Name' );
 
     $word_class_name = lib::get_class_name( 'database\word' );
-    $languages = $word_class_name::get_enum_values( 'language' );
+    $this->languages = $word_class_name::get_enum_values( 'language' );
     
-    foreach( $languages as $language )
+    foreach( $this->languages as $language )
     {
-      $language_item = 'words_' . $language;
-      $language_item_description = 'Number of ' . $language . ' words';
-      $this->add_item( $language_item, 'constant', $language_item_description );
+      $description = 'unknown language';
+      if( $language == 'en' )
+        $description = 'English';
+      elseif ( $language == 'fr' )
+        $description = 'French';
+
+      $description = 'Number of ' . $description . ' words';
+      $this->add_item( 'words_' . $language, 'constant', $description );
     }   
     $this->add_item( 'description', 'text', 'Description' );
 
@@ -80,14 +85,11 @@ class dictionary_view extends \cenozo\ui\widget\base_view
     $db_dictionary = $this->get_record();
     $this->set_item( 'name', $db_dictionary->name, true );
 
-    $word_class_name = lib::get_class_name( 'database\word' );
-    $languages = $word_class_name::get_enum_values( 'language' );    
-    foreach( $languages as $language )
+    foreach( $this->languages as $language )
     {
-      $language_item = 'words_' . $language;
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'language','=', $language );
-      $this->set_item( $language_item, $db_dictionary->get_word_count( $modifier ) );
+      $this->set_item( 'words_' . $language, $db_dictionary->get_word_count( $modifier ) );
     }
 
     $this->set_item( 'description', $db_dictionary->description );
@@ -107,4 +109,13 @@ class dictionary_view extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $word_list = NULL;
+
+  /** 
+   * The languages.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected $languages = null;
+
 }
