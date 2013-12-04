@@ -51,6 +51,7 @@ class test_list extends \cenozo\ui\widget\base_list
     
     $this->add_column( 'name', 'string', 'Name', true );
     $this->add_column( 'strict', 'constant', 'Strict', true );
+    $this->add_column( 'rank_words', 'constant', 'Words Ranked', true );
     $this->add_column( 'dictionary', 'string', 'Primary Dictionary', $allow_primary_sort );
     $this->add_column( 'variant_dictionary', 'string', 'Variant Dictionary' );
     $this->add_column( 'intrusion_dictionary', 'string', 'Intrusion Dictionary' );
@@ -79,6 +80,7 @@ class test_list extends \cenozo\ui\widget\base_list
         array( 
           'name' => $record->name,
           'strict' => ( $record->strict ? 'yes' : 'no' ),
+          'rank_words' => ( $record->rank_words ? 'yes' : 'no' ),
           'dictionary' =>  ( is_null( $record->dictionary_id ) ? '(none)' :
              $dictionary_list[ $record->dictionary_id ] ),
            'variant_dictionary' => ( is_null( $record->variant_dictionary_id ) ? 

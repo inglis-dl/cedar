@@ -255,6 +255,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   `intrusion_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `variant_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words',
+  `rank_words` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = requires ranked words',
   PRIMARY KEY (`id`),
   INDEX `fk_dictionary_id` (`dictionary_id` ASC),
   INDEX `fk_intrusion_dictionary_id` (`intrusion_dictionary_id` ASC),

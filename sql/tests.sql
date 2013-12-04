@@ -3,8 +3,8 @@
 -- -----------------------------------------------------
 SET AUTOCOMMIT=0;
 
-INSERT IGNORE INTO test( name ) VALUES( "REY" );
-INSERT IGNORE INTO test( name ) VALUES( "REY II" );
+INSERT IGNORE INTO test( name, rank_words ) VALUES( "REY", true );
+INSERT IGNORE INTO test( name, rank_words ) VALUES( "REY II", true );
 INSERT IGNORE INTO test( name ) VALUES( "AFT" );
 INSERT IGNORE INTO test( name ) VALUES( "FAS (f words)" );
 INSERT IGNORE INTO test( name ) VALUES( "FAS (a words)" );

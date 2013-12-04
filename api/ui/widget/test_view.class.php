@@ -38,18 +38,23 @@ class test_view extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
 
+    $record = $this->get_record();
+
     $this->add_item( 'name', 'constant', 'Name' );
     $this->add_item( 'dictionary_id', 'enum', 'Primary Dictionary' );
-    if( !$this->get_record()->strict )
+    if( !$record->strict )
     {
       $this->add_item( 'variant_dictionary_id', 'enum', 'Variant Dictionary' );
       $this->add_item( 'intrusion_dictionary_id', 'enum', 'Intrusion Dictionary' );
     }
 
-    // create the ranked_word_list sub-list widget
-    $this->ranked_word_set_list = lib::create( 'ui\widget\ranked_word_set_list', $this->arguments );
-    $this->ranked_word_set_list->set_parent( $this );
-    $this->ranked_word_set_list->set_heading( 'Ranked Words' );
+    if( $record->rank_words )
+    {
+      // create the ranked_word_list sub-list widget
+      $this->ranked_word_set_list = lib::create( 'ui\widget\ranked_word_set_list', $this->arguments );
+      $this->ranked_word_set_list->set_parent( $this );
+      $this->ranked_word_set_list->set_heading( 'Ranked Words' );
+    }  
   }
 
  /**
@@ -83,13 +88,15 @@ class test_view extends \cenozo\ui\widget\base_view
         $record->intrusion_dictionary_id, false, $dictionary_list );
     }
 
-    try
+    if( $record->rank_words )
     {
-      $this->ranked_word_set_list->process();
-      $this->set_variable( 'ranked_word_set_list', $this->ranked_word_set_list->get_variables() );
+      try
+      {
+        $this->ranked_word_set_list->process();
+        $this->set_variable( 'ranked_word_set_list', $this->ranked_word_set_list->get_variables() );
+      }
+      catch( \cenozo\exception\permission $e ) {}
     }
-    catch( \cenozo\exception\permission $e ) {}
-
   }
 
   /**
