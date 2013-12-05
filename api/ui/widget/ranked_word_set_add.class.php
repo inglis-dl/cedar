@@ -119,9 +119,9 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
         __METHOD__ );
     }  
 
-    $num_ranked_word_sets = $db_test->get_ranked_word_set_count();
+    $num_ranks = $db_test->get_ranked_word_set_count();
     $ranks = array();
-    for( $rank = 1; $rank <= ( $num_ranked_word_sets + 1 ); $rank++ ) $ranks[] = $rank;
+    for( $rank = 1; $rank <= ( $num_ranks + 1 ); $rank++ ) $ranks[] = $rank;
     $ranks = array_combine( $ranks, $ranks );
     end( $ranks );
     $last_rank_key = key( $ranks );

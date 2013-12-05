@@ -91,18 +91,19 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
          __METHOD__ );        
     }
 
-    $num_ranked_word_sets = $db_test->get_ranked_word_set_count();
+    $num_ranks = $db_test->get_ranked_word_set_count();
     $ranks = array();
-    for( $rank = 1; $rank <= $num_ranked_word_sets; $rank++ ) $ranks[] = $rank;
+    for( $rank = 1; $rank <= ( $num_ranks + 1 ); $rank++ ) $ranks[] = $rank;
     $ranks = array_combine( $ranks, $ranks );
-     
+
     // set the view's items
     $this->set_item( 'rank', $record->rank, true, $ranks );
 
     foreach( $this->languages as $language )
     {
       $word_list = $words[$language]; 
-      $this->set_item( 'word_' . $language . '_id', '', false, $word_list );
+      $word_id = 'word_' . $language . '_id';
+      $this->set_item( $word_id, $record->$word_id, true, $word_list );
     }
   }
 
@@ -113,5 +114,4 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $languages = null;
-
 }
