@@ -134,7 +134,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     foreach( $this->languages as $language )
     {
       $word_list = $words[$language];       
-      $this->set_item( 'word_' . $language . '_id', '', false, $word_list );
+      $this->set_item( 'word_' . $language . '_id', '', true, $word_list );
     }
   }
 

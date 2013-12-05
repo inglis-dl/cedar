@@ -38,7 +38,7 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
-    $this->add_column( 'rank', 'number', 'Rank', true );
+    $this->add_column( 'rank', 'string', 'Rank', true );
 
     $word_class_name = lib::get_class_name( 'database\word' );
     $this->languages = $word_class_name::get_enum_values( 'language' );
