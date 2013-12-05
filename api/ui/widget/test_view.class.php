@@ -41,7 +41,10 @@ class test_view extends \cenozo\ui\widget\base_view
     $record = $this->get_record();
 
     $this->add_item( 'name', 'constant', 'Name' );
+    $this->add_item( 'strict', 'constant', 'Strict' );
+    $this->add_item( 'rank_words', 'constant', 'Rank Words' );
     $this->add_item( 'dictionary_id', 'enum', 'Primary Dictionary' );
+
     if( !$record->strict )
     {
       $this->add_item( 'variant_dictionary_id', 'enum', 'Variant Dictionary' );
@@ -54,6 +57,14 @@ class test_view extends \cenozo\ui\widget\base_view
       $this->ranked_word_set_list = lib::create( 'ui\widget\ranked_word_set_list', $this->arguments );
       $this->ranked_word_set_list->set_parent( $this );
       $this->ranked_word_set_list->set_heading( 'Ranked Words' );
+
+      $operation_class_name = lib::get_class_name( 'database\operation' );
+      $db_operation = $operation_class_name::get_operation( 'push', 'ranked_word_set', 'import' );
+      if( lib::create( 'business\session' )->is_allowed( $db_operation ) ) 
+      {   
+        $this->add_action( 'import', 'Import', $db_operation,
+          'Import words from a dictionary to generate a set of ranked words' );
+      }
     }  
   }
 
@@ -72,6 +83,13 @@ class test_view extends \cenozo\ui\widget\base_view
 
     // set the view's items
     $this->set_item( 'name', $record->name, true );
+    $this->set_item( 'strict', 
+      $record->strict ? "yes: variants and intrusions are ignored" :
+                        "no: variants and intrusions are recorded", true );
+
+    $this->set_item( 'rank_words', 
+      $record->rank_words ? "yes: primary dictionary words must be ranked" :  
+                            "no: primary dictionary words are not ranked", true );
 
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
 
@@ -80,6 +98,7 @@ class test_view extends \cenozo\ui\widget\base_view
        $dictionary_list[$db_dictionary->id] = $db_dictionary->name;
 
     $this->set_item( 'dictionary_id', $record->dictionary_id, false, $dictionary_list );
+    $this->set_variable( 'dictionary_id', $record->dictionary_id ); 
     if( !$record->strict )
     {
       $this->set_item( 'variant_dictionary_id', 
