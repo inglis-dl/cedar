@@ -47,7 +47,7 @@ mysql name_myapp < operations.sql
 - use sed to change the default name of myapp and cenozo db's as required:
 sed -e "s/\(myapp\|cenozo\)/name_\1/g" roles.sql | mysql name_myapp
 
-- log into mastodon, add a service with name="myapp", title="Cedar"
+- log into mastodon, add a service with name="myapp", title="MyApp"
 Version="0.1.0" or whatever version is in myapp/web/settings.ini.php
 
 - view details about service "myapp" , add Cohort list (tracking, comprehensive)
