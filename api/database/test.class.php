@@ -12,4 +12,4 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * test: record
  */
-class test extends \cenozo\database\record {}
+class test extends \cenozo\database\has_rank {}

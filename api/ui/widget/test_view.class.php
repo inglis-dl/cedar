@@ -40,7 +40,8 @@ class test_view extends \cenozo\ui\widget\base_view
 
     $record = $this->get_record();
 
-    $this->add_item( 'name', 'constant', 'Name' );
+    $this->add_item( 'name', 'string', 'Name' );
+    $this->add_item( 'rank', 'number', 'Test Order' );
     $this->add_item( 'strict', 'constant', 'Strict' );
     $this->add_item( 'rank_words', 'constant', 'Rank Words' );
     $this->add_item( 'dictionary_id', 'enum', 'Primary Dictionary' );
@@ -53,10 +54,12 @@ class test_view extends \cenozo\ui\widget\base_view
 
     if( $record->rank_words )
     {
+      $this->add_item( 'words', 'constant', 'Number of ranked word sets' );
+     
       // create the ranked_word_list sub-list widget
       $this->ranked_word_set_list = lib::create( 'ui\widget\ranked_word_set_list', $this->arguments );
       $this->ranked_word_set_list->set_parent( $this );
-      $this->ranked_word_set_list->set_heading( 'Ranked Words' );
+      $this->ranked_word_set_list->set_heading( 'Ranked Word Sets' );
     }  
   }
 
@@ -75,6 +78,7 @@ class test_view extends \cenozo\ui\widget\base_view
 
     // set the view's items
     $this->set_item( 'name', $record->name, true );
+    $this->set_item( 'rank', $record->rank, true );
     $this->set_item( 'strict', 
       $record->strict ? "yes: variants and intrusions are ignored" :
                         "no: variants and intrusions are recorded", true );
@@ -101,6 +105,7 @@ class test_view extends \cenozo\ui\widget\base_view
 
     if( $record->rank_words )
     {
+      $this->set_item( 'words', $record->get_ranked_word_set_count() );
       try
       {
         $this->ranked_word_set_list->process();

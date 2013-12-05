@@ -256,11 +256,13 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   `variant_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words',
   `rank_words` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = requires ranked words',
+  `rank` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_dictionary_id` (`dictionary_id` ASC),
   INDEX `fk_intrusion_dictionary_id` (`intrusion_dictionary_id` ASC),
   INDEX `fk_variant_dictionary_id` (`variant_dictionary_id` ASC),
   UNIQUE INDEX `uq_name` (`name` ASC),
+  UNIQUE INDEX `uq_rank` (`rank` ASC),
   CONSTRAINT `fk_test_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
@@ -382,7 +384,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`ranked_word_set` (
   `test_id` INT UNSIGNED NOT NULL,
   `word_en_id` INT UNSIGNED NOT NULL,
   `word_fr_id` INT UNSIGNED NOT NULL,
-  `rank` INT NOT NULL,
+  `rank` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
   INDEX `fk_word_en_id` (`word_en_id` ASC),
