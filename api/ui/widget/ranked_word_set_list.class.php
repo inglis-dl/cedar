@@ -50,6 +50,7 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
 
     //TODO consider disabling the add button at the bottom of the list
     // once all the words in the primary dictionary have been used up
+    // or do this in the parent "test" class
     //$this->set_addable()
   }
   

@@ -143,10 +143,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     {
       $word_list = $words[$language];       
       $word_id = 'word_' . $language . '_id';
-      reset($word_list);
-      $next_key = key($word_list);
-      if( count( $word_list ) == 1 ) $word_list['NULL'] = '';
-      $this->set_item( $word_id, $next_key, true, $word_list );
+      $this->set_item( $word_id, key( $word_list ), true, $word_list, true );
     }
   }
 
@@ -157,5 +154,4 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $languages = null;
-
 }
