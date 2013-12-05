@@ -57,14 +57,6 @@ class test_view extends \cenozo\ui\widget\base_view
       $this->ranked_word_set_list = lib::create( 'ui\widget\ranked_word_set_list', $this->arguments );
       $this->ranked_word_set_list->set_parent( $this );
       $this->ranked_word_set_list->set_heading( 'Ranked Words' );
-
-      $operation_class_name = lib::get_class_name( 'database\operation' );
-      $db_operation = $operation_class_name::get_operation( 'push', 'ranked_word_set', 'import' );
-      if( lib::create( 'business\session' )->is_allowed( $db_operation ) ) 
-      {   
-        $this->add_action( 'import', 'Import', $db_operation,
-          'Import words from a dictionary to generate a set of ranked words' );
-      }
     }  
   }
 
