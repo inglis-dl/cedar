@@ -65,3 +65,5 @@ and Role List entries (administrator, typist)
 - create a symbolic link public_html in your root user directory
 - create symbolic links to cenozo and your app's repository web folders
 - create the log file in the root of your app's repository: touch log, chmod 666 log
+- for testing, release participants from name_cenozo with
+insert into service_has_participant (service_id, participant_id, datetime) select service.id, participant.id, utc_timestamp() from service, participant where service.name='cedar';
