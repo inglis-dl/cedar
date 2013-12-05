@@ -10,12 +10,30 @@ to create a template .mwb file for your app
 - export forward engineer, filtering out all cenozo table objects,
 turn off views and triggers as required to schema.sql
 
+- to get the app to run during development, there must be the following databases:
+name_myapp
+name_beartooth
+name_cenozo
+name_mastodon
+name_sabretooth
+name_sabretooth_mc
+name_limesurvey
+name_limesurvey2
+
 - create db in mysql:
 create database name_myapp;
 grant all on name_myapp.* to 'name'@'localhost';
 
+- create all the other 'name_*' dbs listed above
+
+- run the "load" script in /home/?/files/data/db to preload data into all the 
+listed db's
+
 - import the schema.sql into mysql:
 sed -e "s/\`\(myapp\|cenozo\)\`/\`name_\1\`/g" schema.sql | mysql name_app
+
+- import the cenozo operations from cenozo/sql/operations.sql
+mysql name_cenozo < operations.sql
 
 - import the customized cenozo/sql/operations.sql from myapp/sql into name_app db:
 mysql name_myapp < operations.sql
