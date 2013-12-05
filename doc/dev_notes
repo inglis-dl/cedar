@@ -33,7 +33,7 @@ listed db's
 sed -e "s/\`\(myapp\|cenozo\)\`/\`name_\1\`/g" schema.sql | mysql name_app
 
 - import the cenozo operations from cenozo/sql/operations.sql
-mysql name_cenozo < operations.sql
+mysql name_myapp < operations.sql
 
 - import the customized cenozo/sql/operations.sql from myapp/sql into name_app db:
 mysql name_myapp < operations.sql
