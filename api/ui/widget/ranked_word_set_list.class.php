@@ -47,6 +47,10 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
       $this->add_column( 'word_' . $language, 'string', 'Word (' . 
         ($language == "en" ? 'English' : 'French')  . ')', false );
     }
+
+    //TODO consider disabling the add button at the bottom of the list
+    // once all the words in the primary dictionary have been used up
+    //$this->set_addable()
   }
   
   /**

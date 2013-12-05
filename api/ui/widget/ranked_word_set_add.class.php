@@ -83,9 +83,9 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     $ranked_word_set_class_name = lib::get_class_name( 'database\ranked_word_set' );
     $words = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
-    if( $dictionary_word_count > ( count( $this->languages ) -1 )  )
+    if( $dictionary_word_count > 0 && 
+        ( $dictionary_word_count % count( $this->languages ) ) == 0  )
     {
-      $ranked_set_words = array();
       foreach( $this->languages as $language )
       {
         // get word ids from all ranked word sets that have this test id
@@ -113,11 +113,19 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
       }
     }
     else
-    {
+    {     
       throw lib::create( 'exception\notice', 
         'The primary dictionary must contain at least one word of each language.',
         __METHOD__ );
-    }  
+    }
+
+    //TODO remove this exception once the list class turns off adding
+    if( empty( $words ) )
+    {
+      throw lib::create( 'exception\notice', 
+        'There are no words left in the dictionary to create a ranked word set.',
+        __METHOD__ );
+    }
 
     $num_ranks = $db_test->get_ranked_word_set_count();
     $ranks = array();
@@ -134,7 +142,11 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     foreach( $this->languages as $language )
     {
       $word_list = $words[$language];       
-      $this->set_item( 'word_' . $language . '_id', '', true, $word_list );
+      $word_id = 'word_' . $language . '_id';
+      reset($word_list);
+      $next_key = key($word_list);
+      if( count( $word_list ) == 1 ) $word_list['NULL'] = '';
+      $this->set_item( $word_id, $next_key, true, $word_list );
     }
   }
 
