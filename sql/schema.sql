@@ -290,7 +290,7 @@ DROP TABLE IF EXISTS `cedar`.`assignment` ;
 CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `update_timestamp` TIMESTAMP NOT NULL,
-  `create_timestamp` VARCHAR(45) NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
   `participant_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
