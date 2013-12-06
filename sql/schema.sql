@@ -191,6 +191,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`recording` (
   `create_timestamp` TIMESTAMP NOT NULL,
   `participant_id` INT UNSIGNED NOT NULL,
   `file_name` VARCHAR(45) NOT NULL,
+  `language` ENUM('any','en','fr') NOT NULL DEFAULT 'en',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `uq_file_name` (`file_name` ASC),
   INDEX `fk_participant_id` (`participant_id` ASC),
@@ -282,6 +283,33 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `cedar`.`assignment`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`assignment` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` VARCHAR(45) NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `participant_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_participant_id` (`participant_id` ASC),
+  INDEX `fk_user_id` (`user_id` ASC),
+  CONSTRAINT `fk_assignment_participant_id`
+    FOREIGN KEY (`participant_id`)
+    REFERENCES `cenozo`.`participant` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_assignment_user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `cedar`.`test_entry`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `cedar`.`test_entry` ;
@@ -291,28 +319,21 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `participant_id` INT UNSIGNED NOT NULL,
   `audio_fault` TINYINT(1) NOT NULL DEFAULT 0,
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
+  `assignment_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
-  INDEX `fk_user_id` (`user_id` ASC),
-  INDEX `fk_participant_id` (`participant_id` ASC),
+  INDEX `fk_test_entry_assignment1_idx` (`assignment_id` ASC),
   CONSTRAINT `fk_test_entry_test_id`
     FOREIGN KEY (`test_id`)
     REFERENCES `cedar`.`test` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_test_entry_user_id`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `cenozo`.`user` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_test_entry_participant_id`
-    FOREIGN KEY (`participant_id`)
-    REFERENCES `cenozo`.`participant` (`id`)
+  CONSTRAINT `fk_test_entry_assignment1`
+    FOREIGN KEY (`assignment_id`)
+    REFERENCES `cedar`.`assignment` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
