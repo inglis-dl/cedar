@@ -325,13 +325,13 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
-  INDEX `fk_test_entry_assignment1_idx` (`assignment_id` ASC),
+  INDEX `fk_assignment_id` (`assignment_id` ASC),
   CONSTRAINT `fk_test_entry_test_id`
     FOREIGN KEY (`test_id`)
     REFERENCES `cedar`.`test` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_test_entry_assignment1`
+  CONSTRAINT `fk_test_entry_assignment_id`
     FOREIGN KEY (`assignment_id`)
     REFERENCES `cedar`.`assignment` (`id`)
     ON DELETE NO ACTION
