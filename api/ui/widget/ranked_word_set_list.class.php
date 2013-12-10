@@ -85,5 +85,4 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
    * @access protected
    */
   protected $languages = null;
-
 }
