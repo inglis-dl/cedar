@@ -3,6 +3,20 @@
 -- -----------------------------------------------------
 SET AUTOCOMMIT=0;
 
+-- assignment
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "assignment", "add", true, "View a form for creating a new assignment." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "assignment", "delete", true, "Removes an assignment from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "assignment", "edit", true, "Edits an assignment's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "assignment", "list", true, "Lists assignments." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "assignment", "new", true, "Creates a new assignment." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "assignment", "view", true, "View the details of an assignment." );
+
 -- dictionary
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "dictionary", "add", true, "View a form for creating a new dictionary." );
