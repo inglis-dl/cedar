@@ -81,6 +81,20 @@ VALUES( "widget", "test", "add_ranked_word_set", true, "A form to create a ranke
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test", "delete_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
 
+-- test_entry
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "add", true, "View a form for creating a new test_entry." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry", "delete", true, "Removes a test_entry from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry", "edit", true, "Edits a test_entry's details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "list", true, "Lists an assignment's test_entries." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry", "new", true, "Creates a new assignment test_entry." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "view", true, "View the details of an assignment's test_entries." );
+
 -- user
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "user", "add_cohort", true, "A form to add a cohort to a user." );
