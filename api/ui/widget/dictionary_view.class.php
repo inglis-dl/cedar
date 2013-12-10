@@ -104,7 +104,7 @@ class dictionary_view extends \cenozo\ui\widget\base_view
   }
 
   /** 
-   * The dictionary list widget.
+   * The word list widget.
    * @var word_list
    * @access protected
    */
