@@ -38,17 +38,12 @@ class test_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
 
-    $allow_primary_sort = true;
     $test_class_name = lib::get_class_name( 'database\test');
-    foreach( $test_class_name::select() as $db_test )
-    {
-      if( is_null( $db_test->dictionary_id ) )
-      {
-        $allow_primary_sort = false;
-        break;
-      }
-    }
-    
+    $modifier = lib::create('database\modifier');
+    $modifier->where( 'dictionary_id', '=', 'NULL' );
+    $allow_primary_sort = 
+      $test_class_name::count( $modifier ) == $test_class_name::count() ? false : true;
+
     $this->add_column( 'rank', 'constant', 'Order', true );
     $this->add_column( 'name', 'string', 'Name', true );
     $this->add_column( 'strict', 'constant', 'Strict', true );
@@ -82,8 +77,8 @@ class test_list extends \cenozo\ui\widget\base_list
       // assemble the row for this record
       $this->add_row( $record->id,
         array( 
-          'name' => $record->name,
           'rank' => $record->rank,
+          'name' => $record->name,
           'strict' => ( $record->strict ? 'yes' : 'no' ),
           'rank_words' => ( $record->rank_words ? 'yes' : 'no' ),
           'dictionary' =>  ( is_null( $record->dictionary_id ) ? '(none)' :
