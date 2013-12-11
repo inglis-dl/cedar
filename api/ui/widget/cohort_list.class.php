@@ -41,10 +41,6 @@ class cohort_list extends \cenozo\ui\widget\base_list
     parent::prepare();
 
     $this->add_column( 'name', 'string', 'Name', true );
-    if( !is_null( $this->parent ) &&
-        'service' == $this->parent->get_subject() &&
-        'view' == $this->parent->get_name() )
-      $this->add_column( 'service_has_cohort.grouping', 'string', 'Grouping', true );
     $this->add_column( 'participants', 'number', 'Participants', false );
     $this->add_column( 'users', 'number', 'Users', false );
   }
@@ -61,15 +57,10 @@ class cohort_list extends \cenozo\ui\widget\base_list
     
     foreach( $this->get_record_list() as $record )
     {
-      $row = array( 'name' => $record->name,
-                    'participants' => $record->get_participant_count(),
-                    'users' => $record->get_user_count() );
-      if( !is_null( $this->parent ) &&
-          'service' == $this->parent->get_subject() &&
-          'view' == $this->parent->get_name() )
-        $row['service_has_cohort.grouping'] =
-          $this->parent->get_record()->get_cohort_grouping( $record );
-      $this->add_row( $record->id, $row );
+      $this->add_row( $record->id, 
+        array( 'name' => $record->name,
+               'participants' => $record->get_participant_count(),
+               'users' => $record->get_user_count() ) );
     }
   }
 }

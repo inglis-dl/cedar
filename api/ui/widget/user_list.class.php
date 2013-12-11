@@ -25,7 +25,7 @@ class user_list extends \cenozo\ui\widget\user_list
   {
     parent::prepare();
 
-    $this->add_column( 'cohort', 'string', 'Cohort', false );
+    $this->add_column( 'cohort.name', 'string', 'Cohort', false );
   }
 
   /**
@@ -63,7 +63,8 @@ class user_list extends \cenozo\ui\widget\user_list
 
       $cohort = 'none';
       $db_cohort = $record->get_cohort_list();
-     
+      log::debug( array( $record, $db_cohort));
+
       if( 1 == count( $db_cohort ) ) $cohort = $db_cohort[0]->name; // only one cohort?
       else if( 1 < count( $db_cohort ) ) $cohort = 'multiple'; // multiple cohorts?
 
@@ -74,7 +75,7 @@ class user_list extends \cenozo\ui\widget\user_list
                'site.name' => $site,
                'role.name' => $role,
                'last_activity' => $last,
-               'cohort' => $cohort ) );
+               'cohort.name' => $cohort ) );
     }
   }
 }
