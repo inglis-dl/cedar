@@ -243,6 +243,21 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `cedar`.`test_type`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`test_type` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`test_type` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `name` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `cedar`.`test`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `cedar`.`test` ;
@@ -255,6 +270,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   `dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `intrusion_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `variant_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
+  `test_type_id` INT UNSIGNED NOT NULL,
   `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words',
   `rank_words` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = requires ranked words',
   `rank` INT UNSIGNED NOT NULL,
@@ -264,6 +280,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   INDEX `fk_variant_dictionary_id` (`variant_dictionary_id` ASC),
   UNIQUE INDEX `uq_name` (`name` ASC),
   UNIQUE INDEX `uq_rank` (`rank` ASC),
+  INDEX `fk_test_type_id` (`test_type_id` ASC),
   CONSTRAINT `fk_test_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
@@ -277,6 +294,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   CONSTRAINT `fk_test_variant_dictionary_id`
     FOREIGN KEY (`variant_dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_test_type_id`
+    FOREIGN KEY (`test_type_id`)
+    REFERENCES `cedar`.`test_type` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

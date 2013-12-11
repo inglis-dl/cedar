@@ -42,12 +42,19 @@ class assignment_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'uid', 'constant', 'UId' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
     $this->add_item( 'user', 'constant', 'User' );
-    //$this->add_item( 'completed', 'constant', 'Status' );
 
     // create the test_entry sub-list widget
     $this->test_entry_list = lib::create( 'ui\widget\test_entry_list', $this->arguments );
     $this->test_entry_list->set_parent( $this );
     $this->test_entry_list->set_heading( 'Tests' );
+
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+    $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'process' );
+    if( lib::create( 'business\session' )->is_allowed( $db_operation ) ) 
+    {   
+      $this->add_action( 'process', 'Process', $db_operation,
+        'Transcribe the cognitive test recordings made during an interview.' );
+    }
   }
 
   /**
@@ -70,6 +77,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
     $this->set_item( 'cohort', $db_participant->get_cohort()->name, true );
     $this->set_item( 'user', $db_assignment->get_user()->name, true );
 
+    //TODO if the user is a typist, consider not showing the order of tests to process
     try
     {
       $this->test_entry_list->process();
