@@ -63,6 +63,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
+    $db_user = $session->get_user();
 
     foreach( $assignment_list as $db_assignment )
     {
@@ -73,7 +74,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $mod_complete->where( 'completed', '=', true );
       $complete_count = $test_entry_class_name::count( $mod_complete );
 
-      if( $complete_count == $test_count && $db_role->name == 'typist' )
+      if( ( $complete_count == $test_count && $db_role->name == 'typist' ) ||
+          ( $db_role->name == 'typist' && $db_assignment->get_user()->name != $db_user->name ) )
         continue;
       
       $db_participant = $db_assignment->get_participant();
@@ -91,9 +93,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
         array( 'uid' => $db_participant->uid,
                'cohort' => $db_participant->get_cohort()->name,
                'user' => $db_assignment->get_user()->name,
-               'defer' => $defer_count . '/' . $test_count,
-               'adjudicate' => $adjudicate_count . '/' . $test_count,
-               'complete' =>  $complete_count . '/' . $test_count ) );
+               'defer' => 
+                 $defer_count > 0 ? $defer_count . '/' . $test_count : 'none',
+               'adjudicate' => 
+                 $adjudicate_count > 0 ? $adjudicate_count . '/' . $test_count : 'none',
+               'complete' =>  
+                 $complete_count > 0 ? $complete_count . '/' . $test_count : 'none' ) );
     }
   }
 }
