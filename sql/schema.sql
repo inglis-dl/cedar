@@ -323,6 +323,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `audio_fault` TINYINT(1) NOT NULL DEFAULT 0,
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
+  `adjudicate` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
   INDEX `fk_assignment_id` (`assignment_id` ASC),
