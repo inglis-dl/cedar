@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: test_entry delete
+ *
+ * Delete a test_entry.
  */
 class test_entry_delete extends \cenozo\ui\push\base_delete
 {

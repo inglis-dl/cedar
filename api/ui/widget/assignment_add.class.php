@@ -37,14 +37,21 @@ class assignment_add extends \cenozo\ui\widget\base_view
   protected function prepare()
   {
     parent::prepare();
+
+    $session = lib::create( 'business\session' );
+    $db_role = $session->get_role();
     
     // add items to the view
-    $this->add_item( 'user_id', 'hidden' );
+    if( $db_role->name == 'typist' )
+      $this->add_item( 'user_id', 'hidden' );
+    else
+      $this->add_item( 'user_id', 'enum', 'User' );
+
     $this->add_item( 'participant_id', 'hidden' );
-    //TODO  these should be constant but base_add.twig will not process constant
-    $this->add_item( 'uid', 'string', 'UID' );
-    $this->add_item( 'language', 'string', 'Language' );
-    $this->add_item( 'cohort', 'string', 'Cohort' );
+    $this->add_item( 'cohort_name', 'hidden' );
+    $this->add_item( 'uid', 'constant', 'UID' );
+    $this->add_item( 'language', 'constant', 'Language' );
+    $this->add_item( 'cohort', 'constant', 'Cohort' );
   }
 
   /**
@@ -61,61 +68,69 @@ class assignment_add extends \cenozo\ui\widget\base_view
     $db_role = $session->get_role();
     $db_user = $session->get_user();
 
-    // get the cohorts that this user is assigned to
+    // filter on participants with cohorts this user is assigned to
     $cohort_ids = array();
     $has_tracking = false;
     $has_comprehensive = false;
-    foreach( $db_user->get_cohort_list() as $db_cohort )
+    $cohort_list = array();
+    if( $db_role->name == 'typist' )
+      $cohort_list = $db_user->get_cohort_list();
+    else
     {
-      $cohort_ids[]= $db_cohort->id;
+      $cohort_class_name = lib::get_class_name( 'database\cohort' );  
+      $cohort_list = $cohort_class_name::select();
+    }
+
+    foreach( $cohort_list as $db_cohort )
+    {
+      $cohort_ids[] = $db_cohort->id;
       if( 'tracking' == $db_cohort->name )
         $has_tracking = true;
       if( 'comprehensive' == $db_cohort->name )
         $has_comprehensive = true;
     }
 
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'cohort_id', 'IN', $cohort_ids );
+    $base_mod = lib::create( 'database\modifier' );
+    $base_mod->where( 'cohort_id', 'IN', $cohort_ids );
 
     // filter on participants who have the same language as the user
-    if( $db_user->language != 'any' )
+    if( $db_role->name == 'typist' && $db_user->language != 'any' )
     {
-      $modifier->where( 'language', '=', $db_user->language );
-      //TODO the participant language can be NULL, meaning
-      // english
+      $base_mod->where( 'language', '=', $db_user->language );
     }
 
+    // the participant must have completed their interview
     $event_type_class_name = lib::get_class_name( 'database\event_type' );
 
     $db_tracking_event_type =
-      $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Home)' );
+      $event_type_class_name::get_unique_record( 'name', 'completed (Baseline)' );
 
     $db_comprehensive_event_type =
-      $event_type_class_name::get_unique_record( 'name', 'completed (Baseline)' );
+      $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' );
 
     if( $has_tracking && $has_comprehensive )
     {
-      $modifier->where_bracket( true );
+      $base_mod->where_bracket( true );
 
       // tracking
-      $modifier->where_bracket( true );
-      $modifier->where( 'event.event_type_id', '=', $db_tracking_event_type->id );
-      $modifier->where_bracket( false );
+      $base_mod->where_bracket( true );
+      $base_mod->where( 'event.event_type_id', '=', $db_tracking_event_type->id );
+      $base_mod->where_bracket( false );
 
       // comprehensive
-      $modifier->where_bracket( true, true );
-      $modifier->where( 'event.event_type_id', '=', $db_comprehensive_event_type->id );
-      $modifier->where_bracket( false );
+      $base_mod->where_bracket( true, true );
+      $base_mod->where( 'event.event_type_id', '=', $db_comprehensive_event_type->id );
+      $base_mod->where_bracket( false );
       
-      $modifier->where_bracket( false );
+      $base_mod->where_bracket( false );
     }
     else if( $has_tracking )
     {
-      $modifier->where( 'event.event_type_id', '=', $db_tracking_event_type->id );
+      $base_mod->where( 'event.event_type_id', '=', $db_tracking_event_type->id );
     }
     else if( $has_comprehensive )
     {
-      $modifier->where( 'event.event_type_id', '=', $db_comprehensive_event_type->id );
+      $base_mod->where( 'event.event_type_id', '=', $db_comprehensive_event_type->id );
     }
 
     $participant_class_name = lib::get_class_name( 'database\participant' );
@@ -125,38 +140,76 @@ class assignment_add extends \cenozo\ui\widget\base_view
     $language = '';
     $participant_id = '';
     $cohort = '';
-    $modifier->limit( 200 );
-    foreach( $participant_class_name::select( $modifier ) as $db_participant )
-    {   
-      $assignment_mod = lib::create( 'database\modifier' );
-      $assignment_mod->where( 'participant_id', '=', $db_participant->id );
-      $assignment_mod->where( 'user_id', '=', $db_user->id );
+    $cohort_id = '';
+    $limit = 10;
+    $offset = 0;
+    $participant_count = 0;
+    do
+    {
+      $mod_limit = clone $base_mod;
+      $mod_limit->limit( $limit, $offset );
+      $participant_list = $participant_class_name::select( $mod_limit );
 
-      if( $assignment_class_name::count( $assignment_mod ) == 0 )
+      $participant_count = count( $participant_list );
+      if( $participant_count > 0 )
       {
-        $uid = $db_participant->uid;
-        $language = $db_participant->language;
-        $participant_id = $db_participant->id;
-        $cohort = $db_participant->get_cohort()->name;
-        //log::debug( array( $db_participant, $db_user ) );
-        $found = true;        
-        break;
-      }  
-    }   
+        foreach( $participant_list as $db_participant )
+        {   
+          $assignment_mod = lib::create( 'database\modifier' );
+          $assignment_mod->where( 'participant_id', '=', $db_participant->id );
+          $assignment_mod->where( 'user_id', '=', $db_user->id );
+
+          if( $assignment_class_name::count( $assignment_mod ) == 0 )
+          {
+            $uid = $db_participant->uid;
+            $language = $db_participant->language;
+            $language = is_null( $language ) ? 'en' : $language;
+            $participant_id = $db_participant->id;
+            $db_cohort = $db_participant->get_cohort();
+            $cohort = $db_cohort->name;
+            $cohort_id = $db_cohort->id;
+            $found = true;
+            break;
+          }  
+        }
+        $offset += $limit;
+      }
+    } while( !$found && $participant_count > 0 );
       
-    // throw a notice if no participant  was found
-    if( !$found ) throw lib::create( 'exception\notice',
-      sprintf( 'There are currently no %ss available for processing.',
-               str_replace( '_', ' ', $this->get_subject() ) ),
-      __METHOD__ );
+    // throw a notice if no participant was found
+    if( !$found ) 
+      throw lib::create( 'exception\notice',
+        'There are currently no participants available for processing.', __METHOD__ );
 
     //TODO use a semaphore when generating a new assignment
 
-   
-    //log::debug( array( $db_user->id, $participant_id,  $uid, $language, $cohort ) );
+    if( $db_role->name == 'typist' )
+    {
+      $this->set_item( 'user_id', $db_user->id, true );
+    }  
+    else
+    {
+      // get all users with matching language and cohort attributes to select from
+      $user_mod = lib::create( 'database\modifier' );
+      $user_mod->where( 'user_has_cohort.cohort_id', '=', $cohort_id );
+      $user_mod->where( 'language', 'IN', array( 'any', $language ) );
 
-    $this->set_item( 'user_id', $db_user->id, true );
+      $user_class_name = lib::get_class_name( 'database\user' );  
+      $user_list = $user_class_name::select( $user_mod );
+
+      if( empty( $user_list ) )
+       throw lib::create( 'exception\notice',
+         'There must be one or more users having the same language ( ' . $language .
+         ' ) and cohort (' . $cohort . ' ) attributes as the participant.', __METHOD__ );
+
+      $users = array();
+      foreach( $user_list as $db_user )
+        $users[ $db_user->id ] = $db_user->name;
+
+      $this->set_item( 'user_id', '', false, $users );      
+    }
     $this->set_item( 'participant_id', $participant_id, true );
+    $this->set_item( 'cohort_name', $cohort, true );
     $this->set_item( 'uid', $uid, true );
     $this->set_item( 'language', $language, true );
     $this->set_item( 'cohort', $cohort, true );

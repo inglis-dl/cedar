@@ -38,15 +38,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
-    $this->add_column( 'uid', 'constant', 'UId', true );
-    $this->add_column( 'cohort', 'constant', 'Cohort', true );
-    $this->add_column( 'user', 'constant', 'User', true );
-    /*
-    $this->add_column( 'language', 'constant', 'Language', true );
-    $this->add_column( 'defer', 'constant', 'Defer', true );
+    $this->add_column( 'uid', 'string', 'UId', true );
+    $this->add_column( 'cohort', 'string', 'Cohort', true );
+    $this->add_column( 'user', 'string', 'User', true );
+    $this->add_column( 'defer', 'string', 'Defer', true );
     $this->add_column( 'adjudicate', 'string', 'Adjudicate', true );
-    $this->add_column( 'complete', 'string', 'Complete', true );
-    */
+    $this->add_column( 'complete', 'string', 'Complete', true );    
   }
   
   /**
@@ -59,22 +56,44 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
 
-    $participant_class_name = lib::get_class_name( 'database\participant' );
-    foreach( $this->get_record_list() as $record )
+    $assignment_list = $this->get_record_list();
+    $test_entry_class_name = lib::get_class_name('database\test_entry');
+    $test_class_name = lib::get_class_name('database\test');
+    $test_count = $test_class_name::count();
+
+    $session = lib::create( 'business\session' );
+    $db_role = $session->get_role();
+
+    foreach( $assignment_list as $db_assignment )
     {
-      $db_participant = $record->get_participant();
+      $base_mod = lib::create( 'database\modifier' );
+      $base_mod->where( 'assignment_id', '=', $db_assignment->id );
+
+      $mod_complete = clone $base_mod;
+      $mod_complete->where( 'completed', '=', true );
+      $complete_count = $test_entry_class_name::count( $mod_complete );
+
+      if( $complete_count == $test_count && $db_role->name == 'typist' )
+        continue;
+      
+      $db_participant = $db_assignment->get_participant();
       $language = $db_participant->language;
-      $this->add_row( $record->id,
+
+      $mod_defer = clone $base_mod;
+      $mod_defer->where( 'deferred', '=', true );
+      $defer_count = $test_entry_class_name::count( $mod_defer );
+
+      $mod_adjudicate = clone $base_mod;
+      $mod_adjudicate->where( 'adjudicate', '=', true );
+      $adjudicate_count = $test_entry_class_name::count( $mod_adjudicate );        
+
+      $this->add_row( $db_assignment->id,
         array( 'uid' => $db_participant->uid,
                'cohort' => $db_participant->get_cohort()->name,
-               'user' => $record->get_user()->name
-               /*
-               'language' => (is_null($language) ? 'en' : $language ),
-               'defer' => '0/X',
-               'adjudicate' => '0/X',
-               'complete' =>'0/X' 
-               */
-               ) );
+               'user' => $db_assignment->get_user()->name,
+               'defer' => $defer_count . '/' . $test_count,
+               'adjudicate' => $adjudicate_count . '/' . $test_count,
+               'complete' =>  $complete_count . '/' . $test_count ) );
     }
   }
 }

@@ -49,13 +49,16 @@ class test_list extends \cenozo\ui\widget\base_list
       }
     }
     
-    $this->add_column( 'name', 'string', 'Name', true );
     $this->add_column( 'rank', 'constant', 'Order', true );
+    $this->add_column( 'name', 'string', 'Name', true );
     $this->add_column( 'strict', 'constant', 'Strict', true );
     $this->add_column( 'rank_words', 'constant', 'Words Ranked', true );
     $this->add_column( 'dictionary', 'string', 'Primary Dictionary', $allow_primary_sort );
     $this->add_column( 'variant_dictionary', 'string', 'Variant Dictionary' );
     $this->add_column( 'intrusion_dictionary', 'string', 'Intrusion Dictionary' );
+
+    $this->set_variable( 'sort_column', 'rank' );
+    $this->set_variable( 'sort_desc', false );
   }
   
   /**

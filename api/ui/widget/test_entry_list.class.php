@@ -38,8 +38,11 @@ class test_entry_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
-    $this->add_column( 'test_entry', 'string', 'Word', true );
-    $this->add_column( 'language', 'string', 'Language', true );
+    $this->add_column( 'test.rank', 'constant', 'Order', true );
+    $this->add_column( 'test_id', 'string', 'Test', true );
+    $this->add_column( 'audio_fault', 'boolean', 'Audio Fault', true );
+    $this->add_column( 'completed', 'boolean', 'Completed', true );
+    $this->add_column( 'deferred', 'boolean', 'Deferred', true );
   }
   
   /**
@@ -54,9 +57,14 @@ class test_entry_list extends \cenozo\ui\widget\base_list
 
     foreach( $this->get_record_list() as $record )
     {
+      $db_test = $record->get_test();
       $this->add_row( $record->id,
-        array( 'test_entry' => $record->test_entry,
-               'language' => $record->language ) );
+        array( 'test.rank' => $db_test->rank,
+               'test_id' => $db_test->name,
+               'audio_fault' => $record->audio_fault,
+               'completed' => $record->completed,
+               'deferred' => $record->deferred
+               ) );
     }
   }
 }

@@ -31,6 +31,7 @@ class self_menu extends \cenozo\ui\widget\self_menu
       'ranked_word_set', 
       'service', 
       'site',
+      'test_entry',
       'word' ) );
   }
 }

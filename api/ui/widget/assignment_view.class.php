@@ -42,6 +42,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'uid', 'constant', 'UId' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
     $this->add_item( 'user', 'constant', 'User' );
+    //$this->add_item( 'completed', 'constant', 'Status' );
 
     // create the test_entry sub-list widget
     $this->test_entry_list = lib::create( 'ui\widget\test_entry_list', $this->arguments );
@@ -61,9 +62,12 @@ class assignment_view extends \cenozo\ui\widget\base_view
 
     $db_assignment = $this->get_record();
 
+    //TODO throw an exception if no particpant id is set
+
     // set the view's items
-    $this->set_item( 'uid', $db_assignment->get_participant()->uid, true );
-    $this->set_item( 'cohort', $db_assignment->get_participant()->get_cohort()->name, true );
+    $db_participant = $db_assignment->get_participant();
+    $this->set_item( 'uid', $db_participant->uid, true );
+    $this->set_item( 'cohort', $db_participant->get_cohort()->name, true );
     $this->set_item( 'user', $db_assignment->get_user()->name, true );
 
     try
