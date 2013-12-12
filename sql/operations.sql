@@ -49,7 +49,7 @@ VALUES( "push", "dictionary_import", "delete", true, "Removes a dictionay import
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "dictionary_import", "process", true, "Adds unique words to a dictionary from a CSV file." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "pull", "dictionary_import", "process", true, "Processes a words from a CSV file." );
+VALUES( "pull", "dictionary_import", "process", true, "Processes words from a CSV file." );
 
 -- ranked_word_set
 INSERT INTO operation( type, subject, name, restricted, description )
@@ -94,6 +94,10 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry", "new", true, "Creates a new assignment test_entry." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "view", true, "View the details of an assignment's test_entries." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry", "transcribe", true, "Edits a test_entry's transcription." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "transcribe", true, "View a form for transcribing recordings into test entries." );
 
 -- user
 INSERT INTO operation( type, subject, name, restricted, description )
