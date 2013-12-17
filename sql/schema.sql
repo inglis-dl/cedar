@@ -374,7 +374,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_word` (
   `test_entry_id` INT UNSIGNED NOT NULL,
   `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
   `word_candidate` VARCHAR(45) NULL DEFAULT NULL COMMENT 'if NULL word_id NOT NULL',
-  `selected` TINYINT(1) NULL DEFAULT NULL,
+  `selection` ENUM('yes','no','variant') NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_word_id` (`word_id` ASC),
