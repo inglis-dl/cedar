@@ -1,16 +1,60 @@
 {##
  # test_entry_transcribe.twig
  # 
- # Used to upload test_entry words from CSV data files
- # @author Dean Inglis <inglisd@mcmaster.ca>
+ # Extends the base_record template for transcribing recordings.
+ # @author Patrick Emond <emondpd@mcmaster.ca>
  #}
-{% extends "widget.twig" %}
+{% extends "base_record.twig" %}
 
 {% block javascript %}
+
+  {{ parent() }}
   <script type="text/javascript">
+    $( function () {
+      $("#{{ widget.full }}__audio_fault").click(function() {
+        var args = new Object();
+        args.columns = { audio_fault : $(this).is(':checked')?1:0 };
+        args.id = {{ id }};
+        console.log( args );
+        console.log( ajax_push( "{{widget.subject}}", "edit", args ) );
+      } );
+
+
+    } );
   </script>
+
 {% endblock javascript %}
 
-{% block widget %}
-{% endblock widget %}
+{% block record %}
 
+  <div>
+
+    <div class="title" style="padding-top: 10px;">{{ test_title }}</div>
+
+    <div id="test_transcribe_slot"></div>
+
+    <div>
+
+      <div>
+        <table>
+          <tr>
+            <td align="left">
+              Audio widget goes here
+            </td>
+            <td align="right">
+              <input type="checkbox" id="{{ widget.full }}__audio_fault" {{audio_fault ? "checked":"" }}/>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div>
+        {% from 'macros.twig' import confirm_buttons %}
+        {{ confirm_buttons( slot, widget.full, ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
+      </div>
+
+    </div>
+
+  </div>
+
+{% endblock record %}

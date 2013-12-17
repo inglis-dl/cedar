@@ -28,20 +28,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   }
 
   /** 
-   * Processes arguments, preparing them for the operation.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
-   * @access protected
-   */
-  protected function prepare()
-  {
-    parent::prepare();
-
-    // determine which test to set as the active test requiring entry
-  }
-
-  /** 
    * Sets up the operation with any pre-execution instructions that may be necessary.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -50,5 +36,13 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   protected function setup()
   {
     parent::setup();
+
+    $record = $this->get_record();
+
+    $db_test = $record->get_test();
+
+    $db_test_type = $db_test->get_test_type();
+    $this->set_variable( 'test_title', $db_test_type->name );
+    $this->set_variable( 'audio_fault', $record->audio_fault );
   }
 }
