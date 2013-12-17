@@ -33,7 +33,9 @@ INSERT IGNORE INTO test( name, strict, rank, test_type_id, dictionary_id )
 VALUES( "MAT (counting)", true, 4,
 ( SELECT id FROM test_type WHERE name='CONFIRMATION' ),
 ( SELECT id FROM dictionary WHERE name='confirmation' ) );
-INSERT IGNORE INTO test( name, strict, rank, test_type_id )
-VALUES( "MAT (alternation)", true, 5, ( SELECT id FROM test_type WHERE name='ALPHA-NUMERIC' ) );
+INSERT IGNORE INTO test( name, strict, rank, test_type_id, dictionary_id )
+VALUES( "MAT (alternation)", true, 5,
+( SELECT id FROM test_type WHERE name='ALPHA-NUMERIC' ),
+( SELECT id FROM dictionary WHERE name='alpha-numeric' ) );
 
 COMMIT;
