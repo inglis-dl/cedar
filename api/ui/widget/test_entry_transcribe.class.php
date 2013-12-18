@@ -38,11 +38,28 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     parent::setup();
 
     $record = $this->get_record();
+    $test_class_name = lib::get_class_name('database\test');
+    $test_count = $test_class_name::count();
 
     $db_test = $record->get_test();
+    $rank = $db_test->rank;
+    $this->set_heading( $db_test->name . ' transcription for ' .  
+      $record->get_assignment()->get_participant()->uid . 
+      ' ( test ' . $rank . ' / ' . $test_count . ' tests )'  );
+    $this->set_variable( 'audio_fault', $record->audio_fault );
+    $this->set_variable( 'deferred', $record->deferred );
+    $this->set_variable( 'rank', $rank );
 
     $db_test_type = $db_test->get_test_type();
-    $this->set_variable( 'test_title', $db_test_type->name );
-    $this->set_variable( 'audio_fault', $record->audio_fault );
+
+    // find the ids of the prev and next test_entrys
+    $db_prev_test_entry = $record->get_previous();
+    $db_next_test_entry = $record->get_next();
+
+    $this->set_variable( 'prev_test_entry_id', 
+      is_null($db_prev_test_entry) ? 0 : $db_prev_test_entry->id );
+
+    $this->set_variable( 'next_test_entry_id', 
+      is_null($db_next_test_entry) ? 0 : $db_next_test_entry->id );
   }
 }

@@ -124,7 +124,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     // define whether or not test_entry transcribing is allowed
     $operation_class_name = lib::get_class_name( 'database\operation' );
-    $db_operation = $operation_class_name::get_operation( 'push', 'test_entry', 'transcribe' );
+    $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'transcribe' );
     $this->set_variable( 'allow_transcribe',
       ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
         $allow_transcribe_operation ) );   

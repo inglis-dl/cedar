@@ -11,14 +11,81 @@
   {{ parent() }}
   <script type="text/javascript">
     $( function () {
+
       $("#{{ widget.full }}__audio_fault").click(function() {
         var args = new Object();
         args.columns = { audio_fault : $(this).is(':checked')?1:0 };
         args.id = {{ id }};
-        console.log( args );
-        console.log( ajax_push( "{{widget.subject}}", "edit", args ) );
+        ajax_push( "{{widget.subject}}", "edit", args );
+      } );
+      
+      $("#{{ widget.full }}_Quit").click(function() {
+        slot_load( {{ slot }}, "assignment", "list" );
       } );
 
+      $("#{{ widget.full }}_Defer").click(function() {
+
+        $dialog = $( "#{{ widget.full }}__note_dialog" );
+        var buttons = new Object;
+        buttons.Ok = function() {
+          var note = $("#{{ widget.full }}__note").val();
+          if( note.length == 0 ) {
+            error_dialog( "Error", "You cannot leave a blank note." );
+          } else {
+            var args = new Object();
+            args.columns = { 
+              note : $("#{{ widget.full }}__note").val(), 
+              deferred : 1
+              };
+
+            args.id = {{ id }};
+            if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+              $dialog.dialog( "close" );
+              $("#{{ widget.full }}_Next").attr( "disabled", "" );
+            }
+          }
+        };  
+        buttons.Cancel = function() { $dialog.dialog( "close" ); };
+
+        var html = "A note is required indicating the reason for deferral.";
+        html += "<textarea id=\"{{ widget.full }}__note\"></textarea>";
+
+        $dialog.html( html );
+
+        $dialog.dialog( {
+          closeOnEscape: true,
+          title: "Deferral Note",
+          modal: true,
+          dialogClass: "alert",
+          width: 450,
+          buttons: buttons,
+          open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
+        } );
+      } );
+
+      $("#{{ widget.full }}_Reset").click(function() {
+        slot_load( {{ slot }}, "assignment", "list" );
+      } );
+
+      $("#{{ widget.full }}_Prev").click(function() {
+        
+        slot_load( {{ slot }}, 
+          "{{ widget.subject }}", "{{ widget.name }}", 
+          { id : {{ prev_test_entry_id}} } );
+
+      } ).attr( "disabled", "{{ rank == 1 ? 'disabled' : '' }}" );
+
+      $("#{{ widget.full }}_Next").click(function() {
+
+        {% if 0 == next_test_entry_id %}
+          slot_load( {{ slot }}, "assignment", "list" );
+        {% else %}  
+          slot_load( {{ slot }}, 
+            "{{ widget.subject }}", "{{ widget.name }}", 
+            { id : {{ next_test_entry_id}} } );
+         {% endif %}    
+
+      } ).attr( "disabled", "{{ deferred == 1 ? 'disabled' : '' }}" );
 
     } );
   </script>
@@ -29,20 +96,22 @@
 
   <div>
 
-    <div class="title" style="padding-top: 10px;">{{ test_title }}</div>
-
     <div id="test_transcribe_slot"></div>
 
-    <div>
+    <div class="spacer">
 
       <div>
         <table>
           <tr>
             <td align="left">
-              Audio widget goes here
+              <audio controls>
+                <embed height="50" style="width:100%">
+              </audio>
             </td>
             <td align="right">
-              <input type="checkbox" id="{{ widget.full }}__audio_fault" {{audio_fault ? "checked":"" }}/>
+              <input type="checkbox" id="{{ widget.full }}__audio_fault" 
+                {{audio_fault ? "checked":"" }}/>
+              <label for = "{{ widget.full }}__audio_fault">Audio Fault</label>  
             </td>
           </tr>
         </table>
@@ -56,5 +125,7 @@
     </div>
 
   </div>
+
+  <div id="{{ widget.full }}__note_dialog"></div>
 
 {% endblock record %}
