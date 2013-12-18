@@ -63,7 +63,6 @@ class user_list extends \cenozo\ui\widget\user_list
 
       $cohort = 'none';
       $db_cohort = $record->get_cohort_list();
-      log::debug( array( $record, $db_cohort));
 
       if( 1 == count( $db_cohort ) ) $cohort = $db_cohort[0]->name; // only one cohort?
       else if( 1 < count( $db_cohort ) ) $cohort = 'multiple'; // multiple cohorts?
