@@ -350,6 +350,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
   INDEX `fk_assignment_id` (`assignment_id` ASC),
+  UNIQUE INDEX `uq_test_id_assignment_id` (`test_id` ASC, `assignment_id` ASC),
   CONSTRAINT `fk_test_entry_test_id`
     FOREIGN KEY (`test_id`)
     REFERENCES `cedar`.`test` (`id`)
