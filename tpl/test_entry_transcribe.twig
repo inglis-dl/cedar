@@ -2,7 +2,7 @@
  # test_entry_transcribe.twig
  # 
  # Extends the base_record template for transcribing recordings.
- # @author Patrick Emond <emondpd@mcmaster.ca>
+ # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
 {% extends "base_record.twig" %}
 
@@ -41,7 +41,9 @@
             args.id = {{ id }};
             if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
               $dialog.dialog( "close" );
-              $("#{{ widget.full }}_Next").attr( "disabled", "" );
+              console.log( $("#{{ widget.full }}_Next") );
+              $("#{{ widget.full }}_Next").button( { disabled : false  } );
+              $(this).button( { disabled : true } );
             }
           }
         };  
@@ -61,7 +63,7 @@
           buttons: buttons,
           open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
         } );
-      } );
+      } ).button( { disabled : {{ deferred == 1 ? 'true' : 'false' }} } );
 
       $("#{{ widget.full }}_Reset").click(function() {
         slot_load( {{ slot }}, "assignment", "list" );
@@ -73,7 +75,7 @@
           "{{ widget.subject }}", "{{ widget.name }}", 
           { id : {{ prev_test_entry_id}} } );
 
-      } ).attr( "disabled", "{{ rank == 1 ? 'disabled' : '' }}" );
+      } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } );
 
       $("#{{ widget.full }}_Next").click(function() {
 
@@ -85,7 +87,7 @@
             { id : {{ next_test_entry_id}} } );
          {% endif %}    
 
-      } ).attr( "disabled", "{{ deferred == 1 ? 'disabled' : '' }}" );
+      } ).button( { disabled : {{ deferred == 1 ? 'false' : 'true' }} } );
 
     } );
   </script>
@@ -95,8 +97,12 @@
 {% block record %}
 
   <div>
+    
+    <div class="spacer">
 
-    <div id="test_transcribe_slot"></div>
+    <div>
+      {% include [ 'test_entry_', test_type, '.twig']|join with test_entry_args %}
+    </div>  
 
     <div class="spacer">
 

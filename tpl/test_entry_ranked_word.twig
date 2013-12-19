@@ -1,0 +1,37 @@
+{##
+ # test_entry_ranked_word.twig
+ # 
+ # View cohort details.
+ # @author Dean Inglis <inglisd@mcmaster.ca>
+ # @see base_view.twig for parameters
+ #}
+{% extends "widget.twig" %}
+
+{% block javascript %}
+  {{ parent() }}
+  <script type="text/javascript">
+    $( function () {
+    } );
+  </script>
+
+{% endblock javascript %}
+
+{% block widget %}
+  <table>
+    <thead>
+      <td></td>
+      <td>Yes</td>
+      <td>No</td>
+      <td>Variant</td>
+      <td></td>
+    </thead>
+    <tr>
+      <td class="heading">Drum</td>
+      <td><input name="drum" value="yes" type="radio"/></td>
+      <td><input name="drum" value="no" type="radio"/></td>
+      <td><input name="drum" value="variant" type="radio"/></td>
+      <td><input id="drum_variant" type="text" disabled></td>
+    </tr>
+  </table> 
+{% endblock widget %}
+

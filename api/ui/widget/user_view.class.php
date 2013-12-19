@@ -40,8 +40,6 @@ class user_view extends \cenozo\ui\widget\user_view
   {
     parent::setup();
 
-    $cohort_class_name = lib::get_class_name( 'database\cohort' );
-
     try
     {
       $this->cohort_list->process();

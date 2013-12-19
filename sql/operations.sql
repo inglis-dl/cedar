@@ -99,6 +99,15 @@ VALUES( "push", "test_entry", "transcribe", true, "Edits a test_entry's transcri
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "transcribe", true, "View a form for transcribing recordings into test entries." );
 
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "alpha_numeric", true, "Typist entry form for alpha numeric test type." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "classification", true,  "Typist entry form for classification test type." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "confirmation", true,  "Typist entry form for confirmation test type." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "ranked_word", true,  "Typist entry form for ranked word test type." );
+
 -- user
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "user", "add_cohort", true, "A form to add a cohort to a user." );

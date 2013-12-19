@@ -1,0 +1,153 @@
+<?php
+/**
+ * test_entry_transcribe.class.php
+ * 
+ * @author Dean Inglis <inglisd@mcmaster.ca>
+ * @filesource
+ */
+
+namespace cedar\ui\widget;
+use cenozo\lib, cenozo\log, cedar\util;
+
+/**
+ * widget test_entry transcribe
+ *
+ * Transcribe recordings into a test_entry.
+ */
+class test_entry_transcribe extends \cenozo\ui\widget\base_view
+{
+  /**
+   * Constructor.
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param array $args An associative array of arguments to be processed by the widget
+   * @access public
+   */
+  public function __construct( $args )
+  {
+    parent::__construct( 'test_entry', 'transcribe', $args );
+  }
+
+  /** 
+   * Processes arguments, preparing them for the operation.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
+   * @access protected
+   */
+  protected function prepare()
+  {
+    parent::prepare();
+    $record = $this->get_record();
+    $db_test = $record->get_test();
+    $db_test_type = $db_test->get_test_type();
+
+    $this->set_heading( $db_test->name );
+
+    $this->add_item( 'audio_fault', 'boolean', 'Audio Fault' );
+
+/*
+    if( $db_test_type->name == 'RANKED WORD' )
+    {
+      $this->add_item( 'selection', 'boolean', 'Yes/No' );
+      $this->add_item( 'word_candidate', 'string', 'Variant' );
+    }
+*/    
+    if( $db_test_type->name == 'CONFIRMATION' )
+    {
+      $this->add_item( 'selection', 'boolean', 'Yes/No' );
+    }
+  }
+
+  /** 
+   * Sets up the operation with any pre-execution instructions that may be necessary.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected function setup()
+  {
+    parent::setup();
+
+    $session = lib::create( 'business\session' );
+    $db_user = $session->get_user();
+
+    $record = $this->get_record();
+
+    $language = $record->get_assignment()->get_participant()->language;
+    $language = is_null( $language ) ? 'en' : $language;
+    
+    $db_test = $record->get_test();
+
+    $db_test_type = $db_test->get_test_type();
+    $this->set_variable( 'test_type', $db_test_type->name );
+
+    $this->set_item( 'audio_fault', $record->audio_fault );
+
+    if( $db_test_type->name == 'RANKED WORD' )
+    {
+      $test_entry_word_class_name = lib::get_class_name( 'database\test_entry_word' );
+      $selections = $test_entry_word_class_name::get_enum_values( 'selection' );
+      $selections = array_combine( $selections, $selections );
+
+      $ranked_word_set_class_name = lib::get_class_name( 'database\ranked_word_set' );
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'ranked_word_set.test_id', '=', $db_test->id );
+      $modifier->order( 'rank' );
+      $word_id = 'word_' . $language . '_id';
+
+      $sql  = 'SELECT ranked_word_set.rank, word.word, '.
+              'test_entry_word.selection, test_entry_word.word_id, test_entry_word.word_candidate '.
+              'FROM ranked_word_set '.
+              'LEFT JOIN test_entry_word '.
+              'ON ranked_word_set.' . $word_id . '=test_entry_word.word_id '.
+              'AND test_entry_word.test_entry_id=' . $record->id . ' '.
+              'LEFT JOIN test_entry '.
+              'ON test_entry_word.test_entry_id=test_entry.id '.
+              'AND test_entry.test_id=' . $db_test->id . ' '.
+              'LEFT JOIN word '.
+              'ON ranked_word_set.word_en_id=word.id ';
+
+      $data = array();
+      $data = $ranked_word_set_class_name::db()->get_all( 
+        sprintf('%s %s', $sql, $modifier->get_sql() ) );     
+
+      //log::debug(array_values($data));
+      $row = 0;
+      foreach( $data as $value )
+      {
+        $this->add_item( 'selection_'.$row , 'enum', $value['word'] );
+        $this->add_item( 'word_candidate_'.$row , 'string' );
+
+        $this->set_item( 'selection_'.$row, 
+          is_null( $value['selection'] ) ? '' : $value['selection'], false, $selections );
+        $this->set_item( 'word_candidate_'.$row ,
+          is_null( $value['word_candidate'] ) ? '' : $value['word_candidate'] );
+        $row++;
+      }
+    }
+    else if( $db_test_type->name == 'CLASSIFICATION' )
+    {
+      $row = 0;
+    }
+    else if( $db_test_type->name == 'CONFIRMATION' )
+    {
+      if( preg_match( '/alpha/', $db_test->name ) )
+        $this->set_note( 'selection',
+          'Was the participant able to recite the alphabet, from A, B, C and so on ?' );
+      else
+        $this->set_note( 'selection',
+          'Was the participant able to count 1 to 20, from 1, 2, 3 and so on?' ); 
+    }
+    else if( $db_test_type->name == 'ALPHA-NUMERIC' )
+    {
+      $row = 0;
+    }
+    else
+      throw lib::create( 'exception\runtime', 
+        'Unknown test type: ' . $db_test_type->name, __METHOD__ );
+
+   //$this->set_variable( 'packing_order', $packing_order );
+   //$this->set_variable( 'extendable', $extendable );
+
+  }
+}

@@ -59,11 +59,16 @@ class assignment_new extends \cenozo\ui\push\base_new
     $columns = $this->get_argument( 'columns' );
     $test_class_name = lib::get_class_name( 'database\test' );
 
-    //creates a test entry automatically for each test
-    foreach( $test_class_name::select() as $db_test )
+    $modifier = NULL; 
+    if( $columns['cohort_name'] == 'tracking' )
     {
-      if( preg_match( '/FAS/', $db_test->name ) && 
-          $columns['cohort_name'] == 'tracking' ) continue;
+      $modifier = lib::create('database\modifier');
+      $modifier->where( 'name', 'not like', 'FAS%' );
+    }  
+
+    //creates a test entry automatically for each test
+    foreach( $test_class_name::select( $modifier ) as $db_test )
+    {
       $args = array();
       $args['columns']['test_id'] = $db_test->id;
       $args['columns']['assignment_id'] = $record->id;
