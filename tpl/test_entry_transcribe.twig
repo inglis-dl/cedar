@@ -16,7 +16,7 @@
         var args = new Object();
         args.columns = { audio_fault : $(this).is(':checked')?1:0 };
         args.id = {{ id }};
-        ajax_push( "{{widget.subject}}", "edit", args );
+        ajax_push( "{{ widget.subject }}", "edit", args );
       } );
       
       $("#{{ widget.full }}_Quit").click(function() {
@@ -41,7 +41,6 @@
             args.id = {{ id }};
             if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
               $dialog.dialog( "close" );
-              console.log( $("#{{ widget.full }}_Next") );
               $("#{{ widget.full }}_Next").button( { disabled : false  } );
               $(this).button( { disabled : true } );
             }
@@ -63,14 +62,10 @@
           buttons: buttons,
           open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
         } );
+
       } ).button( { disabled : {{ deferred == 1 ? 'true' : 'false' }} } );
 
-      $("#{{ widget.full }}_Reset").click(function() {
-        slot_load( {{ slot }}, "assignment", "list" );
-      } );
-
       $("#{{ widget.full }}_Prev").click(function() {
-        
         slot_load( {{ slot }}, 
           "{{ widget.subject }}", "{{ widget.name }}", 
           { id : {{ prev_test_entry_id}} } );
@@ -101,7 +96,7 @@
     <div class="spacer">
 
     <div>
-      {% include [ 'test_entry_', test_type, '.twig']|join with test_entry_args %}
+      {% include [ 'test_entry_', test_type, '.twig']|join with test_entry_args %}      
     </div>  
 
     <div class="spacer">
@@ -113,11 +108,9 @@
               <audio controls>
                 <embed height="50" style="width:100%">
               </audio>
-            </td>
-            <td align="right">
               <input type="checkbox" id="{{ widget.full }}__audio_fault" 
-                {{audio_fault ? "checked":"" }}/>
-              <label for = "{{ widget.full }}__audio_fault">Audio Fault</label>  
+                {{ audio_fault ? "checked":"" }}/>
+              <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
             </td>
           </tr>
         </table>

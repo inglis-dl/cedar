@@ -60,39 +60,42 @@ class test_entry_ranked_word extends \cenozo\ui\widget
   {
     parent::setup();
 
-    $record = $this->parent->get_record();
-    $language = $record->get_assignment()->get_participant()->language;
+    $db_test_entry = $this->parent->get_record();
+    $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
 
     //get this test_entry's test_entry_words
     $word_entry_list = array();
-    foreach( $record->get_test_entry_word_list() as $db_test_entry_word )
+    foreach( $db_test_entry->get_test_entry_word_list() as $db_test_entry_word )
     {
       $word_entry_list[ $db_test_entry_word->get_word()->word ] = 
-        array( 'selection' => $db_test_entry_word->selection,  
+        array( 'id' => $db_test_entry_word->id,
+               'selection' => $db_test_entry_word->selection,  
                'word_candidate' => $db_test_entry_word->word_candidate );  
     }    
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
     $word_list = array();
-    foreach( $record->get_test()->get_ranked_word_set_list( $modifier )
+    foreach( $db_test_entry->get_test()->get_ranked_word_set_list( $modifier )
       as $db_ranked_word_set )
     {
       $db_word = $db_ranked_word_set->get_word( $language );
       $row = array(
-               'word' =>$db_word->word,
-               'selection' => 0,
-               'word_candiate' => '' );
+               'entry_id' => '', 
+               'word_id' => $db_word->id,
+               'word' => $db_word->word,
+               'selection' => '',
+               'word_candidate' => '' );
       if( array_key_exists( $db_word->word, $word_entry_list ) )
       {
+         $row['entry_id'] = $word_entry_list[$db_word->word]['id'];
          $row['selection'] = $word_entry_list[$db_word->word]['selection'];
          $row['word_candidate'] = $word_entry_list[$db_word->word]['word_candidate'];
       }
       $word_list[] = $row;
-      // get the test_entry for this word if it exists
     }
     $this->set_variable( 'word_list', $word_list );
-    log::debug( $word_list );
+    log::debug($word_list);
   }
 }

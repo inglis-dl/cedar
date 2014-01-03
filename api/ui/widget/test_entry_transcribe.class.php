@@ -101,7 +101,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   }
 
   /**
-   * The cohort list widget.
+   * The test entry widget.
    * @var test_entry_widget
    * @access protected
    */

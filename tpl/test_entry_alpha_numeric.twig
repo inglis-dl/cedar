@@ -1,7 +1,7 @@
 {##
  # test_entry_alpha_numeric.twig
  # 
- # View cohort details.
+ # Transcribe an alpha numeric type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
  #}
@@ -11,11 +11,15 @@
 
   <script type="text/javascript">
     $( function () {
-    };
+    } );
   </script>
 
 {% endblock javascript %}
 
 {% block record %}
-
+  <table>
+    <tr>
+      <td><input id="alpha_num_word" type="text" disabled></td>
+    </tr>
+  </table>
 {% endblock record %}
