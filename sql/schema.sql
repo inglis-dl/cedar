@@ -365,29 +365,21 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `cedar`.`test_entry_word`
+-- Table `cedar`.`test_entry_confirmation`
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS `cedar`.`test_entry_word` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_confirmation` ;
 
-CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_word` (
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_confirmation` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_entry_id` INT UNSIGNED NOT NULL,
-  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
-  `word_candidate` VARCHAR(45) NULL DEFAULT NULL COMMENT 'if NULL word_id NOT NULL',
-  `selection` ENUM('yes','no','variant') NULL DEFAULT NULL,
+  `confirmation` TINYINT(1) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
-  INDEX `fk_word_id` (`word_id` ASC),
-  CONSTRAINT `fk_test_entry_word_test_entry_id`
+  CONSTRAINT `fk_test_entry_confirmation_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_test_entry_word_word_id`
-    FOREIGN KEY (`word_id`)
-    REFERENCES `cedar`.`word` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -475,6 +467,92 @@ CREATE TABLE IF NOT EXISTS `cedar`.`dictionary_import` (
   CONSTRAINT `fk_dictionary_import_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`test_entry_ranked_word`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`test_entry_ranked_word` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_ranked_word` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `test_entry_id` INT UNSIGNED NOT NULL,
+  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
+  `word_candidate` VARCHAR(45) NULL DEFAULT NULL,
+  `selection` ENUM('yes','no','variant') NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_test_entry_id` (`test_entry_id` ASC),
+  INDEX `fk_word_id` (`word_id` ASC),
+  CONSTRAINT `fk_test_entry_ranked_word_test_entry_id`
+    FOREIGN KEY (`test_entry_id`)
+    REFERENCES `cedar`.`test_entry` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_ranked_word_word_id`
+    FOREIGN KEY (`word_id`)
+    REFERENCES `cedar`.`word` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`test_entry_classification`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`test_entry_classification` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_classification` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `test_entry_id` INT UNSIGNED NOT NULL,
+  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
+  `word_candidate` VARCHAR(45) NULL DEFAULT NULL,
+  `rank` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_test_entry_id` (`test_entry_id` ASC),
+  INDEX `fk_word_id` (`word_id` ASC),
+  CONSTRAINT `fk_test_entry_classification_test_entry_id`
+    FOREIGN KEY (`test_entry_id`)
+    REFERENCES `cedar`.`test_entry` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_classification_word_id`
+    FOREIGN KEY (`word_id`)
+    REFERENCES `cedar`.`word` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`test_entry_alpha_numeric`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`test_entry_alpha_numeric` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_alpha_numeric` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `test_entry_id` INT UNSIGNED NOT NULL,
+  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
+  `rank` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_test_entry_id` (`test_entry_id` ASC),
+  INDEX `fk_word_id` (`word_id` ASC),
+  CONSTRAINT `fk_test_entry_alpha_numeric_test_entry_id`
+    FOREIGN KEY (`test_entry_id`)
+    REFERENCES `cedar`.`test_entry` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_alpha_numeric_word_id`
+    FOREIGN KEY (`word_id`)
+    REFERENCES `cedar`.`word` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

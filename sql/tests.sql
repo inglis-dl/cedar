@@ -25,14 +25,12 @@ SELECT id FROM dictionary WHERE name='intrusions' );
 UPDATE test SET variant_dictionary_id = (
 SELECT id FROM dictionary WHERE name='variants' );
 
-INSERT IGNORE INTO test( name, strict, rank_words, rank, test_type_id, dictionary_id )
-VALUES( "MAT (alphabet)", true, true, 3, 
-( SELECT id FROM test_type WHERE name='confirmation' ),  
-( SELECT id FROM dictionary WHERE name='confirmation' ) );
-INSERT IGNORE INTO test( name, strict, rank_words, rank, test_type_id, dictionary_id )
-VALUES( "MAT (counting)", true, true, 4,
-( SELECT id FROM test_type WHERE name='confirmation' ),
-( SELECT id FROM dictionary WHERE name='confirmation' ) );
+INSERT IGNORE INTO test( name, strict, rank, test_type_id )
+VALUES( "MAT (alphabet)", true, 3, 
+( SELECT id FROM test_type WHERE name='confirmation' ) );
+INSERT IGNORE INTO test( name, strict, rank, test_type_id )
+VALUES( "MAT (counting)", true, 4,
+( SELECT id FROM test_type WHERE name='confirmation' ) );
 INSERT IGNORE INTO test( name, strict, rank, test_type_id, dictionary_id )
 VALUES( "MAT (alternation)", true, 5,
 ( SELECT id FROM test_type WHERE name='alpha_numeric' ),
