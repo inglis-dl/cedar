@@ -44,11 +44,6 @@ class word_new extends \cenozo\ui\push\base_new
     if( array_key_exists( 'word', $columns ) ) 
     {
       $word = strtolower( $columns['word'] );
-      if( preg_match( '#[0-9]#', $word ) )
-      {  
-        throw lib::create( 'exception\notice',
-          'Not a valid word: numbers are not allowed.', __METHOD__ );
-      }
     }
   }
 }
