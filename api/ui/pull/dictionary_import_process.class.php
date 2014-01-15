@@ -85,10 +85,10 @@ class dictionary_import_process extends \cenozo\ui\pull
 
       if( 2 == $row_entry_count ) 
       {   
-        $word = strtolower( trim( $row_entry[0] ) );
+        $word = str_word_count( strtolower( trim( $row_entry[0] ) ), 1 );
         $error = false;
 
-        if( preg_match( '#[0-9]#', $word ) ) 
+        if( !preg_match( '/^[A-Za-z0-9\-]+$/', $word ) ) 
         {
           $this->data['error_entries'][] = 
             'Error: invalid word entry "' . $word . '" on line ' 

@@ -43,19 +43,22 @@ class word_edit extends \cenozo\ui\push\base_edit
     // if there is a word, validate it
     if( array_key_exists( 'word', $columns ) ) 
     {   
-      $word = strtolower( $columns['word'] );
-      /*
-      if( count( str_word_count( $word ) ) > 1 ) 
-      {   
+      $word = str_word_count( strtolower( trim( $columns['word'] ) ), 1 );
+
+      if( empty( $word ) || count( $word ) == 0 ) 
+      { 
         throw lib::create( 'exception\notice',
-          'Multiple word entries are not allowed.', __METHOD__ );
+          'Empty word entries are not allowed.', __METHOD__ );
       }
-      */
-      if( preg_match( '#[0-9]#', $word ) ) 
-      {   
-        throw lib::create( 'exception\notice',
-          'Not a valid word: numbers are not allowed.', __METHOD__ );
-      }   
+      
+      foreach( $word as $value )
+      {
+        if( !preg_match( '/^[A-Za-z0-9\-]+$/', $value ) ) 
+        {   
+          throw lib::create( 'exception\notice',
+            'Not a valid word.', __METHOD__ );
+        }   
+      }
     }   
   }
 }
