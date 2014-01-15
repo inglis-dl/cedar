@@ -11,8 +11,6 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * widget test_entry transcribe
- *
- * Transcribe recordings into a test_entry.
  */
 class test_entry_transcribe extends \cenozo\ui\widget\base_view
 {

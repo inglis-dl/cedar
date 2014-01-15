@@ -1,6 +1,6 @@
 <?php
 /**
- * test_entry_confirmation.class.php
+ * test_entry_confirmation_transcribe.class.php
  * 
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
@@ -10,9 +10,9 @@ namespace cedar\ui\widget;
 use cenozo\lib, cenozo\log, cedar\util;
 
 /**
- * widget self menu
+ * widget test_entry_confirmation transcribe
  */
-class test_entry_confirmation extends \cenozo\ui\widget
+class test_entry_confirmation_transcribe extends \cenozo\ui\widget
 {
   /** 
    * Constructor.
@@ -22,7 +22,7 @@ class test_entry_confirmation extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry', 'confirmation', $args );
+    parent::__construct( 'test_entry_confirmation', 'transcribe', $args );
   }
 
   /**

@@ -1,6 +1,6 @@
 <?php
 /**
- * test_entry_alpha_numeric.class.php
+ * test_entry_alpha_numeric_transcribe.class.php
  * 
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
@@ -10,11 +10,10 @@ namespace cedar\ui\widget;
 use cenozo\lib, cenozo\log, cedar\util;
 
 /**
- * widget self menu
+ * widget test_entry_alpha_numeric transcribe
  */
-class test_entry_alpha_numeric extends \cenozo\ui\widget
+class test_entry_alpha_numeric_transcribe extends \cenozo\ui\widget
 {
-
   /** 
    * Constructor.
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -23,7 +22,7 @@ class test_entry_alpha_numeric extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry', 'alpha_numeric', $args );
+    parent::__construct( 'test_entry_alpha_numeric', 'transcribe', $args );
   }
 
   /**
