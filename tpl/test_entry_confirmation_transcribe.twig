@@ -1,0 +1,58 @@
+{##
+ # test_entry_confirmation_transcribe.twig
+ # 
+ # Transcribe a confirmation test.
+ # @author Dean Inglis <inglisd@mcmaster.ca>
+ # @see base_view.twig for parameters
+ #}
+{% extends "widget.twig" %}
+
+{% block javascript %}
+  {{ parent() }}
+  <script type="text/javascript">
+    $( function () {
+
+      // find and handle radio element change events:
+      $( "#{{ widget.full }}__word_table" ).find("input:radio").change( function() {
+        var args = new Object();
+        var columns = new Object();
+        columns["test_entry_id"]="{{ parent.id }}";
+        //columns["selection"]=$(this).val();
+            
+        console.log( $( "input" ).siblings( $(this).val() ) );
+
+        console.log(columns);
+        args.columns = columns;
+        //if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
+          
+        //} else {
+        //   ajax_push( "{{ parent.subject }}", "edit", args ) )
+        //}     
+             
+      } );
+
+    } );
+  </script>
+
+{% endblock javascript %}
+
+{% block widget %}
+  <table id="{{ widget.full }}__word_table">
+  <caption style="text-align: left;"><strong>{{ instruction }}</strong></caption>
+    {% for word in word_list %}
+      <tr>
+        <td style="text-align: left; padding: 5px;">
+          <input
+             name="confirmation"
+             value="{{word.word}}"
+             type="radio"
+             class="{{word.word}}"
+             {{ word.selection == 'yes' ? "checked" : "" }}/><font style="text-transform: capitalize;">{{ word.word }}</font>
+            <input id="{{ parent.subject }}__entry_id" value="{{ word.entry_id }}" type="hidden" class="{{word.word}}"/>
+            <input id="{{ parent.subject }}__word_id" value="{{ word.word_id }}" type="hidden" class="{{word.word}}"/>
+            <input id="{{ parent.subject }}__id" value="{{ parent.id }}" type="hidden" class="{{word.word}}"/></td>      
+      </tr>
+    {% endfor %}
+  </table> 
+{% endblock widget %}
+
