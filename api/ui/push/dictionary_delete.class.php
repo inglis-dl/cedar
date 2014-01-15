@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: dictionary delete
+ *
+ * Delete a dictionary.
  */
 class dictionary_delete extends \cenozo\ui\push\base_delete
 {

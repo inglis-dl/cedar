@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * push: ranked_word_set new
  *
- * Create a new ranked_word_set.
+ * Create a new ranked word set.
  */
 class ranked_word_set_new extends \cenozo\ui\push\base_new
 {

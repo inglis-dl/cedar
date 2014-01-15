@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: user delete_cohort
+ *
+ * Delete a cohort from a user.
  */
 class user_delete_cohort extends \cenozo\ui\push\base_record
 {

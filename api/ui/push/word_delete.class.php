@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: word delete
+ *
+ * Delete a word.
  */
 class word_delete extends \cenozo\ui\push\base_delete
 {

@@ -10,7 +10,7 @@ namespace cedar\ui\widget;
 use cenozo\lib, cenozo\log, cedar\util;
 
 /**
- * widget self menu
+ * widget self_menu
  */
 class self_menu extends \cenozo\ui\widget\self_menu
 {

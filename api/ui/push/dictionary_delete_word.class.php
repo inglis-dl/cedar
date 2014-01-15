@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: dictionary delete_word
+ *
+ * Delete a word from a dictionary.
  */
 class dictionary_delete_word extends \cenozo\ui\push\base_delete_record
 {

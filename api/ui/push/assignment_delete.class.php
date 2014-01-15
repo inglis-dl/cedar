@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: assignment delete
+ *
+ * Delete an assignment.
  */
 class assignment_delete extends \cenozo\ui\push\base_delete
 {

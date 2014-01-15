@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * push: test_entry edit
  *
- * Edit a test_entry.
+ * Edit a test entry.
  */
 class test_entry_edit extends \cenozo\ui\push\base_edit
 {

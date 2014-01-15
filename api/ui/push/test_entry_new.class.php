@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * push: test_entry new
  *
- * Create a new test_entry.
+ * Create a new test entry.
  */
 class test_entry_new extends \cenozo\ui\push\base_new
 {

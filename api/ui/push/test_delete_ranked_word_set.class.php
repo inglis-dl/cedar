@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * push: test delete_ranked_word_set
+ *
+ * Delete a ranked word set from a test.
  */
 class test_delete_ranked_word_set extends \cenozo\ui\push\base_delete_record
 {

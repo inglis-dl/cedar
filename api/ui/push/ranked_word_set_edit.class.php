@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * push: ranked_word_set edit
  *
- * Edit a ranked_word_set.
+ * Edit a ranked word set.
  */
 class ranked_word_set_edit extends \cenozo\ui\push\base_edit
 {

@@ -11,6 +11,8 @@ use cenozo\lib, cenozo\log;
 
 /**
  * push: user new_cohort
+ *
+ * Add a cohort to a user.
  */
 class user_new_cohort extends \cenozo\ui\push\base_record
 {

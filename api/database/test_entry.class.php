@@ -64,5 +64,4 @@ class test_entry extends \cenozo\database\record
     }
     return $db_next_test_entry;
   }
-
 }
