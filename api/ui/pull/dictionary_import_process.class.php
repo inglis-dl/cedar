@@ -85,17 +85,22 @@ class dictionary_import_process extends \cenozo\ui\pull
 
       if( 2 == $row_entry_count ) 
       {   
-        $word = str_word_count( strtolower( trim( $row_entry[0] ) ), 1 );
+        $word = explode( " ", strtolower( trim( $row_entry[0] ) ) );
         $error = false;
 
-        if( !preg_match( '/^[A-Za-z0-9\-]+$/', $word ) ) 
+        foreach( $word as $value )
         {
-          $this->data['error_entries'][] = 
-            'Error: invalid word entry "' . $word . '" on line ' 
-            . $row . ': "' . implode( '", "', $row_entry ) . '"';
-          $error_count++;
-          $error = true;
+          if( !preg_match( '/^[A-Za-z0-9\p{L}\-]+$/', $value ) ) 
+          {
+            $this->data['error_entries'][] = 
+              'Error: invalid word entry "' . $value . '" on line ' 
+              . $row . ': "' . implode( '", "', $row_entry ) . '"';
+            $error_count++;
+            $error = true;
+          }
         }
+        if( is_array( $word ) ) $word = implode( " ", $word );
+
         $language = strtolower( trim( $row_entry[1] ) );
         if( !in_array( $language, $languages ) )
         {
@@ -196,6 +201,7 @@ class dictionary_import_process extends \cenozo\ui\pull
       }
     }
 
+    log::debug( $word_array_final );
     $this->data[ 'duplicate_word_count' ] = $duplicate_word_count;
     $this->data[ 'unique_word_count' ] = $unique_word_count;
     if( $unique_word_count > 0 )
