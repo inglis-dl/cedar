@@ -62,16 +62,28 @@ class test_entry_confirmation_transcribe extends \cenozo\ui\widget
 
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
+
+    if( $test_type_name != 'confirmation' )
+      throw lib::create( 'exception\runtime',
+              'Widget requires test type to be ranked word, not ' . 
+              $test_type_name, __METHOD__ );
+
     $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
 
-    //get this test_entry's test_entry_words
+    // get the Yes or No words from the confirmation dictionary according to the
+    // the language of the participant
+
+    // Get the db entries
     $word_entry_list = array();
-    foreach( $db_test_entry->get_test_entry_word_list() as $db_test_entry_word )
+    foreach( $db_test_entry->get_test_entry_confirmation_list() as $db_test_entry_confirmation )
     {
-      $word_entry_list[ $db_test_entry_word->get_word()->word ] =
-        array( 'id' => $db_test_entry_word->id,
-               'selection' => $db_test_entry_word->selection );
+
+      $db_test_entry_confirmation->confirmation
+      $word_entry_list[ $db_test_entry_confirmatiion->get_word()->word ] =
+        array( 'id' => $db_test_entry_confirmation->id,
+               'confirmation' => $db_test_entry_confirmation->confirmation );
                
     }
 

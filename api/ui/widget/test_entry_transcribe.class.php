@@ -42,9 +42,10 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     $db_test_type = $db_test->get_test_type();
 
-    // create the test_entry_widget sub widget
+    // create the test_entry sub widget
+    // example: widget class test_entry_ranked_word_transcribe
     $this->test_entry_widget = lib::create( 
-      'ui\widget\test_entry_' . $db_test_type->name , $this->arguments );
+      'ui\widget\test_entry_' . $db_test_type->name . '_transcribe', $this->arguments );
     $this->test_entry_widget->set_parent( $this );
 
     $modifier = NULL;

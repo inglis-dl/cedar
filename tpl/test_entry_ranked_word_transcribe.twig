@@ -15,29 +15,39 @@
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
       // which radio button was selected
-      $( "#{{ widget.full }}__word_table" ).find("input:radio").change( function() {
-        // the id of the text entry field for the variant
-        var input_id="{{ widget.full }}__" + $(this).attr("name");
-        var $input=$( "#"+input_id );
+      $( "#{{ widget.full }}__word_table" ).find( "input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
-        columns["test_entry_id"]="{{ parent.id }}";
-        columns["word_id"]=$(this).attr("name");
-        columns["selection"]=$(this).val();
-        console.log(columns);
-        args.columns = columns;
-        //if(ajax_push( "{{ parent.subject }}", "new", args ) )
+        columns["test_entry_id"] = "{{ parent.id }}";
+        columns["word_id"] = $(this).attr( "name" );
+        columns["selection"] = $(this).val();
 
-
+        var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
         if( $(this).val() == "variant" ) {
-          $input.removeAttr("disabled");
+          $(text_id).removeAttr( "disabled" );
         } else {
-          $input.attr("disabled","disabled");
+          $(text_id).attr( "disabled", "disabled" );
+          $(text_id).val( "" );
         }
         
+        columns["word_candidate"] = $(text_id).val();
+        args.columns = columns;
+        console.log(columns);
+
+        // if this is the first time setting this entry 
+        // we have to create a new db entry 
+        // otherwise edit the existing db entry
+        //if( ajax_push( "{{ widget.subject }}", "edit", args ) )
       } );
 
-      $("#{{ widget.full }}__word_table").find("input:text").change( function() {
+      $( "#{{ widget.full }}__word_table" ).find( "input:text" ).change( function() {
+        var args = new Object();
+        var columns = new Object();
+        columns["test_entry_id"] = "{{ parent.id }}";
+        columns["word_id"] = $(this).attr( "name" );
+        columns["word_candidate"] = $(this).val();
+        args.columns = columns;
+        console.log(columns);
         
       } );  
 
@@ -46,15 +56,24 @@
       // use the parent.full name since the reset button
       // is declared in the parent twig file
       $( "#{{ parent.full }}_Reset" ).click(function() {
+        input = $("#{{ widget.full }}__word_table" ).find( "input" );
+        input.each( function() {
+          if( this.type == "radio" ) {
+            if( $(this).val() == "no" ) {
+              $(this).attr( "checked", "checked" );
+            }
+            else {
+              $(this).removeAttr( "checked" );
+            }
+          }
+          else {
+            $(this).val( "" );
+            $(this).attr( "disabled", "disabled" );
+          }
+        } );
         
-        //console.log(["{{widget.full}}","{{parent.subject}}", "{{id}}"]);
-       console.log($("#{{ widget.full }}__word_table").find("input:hidden"));
-      //  slot_load( {{ slot }}, "assignment", "list" );
-        
-       //ajax_push( "{{ parent.subject }}", "delete", { "id": {{ id }} } );
+        //if( ajax_push( "{{ parent.subject }}", "reset", args ) )
       } );
-
-      
 
     } );
   </script>
@@ -62,7 +81,9 @@
 {% endblock javascript %}
 
 {% block widget %}
+
   <table id="{{ widget.full }}__word_table">
+
     <thead>
       <td></td>
       <td>Yes</td>
@@ -87,16 +108,13 @@
              value="variant"
              type="radio"
              {{ word.selection == 'variant' ? "checked" : "" }}/></td>
-        <td><input id="{{ widget.full }}__{{ word.word }}"
-             name="{{ word.word_id}}"
+        <td><input name="{{ word.word_id }}"
              type="text"
-             {{ word.selection == 'variant' ? '' : 'disabled' }}>{{ word.word_candidate }}</input></td>
-        <td><input id="{{ parent.subject }}__word_id" value="{{ word.word_id }}" type="hidden"/></td>      
-        <td><input id="{{ parent.subject }}__entry_id" value="{{ word.entry_id }}" type="hidden"/></td>      
-        <td><input id="{{ parent.subject }}__id" value="{{ parent.id }}" type="hidden"/></td>      
+             {{ word.selection == 'variant' ? "" : "disabled" }}>{{ word.word_candidate }}</input></td>
       </tr>
     {% endfor %}  
 
-  </table> 
+  </table>
+
 {% endblock widget %}
 
