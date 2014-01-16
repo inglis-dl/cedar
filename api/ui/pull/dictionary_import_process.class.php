@@ -90,7 +90,7 @@ class dictionary_import_process extends \cenozo\ui\pull
 
         foreach( $word as $value )
         {
-          if( !preg_match( '/^[A-Za-z0-9\p{L}\-]+$/', $value ) ) 
+          if( !preg_match( '/^[A-Za-z0-9\p{L}\-\']+$/', $value ) ) 
           {
             $this->data['error_entries'][] = 
               'Error: invalid word entry "' . $value . '" on line ' 

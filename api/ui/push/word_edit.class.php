@@ -53,7 +53,7 @@ class word_edit extends \cenozo\ui\push\base_edit
       
       foreach( $word as $value )
       {
-        if( !preg_match( '/^[A-Za-z0-9\p{L}\-]+$/', $value ) ) 
+        if( !preg_match( '/^[A-Za-z0-9\p{L}\-\']+$/', $value ) ) 
         {   
           throw lib::create( 'exception\notice',
             'Not a valid word.', __METHOD__ );
