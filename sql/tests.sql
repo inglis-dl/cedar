@@ -3,37 +3,40 @@
 -- -----------------------------------------------------
 SET AUTOCOMMIT=0;
 
-INSERT IGNORE INTO test_type( name ) 
-VALUES( "confirmation" ), ("alpha_numeric"), ("ranked_word"), ("classification");
+INSERT IGNORE INTO test_type( id, name ) 
+VALUES( 1, "confirmation" ), ( 2, "alpha_numeric"), ( 3, "ranked_word"), ( 4, "classification");
 
-INSERT IGNORE INTO test( name, rank_words, rank, test_type_id ) 
-VALUES( "REY", true, 1, ( SELECT id FROM test_type WHERE name='ranked_word' ) );
-INSERT IGNORE INTO test( name, rank_words, rank, test_type_id )
-VALUES( "REY II", true, 6, ( SELECT id FROM test_type WHERE name='ranked_word' ) );
-INSERT IGNORE INTO test( name, rank, test_type_id )
-VALUES( "AFT", 2, ( SELECT id FROM test_type WHERE name='classification' ) );
-INSERT IGNORE INTO test( name, rank, test_type_id )
-VALUES( "FAS (f words)", 7, ( SELECT id FROM test_type WHERE name='classification' ) );
-INSERT IGNORE INTO test( name, rank, test_type_id )
-VALUES( "FAS (a words)", 8, ( SELECT id FROM test_type WHERE name='classification' ) );
-INSERT IGNORE INTO test( name, rank, test_type_id )
-VALUES( "FAS (s words)", 9, ( SELECT id FROM test_type WHERE name='classification' ) );
+INSERT IGNORE INTO test( id, name, rank_words, rank, test_type_id,
+ variant_dictionary_id, intrusion_dictionary_id, dictionary_id ) 
+VALUES( 1, "REY", true, 1, 3, 1, 2, 5 );
 
-UPDATE test SET intrusion_dictionary_id = (
-SELECT id FROM dictionary WHERE name='intrusions' );
+INSERT IGNORE INTO test( id, name, rank, test_type_id,
+ variant_dictionary_id, intrusion_dictionary_id ) 
+VALUES( 2, "AFT", 2, 4, 1, 2 );
 
-UPDATE test SET variant_dictionary_id = (
-SELECT id FROM dictionary WHERE name='variants' );
+INSERT IGNORE INTO test( id, name, strict, rank, test_type_id, dictionary_id )
+VALUES( 3, "MAT (alphabet)", true, 3, 1, 3 );
 
-INSERT IGNORE INTO test( name, strict, rank, test_type_id )
-VALUES( "MAT (alphabet)", true, 3, 
-( SELECT id FROM test_type WHERE name='confirmation' ) );
-INSERT IGNORE INTO test( name, strict, rank, test_type_id )
-VALUES( "MAT (counting)", true, 4,
-( SELECT id FROM test_type WHERE name='confirmation' ) );
-INSERT IGNORE INTO test( name, strict, rank, test_type_id, dictionary_id )
-VALUES( "MAT (alternation)", true, 5,
-( SELECT id FROM test_type WHERE name='alpha_numeric' ),
-( SELECT id FROM dictionary WHERE name='alpha-numeric' ) );
+INSERT IGNORE INTO test( id, name, strict, rank, test_type_id, dictionary_id )
+VALUES( 4, "MAT (counting)", true, 4, 1, 3 );
+
+INSERT IGNORE INTO test( id, name, strict, rank, test_type_id, dictionary_id )
+VALUES( 5, "MAT (alternation)", true, 5, 2, 4 );
+
+INSERT IGNORE INTO test( id, name, rank_words, rank, test_type_id,
+ variant_dictionary_id, intrusion_dictionary_id, dictionary_id ) 
+VALUES( 6, "REY II", true, 6, 3, 1, 2, 5 );
+
+INSERT IGNORE INTO test( id, name, rank, test_type_id, 
+ variant_dictionary_id, intrusion_dictionary_id ) 
+VALUES( 7, "FAS (f words)", 7, 4, 1, 2 );
+
+INSERT IGNORE INTO test( id, name, rank, test_type_id, 
+ variant_dictionary_id, intrusion_dictionary_id ) 
+VALUES( 8, "FAS (a words)", 8, 4, 1, 2 );
+
+INSERT IGNORE INTO test( id, name, rank, test_type_id, 
+ variant_dictionary_id, intrusion_dictionary_id ) 
+VALUES( 9, "FAS (s words)", 9, 4, 1, 2 );
 
 COMMIT;
