@@ -11,20 +11,29 @@
   {{ parent() }}
   <script type="text/javascript">
     $( function () {
-
-      $( "input.fields" ).each( function (index) {
-      } );
-
     } );
   </script>
 
 {% endblock javascript %}
 
 {% block widget %}
-  <table>
-    <tr>
-      <td><input id="aft_word" type="text" name="field1" class="fields" disabled></td>
-    </tr>
+
+  <table id="{{ widget.full }}__word_table">
+
+    {% for i in range(0, word_list|length-1, 4) %}
+      {% set k = range( i, i+4 ) $}
+       "{{ k }}"
+      <tr>
+        {% for j in range(   "{{ loop.index }}",  "{{ loop.index + 4 }}"  ) %}
+          <td><input 
+               type="text" 
+               name="test"
+               value="{{ j }}"></td>
+         {% endfor %}
+      </tr>
+    {% endfor %}
+
   </table>
+
 {% endblock widget %}
 

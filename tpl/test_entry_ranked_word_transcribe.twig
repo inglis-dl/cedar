@@ -34,9 +34,9 @@
         
         columns["word_candidate"] = $(text_id).val();
         args.columns = columns;
-        console.log(columns);
 
         ajax_push( "{{ widget.subject }}", "edit", args );
+
       } );
 
       //TODO deal with case where text input loses focus with no text input
@@ -50,7 +50,7 @@
         columns["word_candidate"] = $(this).val();
         columns["selection"] = "variant";
         args.columns = columns;
-        console.log(columns);
+        
         ajax_push( "{{ widget.subject }}", "edit", args );
         
       } );  
@@ -102,7 +102,7 @@
       <tr>
         <td class="heading">{{ word.word }}</td>
         <td><input
-             name="{{ word.word_id }}"
+             name={{ word.word_id }}
              value="yes"
              type="radio" 
              {{ word.selection == 'yes' ? "checked" : "" }}></td>
@@ -110,17 +110,17 @@
              value="no"
              type="radio"
              {{ word.selection == 'no' ? "checked" : "" }}></td>
-        <td><input name="{{ word.word_id }}" 
+        <td><input name={{ word.word_id }} 
              value="variant"
              type="radio"
              {{ word.selection == 'variant' ? "checked" : "" }}></td>
-        <td><input name="{{ word.word_id }}"
+        <td><input name={{ word.word_id }}
              type="text"
              {{ word.selection == 'variant' ? "" : "disabled" }}
              value={{ word.word_candidate }}></td>
-        <td><input name="{{ word.word_id }}"
+        <td><input name={{ word.word_id }}
              type="hidden"
-             value="{{ word.id}}"></td>
+             value={{ word.id}}></td>
       </tr>
     {% endfor %}  
 
