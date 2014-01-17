@@ -18,6 +18,8 @@
       $( "#{{ widget.full }}__word_table" ).find( "input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
+        var hidden_id = "input:hidden[name=" + $(this).attr( "name" ) + "]";
+        columns["id"] = $(hidden_id).val();
         columns["test_entry_id"] = "{{ parent.id }}";
         columns["word_id"] = $(this).attr( "name" );
         columns["selection"] = $(this).val();
@@ -34,20 +36,22 @@
         args.columns = columns;
         console.log(columns);
 
-        // if this is the first time setting this entry 
-        // we have to create a new db entry 
-        // otherwise edit the existing db entry
-        //if( ajax_push( "{{ widget.subject }}", "edit", args ) )
+        ajax_push( "{{ widget.subject }}", "edit", args );
       } );
 
+      //TODO deal with case where text input loses focus with no text input
       $( "#{{ widget.full }}__word_table" ).find( "input:text" ).change( function() {
         var args = new Object();
         var columns = new Object();
+        var hidden_id = "input:hidden[name=" + $(this).attr( "name" ) + "]";
+        columns["id"] = $(hidden_id).val();
         columns["test_entry_id"] = "{{ parent.id }}";
         columns["word_id"] = $(this).attr( "name" );
         columns["word_candidate"] = $(this).val();
+        columns["selection"] = "variant";
         args.columns = columns;
         console.log(columns);
+        ajax_push( "{{ widget.subject }}", "edit", args );
         
       } );  
 
@@ -56,23 +60,25 @@
       // use the parent.full name since the reset button
       // is declared in the parent twig file
       $( "#{{ parent.full }}_Reset" ).click(function() {
-        input = $("#{{ widget.full }}__word_table" ).find( "input" );
-        input.each( function() {
-          if( this.type == "radio" ) {
-            if( $(this).val() == "no" ) {
-              $(this).attr( "checked", "checked" );
+        var id = "{{ parent.id }}";
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
+        //  slot_refresh( {{ slot }} );
+          input = $("#{{ widget.full }}__word_table" ).find( "input" );
+          input.each( function() {
+            if( this.type == "radio" ) {
+              if( $(this).val() == "no" ) {
+                $(this).attr( "checked", "checked" );
+              }
+              else {
+                $(this).removeAttr( "checked" );
+              }
             }
             else {
-              $(this).removeAttr( "checked" );
+              $(this).val( "" );
+              $(this).attr( "disabled", "disabled" );
             }
-          }
-          else {
-            $(this).val( "" );
-            $(this).attr( "disabled", "disabled" );
-          }
-        } );
-        
-        //if( ajax_push( "{{ parent.subject }}", "reset", args ) )
+          } );
+        }
       } );
 
     } );
@@ -99,18 +105,22 @@
              name="{{ word.word_id }}"
              value="yes"
              type="radio" 
-             {{ word.selection == 'yes' ? "checked" : "" }}/></td>
+             {{ word.selection == 'yes' ? "checked" : "" }}></td>
         <td><input name="{{ word.word_id }}" 
              value="no"
              type="radio"
-             {{ word.selection == 'no' ? "checked" : "" }}/></td>
+             {{ word.selection == 'no' ? "checked" : "" }}></td>
         <td><input name="{{ word.word_id }}" 
              value="variant"
              type="radio"
-             {{ word.selection == 'variant' ? "checked" : "" }}/></td>
+             {{ word.selection == 'variant' ? "checked" : "" }}></td>
         <td><input name="{{ word.word_id }}"
              type="text"
-             {{ word.selection == 'variant' ? "" : "disabled" }}>{{ word.word_candidate }}</input></td>
+             {{ word.selection == 'variant' ? "" : "disabled" }}
+             value={{ word.word_candidate }}></td>
+        <td><input name="{{ word.word_id }}"
+             type="hidden"
+             value="{{ word.id}}"></td>
       </tr>
     {% endfor %}  
 

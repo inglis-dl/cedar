@@ -51,7 +51,7 @@ class test_entry_reset extends \cenozo\ui\push\base_record
         $db_test_entry_ranked_word->delete();
       }
       $modifier = lib::create( 'database\modifier' );
-      $modifer->where( 'word_id', '!=', 'NULL' );
+      $modifier->where( 'word_id', '!=', 'NULL' );
       foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) 
         as $db_test_entry_ranked_word )
       {

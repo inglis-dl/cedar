@@ -69,7 +69,11 @@ class assignment_new extends \cenozo\ui\push\base_new
 
     $language = $db_assignment->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
+    //TODO consider creating default sub items for test_entry objects
+    // in the database api
+    
     //creates a test entry automatically for each test
     foreach( $test_class_name::select( $modifier ) as $db_test )
     {
@@ -78,7 +82,7 @@ class assignment_new extends \cenozo\ui\push\base_new
       $args['columns']['assignment_id'] = $db_assignment->id;
       $operation = lib::create( 'ui\push\test_entry_new', $args );
       $operation->process();
-      $test_entry_id = static::db()::insert_id();
+      $test_entry_id = $test_entry_class_name::db()->insert_id();
 
       // create default test_entry sub tables
       $test_type_name = $db_test->get_test_type()->name;
@@ -95,10 +99,11 @@ class assignment_new extends \cenozo\ui\push\base_new
           as $db_ranked_word_set )
         {
           // Get the word in the participant's language.
-          $db_word = $db_ranked_word_set->get_word( $language );
+          $word_id = 'word_' . $language . '_id';
           $args = array();
           $args['columns']['test_entry_id'] = $test_entry_id;
           $args['columns']['selection'] = 'no';
+          $args['columns']['word_id'] = $db_ranked_word_set->$word_id;
           $operation = lib::create( 'ui\push\test_entry_ranked_word_new', $args );
           $operation->process();             
         }
@@ -108,7 +113,7 @@ class assignment_new extends \cenozo\ui\push\base_new
         $args = array();
         $args['columns']['test_entry_id'] = $test_entry_id;
         $args['columns']['confirmation'] = 0;
-        $operation = lib::create( 'ui\push\test_entry_confirmation', $args );
+        $operation = lib::create( 'ui\push\test_entry_confirmation_new', $args );
         $operation->process();
       }
       else if( $test_type_name == 'classification' )
@@ -119,7 +124,7 @@ class assignment_new extends \cenozo\ui\push\base_new
           $args = array();
           $args['columns']['test_entry_id'] = $test_entry_id;
           $args['columns']['rank'] = $rank;          
-          $operation = lib::create( 'ui\push\test_entry_classification', $args );
+          $operation = lib::create( 'ui\push\test_entry_classification_new', $args );
           $operation->process();
         }
       }
@@ -135,7 +140,7 @@ class assignment_new extends \cenozo\ui\push\base_new
           $args = array();
           $args['columns']['test_entry_id'] = $test_entry_id;
           $args['columns']['rank'] = $rank;          
-          $operation = lib::create( 'ui\push\test_entry_alpha_numeric', $args );
+          $operation = lib::create( 'ui\push\test_entry_alpha_numeric_new', $args );
           $operation->process();
         }         
       }

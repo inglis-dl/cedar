@@ -76,18 +76,15 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
     $language = is_null( $language ) ? 'en' : $language;
     
     $word_entry_list = array();
-    // Get the db entries for the test_entry.
-    // The first time the test entry form is shown, these db entries will not exist.
-    // If the selection is NULL, and the word_candidate is not NULL, the
-    // word_candidate is an intrusion.
-    // If the selection is not NULL, and the word_candidate is not NULL, the
-    // word candidate is a variant.
     foreach( $db_test_entry->get_test_entry_ranked_word_list() as $db_test_entry_ranked_word )
     {
       $word_entry_list[ $db_test_entry_ranked_word->get_word()->word ] = 
-        array( 'id' => $db_test_entry_ranked_word->id,
-               'selection' => $db_test_entry_ranked_word->selection,  
-               'word_candidate' => $db_test_entry_ranked_word->word_candidate );  
+        array(
+          'id' => $db_test_entry_ranked_word->id,
+          'selection' => $db_test_entry_ranked_word->selection,  
+          'word_candidate' => 
+            is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
+              $db_test_entry_ranked_word->word_candidate );  
     }    
 
     $modifier = lib::create( 'database\modifier' );
@@ -96,22 +93,21 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
 
     // Get the list of ranked words in order.
     // Create data for the rows in the transcribe widget's table.
-    // If there is a corresponding db entry, populate data fields accordingly.
     foreach( $db_test->get_ranked_word_set_list( $modifier )
       as $db_ranked_word_set )
     {
       // Get the word in the participant's language.
-      $db_word = $db_ranked_word_set->get_word( $language );
+      $word_id = 'word_' . $language . '_id';
+      $db_word = lib::create( 'database\word', $db_ranked_word_set->$word_id );
       $row = array(
-               'entry_id' => '',
+               'id' => '',
                'word_id' => $db_word->id,
                'word' => $db_word->word,
                'selection' => '',
                'word_candidate' => '' );
-      // Populate with db entry data if available.
       if( array_key_exists( $db_word->word, $word_entry_list ) )
       {
-         $row['entry_id'] = $word_entry_list[$db_word->word]['id'];
+         $row['id'] = $word_entry_list[$db_word->word]['id'];
          $row['selection'] = $word_entry_list[$db_word->word]['selection'];
          $row['word_candidate'] = $word_entry_list[$db_word->word]['word_candidate'];
       }
