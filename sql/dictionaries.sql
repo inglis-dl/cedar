@@ -20,17 +20,20 @@ VALUES( 5, "REY_words", "predefined words for the REY test" );
 
 LOAD DATA LOCAL INFILE 'confirmation_dictionary.csv' IGNORE 
 INTO TABLE word 
-FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+CHARACTER SET latin1
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'
 ( word, language, dictionary_id );
 
 LOAD DATA LOCAL INFILE 'alpha_numeric_dictionary.csv' IGNORE
 INTO TABLE word
-FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+CHARACTER SET latin1
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n'
 ( word, language, dictionary_id );
 
 LOAD DATA LOCAL INFILE 'rey_dictionary.csv' IGNORE
 INTO TABLE word
-FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+CHARACTER SET latin1
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'  LINES TERMINATED BY '\n'
 ( word, language, dictionary_id );
 
 COMMIT;
