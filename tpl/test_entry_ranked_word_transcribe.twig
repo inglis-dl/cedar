@@ -37,7 +37,7 @@
 
         ajax_push( "{{ widget.subject }}", "edit", args );
 
-      } );
+      } );// end radio input change
 
       //TODO deal with case where text input loses focus with no text input
       $( "#{{ widget.full }}__word_table" ).find( "input:text" ).change( function() {
@@ -53,7 +53,7 @@
         
         ajax_push( "{{ widget.subject }}", "edit", args );
         
-      } );  
+      } );// end test input change  
 
       // loop over all input elements and clear them
       // update the db to reflect the changes   
@@ -79,7 +79,7 @@
             }
           } );
         }
-      } );
+      } );// end Reset button click
 
     } );
   </script>
