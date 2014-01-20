@@ -101,6 +101,9 @@
     {% for word in word_list %}
       <tr>
         <td class="heading">{{ word.word }}</td>
+        <input name={{ word.word_id }}
+             type="hidden"
+             value={{ word.id}}>
         <td><input
              name={{ word.word_id }}
              value="yes"
@@ -118,9 +121,6 @@
              type="text"
              {{ word.selection == 'variant' ? "" : "disabled" }}
              value={{ word.word_candidate }}></td>
-        <td><input name={{ word.word_id }}
-             type="hidden"
-             value={{ word.id}}></td>
       </tr>
     {% endfor %}  
 
