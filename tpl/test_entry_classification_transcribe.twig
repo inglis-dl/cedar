@@ -11,6 +11,67 @@
   {{ parent() }}
   <script type="text/javascript">
     $( function () {
+
+      $( "#{{ widget.full }}__word_table" ).find( "input:text" ).change( function() {
+        var args = new Object();
+        var columns = new Object();
+        columns["id"] = $(this).attr("id").split("__")[0];
+        columns["rank"] = $(this).attr("id").split("__")[1];
+        columns["test_entry_id"] = "{{ parent.id }}";
+        columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
+        columns["word_candidate"] = $(this).val();
+        args.columns = columns;
+        console.log(columns);
+
+        // refresh with updated information
+        // if the candidate is found in the dictionary, this 
+        // will change the element class attr and therefore its color
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          slot_refresh( {{ slot }} );
+        }
+        
+      } );// end text input change
+
+      // loop over all input elements and clear them
+      // update the db to reflect the changes   
+      // use the parent.full name since the reset button
+      // is declared in the parent twig file
+      $( "#{{ parent.full }}_Reset" ).click(function() {
+        var id = "{{ parent.id }}";
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
+          input = $("#{{ widget.full }}__word_table" ).find( "input:text" );
+          input.each( function() {
+              var rank = $(this).attr( "id" ).split("__")[1];
+              if( rank == "1" ) {
+                //$(this).css( "background-color", "white");
+                $(this).removeAttr( "disabled" );
+              } else {
+                $(this).attr( "disabled", "disabled" );
+              }
+
+              $(this).val( "" );
+              $(this).attr("name", "undefined" );
+          } );
+        }
+      } );// end Reset button click
+
+     //   TODO: set background color according to entry status below 
+                   // if status == 'empty'   }  
+                   //   if kprev == 'false' 
+                   //     "disabled" 
+                   //   else 
+                   //     "style='background-color:white;'" 
+                   //   endif 
+                   //   set kprev = 'false' 
+                   // elseif status == 'candidate' 
+                   //     "style='background-color:lightyellow;'" 
+                   //     set kprev = 'true' 
+                   // elseif status == 'word' 
+                   //     "style='background-color:palegreen;'" 
+                   //     set kprev = 'true' 
+                   // endif 
+                   
+
     } );
   </script>
 
@@ -19,17 +80,39 @@
 {% block widget %}
 
   <table id="{{ widget.full }}__word_table">
-
-    {% for i in range(0, word_list|length-1, 4) %}
-      {% set k = range( i, i+4 ) $}
-       "{{ k }}"
+    {% set numcell = 4 %}
+    {% set kprev= 'true' %}
+    {% for i in range(0, word_list|length-1, numcell) %}
       <tr>
-        {% for j in range(   "{{ loop.index }}",  "{{ loop.index + 4 }}"  ) %}
-          <td><input 
-               type="text" 
-               name="test"
-               value="{{ j }}"></td>
-         {% endfor %}
+          {% set kmax = i+numcell-1 %}
+          {% for k in i..kmax %}
+
+            {% set value = '' %}
+            {% if word_list[k].word_id is defined %}
+              {% set value = word_list[k].word %}
+            {% elseif word_list[k].word_candidate is defined %}  
+                {% set value = word_list[k].word_candidate %}
+            {% endif %}
+            {% set status = word_list[k].word_id ? "word" : 
+                           word_list[k].word_candidate ? "candidate" : "empty" %} 
+
+              <td><input id="{{ word_list[ k ].id }}__{{ word_list[ k ].rank }}"
+                   type="text"
+                   name={{ word_list[k].word_id ? word_list[k].word_id : 'undefined' }}
+
+                   {% if status == 'empty'  %} 
+                     {% if kprev == 'false' %}
+                       {{ "disabled" }}
+                     {% endif %}
+                     {% set kprev = 'false' %}
+                   {% elseif status == 'candidate' %}
+                       {% set kprev = 'true' %}
+                   {% elseif status == 'word' %}
+                       {% set kprev = 'true' %}
+                   {% endif %}
+                   
+                   value="{{ value }}"></td>
+          {% endfor %}    
       </tr>
     {% endfor %}
 

@@ -81,7 +81,8 @@ class test_entry_classification_transcribe extends \cenozo\ui\widget
     //TODO add variable for dictionary lookup text completion
     foreach( $db_test_entry->get_test_entry_classification_list( $modifier ) as $db_test_entry_classification )
     {
-      $db_word = lib::create( 'database\word', $db_test_entry_classification->word_id );
+      $db_word = is_null(  $db_test_entry_classification->word_id ) ? null :
+        lib::create( 'database\word', $db_test_entry_classification->word_id );
       $row = array(
                'id' => $db_test_entry_classification->id,
                'rank' => $db_test_entry_classification->rank,
