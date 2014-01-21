@@ -77,7 +77,7 @@ class test_entry_classification_transcribe extends \cenozo\ui\widget
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
-    $word_list = array();
+    $entry_data = array();
     //TODO add variable for dictionary lookup text completion
     foreach( $db_test_entry->get_test_entry_classification_list( $modifier ) as $db_test_entry_classification )
     {
@@ -92,8 +92,8 @@ class test_entry_classification_transcribe extends \cenozo\ui\widget
                  is_null( $db_test_entry_classification->word_candidate ) ? '' :
                  $db_test_entry_classification->word_candidate );
 
-      $word_list[] = $row;              
+      $entry_data[] = $row;              
     }
-    $this->set_variable( 'word_list', $word_list );
+    $this->set_variable( 'entry_data', $entry_data );
   }
 }

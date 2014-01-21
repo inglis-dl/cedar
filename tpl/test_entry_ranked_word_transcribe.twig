@@ -15,7 +15,7 @@
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
       // which radio button was selected
-      $( "#{{ widget.full }}__word_table" ).find( "input:radio" ).change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
         var hidden_id = "input:hidden[name=" + $(this).attr( "name" ) + "]";
@@ -40,7 +40,7 @@
       } );// end radio input change
 
       //TODO deal with case where text input loses focus with no text input
-      $( "#{{ widget.full }}__word_table" ).find( "input:text" ).change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
         var columns = new Object();
         var hidden_id = "input:hidden[name=" + $(this).attr( "name" ) + "]";
@@ -62,8 +62,7 @@
       $( "#{{ parent.full }}_Reset" ).click(function() {
         var id = "{{ parent.id }}";
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
-        //  slot_refresh( {{ slot }} );
-          input = $("#{{ widget.full }}__word_table" ).find( "input" );
+          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
           input.each( function() {
             if( this.type == "radio" ) {
               if( $(this).val() == "no" ) {
@@ -90,7 +89,7 @@
   
   <div class="spacer">
 
-  <table id="{{ widget.full }}__word_table">
+  <table id="{{ widget.full }}__entry_table">
 
     <thead>
       <td></td>
@@ -100,29 +99,29 @@
       <td></td>
     </thead>
     
-    {% for word in word_list %}
+    {% for entry in  entry_data %}
       <tr>
-        <td class="heading">{{ word.word }}</td>
-        <input name={{ word.word_id }}
+        <td class="heading">{{ entry.word }}</td>
+        <input name={{ entry.word_id }}
              type="hidden"
-             value={{ word.id}}>
+             value={{ entry.id}}>
         <td><input
-             name={{ word.word_id }}
+             name={{ entry.word_id }}
              value="yes"
              type="radio" 
-             {{ word.selection == 'yes' ? "checked" : "" }}></td>
-        <td><input name="{{ word.word_id }}" 
+             {{ entry.selection == 'yes' ? "checked" : "" }}></td>
+        <td><input name="{{ entry.word_id }}" 
              value="no"
              type="radio"
-             {{ word.selection == 'no' ? "checked" : "" }}></td>
-        <td><input name={{ word.word_id }} 
+             {{ entry.selection == 'no' ? "checked" : "" }}></td>
+        <td><input name={{ entry.word_id }} 
              value="variant"
              type="radio"
-             {{ word.selection == 'variant' ? "checked" : "" }}></td>
-        <td><input name={{ word.word_id }}
+             {{ entry.selection == 'variant' ? "checked" : "" }}></td>
+        <td><input name={{ entry.word_id }}
              type="text"
-             {{ word.selection == 'variant' ? "" : "disabled" }}
-             value={{ word.word_candidate }}></td>
+             {{ entry.selection == 'variant' ? "" : "disabled" }}
+             value={{ entry.word_candidate }}></td>
       </tr>
     {% endfor %}  
 

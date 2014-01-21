@@ -27,7 +27,7 @@
 */
 
 
-      $( "#{{ widget.full }}__word_table" ).find( "input:text" ).change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
         var columns = new Object();
         columns["id"] = $(this).attr("id").split("__")[0];
@@ -60,7 +60,7 @@
       $( "#{{ parent.full }}_Reset" ).click(function() {
         var id = "{{ parent.id }}";
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
-          input = $("#{{ widget.full }}__word_table" ).find( "input:text" );
+          input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
           input.each( function() {
               var rank = $(this).attr( "id" ).split("__")[1];
               if( rank == "1" ) {
@@ -73,7 +73,7 @@
               $(this).val( "" );
               $(this).attr("name", "undefined" );
           } );
-           $("#{{ parent.full }}_Next").attr( "disabled","disabled" );
+          $("#{{ parent.full }}_Next").button( { disabled : true } );
         }
       } );// end Reset button click
 
@@ -103,27 +103,27 @@
 
   <div class="spacer">
 
-  <table id="{{ widget.full }}__word_table">
+  <table id="{{ widget.full }}__entry_table">
 
     {% set numcell = 4 %}
     {% set kprev= 'true' %}
-    {% for i in range(0, word_list|length-1, numcell) %}
+    {% for i in range(0, entry_data|length-1, numcell) %}
       <tr>
           {% set kmax = i+numcell-1 %}
           {% for k in i..kmax %}
 
             {% set value = '' %}
-            {% if word_list[k].word_id is defined %}
-              {% set value = word_list[k].word %}
-            {% elseif word_list[k].word_candidate is defined %}  
-                {% set value = word_list[k].word_candidate %}
+            {% if entry_data[k].word_id is defined %}
+              {% set value = entry_data[k].word %}
+            {% elseif entry_data[k].word_candidate is defined %}  
+                {% set value = entry_data[k].word_candidate %}
             {% endif %}
-            {% set status = word_list[k].word_id ? "word" : 
-                           word_list[k].word_candidate ? "candidate" : "empty" %} 
+            {% set status = entry_data[k].word_id ? "word" : 
+                           entry_data[k].word_candidate ? "candidate" : "empty" %} 
 
-              <td><input id="{{ word_list[ k ].id }}__{{ word_list[ k ].rank }}"
+              <td><input id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
                    type="text"
-                   name={{ word_list[k].word_id ? word_list[k].word_id : 'undefined' }}
+                   name={{ entry_data[k].word_id ? entry_data[k].word_id : 'undefined' }}
 
                    {% if status == 'empty'  %} 
                      {% if kprev == 'false' %}

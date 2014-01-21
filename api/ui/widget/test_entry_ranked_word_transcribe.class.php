@@ -75,10 +75,10 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
     $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
     
-    $word_entry_list = array();
+    $entry_list = array();
     foreach( $db_test_entry->get_test_entry_ranked_word_list() as $db_test_entry_ranked_word )
     {
-      $word_entry_list[ $db_test_entry_ranked_word->get_word()->word ] = 
+      $entry_list[ $db_test_entry_ranked_word->get_word()->word ] = 
         array(
           'id' => $db_test_entry_ranked_word->id,
           'selection' => $db_test_entry_ranked_word->selection,  
@@ -89,7 +89,7 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
-    $word_list = array();
+    $entry_data = array();
 
     // Get the list of ranked words in order.
     // Create data for the rows in the transcribe widget's table.
@@ -105,14 +105,14 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
                'word' => $db_word->word,
                'selection' => '',
                'word_candidate' => '' );
-      if( array_key_exists( $db_word->word, $word_entry_list ) )
+      if( array_key_exists( $db_word->word, $entry_list ) )
       {
-         $row['id'] = $word_entry_list[$db_word->word]['id'];
-         $row['selection'] = $word_entry_list[$db_word->word]['selection'];
-         $row['word_candidate'] = $word_entry_list[$db_word->word]['word_candidate'];
+         $row['id'] = $entry_list[$db_word->word]['id'];
+         $row['selection'] = $entry_list[$db_word->word]['selection'];
+         $row['word_candidate'] = $entry_list[$db_word->word]['word_candidate'];
       }
-      $word_list[] = $row;
+      $entry_data[] = $row;
     }
-    $this->set_variable( 'word_list', $word_list );
+    $this->set_variable( 'entry_data', $entry_data );
   }
 }
