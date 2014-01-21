@@ -81,7 +81,8 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
       $entry_list[ $db_test_entry_ranked_word->get_word()->word ] = 
         array(
           'id' => $db_test_entry_ranked_word->id,
-          'selection' => $db_test_entry_ranked_word->selection,  
+          'selection' => is_null( $db_test_entry_ranked_word->selection ) ? '' :
+             $db_test_entry_ranked_word->selection,  
           'word_candidate' => 
             is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
               $db_test_entry_ranked_word->word_candidate );  

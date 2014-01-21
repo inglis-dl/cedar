@@ -41,21 +41,10 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
     if( $test_type_name == 'ranked_word' )
     {
-      // delete entries that are intrusions
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'selection', '=', 'NULL' );
-      $modifier->where( 'word_id', '=', 'NULL' );
-      foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) 
+      foreach( $db_test_entry->get_test_entry_ranked_word_list() 
         as $db_test_entry_ranked_word )
       {
-        $db_test_entry_ranked_word->delete();
-      }
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'word_id', '!=', 'NULL' );
-      foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) 
-        as $db_test_entry_ranked_word )
-      {
-        $db_test_entry_ranked_word->selection = 'no';
+        $db_test_entry_ranked_word->selection = NULL;
         $db_test_entry_ranked_word->word_candidate = NULL;
         $db_test_entry_ranked_word->save();        
       }      
@@ -68,7 +57,7 @@ class test_entry_reset extends \cenozo\ui\push\base_record
         $test_entry_confirmation_class_name::get_unique_record(
           'test_entry_id', $db_test_entry->id );
 
-      $db_test_entry_confirmation->confirmation = 0;
+      $db_test_entry_confirmation->confirmation = NULL;
       $db_test_entry_confirmation->save(); 
     }
     else if( $test_type_name == 'classification' )
@@ -96,6 +85,7 @@ class test_entry_reset extends \cenozo\ui\push\base_record
         'Assignment requires a valid test type, not ' . 
         $test_type_name, __METHOD__ );
     }
+    $db_test_entry->completed = 0;
     $db_test_entry->save();
   }
 }

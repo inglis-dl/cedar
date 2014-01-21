@@ -102,7 +102,7 @@ class assignment_new extends \cenozo\ui\push\base_new
           $word_id = 'word_' . $language . '_id';
           $args = array();
           $args['columns']['test_entry_id'] = $test_entry_id;
-          $args['columns']['selection'] = 'no';
+          //$args['columns']['selection'] = '';
           $args['columns']['word_id'] = $db_ranked_word_set->$word_id;
           $operation = lib::create( 'ui\push\test_entry_ranked_word_new', $args );
           $operation->process();             
@@ -112,7 +112,7 @@ class assignment_new extends \cenozo\ui\push\base_new
       {
         $args = array();
         $args['columns']['test_entry_id'] = $test_entry_id;
-        $args['columns']['confirmation'] = 0;
+        //$args['columns']['confirmation'] = 0;
         $operation = lib::create( 'ui\push\test_entry_confirmation_new', $args );
         $operation->process();
       }

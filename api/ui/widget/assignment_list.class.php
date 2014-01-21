@@ -57,9 +57,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
     parent::setup();
 
     $assignment_list = $this->get_record_list();
-    $test_entry_class_name = lib::get_class_name('database\test_entry');
-    $test_class_name = lib::get_class_name('database\test');
-    $test_count = $test_class_name::count();
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+    $test_class_name = lib::get_class_name( 'database\test' );
 
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
@@ -68,15 +67,18 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     foreach( $assignment_list as $db_assignment )
     {
+      if( $db_role->name == 'typist' && $db_assignment->get_user()->name != $db_user->name )
+        continue;
+
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
+      $test_count = $test_entry_class_name::count( $base_mod );
 
       $mod_complete = clone $base_mod;
       $mod_complete->where( 'completed', '=', true );
       $complete_count = $test_entry_class_name::count( $mod_complete );
 
-      if( ( $complete_count == $test_count && $db_role->name == 'typist' ) ||
-          ( $db_role->name == 'typist' && $db_assignment->get_user()->name != $db_user->name ) )
+      if( $complete_count == $test_count && $db_role->name == 'typist' )
         continue;
       
       $db_participant = $db_assignment->get_participant();

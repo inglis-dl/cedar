@@ -36,9 +36,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   {
     parent::prepare();
 
-    $record = $this->get_record();
-    $db_test = $record->get_test();
-    $db_participant = $record->get_assignment()->get_participant();
+    $db_test_entry = $this->get_record();
+    $db_test = $db_test_entry->get_test();
+    $db_participant = $db_test_entry->get_assignment()->get_participant();
 
     $db_test_type = $db_test->get_test_type();
 
@@ -78,6 +78,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'audio_fault', $record->audio_fault );
     $this->set_variable( 'deferred', $record->deferred );
+    $this->set_variable( 'completed', $record->completed );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
 

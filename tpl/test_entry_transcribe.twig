@@ -12,6 +12,9 @@
   <script type="text/javascript">
     $( function () {
 
+      $("#{{ widget.full }}_Next").button( 
+        { disabled : {{ deferred == 1 ? 'false' : ( completed == 1 ? 'false' : 'true' ) }} } );
+
       $("#{{ widget.full }}__audio_fault").click(function() {
         var args = new Object();
         args.columns = { audio_fault : $(this).is(':checked')?1:0 };
@@ -73,7 +76,7 @@
       } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } );
 
       $("#{{ widget.full }}_Next").click(function() {
-
+         
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
         {% else %}  
@@ -82,7 +85,7 @@
             { id : {{ next_test_entry_id}} } );
          {% endif %}    
 
-      } ).button( { disabled : {{ deferred == 1 ? 'false' : 'true' }} } );
+      } ).button( { disabled : {{ deferred == 1 ? 'false' : ( completed == 1 ? 'false' : 'true' ) }} } );
 
     } );
   </script>

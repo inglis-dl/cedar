@@ -12,8 +12,6 @@
   <script type="text/javascript">
     $( function () {
 
-      // TODO debug Next button enable disable conditions
-
       // find and handle radio element change events:
       $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
         var args = new Object();
@@ -30,7 +28,6 @@
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           $("#{{ parent.full }}_Next").button( { disabled : false } );
         }
-             
       } );
 
 
