@@ -112,17 +112,17 @@
                 {{ audio_fault ? "checked":"" }}/>
               <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
             </td>
+            <td>
+              <div>
+                {% from 'macros.twig' import confirm_buttons %}
+                  {{ confirm_buttons( slot, widget.full, 
+                    ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
+              </div>
+            </td>
           </tr>
         </table>
       </div>
-
-      <div>
-        {% from 'macros.twig' import confirm_buttons %}
-        {{ confirm_buttons( slot, widget.full, ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-      </div>
-
     </div>
-
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>
