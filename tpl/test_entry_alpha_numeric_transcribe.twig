@@ -1,25 +1,123 @@
 {##
- # test_entry_alpha_numeric_transcribe.twig
+ # test_entry_classfication_transcribe.twig
  # 
- # Transcribe an alpha numeric type test.
+ # Transcribe a alpha_numeric type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
  #}
 {% extends "widget.twig" %}
 
 {% block javascript %}
-
+  {{ parent() }}
   <script type="text/javascript">
     $( function () {
+       // TODO debug Next button enable disable conditions
+       $("#{{ parent.full }}_Next").button({ disabled : false} );
+/*
+       $('input[id="1__1"]').keyup( function() {
+           if( $(this).val() != '') {
+             console.log( 'keyup not null' );
+             $("#{{ parent.full }}_Next").({ disabled : false} );
+           }else{
+             console.log( 'keyup null' );
+             $("#{{ parent.full }}_Next").button({ disabled : true} );
+           }
+         
+        } );
+*/
+
+
+      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
+        var args = new Object();
+        var columns = new Object();
+        columns["id"] = $(this).attr("id").split("__")[0];
+        columns["rank"] = $(this).attr("id").split("__")[1];
+        columns["test_entry_id"] = "{{ parent.id }}";
+        columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
+        columns["word_value"] = $(this).val();
+        args.columns = columns;
+        console.log(args);
+
+        // refresh with updated information
+        // if the candidate is found in the dictionary, this 
+        // will change the element class attr and therefore its color
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          slot_refresh( {{ slot }} );
+          if( columns["rank"]  == '1' ) {
+            $("#{{ parent.full }}_Next").button( { disabled : false } );
+          }
+        }
+
+      } );// end text input change
+
+      // loop over all input elements and clear them
+      // update the db to reflect the changes   
+      $( "#{{ parent.full }}_Reset" ).click(function() {
+        var id = "{{ parent.id }}";
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
+          input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
+          input.each( function() {
+              var rank = $(this).attr( "id" ).split("__")[1];
+              if( rank == "1" ) {
+                $(this).removeAttr( "disabled" );
+              } else {
+                $(this).attr( "disabled", "disabled" );
+              }
+
+              $(this).val( "" );
+              $(this).attr("name", "undefined" );
+          } );
+          $("#{{ parent.full }}_Next").button( { disabled : true } );
+        }
+      } );// end Reset button click
+
     } );
   </script>
 
 {% endblock javascript %}
 
-{% block record %}
-  <table>
-    <tr>
-      <td><input id="alpha_num_word" type="text" disabled></td>
-    </tr>
+{% block widget %}
+
+  <div class="spacer">
+
+  <table id="{{ widget.full }}__entry_table">
+
+    {% set numcell =  10 %}
+    {% set kprev= 'true' %}
+    {% for i in range(0, entry_data|length-1, numcell) %}
+      <tr>
+          {% set kmax = i+numcell-1 %}
+          {% if kmax > entry_data|length-1 %}
+            {% set kmax = entry_data|length-1 %}
+          {% endif %}  
+          {% for k in i..kmax %}
+
+            {% set value = '' %}
+            {% if entry_data[k].word_id is defined %}
+              {% set value = entry_data[k].word %}
+            {% endif %}
+            {% set status = entry_data[k].word_id ? "word" : "empty" %} 
+
+              <td><input id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
+                   type="text"
+                   style="width:20%"
+                   name={{ entry_data[k].word_id ? entry_data[k].word_id : 'undefined' }}
+
+                   {% if status == 'empty'  %} 
+                     {% if kprev == 'false' %}
+                       {{ "disabled" }}
+                     {% endif %}
+                     {% set kprev = 'false' %}
+                   {% elseif status == 'word' %}
+                       {% set kprev = 'true' %}
+                   {% endif %}
+                   
+                   value="{{ value }}"></td>
+          {% endfor %}    
+      </tr>
+    {% endfor %}
+
   </table>
-{% endblock record %}
+
+{% endblock widget %}
+
