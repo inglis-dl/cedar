@@ -12,24 +12,38 @@
   <script type="text/javascript">
     $( function () {
 
+      // TODO debug Next button enable disable conditions
+
       // find and handle radio element change events:
-      $( "#{{ widget.full }}__word_table" ).find("input:radio").change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
         var args = new Object();
         var columns = new Object();
-        columns["test_entry_id"]="{{ parent.id }}";
-        //columns["selection"]=$(this).val();
-            
-        console.log( $( "input" ).siblings( $(this).val() ) );
-
+        columns["id"] = $(this).attr( "name" );
+        columns["test_entry_id"] = "{{ parent.id }}";
+        if( $(this).val() == "yes" ) {
+          columns["confirmation"] = 1;
+        } else {
+          columns["confirmation"] = 0;
+        }
         console.log(columns);
         args.columns = columns;
-        //if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
-          
-        //} else {
-        //   ajax_push( "{{ parent.subject }}", "edit", args ) )
-        //}     
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          $("#{{ parent.full }}_Next").button( { disabled : false } );
+        }
              
       } );
+
+
+      $( "#{{ parent.full }}_Reset" ).click(function() {
+        var id = "{{ parent.id }}";
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
+          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
+          input.each( function() {
+            $(this).removeAttr( "checked" );
+          } );
+          $("#{{ parent.full }}_Next").button( { disabled : true } );
+        }
+      } );// end Reset button click
 
     } );
   </script>
@@ -37,22 +51,37 @@
 {% endblock javascript %}
 
 {% block widget %}
-  <table id="{{ widget.full }}__word_table">
-  <caption style="text-align: left;"><strong>{{ instruction }}</strong></caption>
-    {% for word in word_list %}
+    
+  <div class="spacer">
+
+  <caption style="text-align: left;"><strong>{{ entry_data.instruction }}</strong></caption>
+
+  <div class="spacer">
+
+  <table id="{{ widget.full }}__entry_table">
+
       <tr>
-        <td style="text-align: left; padding: 5px;">
-          <input
-             name="confirmation"
-             value="{{word.word}}"
+          <td><input
+             id="{{ widget.full }}__Yes"
+             name={{ entry_data.id }}
+             value="yes"
              type="radio"
-             class="{{word.word}}"
-             {{ word.selection == 'yes' ? "checked" : "" }}/><font style="text-transform: capitalize;">{{ word.word }}</font>
-            <input id="{{ parent.subject }}__entry_id" value="{{ word.entry_id }}" type="hidden" class="{{word.word}}"/>
-            <input id="{{ parent.subject }}__word_id" value="{{ word.word_id }}" type="hidden" class="{{word.word}}"/>
-            <input id="{{ parent.subject }}__id" value="{{ parent.id }}" type="hidden" class="{{word.word}}"/></td>      
-      </tr>
-    {% endfor %}
+             {{ entry_data.confirmation == '1' ? "checked" : "" }}>
+             <label for="{{ widget.full }}__Yes">Yes</label>
+          </td>
+       </tr> 
+      <tr>
+          <td><input
+             id="{{ widget.full }}__No"
+             name={{ entry_data.id }}
+             value="no"
+             type="radio"
+             {{ entry_data.confirmation == '0' ? "checked" : "" }}>
+             <label for="{{ widget.full }}__No">No</label>
+          </td>
+       </tr> 
+
   </table> 
+
 {% endblock widget %}
 

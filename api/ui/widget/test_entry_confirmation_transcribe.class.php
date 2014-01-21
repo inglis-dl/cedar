@@ -68,45 +68,7 @@ class test_entry_confirmation_transcribe extends \cenozo\ui\widget
       throw lib::create( 'exception\runtime',
               'Widget requires test type to be ranked word, not ' . 
               $test_type_name, __METHOD__ );
-
-    $language = $db_test_entry->get_assignment()->get_participant()->language;
-    $language = is_null( $language ) ? 'en' : $language;
-
-    // get the Yes or No words from the confirmation dictionary according to the
-    // the language of the participant
-
-    // Get the db entries
-    $word_entry_list = array();
-    foreach( $db_test_entry->get_test_entry_confirmation_list() as $db_test_entry_confirmation )
-    {
-
-      $db_test_entry_confirmation->confirmation
-      $word_entry_list[ $db_test_entry_confirmatiion->get_word()->word ] =
-        array( 'id' => $db_test_entry_confirmation->id,
-               'confirmation' => $db_test_entry_confirmation->confirmation );
-               
-    }
-
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->order( 'rank' );
-    $word_list = array();
-    foreach( $db_test_entry->get_test()->get_ranked_word_set_list( $modifier )
-      as $db_ranked_word_set )
-    {
-      $db_word = $db_ranked_word_set->get_word( $language );
-      $row = array(
-               'entry_id' => '',
-               'word_id' => $db_word->id,
-               'word' => $db_word->word,
-               'selection' => '' );
-      if( array_key_exists( $db_word->word, $word_entry_list ) )
-      {
-         $row['entry_id'] = $word_entry_list[$db_word->word]['id'];
-         $row['selection'] = $word_entry_list[$db_word->word]['selection'];
-      }
-      $word_list[] = $row;
-    }
-    $this->set_variable( 'word_list', $word_list );
+    
     $instruction = "Was the participant able to ";
     if( preg_match( '/alpha/', $db_test->name ) )
     {
@@ -118,7 +80,15 @@ class test_entry_confirmation_transcribe extends \cenozo\ui\widget
       $instruction = $instruction .
         "count from 1 to 20, from 1, 2, 3, 4 and so on?";
     }
-    $this->set_variable( 'instruction', $instruction );
-    log::debug($word_list);
+
+    // Get the db entries
+    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
+    $db_test_entry_confirmation = $test_entry_confirmation_class_name::get_unique_record(
+      'test_entry_id', $db_test_entry->id );
+
+    $entry_data = array( 'id' => $db_test_entry_confirmation->id,
+                         'confirmation' => $db_test_entry_confirmation->confirmation,
+                         'instruction' => $instruction );
+    $this->set_variable( 'entry_data', $entry_data );                     
   }
 }
