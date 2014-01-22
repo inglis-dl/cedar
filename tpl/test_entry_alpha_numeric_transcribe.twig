@@ -27,6 +27,15 @@
 */
 
 
+      // set focus to the next empty input field
+      $( 'input:text' ).each( function() {
+        if( this.value ==='' ) {
+          this.focus();
+          return false;
+        }
+      } );
+
+
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
         var columns = new Object();
@@ -57,15 +66,14 @@
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
           input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
           input.each( function() {
+              $(this).val( "" );
+              $(this).attr("name", "undefined" );
               var rank = $(this).attr( "id" ).split("__")[1];
               if( rank == "1" ) {
                 $(this).removeAttr( "disabled" );
               } else {
                 $(this).attr( "disabled", "disabled" );
               }
-
-              $(this).val( "" );
-              $(this).attr("name", "undefined" );
           } );
           $("#{{ parent.full }}_Next").button( { disabled : true } );
         }

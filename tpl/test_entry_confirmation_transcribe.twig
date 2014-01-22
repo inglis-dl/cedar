@@ -12,7 +12,17 @@
   <script type="text/javascript">
     $( function () {
 
-      // find and handle radio element change events:
+      // if any radio buttons are checked, enable Next button
+      $('input:radio').each( function() {
+        $("#{{ parent.full }}_Next").button( { disabled : true } );
+        if( $(this).is(':checked') ) {
+          $("#{{ parent.full }}_Next").button( { disabled : false } );
+          return false;
+        }
+      } );
+
+
+      // find and handle radio element change event:
       $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
         var args = new Object();
         var columns = new Object();
@@ -41,6 +51,9 @@
           $("#{{ parent.full }}_Next").button( { disabled : true } );
         }
       } );// end Reset button click
+
+     // TODO consider overriding next button function so that
+     // if the radio entry is "no" set and skip the next test
 
     } );
   </script>

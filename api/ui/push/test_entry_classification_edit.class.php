@@ -52,11 +52,27 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $modifier->limit( 1 );
     $word_class_name = lib::get_class_name( 'database\word' );
     $db_word = $word_class_name::select( $modifier );
+    $do_save = false;
     if( !empty( $db_word ) )
     {
       $db_test_entry_classification->word_id = $db_word[0]->id;
       $db_test_entry_classification->word_candidate = NULL;
       $db_test_entry_classification->save();
     }
+
+    // consider the test entry completed if 1 or more entries exist
+    // if none exist, the typist must defer to the admin to set completed status
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'word_id', '!=', '' );
+    $modifier->where( 'word_candidate', '!=', '', true, true );
+    $test_entry_classification_class_name = 
+      lib::get_class_name('database\test_entry_classification');
+    $completed = $test_entry_classification_class_name::count( $modifier ) > 0 ? 1 : 0;
+    if( $db_test_entry->completed != $completed )
+    {   
+      $db_test_entry->completed = $completed;
+      $db_test_entry->save();
+    } 
   }
 }

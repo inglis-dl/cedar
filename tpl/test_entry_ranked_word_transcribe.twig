@@ -10,7 +10,19 @@
 {% block javascript %}
   {{ parent() }}
   <script type="text/javascript">
+    function count_empty_inputs( ) {
+      // count number of radio items total
+      // count number of items with value "yes"
+      // count number of items with value "no"
+      // count number of items with value "variant"
+      // total yes + no + variant == total radio / 3 => enable next button
+
+      return $('[name*=arquivo][value!=""]').length;
+    }
+    
     $( function () {
+      // TODO debug Next button enable disable conditions
+      $("#{{ parent.full }}_Next").button({ disabled : false} );
 
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
@@ -26,6 +38,8 @@
 
         var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
         if( $(this).val() == "variant" ) {
+          // disable inputs until the variant is entered
+          $( "#{{ widget.full }}__entry_table" ).find( "input" ).attr( "disabled", "disabled" );
           $(text_id).removeAttr( "disabled" );
           $(text_id).focus();
         } else {
@@ -35,8 +49,10 @@
         
         columns["word_candidate"] = $(text_id).val();
         args.columns = columns;
-
-        ajax_push( "{{ widget.subject }}", "edit", args );
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+        } else {
+          error_dialog( "Error", "Push to database failed." );
+        }
 
 
       } );// end radio input change
@@ -57,7 +73,21 @@
           columns["selection"] = "variant";
           args.columns = columns;
           
-          ajax_push( "{{ widget.subject }}", "edit", args );
+          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            input = $( "#{{ widget.full }}__entry_table" ).find( "input:radio" );
+            input.each( function() {
+              if( this.type == "radio" ) {
+                $(this).removeAttr( "disabled" );
+                if( $(this).val() == 'variant' ) {
+                  var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
+                  if( $(text_id).val().length > 0 ) {
+                    $(text_id).removeAttr( "disabled" );
+                  }  
+                }
+              }
+            } ); 
+
+          }
         }
         
       } );// end test input change  
@@ -70,12 +100,12 @@
           input.each( function() {
             if( this.type == "radio" ) {
               $(this).removeAttr( "checked" );
-            }
-            else {
+            } else if ( this.type == "text" ) {
               $(this).val( "" );
               $(this).attr( "disabled", "disabled" );
             }
           } );
+        $("#{{ parent.full }}_Next").button( { disabled : true } );  
         }
       } );// end Reset button click
 

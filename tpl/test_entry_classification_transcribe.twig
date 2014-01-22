@@ -26,6 +26,13 @@
         } );
 */
 
+      // set focus to the next empty input field
+      $( 'input:text' ).each( function() {
+        if( this.value ==='' ) {
+          this.focus();
+          return false;
+        }
+      } );  
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
@@ -43,14 +50,15 @@
         // will change the element class attr and therefore its color
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           slot_refresh( {{ slot }} );
-        }
-
-        // TODO possible override of parent click function required
-        // debug this statement
-        if( columns["rank"]  == '1' ) {
-          $("#{{ parent.full }}_Next").button( { disabled : false } );
-        }
         
+          // TODO possible override of parent click function required
+          // debug this statement, currently this will force a 
+          // deferral to procede to the next test if the first input
+          // field is left empty
+          if( columns["rank"]  == '1' ) {
+            $("#{{ parent.full }}_Next").button( { disabled : false } );
+          }
+        }
       } );// end text input change
 
       // loop over all input elements and clear them
@@ -62,16 +70,16 @@
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
           input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
           input.each( function() {
+              $(this).val( "" );
+              $(this).attr("name", "undefined" );
               var rank = $(this).attr( "id" ).split("__")[1];
               if( rank == "1" ) {
                 //$(this).css( "background-color", "white");
                 $(this).removeAttr( "disabled" );
+                $(this).focus();
               } else {
                 $(this).attr( "disabled", "disabled" );
               }
-
-              $(this).val( "" );
-              $(this).attr("name", "undefined" );
           } );
           $("#{{ parent.full }}_Next").button( { disabled : true } );
         }

@@ -35,26 +35,27 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
    */
   protected function execute()
   {
-     parent::execute();
+    parent::execute();
 
-     $db_test_entry = $this->get_record()->get_test_entry();
-     $base_mod = lib::create( 'database\modifier' );
-     $base_mod->where( 'test_entry_id', '=', $db_test_entry->id ); 
-     $modifier = clone $base_mod;
-     $modifier->where( 'selection', '=', '' );
-     $test_entry_ranked_word_class_name = lib::get_class_name( 'database\test_entry_ranked_word' ); 
-     $num_selected = $test_entry_ranked_word_class_name::count( $modifier );
-     $modifier = clone $base_mod;
-     $modifier->where( 'selection', '=', 'variant' );
-     $modifier->where( 'word_candidate', '=', '' );
-     $num_empty_variant = $test_entry_ranked_word_class_name::count( $modifier );
+    $db_test_entry_ranked_word = $this->get_record();
+    $db_test_entry = $db_test_entry_ranked_word->get_test_entry();
+
+    $base_mod = lib::create( 'database\modifier' );
+    $base_mod->where( 'test_entry_id', '=', $db_test_entry->id ); 
+    $modifier = clone $base_mod;
+    $modifier->where( 'selection', '=', '' );
+    $test_entry_ranked_word_class_name = lib::get_class_name( 'database\test_entry_ranked_word' ); 
+    $num_empty_selected = $test_entry_ranked_word_class_name::count( $modifier );
+    $modifier = clone $base_mod;
+    $modifier->where( 'selection', '=', 'variant' );
+    $modifier->where( 'word_candidate', '=', '' );
+    $num_empty_variant = $test_entry_ranked_word_class_name::count( $modifier );
    
-     $completed = $num_selected == 0 && $num_empty_variant == 0 ? 1 : 0;
-     if( $db_test_entry->completed != $completed )
-     {
-       $db_test_entry->completed = $completed;
-       $db_test_entry->save();
-     }
+    $completed = $num_empty_selected == 0 && $num_empty_variant == 0 ? 1 : 0;
+    if( $db_test_entry->completed != $completed )
+    {   
+      $db_test_entry->completed = $completed;
+      $db_test_entry->save();
+    } 
   }
- 
 }

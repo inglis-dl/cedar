@@ -87,7 +87,8 @@ class test_entry_confirmation_transcribe extends \cenozo\ui\widget
       'test_entry_id', $db_test_entry->id );
 
     $entry_data = array( 'id' => $db_test_entry_confirmation->id,
-                         'confirmation' => $db_test_entry_confirmation->confirmation,
+                         'confirmation' => is_null( $db_test_entry_confirmation->confirmation ) ? '' :
+                            $db_test_entry_confirmation->confirmation,
                          'instruction' => $instruction );
     $this->set_variable( 'entry_data', $entry_data );                     
   }

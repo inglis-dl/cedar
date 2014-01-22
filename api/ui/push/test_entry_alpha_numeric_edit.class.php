@@ -78,6 +78,23 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $db_test_entry_alpha_numeric->word_id = $db_word[0]->id;
       $db_test_entry_alpha_numeric->save();
     }
+
+    // consider the test entry completed if 1 or more entries exist
+    // if none exist, the typist must defer to the admin to set completed status
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'word_id', '!=', '' );
+    $test_entry_alpha_numeric_class_name = 
+      lib::get_class_name('database\test_entry_alpha_numeric');
+    $completed = $test_entry_alpha_numeric_class_name::count( $modifier ) > 0 ? 1 : 0;
+    if( $db_test_entry->completed != $completed )
+    {   
+      $db_test_entry->completed = $completed;
+      $db_test_entry->save();
+    }    
+
+
+
   }
 
   /**
