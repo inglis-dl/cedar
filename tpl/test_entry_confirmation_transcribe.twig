@@ -10,19 +10,26 @@
 {% block javascript %}
   {{ parent() }}
   <script type="text/javascript">
+
+    function configure_ui() {
+      var disable = $(':input[type="radio"]:checked').length == 0 && !{{ deferred }};
+      $("#{{ parent.full }}_Next").button( { disabled : disable } );
+
+      //disable elements based on deferred status
+      if( {{ deferred }} ) {
+        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
+        $("#{{ parent.full }}_Reset").button( { disabled : true } );
+        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+          $(this).attr( "disabled", "disabled" );
+        } );
+      }
+    }
+
     $( function () {
 
-      // if any radio buttons are checked, enable Next button
-      $('input:radio').each( function() {
-        $("#{{ parent.full }}_Next").button( { disabled : true } );
-        if( $(this).is(':checked') ) {
-          $("#{{ parent.full }}_Next").button( { disabled : false } );
-          return false;
-        }
-      } );
+      configure_ui();
 
-
-      // find and handle radio element change event:
+      // find and handle radio element change events
       $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
         var args = new Object();
         var columns = new Object();
@@ -33,13 +40,11 @@
         } else {
           columns["confirmation"] = 0;
         }
-        console.log(columns);
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          $("#{{ parent.full }}_Next").button( { disabled : false } );
+          configure_ui();
         }
-      } );
-
+      } ); // end radio input change
 
       $( "#{{ parent.full }}_Reset" ).click(function() {
         var id = "{{ parent.id }}";
@@ -48,17 +53,24 @@
           input.each( function() {
             $(this).removeAttr( "checked" );
           } );
-          $("#{{ parent.full }}_Next").button( { disabled : true } );
+          configure_ui();
         }
       } );// end Reset button click
-
-     // TODO consider overriding next button function so that
-     // if the radio entry is "no" set and skip the next test
 
     } );
   </script>
 
 {% endblock javascript %}
+
+{% block defer_action %}
+  <script type="text/javascript">
+  if( {{ deferred }} ) {
+    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+    $(this).attr( "disabled", "disabled" );
+    } );
+  }
+  </script>
+{% endblock defer_action %}
 
 {% block widget %}
     

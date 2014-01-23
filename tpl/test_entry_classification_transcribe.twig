@@ -10,29 +10,32 @@
 {% block javascript %}
   {{ parent() }}
   <script type="text/javascript">
-    $( function () {
-       // TODO debug Next button enable disable conditions
-       $("#{{ parent.full }}_Next").button({ disabled : false} );
-/*
-       $('input[id="1__1"]').keyup( function() {
-           if( $(this).val() != '') {
-             console.log( 'keyup not null' );
-             $("#{{ parent.full }}_Next").({ disabled : false} );
-           }else{
-             console.log( 'keyup null' );
-             $("#{{ parent.full }}_Next").button({ disabled : true} );
-           }
-         
-        } );
-*/
 
-      // set focus to the next empty input field
-      $( 'input:text' ).each( function() {
-        if( this.value ==='' ) {
-          this.focus();
-          return false;
-        }
-      } );  
+    function configure_ui() {
+      var disable = $(':input[type="text"][value!=""]').length == 0 && !{{ deferred }};
+      $("#{{ parent.full }}_Next").button( { disabled : disable } );
+
+      //disable elements based on deferred status
+      if( {{ deferred }} ) {
+        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
+        $("#{{ parent.full }}_Reset").button( { disabled : true } );
+        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+          $(this).attr( "disabled", "disabled" );
+        } );
+      } else {
+        // set focus to the next empty input field
+        $( 'input:text' ).each( function() {
+          if( this.value ==='' && !$(this).attr( "disabled" ) ) {
+            this.focus();
+            return false;
+          }
+        } );  
+      }
+    }
+
+    $( function () {
+
+      configure_ui();
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
@@ -43,28 +46,17 @@
         columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
         columns["word_candidate"] = $(this).val();
         args.columns = columns;
-        console.log(columns);
 
         // refresh with updated information
-        // if the candidate is found in the dictionary, this 
-        // will change the element class attr and therefore its color
+        // TODO if the candidate is found in the dictionary,  
+        // change the element text area background color
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           slot_refresh( {{ slot }} );
-        
-          // TODO possible override of parent click function required
-          // debug this statement, currently this will force a 
-          // deferral to procede to the next test if the first input
-          // field is left empty
-          if( columns["rank"]  == '1' ) {
-            $("#{{ parent.full }}_Next").button( { disabled : false } );
-          }
         }
       } );// end text input change
 
       // loop over all input elements and clear them
-      // update the db to reflect the changes   
-      // use the parent.full name since the reset button
-      // is declared in the parent twig file
+      // update the db to reflect the changes
       $( "#{{ parent.full }}_Reset" ).click(function() {
         var id = "{{ parent.id }}";
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
@@ -74,14 +66,13 @@
               $(this).attr("name", "undefined" );
               var rank = $(this).attr( "id" ).split("__")[1];
               if( rank == "1" ) {
-                //$(this).css( "background-color", "white");
+                //$(this).css( 'background-color', 'yellow');
                 $(this).removeAttr( "disabled" );
-                $(this).focus();
               } else {
                 $(this).attr( "disabled", "disabled" );
               }
           } );
-          $("#{{ parent.full }}_Next").button( { disabled : true } );
+          configure_ui();
         }
       } );// end Reset button click
 
@@ -106,6 +97,16 @@
   </script>
 
 {% endblock javascript %}
+
+{% block defer_action %}
+  <script type="text/javascript">
+  if( {{ deferred }} ) {
+    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+    $(this).attr( "disabled", "disabled" );
+    } );
+  }
+  </script>
+{% endblock defer_action %}
 
 {% block widget %}
 

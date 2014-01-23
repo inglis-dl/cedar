@@ -10,20 +10,34 @@
 {% block javascript %}
   {{ parent() }}
   <script type="text/javascript">
-    function count_empty_inputs( ) {
-      // count number of radio items total
+
+    function configure_ui() {
+      var numRadio = $(':input[type="radio"]').length / 3;
+      var numYes = $(':input[type="radio"][value="yes"]:checked').length;
+      var numNo = $(':input[type="radio"][value="no"]:checked').length;
+      var numVariant = $(':input[type="radio"][value="variant"]:checked').length;
       // count number of items with value "yes"
       // count number of items with value "no"
       // count number of items with value "variant"
       // total yes + no + variant == total radio / 3 => enable next button
+ 
+      var disable = ( numYes + numNo + numVariant ) != numRadio && !{{ deferred }};
+      $("#{{ parent.full }}_Next").button( { disabled : disable } );
 
-      return $('[name*=arquivo][value!=""]').length;
+      //disable elements based on deferred status
+      if( {{ deferred }} ) {
+        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
+        $("#{{ parent.full }}_Reset").button( { disabled : true } );
+        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+          $(this).attr( "disabled", "disabled" );
+        } );
+      }
     }
-    
-    $( function () {
-      // TODO debug Next button enable disable conditions
-      $("#{{ parent.full }}_Next").button({ disabled : false} );
 
+    $( function () {
+
+      configure_ui(); 
+       
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
       // which radio button was selected
@@ -54,13 +68,13 @@
           error_dialog( "Error", "Push to database failed." );
         }
 
+        configure_ui(); 
 
       } );// end radio input change
 
-      //TODO deal with case where text input loses focus with no text input
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         if( $(this).val().length == 0 ) {
-          error_dialog( "Error", "You cannot leave a blank variant entry." );
+          error_dialog( "Error", "Blank variant entry not permitted." );
         } else {
 
           var args = new Object();
@@ -85,12 +99,13 @@
                   }  
                 }
               }
-            } ); 
-
+            } );
           }
+
+          configure_ui(); 
         }
         
-      } );// end test input change  
+      } );// end text input change  
 
       // loop over and clear all input elements
       $( "#{{ parent.full }}_Reset" ).click(function() {
@@ -105,7 +120,8 @@
               $(this).attr( "disabled", "disabled" );
             }
           } );
-        $("#{{ parent.full }}_Next").button( { disabled : true } );  
+
+        configure_ui();
         }
       } );// end Reset button click
 
@@ -113,6 +129,16 @@
   </script>
 
 {% endblock javascript %}
+
+{% block defer_action %}
+  <script type="text/javascript">
+  if( {{ deferred }} ) {
+    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+    $(this).attr( "disabled", "disabled" );
+    } );
+  }
+  </script>
+{% endblock defer_action %}
 
 {% block widget %}
   

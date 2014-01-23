@@ -9,25 +9,22 @@
 {% block javascript %}
 
   {{ parent() }}
-  <script type="text/javascript">
+  <script type="text/javascript">   
+
     $( function () {
 
-      $("#{{ widget.full }}_Next").button( 
-        { disabled : {{ deferred == 1 ? 'false' : ( completed == 1 ? 'false' : 'true' ) }} } );
-
-      $("#{{ widget.full }}__audio_fault").click(function() {
+      $("#{{ widget.full }}__audio_fault").click( function() {
         var args = new Object();
-        args.columns = { audio_fault : $(this).is(':checked')?1:0 };
+        args.columns = { audio_fault : $(this).is(':checked') ? 1 : 0 };
         args.id = {{ id }};
         ajax_push( "{{ widget.subject }}", "edit", args );
-      } );
+      } ); // end Audio Fault click
       
-      $("#{{ widget.full }}_Quit").click(function() {
+      $("#{{ widget.full }}_Quit").click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
-      } );
+      } ); // end Quit click
 
-      $("#{{ widget.full }}_Defer").click(function() {
-
+      $("#{{ widget.full }}_Defer").click( function() {
         $dialog = $( "#{{ widget.full }}__note_dialog" );
         var buttons = new Object;
         buttons.Ok = function() {
@@ -44,8 +41,14 @@
             args.id = {{ id }};
             if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
               $dialog.dialog( "close" );
-              $("#{{ widget.full }}_Next").button( { disabled : false  } );
-              $(this).button( { disabled : true } );
+
+              $("#{{ widget.full }}_Next").button( { disabled : false } );
+              $("#{{ widget.full }}_Reset").button( { disabled : true } );
+              $("#{{ widget.full }}_Defer").button( { disabled : true } );
+
+              slot_refresh( {{slot}} );
+
+              {% block defer_action %}  {% endblock defer_action %}
             }
           }
         };  
@@ -66,26 +69,23 @@
           open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
         } );
 
-      } ).button( { disabled : {{ deferred == 1 ? 'true' : 'false' }} } );
+      } ).button( { disabled : {{ deferred }} } ); // end Defer click
 
-      $("#{{ widget.full }}_Prev").click(function() {
+      $( "#{{ widget.full }}_Prev").click( function() {
         slot_load( {{ slot }}, 
           "{{ widget.subject }}", "{{ widget.name }}", 
           { id : {{ prev_test_entry_id}} } );
+      } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } ); // end Prev click
 
-      } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } );
-
-      $("#{{ widget.full }}_Next").click(function() {
-         
+      $( "#{{ widget.full }}_Next" ).click( function() {
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
         {% else %}  
           slot_load( {{ slot }}, 
             "{{ widget.subject }}", "{{ widget.name }}", 
             { id : {{ next_test_entry_id}} } );
-         {% endif %}    
-
-      } ).button( { disabled : {{ deferred == 1 ? 'false' : ( completed == 1 ? 'false' : 'true' ) }} } );
+        {% endif %}  
+      } ); // end Next click
 
     } );
   </script>
