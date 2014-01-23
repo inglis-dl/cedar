@@ -71,10 +71,7 @@ class assignment_new extends \cenozo\ui\push\base_new
     $language = is_null( $language ) ? 'en' : $language;
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    //TODO consider creating default sub items for test_entry objects
-    // in the database api
-    
-    //creates a test entry automatically for each test
+    //create a test entry for each test
     foreach( $test_class_name::select( $modifier ) as $db_test )
     {
       $args = array();
@@ -90,19 +87,14 @@ class assignment_new extends \cenozo\ui\push\base_new
       {
         $modifier = lib::create( 'database\modifier' );
         $modifier->order( 'rank' );
-        $word_list = array();
 
-        // Get the list of ranked words in order.
-        // Create data for the rows in the transcribe widget's table.
-        // If there is a corresponding db entry, populate data fields accordingly.
         foreach( $db_test->get_ranked_word_set_list( $modifier )
           as $db_ranked_word_set )
         {
-          // Get the word in the participant's language.
+          // get the word in the participant's language
           $word_id = 'word_' . $language . '_id';
           $args = array();
           $args['columns']['test_entry_id'] = $test_entry_id;
-          //$args['columns']['selection'] = '';
           $args['columns']['word_id'] = $db_ranked_word_set->$word_id;
           $operation = lib::create( 'ui\push\test_entry_ranked_word_new', $args );
           $operation->process();             
@@ -112,13 +104,12 @@ class assignment_new extends \cenozo\ui\push\base_new
       {
         $args = array();
         $args['columns']['test_entry_id'] = $test_entry_id;
-        //$args['columns']['confirmation'] = 0;
         $operation = lib::create( 'ui\push\test_entry_confirmation_new', $args );
         $operation->process();
       }
       else if( $test_type_name == 'classification' )
       {
-        // Create a default of 40 to start with.
+        // create a default of 40 to start with
         for( $rank = 1; $rank < 41; $rank++ )
         {
           $args = array();
