@@ -100,6 +100,8 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "view", true, "View the details of an assignment's test_entries." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "transcribe", true, "View a form for transcribing recordings into test entries." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "adjudicate", true, "View and edit paired test_entry details." );
 
 -- test_entry_alpha_numeric
 

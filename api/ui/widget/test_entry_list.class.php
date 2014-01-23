@@ -43,6 +43,20 @@ class test_entry_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'audio_fault', 'boolean', 'Audio Fault', true );
     $this->add_column( 'completed', 'boolean', 'Completed', true );
     $this->add_column( 'deferred', 'boolean', 'Deferred', true );
+
+    // TODO adjudications may be removed at after system operates
+    // and shows that double data entry is not required.  Consider
+    // setting as a system Setting to be set by an administrator
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+    $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );
+    if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
+    {
+      $this->adjudicate_allowed = true;
+      $this->add_column( 'adjudicate', 'boolean', 'Adjudicate', true );
+    }  
+
+    //TODO consider adding the typist(s) name assigned to the test and their email
+    // contact info
   }
   
   /**
@@ -58,13 +72,21 @@ class test_entry_list extends \cenozo\ui\widget\base_list
     foreach( $this->get_record_list() as $record )
     {
       $db_test = $record->get_test();
-      $this->add_row( $record->id,
-        array( 'test.rank' => $db_test->rank,
+      $data = array( 'test.rank' => $db_test->rank,
                'test_id' => $db_test->name,
                'audio_fault' => $record->audio_fault,
-               'completed' => $record->completed,
-               'deferred' => $record->deferred
-               ) );
+               'deferred' => $record->deferred,
+               'completed' => $record->completed );
+      if( $this->adjudicate_allowed )
+        $data['adjudicate'] = $record->adjudicate;
+      $this->add_row( $record->id, $data );   
     }
   }
+
+  /** 
+   * Are adjudications allowed.
+   * @var adjudicate_allowed
+   * @access protected
+   */
+  protected $adjudicate_allowed = false;
 }
