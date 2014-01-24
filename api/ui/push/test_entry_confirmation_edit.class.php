@@ -45,5 +45,6 @@ class test_entry_confirmation_edit extends \cenozo\ui\push\base_edit
       $db_test_entry->completed = $completed;
       $db_test_entry->save();
     }
+    $db_test_entry->adjudicate();
   }  
 }

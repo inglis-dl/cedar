@@ -52,7 +52,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $modifier->limit( 1 );
     $word_class_name = lib::get_class_name( 'database\word' );
     $db_word = $word_class_name::select( $modifier );
-    $do_save = false;
     if( !empty( $db_word ) )
     {
       $db_test_entry_classification->word_id = $db_word[0]->id;
@@ -74,5 +73,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       $db_test_entry->completed = $completed;
       $db_test_entry->save();
     } 
+    $db_test_entry->adjudicate();
   }
 }
