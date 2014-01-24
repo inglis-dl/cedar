@@ -157,20 +157,24 @@ class assignment_add extends \cenozo\ui\widget\base_view
         {   
           $assignment_mod = lib::create( 'database\modifier' );
           $assignment_mod->where( 'participant_id', '=', $db_participant->id );
-          $assignment_mod->where( 'user_id', '=', $db_user->id );
 
-          if( $assignment_class_name::count( $assignment_mod ) == 0 )
+          if( $assignment_class_name::count(  $assignment_mod ) < 2 )
           {
-            $uid = $db_participant->uid;
-            $language = $db_participant->language;
-            $language = is_null( $language ) ? 'en' : $language;
-            $participant_id = $db_participant->id;
-            $db_cohort = $db_participant->get_cohort();
-            $cohort = $db_cohort->name;
-            $cohort_id = $db_cohort->id;
-            $found = true;
-            break;
-          }  
+            $assignment_mod->where( 'user_id', '=', $db_user->id );
+
+            if( $assignment_class_name::count( $assignment_mod ) == 0 )
+            {
+              $uid = $db_participant->uid;
+              $language = $db_participant->language;
+              $language = is_null( $language ) ? 'en' : $language;
+              $participant_id = $db_participant->id;
+              $db_cohort = $db_participant->get_cohort();
+              $cohort = $db_cohort->name;
+              $cohort_id = $db_cohort->id;
+              $found = true;
+              break;
+            }
+          }
         }
         $offset += $limit;
       }
