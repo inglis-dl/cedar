@@ -1,6 +1,6 @@
 <?php
 /**
- * test_entry_alpha_numeric_transcribe.class.php
+ * test_entry_confirmation_adjudicate.class.php
  * 
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
@@ -10,9 +10,9 @@ namespace cedar\ui\widget;
 use cenozo\lib, cenozo\log, cedar\util;
 
 /**
- * widget test_entry_alpha_numeric transcribe
+ * widget test_entry_confirmation adjudicate
  */
-class test_entry_alpha_numeric_transcribe extends \cenozo\ui\widget
+class test_entry_confirmation_adjudicate extends \cenozo\ui\widget
 {
   /** 
    * Constructor.
@@ -22,7 +22,7 @@ class test_entry_alpha_numeric_transcribe extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_alpha_numeric', 'transcribe', $args );
+    parent::__construct( 'test_entry_confirmation', 'adjudicate', $args );
   }
 
   /**
@@ -35,13 +35,11 @@ class test_entry_alpha_numeric_transcribe extends \cenozo\ui\widget
   protected function prepare()
   {
     parent::prepare();
-
-    // parent must be a test_entry_transcribe widget
+  
     if( is_null( $this->parent ) ) 
       throw lib::create( 'exception\runtime', 'This class must have a parent', __METHOD__ );
    
     $db_test_entry = $this->parent->get_record();
-
     $db_test = $db_test_entry->get_test();
     $heading = $db_test->name . ' test entry form';
 
@@ -56,7 +54,6 @@ class test_entry_alpha_numeric_transcribe extends \cenozo\ui\widget
    * Sets up the operation with any pre-execution instructions that may be necessary.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
    * @access protected
    */
   protected function setup()
@@ -67,28 +64,37 @@ class test_entry_alpha_numeric_transcribe extends \cenozo\ui\widget
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
 
-    if( $test_type_name != 'alpha_numeric' )
+    if( $test_type_name != 'confirmation' )
       throw lib::create( 'exception\runtime',
-              'Widget requires test type to be alpha numeric, not ' .
+              'Widget requires test type to be ranked word, not ' . 
               $test_type_name, __METHOD__ );
-
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->order( 'rank' );
-    $entry_data = array();
-    //TODO add variable for dictionary lookup text completion
-    foreach( $db_test_entry->get_test_entry_alpha_numeric_list( $modifier ) as 
-      $db_test_entry_alpha_numeric )
+    
+    $instruction = "Was the participant able to ";
+    if( preg_match( '/alpha/', $db_test->name ) )
     {
-      $db_word = is_null(  $db_test_entry_alpha_numeric->word_id ) ? null :
-        lib::create( 'database\word', $db_test_entry_alpha_numeric->word_id );
-      $row = array(
-               'id' => $db_test_entry_alpha_numeric->id,
-               'rank' => $db_test_entry_alpha_numeric->rank,
-               'word_id' => is_null( $db_word ) ? '' :  $db_word->id,
-               'word' => is_null( $db_word ) ? '' :  $db_word->word );
-
-      $entry_data[] = $row;              
+      $instruction = $instruction .
+        "recite the alphabet, from A, B, C, D and so on?";
     }
-    $this->set_variable( 'entry_data', $entry_data );
+    else
+    {
+      $instruction = $instruction .
+        "count from 1 to 20, from 1, 2, 3, 4 and so on?";
+    }
+
+    $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_entry(); 
+
+    // Get the db entries
+    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
+    $a = $test_entry_confirmation_class_name::get_unique_record(
+      'test_entry_id', $db_test_entry->id );
+    $b = $test_entry_confirmation_class_name::get_unique_record(
+      'test_entry_id', $db_test_entry_adjudicate->id );
+    
+    $entry_data = array( 'id_1' => $a->id,
+                         'confirmation_1' => is_null( $a->confirmation ) ? '' : $a->confirmation,
+                         'id_2' => $b->id,
+                         'confirmation_2' => is_null( $b->confirmation ) ? '' : $b->    confirmation,
+                         'instruction' => $instruction );
+    $this->set_variable( 'entry_data', $entry_data );                     
   }
 }

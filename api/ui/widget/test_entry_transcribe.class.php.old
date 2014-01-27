@@ -141,11 +141,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_view
       $row = 0;
     }
     else
+    {
       throw lib::create( 'exception\runtime', 
         'Unknown test type: ' . $db_test_type->name, __METHOD__ );
-
-   //$this->set_variable( 'packing_order', $packing_order );
-   //$this->set_variable( 'extendable', $extendable );
-
+    }
   }
 }

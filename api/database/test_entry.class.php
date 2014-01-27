@@ -64,16 +64,17 @@ class test_entry extends \cenozo\database\record
     return $db_next_test_entry;
   }
 
+
   /** 
-   * Determine and set the adjudicate status.
+   * Get the entry record from the sibling assignment for adjudication.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @throws exception\notice
    */
-  public function adjudicate()
+  public function get_adjudicate_entry()
   {
-    if( !$this->completed ) return;
+    if( !$this->completed ) return NULL;
     // are there 2 test entries for this participant 
     
     $db_assignment = $this->get_assignment();
@@ -84,8 +85,7 @@ class test_entry extends \cenozo\database\record
     $db_assignment_match = $assignment_class_name::select( $assign_mod );
     if( empty( $db_assignment_match ) ) 
     {
-      log::debug( 'no matching assignment found' );
-      return;
+      return NULL;
     }
     $db_assignment_match = $db_assignment_match[0];
     // TODO check that the user_id in the assignment table should be unique
@@ -100,11 +100,23 @@ class test_entry extends \cenozo\database\record
     $db_test_entry_match = $test_entry_class_name::select( $entry_mod );
     if( empty( $db_test_entry_match ) )
     {
-      log::debug( 'no matching assignment found' );
-      return;
+      return NULL;
     }
-    $db_test_entry_match = $db_test_entry_match[0];
-    
+    return $db_test_entry_match[0];
+  }
+
+  /** 
+   * Determine and set the adjudicate status.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   * @throws exception\notice
+   */
+  public function adjudicate()
+  {
+    $db_test_entry_match = $this->get_adjudicate_entry();
+    if( is_null( $db_test_entry_match ) ) return;
+
     // get all the sub entries for each entry
     $entry_type_name = $this->get_test()->get_test_type()->name;
     $entry_name = 'test_entry_' . $entry_type_name;

@@ -1,0 +1,109 @@
+{##
+ # test_entry_confirmation_transcribe.twig
+ # 
+ # Transcribe a confirmation test.
+ # @author Dean Inglis <inglisd@mcmaster.ca>
+ # @see base_view.twig for parameters
+ #}
+{% extends "widget.twig" %}
+
+{% block javascript %}
+  {{ parent() }}
+  <script type="text/javascript">
+
+    function configure_ui() {
+      var disable = $(':input[type="radio"]:checked').length == 0 && !{{ deferred }};
+      $("#{{ parent.full }}_Next").button( { disabled : disable } );
+
+      //disable elements based on deferred status
+      if( {{ deferred }} ) {
+        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
+        $("#{{ parent.full }}_Reset").button( { disabled : true } );
+        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+          $(this).attr( "disabled", "disabled" );
+        } );
+      }
+    }
+
+    $( function () {
+
+      configure_ui();
+
+      // find and handle radio element change events
+      $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
+        var args = new Object();
+        var columns = new Object();
+        columns["id"] = $(this).attr( "name" );
+        columns["test_entry_id"] = "{{ parent.id }}";
+        if( $(this).val() == "yes" ) {
+          columns["confirmation"] = 1;
+        } else {
+          columns["confirmation"] = 0;
+        }
+        args.columns = columns;
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          configure_ui();
+        }
+      } ); // end radio input change
+
+      $( "#{{ parent.full }}_Reset" ).click(function() {
+        var id = "{{ parent.id }}";
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
+          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
+          input.each( function() {
+            $(this).removeAttr( "checked" );
+          } );
+          configure_ui();
+        }
+      } );// end Reset button click
+
+    } );
+  </script>
+
+{% endblock javascript %}
+
+{% block defer_action %}
+  <script type="text/javascript">
+  if( {{ deferred }} ) {
+    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+    $(this).attr( "disabled", "disabled" );
+    } );
+  }
+  </script>
+{% endblock defer_action %}
+
+{% block widget %}
+    
+  <div class="spacer">
+
+  <caption style="text-align: left;"><strong>{{ entry_data.instruction }}</strong></caption>
+
+  <div class="spacer">
+
+  <table id="{{ widget.full }}__entry_table">
+
+      <tr>
+          <td><input
+             id="{{ widget.full }}__Yes"
+             name={{ entry_data.id }}
+             value="yes"
+             type="radio"
+             {{ entry_data.confirmation == '1' ? "checked" : "" }}>
+             <label for="{{ widget.full }}__Yes">Yes</label>
+          </td>
+       </tr> 
+      <tr>
+          <td><input
+             id="{{ widget.full }}__No"
+             name={{ entry_data.id }}
+             value="no"
+             type="radio"
+             {{ entry_data.confirmation == '0' ? "checked" : "" }}>
+             <label for="{{ widget.full }}__No">No</label>
+          </td>
+       </tr> 
+
+  </table> 
+
+{% endblock widget %}
+
