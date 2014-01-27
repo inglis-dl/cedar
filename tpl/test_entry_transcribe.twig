@@ -13,6 +13,14 @@
 
     $( function () {
 
+      if( "{{ test_type }}" == "confirmation" ) {
+        $("#{{ widget.full }}__audio_control").attr( "disabled", "disabled" );
+        $("#{{ widget.full }}__audio_fault").attr( "disabled", "disabled" );
+      } else {
+        $("#{{ widget.full }}__audio_control").removeAttr( "disabled" );
+        $("#{{ widget.full }}__audio_fault").removeAttr( "disabled" );
+      }
+
       $("#{{ widget.full }}__audio_fault").click( function() {
         var args = new Object();
         args.columns = { audio_fault : $(this).is(':checked') ? 1 : 0 };
@@ -46,7 +54,7 @@
               $("#{{ widget.full }}_Reset").button( { disabled : true } );
               $("#{{ widget.full }}_Defer").button( { disabled : true } );
 
-              slot_refresh( {{slot}} );
+              slot_refresh( {{ slot }} );
 
               {% block defer_action %}  {% endblock defer_action %}
             }
@@ -108,7 +116,8 @@
         <table>
           <tr>
             <td align="left">
-              <audio controls>
+              <audio id="{{ widget.full }}__audio_control"
+                controls="controls">
                 <embed height="50" style="width:100%">
               </audio>
               <input type="checkbox" id="{{ widget.full }}__audio_fault" 
