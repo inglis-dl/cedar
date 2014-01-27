@@ -15,11 +15,17 @@ use cenozo\lib, cenozo\log, cedar\util;
 class test_entry_alpha_numeric extends \cenozo\database\has_rank
 {
   public static function adjudicate_compare( $a, $b ) { 
-    for( $i = 0; $i < count( $a ); $i++ )
-    {   
-      if( $a[ $i ]->rank != $b[ $i ]->rank ||
-          $a[ $i ]->word_id != $b[ $i ]->word_id ) return 1;
-    }     
+    reset( $a );
+    reset( $b );
+    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) )
+    {
+      $a_obj = current( $a ); 
+      $b_obj = current( $b ); 
+      if( $a_obj->rank != $b_obj->rank ||
+          $a_obj->word_id != $b_obj->word_id ) return 1;
+      next( $a );
+      next( $b );
+    }
     return 0;
   }
 }

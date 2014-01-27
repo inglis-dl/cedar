@@ -15,10 +15,16 @@ use cenozo\lib, cenozo\log, cedar\util;
 class test_entry_confirmation extends \cenozo\database\record 
 {
   public static function adjudicate_compare( $a, $b ) { 
-    for( $i = 0; $i < count( $a ); $i++ )
-    {
-      if( $a[ $i ]->confirmation != $b[ $i ]->confirmation ) return 1;
-    }
+    reset( $a );
+    reset( $b );
+    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
+    {   
+      $a_obj = current( $a );  
+      $b_obj = current( $b );  
+      if( $a_obj->confirmation != $b_obj->confirmation ) return 1;
+      next( $a );
+      next( $b );
+    }   
     return 0;
-  }
+  }    
 }
