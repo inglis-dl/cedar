@@ -14,7 +14,15 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test_entry_alpha_numeric extends \cenozo\database\has_rank
 {
-  public static function adjudicate_compare( $a, $b ) { 
+  /** 
+   * Compare test entry lists for adjudication.  Returns true
+   * for a difference in entry fields.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   */
+  public static function adjudicate_compare( $a, $b )
+  { 
     reset( $a );
     reset( $b );
     while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) )

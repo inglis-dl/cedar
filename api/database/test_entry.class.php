@@ -14,7 +14,6 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test_entry extends \cenozo\database\record
 {
-
   /** 
    * Get the previous record according to test rank.
    * 
@@ -113,21 +112,9 @@ class test_entry extends \cenozo\database\record
     $entry_list = $this->$get_list_method();
     $match_entry_list = $db_test_entry_match->$get_list_method();
  
-    if( count( $match_entry_list ) != count( $entry_list ) )
-      throw lib::create( 'exception\runtime',
-        'Test entries must have the same number of sub entries.', __METHOD__ );
-
     $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
     $adjudicate = $entry_class_name::adjudicate_compare( $entry_list , $match_entry_list );
-    if( $adjudicate == 0 )
-    {
-       
-     log::debug( 'no diffs found' );
-    }
-    else
-    {
-      log::debug(' diffs found' );
-    }
+    
     if(  $this->adjudicate != $adjudicate )
     {
       $this->adjudicate = $adjudicate;
