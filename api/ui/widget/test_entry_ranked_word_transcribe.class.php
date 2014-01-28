@@ -75,17 +75,27 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
     $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
     
-    $entry_list = array();
+    $word_list = array();
+    $intrusion_list = array();
     foreach( $db_test_entry->get_test_entry_ranked_word_list() as $db_test_entry_ranked_word )
     {
-      $entry_list[ $db_test_entry_ranked_word->get_word()->word ] = 
-        array(
-          'id' => $db_test_entry_ranked_word->id,
-          'selection' => is_null( $db_test_entry_ranked_word->selection ) ? '' :
-             $db_test_entry_ranked_word->selection,  
-          'word_candidate' => 
-            is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
-              $db_test_entry_ranked_word->word_candidate );  
+      $data = 
+          array(
+            'id' => $db_test_entry_ranked_word->id,
+            'selection' => is_null( $db_test_entry_ranked_word->selection ) ? '' :
+               $db_test_entry_ranked_word->selection,  
+            'word_candidate' => 
+              is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
+                $db_test_entry_ranked_word->word_candidate );
+
+      if( !is_null( $db_test_entry_ranked_word->word_id ) )
+      {
+        $word_list[ $db_test_entry_ranked_word->get_word()->word ] = $data;
+      }
+      else
+      {
+        $intrusion_list[] = $data;
+      }
     }    
 
     $modifier = lib::create( 'database\modifier' );
@@ -100,19 +110,25 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
       // Get the word in the participant's language.
       $word_id = 'word_' . $language . '_id';
       $db_word = lib::create( 'database\word', $db_ranked_word_set->$word_id );
-      $row = array(
-               'id' => '',
-               'word_id' => $db_word->id,
-               'word' => $db_word->word,
-               'selection' => '',
-               'word_candidate' => '' );
-      if( array_key_exists( $db_word->word, $entry_list ) )
+      if( array_key_exists( $db_word->word, $word_list ) )
       {
-         $row['id'] = $entry_list[$db_word->word]['id'];
-         $row['selection'] = $entry_list[$db_word->word]['selection'];
-         $row['word_candidate'] = $entry_list[$db_word->word]['word_candidate'];
+         $entry_data[] = array(
+           'id' => $word_list[ $db_word->word ][ 'id' ],
+           'word_id' => $db_word->id,
+           'word' => $db_word->word,       
+           'selection' => $word_list[ $db_word->word ][ 'selection' ],
+           'word_candidate' => $word_list[ $db_word->word ][ 'word_candidate' ] );
       }
-      $entry_data[] = $row;
+    }
+
+    foreach( $intrusion_list as $intrusion )
+    {
+      $entry_data[] = array(
+        'id' => $intrusion[ 'id' ],
+        'word_id' => '',
+        'word' => '',
+        'selection' => '',
+        'word_candidate' => $intrusion[ 'word_candidate' ] );      
     }
     $this->set_variable( 'entry_data', $entry_data );
   }

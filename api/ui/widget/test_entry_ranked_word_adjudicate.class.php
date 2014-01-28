@@ -77,41 +77,74 @@ class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
 
     $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_entry();
     
-    $a = $db_test_entry->get_test_entry_ranked_word_list();
-    $b = $db_test_entry_adjudicate->get_test_entry_ranked_word_list();
-    $entry_data = array();
+    $word_mod = lib::create( 'database\modifier' );
+    $word_mod->where( 'word_id', '!=', '' );
+    $word_mod->where( 'selection', '!=', '' );
+    $word_mod->order( 'id' );
 
+    $a = $db_test_entry->get_test_entry_ranked_word_list( $word_mod );   
+    $b = $db_test_entry_adjudicate->get_test_entry_ranked_word_list( $word_mod );
+    
+    $entry_data = array();
     while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
     {   
       $a_obj = current( $a );
       $b_obj = current( $b );
       if( $a_obj->selection != $b_obj->selection ||
-          $a_obj->word_id != $b_obj->word_id ||
           $a_obj->word_candidate != $b_obj->word_candidate )
       {        
-        $db_word_1 = is_null(  $a_obj->word_id ) ? null :
-          lib::create( 'database\word', $a_obj->word_id );
-        $db_word_2 = is_null(  $b_obj->word_id ) ? null :
-          lib::create( 'database\word', $b_obj->word_id );
+        if( $a_obj->word_id != $b_obj->word_id )
+          throw lib::create( 'exception\runtime',
+            'Unmatched words found in adjudicate pair',  __METHOD__ );
 
-        $row = array(
-                 'id_1' => $a_obj->id,
-                 'id_2' => $b_obj->id,
-                 'selection_1' => $a_obj->selection,
-                 'selection_2' => $b_obj->selection,
-                  
-                 'word_id_1' => is_null( $db_word_1 ) ? '' :  $db_word_1->id,
-                 'word_1' => is_null( $db_word_1 ) ? '' :  $db_word_1->word,
-                 'word_id_2' => is_null( $db_word_2 ) ? '' :  $db_word_2->id,
-                 'word_2' => is_null( $db_word_2 ) ? '' :  $db_word_2->word 
-                 'word_candidate_1' => is_null( $a->word_candidate ) ? '' :  $a->word_candidate,
-                 'word_candidate_2' => is_null( $b->word_candidate ) ? '' :  $b->wor    d_candidate );
+        $db_word_1 = lib::create( 'database\word', $a_obj->word_id );
+        $db_word_2 = lib::create( 'database\word', $b_obj->word_id );
 
-        $entry_data[] = $row;
+        $entry_data[] = array(
+           'id_1' => $a_obj->id,
+           'id_2' => $b_obj->id,
+           'selection_1' => $a_obj->selection,
+           'selection_2' => $b_obj->selection,                  
+           'word_id_1' => $db_word_1->id,
+           'word_1' => $db_word_1->word,
+           'word_id_2' => $db_word_2->id,
+           'word_2' => $db_word_2->word,
+           'word_candidate_1' => is_null( $a->word_candidate ) ? '' : $a->word_candidate,
+           'word_candidate_2' => is_null( $b->word_candidate ) ? '' : $b->word_candidate );
       }   
       next( $a );
       next( $b );
     }
+
+    $intrusion_mod = lib::create( 'database\modifier' );
+    $intrusion_mod->where( 'selection', '=', '' );
+    $intrusion_mod->order( 'id' );
+
+    $a = $db_test_entry->get_test_entry_ranked_word_list( $intrusion_mod );
+    $b = $db_test_entry_adjudicate->get_test_entry_ranked_word_list( $intrusion_mod );
+    
+    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
+    {   
+      $a_obj = current( $a );
+      $b_obj = current( $b );
+      if( $a_obj->word_candidate != $b_obj->word_candidate )
+      {        
+        $entry_data = array(
+           'id_1' => $a_obj->id,
+           'id_2' => $b_obj->id,
+           'selection_1' => $a_obj->selection,
+           'selection_2' => $b_obj->selection,                  
+           'word_id_1' => $db_word_1->id,
+           'word_1' => $db_word_1->word,
+           'word_id_2' => $db_word_2->id,
+           'word_2' => $db_word_2->word,
+           'word_candidate_1' => is_null( $a->word_candidate ) ? '' : $a->word_candidate,
+           'word_candidate_2' => is_null( $b->word_candidate ) ? '' : $b->word_candidate );
+      }   
+      next( $a );
+      next( $b );
+    }
+
     $this->set_variable( 'entry_data', $entry_data );
   }
 }

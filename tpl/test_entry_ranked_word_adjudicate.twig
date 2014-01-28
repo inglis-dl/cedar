@@ -1,7 +1,7 @@
 {##
- # test_entry_ranked_word_transcribe.twig
+ # test_entry_ranked_word_adjudicate.twig
  # 
- # Transcribe a ranked word test.
+ # Adjudicate a ranked word test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
  #}
@@ -12,42 +12,25 @@
   <script type="text/javascript">
 
     function configure_ui() {
-      var numRadio = $(':input[type="radio"]').length / 3;
-      var numYes = $(':input[type="radio"][value="yes"]:checked').length;
-      var numNo = $(':input[type="radio"][value="no"]:checked').length;
-      var numVariant = $(':input[type="radio"][value="variant"]:checked').length;
-      // count number of items with value "yes"
-      // count number of items with value "no"
-      // count number of items with value "variant"
-      // total yes + no + variant == total radio / 3 => enable next button
- 
-      var disable = ( numYes + numNo + numVariant ) != numRadio && !{{ deferred }};
-      $("#{{ parent.full }}_Next").button( { disabled : disable } );
-
-      //disable elements based on deferred status
-      if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
-        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
-        } );
-      }
+      var disable = $( 'input:radio[value="accept"]:checked' ).length == 
+                    $( 'input:radio[value="accept"]' ).length ? 0 : 1;
+      $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
     }
 
     $( function () {
+     
+      configure_ui();
 
-      configure_ui(); 
-       
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
       // which radio button was selected
-      $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value!="accept"]' ).change( function() {
         var args = new Object();
         var columns = new Object();
-        var hidden_id = "input:hidden[name=" + $(this).attr( "name" ) + "]";
-        columns["id"] = $(hidden_id).val();
+        var name = $(this).attr( "name" );
+        columns["id"] = $(this).attr( "name" ).split("__")[1];
         columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" );
+        columns["word_id"] = $(this).attr( "name" ).split("__")[0];
         columns["selection"] = $(this).val();
 
         var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
@@ -68,8 +51,6 @@
           error_dialog( "Error", "Push to database failed." );
         }
 
-        configure_ui(); 
-
       } );// end radio input change
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
@@ -79,66 +60,47 @@
 
           var args = new Object();
           var columns = new Object();
-          var hidden_id = "input:hidden[name=" + $(this).attr( "name" ) + "]";
-          columns["id"] = $(hidden_id).val();
+          var text_type = $(this).attr( "name" ).split("__")[2];
+          columns["id"] = $(this).attr( "name" ).split("__")[1];
           columns["test_entry_id"] = "{{ parent.id }}";
-          columns["word_id"] = $(this).attr( "name" );
+          columns["word_id"] = text_type == "variant" ? $(this).attr( "name" ).split("__")[0] : "";
           columns["word_candidate"] = $(this).val();
-          columns["selection"] = "variant";
+          columns["selection"] = text_type == "variant" ? "variant" : "";
           args.columns = columns;
           
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-            input = $( "#{{ widget.full }}__entry_table" ).find( "input:radio" );
+            input = $( "#{{ widget.full }}__entry_table" ).find( 'input' );
             input.each( function() {
               if( this.type == "radio" ) {
                 $(this).removeAttr( "disabled" );
-                if( $(this).val() == 'variant' ) {
-                  var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
+                if( $(this).val() == "variant" ) {
+                  var text_id = "input:text[name=" + $(this).attr( "name" ) + "__variant]";
                   if( $(text_id).val().length > 0 ) {
                     $(text_id).removeAttr( "disabled" );
                   }  
-                }
+                }                   
               }
-            } );
+              else if( this.type == "text" ) {
+                if( $(this).attr("name").split("__")[2] == "intrusion" &&
+                    $(this).val().length > 0 ) {
+                  $(this).removeAttr( "disabled" );  
+                }                
+              }  
+            } );// end each input
           }
-
-          configure_ui(); 
         }
         
       } );// end text input change  
 
-      // loop over and clear all input elements
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        var id = "{{ parent.id }}";
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
-          input.each( function() {
-            if( this.type == "radio" ) {
-              $(this).removeAttr( "checked" );
-            } else if ( this.type == "text" ) {
-              $(this).val( "" );
-              $(this).attr( "disabled", "disabled" );
-            }
-          } );
-
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
+        function() {
         configure_ui();
-        }
-      } );// end Reset button click
+      } ); // end radio input change
 
     } );
   </script>
 
 {% endblock javascript %}
-
-{% block defer_action %}
-  <script type="text/javascript">
-  if( {{ deferred }} ) {
-    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-    $(this).attr( "disabled", "disabled" );
-    } );
-  }
-  </script>
-{% endblock defer_action %}
 
 {% block widget %}
   
@@ -147,36 +109,95 @@
   <table id="{{ widget.full }}__entry_table">
 
     <thead>
-      <td></td>
-      <td>Yes</td>
-      <td>No</td>
-      <td>Variant</td>
-      <td></td>
+      <td>Entry #</td>
+      <td>{{ user_1 }}</td>
+      <td>{{ user_2 }}</td>
     </thead>
-    
+  
     {% for entry in entry_data %}
       <tr>
-        <td class="heading">{{ entry.word }}</td>
-        <input name={{ entry.word_id }}
-             type="hidden"
-             value={{ entry.id}}>
-        <td><input
-             name={{ entry.word_id }}
-             value="yes"
-             type="radio" 
-             {{ entry.selection == 'yes' ? "checked" : "" }}></td>
-        <td><input name="{{ entry.word_id }}" 
-             value="no"
-             type="radio"
-             {{ entry.selection == 'no' ? "checked" : "" }}></td>
-        <td><input name={{ entry.word_id }} 
-             value="variant"
-             type="radio"
-             {{ entry.selection == 'variant' ? "checked" : "" }}></td>
-        <td><input name={{ entry.word_id }}
-             type="text"
-             {{ entry.selection == 'variant' ? "" : "disabled" }}
-             value={{ entry.word_candidate }}></td>
+        {% set row_heading = 'intrusion' %}
+        {% if entry.word_1 is defined %}
+          <td class="heading">"{{ entry.word_1  }}"</td>
+          <input id="{{ entry.word_1 }}__{{ entry.id_1 }}__{{ entry.id_2 }}"
+               type="hidden"
+               value="word">             
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_1 }}"
+               value="yes"
+               type="radio" 
+               {{ entry.selection_1 == 'yes' ? "checked" : "" }}>
+          </td>
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_1 }}"
+               value="no"
+               type="radio"
+               {{ entry.selection_1 == 'no' ? "checked" : "" }}>
+          </td>
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_1 }}"
+               value="variant"
+               type="radio"
+               {{ entry.selection_1 == 'variant' ? "checked" : "" }}>
+          </td>
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_1 }}__variant"
+               type="text"
+               {{ entry.selection_1 == 'variant' ? "" : "disabled" }}
+               value={{ entry.word_candidate_1 }}>
+          </td>
+          <td><input id="{{ entry.id_1 }}__Accept"
+               type="radio"
+               value="accept">
+               <label for="{{ entry.id_1 }}__Accept">Accept</label>
+          </td>
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_2 }}"
+               value="yes"
+               type="radio" 
+               {{ entry.selection_2 == 'yes' ? "checked" : "" }}>
+          </td>
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_2 }}"
+               value="no"
+               type="radio"
+               {{ entry.selection_2 == 'no' ? "checked" : "" }}>
+          </td>
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_2 }}"
+               value="variant"
+               type="radio"
+               {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
+          </td>
+          <td><input name="{{ entry.word_id_1 }}__{{ entry.id_2 }}__variant"
+               type="text"
+               {{ entry.selection_2 == 'variant' ? "" : "disabled" }}
+               value={{ entry.word_candidate_2 }}>
+          </td>
+          <td><input id="{{ entry.id_2 }}__Accept"
+               type="radio"
+               value="accept">
+               <label for="{{ entry.id_2 }}__Accept">Accept</label>
+          </td>
+        {% else %}
+          <td class="heading">"intrusion"</td>
+          <input id="{{ entry.id_1 }}__{{ entry.id_2 }}"
+               type="hidden"
+               value="intrusion">
+          <td></td><td></td><td></td>     
+          <td><input name="{{ entry.id_1 }}__{{ entry.id_1 }}__intrusion"
+               type="text"
+               value={{ entry.word_candidate_1 }}>
+          </td>
+          <td><input id="{{ entry.id_1 }}__Accept"
+               type="radio"
+               value="accept">
+               <label for="{{ entry.id_1 }}__Accept">Accept</label>
+          </td>
+          <td></td><td></td><td></td>     
+          <td><input name="{{ entry.id_2 }}__{{ entry.id_2 }}__intrusion"
+               type="text"
+               value={{ entry.word_candidate_2 }}>
+          </td>
+          <td><input id="{{ entry.id_2 }}__Accept"
+               type="radio"
+               value="accept">
+               <label for="{{ entry.id_2 }}__Accept">Accept</label>
+          </td>
+        {% endif %}
       </tr>
     {% endfor %}  
 

@@ -113,6 +113,8 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_alpha_numeric", "delete", true, "Deletes an alpha numeric test entry." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_alpha_numeric", "transcribe", true, "Transcribe an alpha numeric test entry." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry_alpha_numeric", "adjudicate", true, "View and edit paired test_entry details." );
 
 -- test_entry_classification
 
@@ -124,6 +126,8 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_classification", "delete", true, "Deletes a classification test entry." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_classification", "transcribe", true, "Transcribe a classification test entry." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry_classification", "adjudicate", true, "View and edit paired test_entry details." );
 
 -- test_entry_confirmation
 
@@ -135,6 +139,8 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_confirmation", "delete", true, "Deletes a confirmation test entry." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_confirmation", "transcribe", true, "Transcribe a confirmation test entry." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry_confirmation", "adjudicate", true, "View and edit paired test_entry details." );
 
 -- test_entry_ranked_word
 
@@ -146,6 +152,8 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_ranked_word", "deletes", true, "Deletes an entry for an ranked word test type." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_ranked_word", "transcribe", true, "Transcribe an entry for an ranked word test type." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry_ranked_word", "adjudicate", true, "View and edit paired test_entry details." );
 
 -- user
 

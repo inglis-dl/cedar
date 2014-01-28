@@ -64,6 +64,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $db_role = $session->get_role();
     $db_user = $session->get_user();
     $allow_transcribe_operation = false;
+    $allow_adjudicate_operation = false;
 
     foreach( $assignment_list as $db_assignment )
     {
@@ -92,22 +93,40 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $mod_adjudicate->where( 'adjudicate', '=', true );
       $adjudicate_count = $test_entry_class_name::count( $mod_adjudicate );
 
-      // set up for test_entry transcription
       $allow_transcribe = false;
+      $allow_adjudicate = false;
       $test_entry_id = null;
-      if( $complete_count != $test_count )
+
+      if( $db_role->name == 'typist' )
       {
-         $mod_test_entry = clone $base_mod;
-         $mod_test_entry->where( 'completed', '=', false );
-         $mod_test_entry->order( 'test.rank' );
-         $mod_test_entry->limit( 1 );
-         $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
-         if( !is_null( $db_test_entry[0] ) ) 
-         {  
-           $test_entry_id = $db_test_entry[0]->id;
-           $allow_transcribe = true;
-           if( !$allow_transcribe_operation ) $allow_transcribe_operation = true;
-         }
+        $mod_test_entry = clone $base_mod;
+        $mod_test_entry->where( 'completed', '=', false );
+        $mod_test_entry->order( 'test.rank' );
+        $mod_test_entry->limit( 1 );
+        $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
+        if( !is_null( $db_test_entry[0] ) ) 
+        {  
+          $test_entry_id = $db_test_entry[0]->id;
+          $allow_transcribe = true;
+          if( !$allow_transcribe_operation ) $allow_transcribe_operation = true;
+        }
+      }
+      else if( $db_role->name == 'administrator' )
+      {
+        if( $complete_count == $test_count && $adjudicate_count > 0 )
+        {
+           $mod_test_entry = clone $base_mod;
+           $mod_test_entry->where( 'adjudicate', '=', true );
+           $mod_test_entry->order( 'test.rank' );
+           $mod_test_entry->limit( 1 );
+           $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
+           if( !is_null( $db_test_entry[0] ) ) 
+           {  
+             $test_entry_id = $db_test_entry[0]->id;
+             $allow_adjudicate = true;
+             if( !$allow_adjudicate_operation ) $allow_adjudicate_operation = true;
+           }
+        }
       }
 
       $this->add_row( $db_assignment->id,
@@ -121,14 +140,19 @@ class assignment_list extends \cenozo\ui\widget\base_list
                'complete' =>  
                  $complete_count > 0 ? $complete_count . '/' . $test_count : 'none',
                'allow_transcribe' => $allow_transcribe,
+               'allow_adjudicate' => $allow_adjudicate,
                'test_entry_id' => $test_entry_id ) );
     }
 
-    // define whether or not test_entry transcribing is allowed
+    // define whether or not test_entry transcribing or adjudicating is allowed
     $operation_class_name = lib::get_class_name( 'database\operation' );
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'transcribe' );
     $this->set_variable( 'allow_transcribe',
       ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
         $allow_transcribe_operation ) );   
+    $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );
+    $this->set_variable( 'allow_adjudicate',
+      ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
+        $allow_adjudicate_operation ) );   
   }
 }

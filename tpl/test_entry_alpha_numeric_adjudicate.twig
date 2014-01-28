@@ -1,7 +1,7 @@
 {##
- # test_entry_classfication_adjudicate.twig
+ # test_entry_alpha_numeric_adjudicate.twig
  # 
- # Transcribe a alpha_numeric type test.
+ # Adjudicate an alpha_numeric type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
  #}
@@ -12,25 +12,9 @@
   <script type="text/javascript">
 
     function configure_ui() {
-      var disable = $(':input[type="text"][value!=""]').length == 0 && !{{ deferred }};
-      $("#{{ parent.full }}_Next").button( { disabled : disable } );
-
-      //disable elements based on deferred status
-      if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
-        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
-        } );
-      } else {
-        // set focus to the next empty input field
-        $( 'input:text' ).each( function() {
-          if( this.value ==='' && !$(this).attr( "disabled" ) ) {
-            this.focus();
-            return false;
-          }
-        } );
-      }      
+      var disable = $( 'input:radio[value="accept"]:checked' ).length == 
+                    $( 'input:radio[value="accept"]' ).length ? 0 : 1;    
+      $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
     }
 
     $( function () {
@@ -53,25 +37,10 @@
         }
       } );// end text input change
 
-      // loop over all input elements and clear them
-      // update the db to reflect the changes
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        var id = "{{ parent.id }}";
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
-          input.each( function() {
-              $(this).val( "" );
-              $(this).attr("name", "undefined" );
-              var rank = $(this).attr( "id" ).split("__")[1];
-              if( rank == "1" ) {
-                $(this).removeAttr( "disabled" );
-              } else {
-                $(this).attr( "disabled", "disabled" );
-              }
-          } );
-          configure_ui();
-        }
-      } );// end Reset button click
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
+        function() {
+        configure_ui();
+      } ); // end radio input change
 
     } );
   </script>
@@ -104,18 +73,23 @@
                    type="text"
                    style="width:20%"
                    name={{ entry.word_id_1 ? entry.word_id_1 : 'undefined' }}
-                   value="{{ value_1 }}"></td>
-        <td><input id="{{ entry.id_1 }}__radio"
+                   value="{{ value_1 }}">
+        </td>
+        <td><input id="{{ entry.id_1 }}__Accept"
                    type="radio"
-                   value="">
-        <td><input id="{{ entry.id_2 }}__2"
+                   value="accept">
+                   <label for="{{ entry.id_1 }}__Accept">Accept</label>
+        </td>
+        <td><input id="{{ entry.id_2 }}__{{ entry.rank }}__2"
                    type="text"
                    style="width:20%"
                    name={{ entry.word_id_2 ? entry.word_id_2 : 'undefined' }}
                    value="{{ value_2 }}"></td>
-        <td><input id="{{ entry.id_1 }}__2"
+        <td><input id="{{ entry.id_2 }}__Accept"
                    type="radio"
-                   value="">
+                   value="accept">
+                   <label for="{{ entry.id_2 }}__Accept">Accept</label>
+        </td>
       </tr>
     {% endfor %}
 

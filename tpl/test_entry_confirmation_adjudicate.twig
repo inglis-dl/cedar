@@ -1,7 +1,7 @@
 {##
  # test_entry_confirmation_transcribe.twig
  # 
- # Transcribe a confirmation test.
+ # Adjudicate a confirmation type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
  #}
@@ -12,28 +12,21 @@
   <script type="text/javascript">
 
     function configure_ui() {
-      var disable = $(':input[type="radio"]:checked').length == 0 && !{{ deferred }};
-      $("#{{ parent.full }}_Next").button( { disabled : disable } );
-
-      //disable elements based on deferred status
-      if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
-        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
-        } );
-      }
+      var disable = $( 'input:radio[value="accept"]:checked' ).length == 
+                    $( 'input:radio[value="accept"]' ).length ? 0 : 1;
+      $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
     }
 
     $( function () {
 
       configure_ui();
 
-      // find and handle radio element change events
-      $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
+      // find and handle confirmation radio element change events
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[name!="accept"]' ).change(
+        function() {
         var args = new Object();
         var columns = new Object();
-        columns["id"] = $(this).attr( "name" );
+        columns["id"] = $(this).attr( "id" ).split("__")[0];
         columns["test_entry_id"] = "{{ parent.id }}";
         if( $(this).val() == "yes" ) {
           columns["confirmation"] = 1;
@@ -42,35 +35,18 @@
         }
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          configure_ui();
         }
       } ); // end radio input change
 
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        var id = "{{ parent.id }}";
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
-          input.each( function() {
-            $(this).removeAttr( "checked" );
-          } );
-          configure_ui();
-        }
-      } );// end Reset button click
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[name="accept"]' ).change(
+        function() {
+        configure_ui();
+      } ); // end radio input change
 
     } );
   </script>
 
 {% endblock javascript %}
-
-{% block defer_action %}
-  <script type="text/javascript">
-  if( {{ deferred }} ) {
-    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-    $(this).attr( "disabled", "disabled" );
-    } );
-  }
-  </script>
-{% endblock defer_action %}
 
 {% block widget %}
     
@@ -82,27 +58,57 @@
 
   <table id="{{ widget.full }}__entry_table">
 
+    <thead>
+      <td>Entry #</td>
+      <td>{{ user_1 }}</td>
+      <td>{{ user_2 }}</td>
+    </thead>
       <tr>
-          <td><input
-             id="{{ widget.full }}__Yes"
-             name={{ entry_data.id }}
-             value="yes"
-             type="radio"
-             {{ entry_data.confirmation == '1' ? "checked" : "" }}>
-             <label for="{{ widget.full }}__Yes">Yes</label>
-          </td>
-       </tr> 
-      <tr>
-          <td><input
-             id="{{ widget.full }}__No"
-             name={{ entry_data.id }}
-             value="no"
-             type="radio"
-             {{ entry_data.confirmation == '0' ? "checked" : "" }}>
-             <label for="{{ widget.full }}__No">No</label>
-          </td>
-       </tr> 
-
+        <td><input
+           id="{{ entry.id_1 }}__Yes"
+           name="{{ entry.id_1 }}__confirmation"
+           value="yes"
+           type="radio"
+           {{ entry_data.confirmation_1 == '1' ? "checked" : "" }}>
+           <label for="{{ entry.id_1 }}__Yes">Yes</label>
+        </td>
+        <td><input
+           id="{{ entry.id_1 }}__No"
+           name="{{ entry.id_1 }}__confirmation"
+           value="no"
+           type="radio"
+           {{ entry_data.confirmation_1 == '1' ? "" : "checked" }}>
+           <label for="{{ entry.id_1 }}__No">No</label>
+        </td>
+        <td><input
+           id="{{ entry.id_1 }}__Accept"
+           value="accept"
+           type="radio">
+           <label for="{{ entry.id_1 }}__Accept">Accept</label>
+        </td>
+        <td><input
+           id="{{ entry.id_2 }}__Yes"
+           name="{{ entry.id_2 }}__confirmation"
+           value="yes"
+           type="radio"
+           {{ entry_data.confirmation_2 == '1' ? "checked" : "" }}>
+           <label for="{{ entry.id_2 }}__Yes">Yes</label>
+        </td>
+        <td><input
+           id="{{ entry.id_2 }}__No"
+           name="{{ entry.id_2 }}__confirmation"
+           value="no"
+           type="radio"
+           {{ entry_data.confirmation_2 == '1' ? "" : "checked" }}>
+           <label for="{{ entry.id_2 }}__No">No</label>
+        </td>
+        <td><input
+           id="{{ entry.id_2 }}__Accept"
+           value="accept"
+           type="radio">
+           <label for="{{ entry.id_2 }}__Accept">Accept</label>
+        </td>
+      </tr>
   </table> 
 
 {% endblock widget %}

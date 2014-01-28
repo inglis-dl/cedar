@@ -36,20 +36,17 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
   {
     parent::prepare();
 
-    $db_test_entry = $this->get_record();
-    $this->adjudicate_entry = $db_test_entry->get_adjudicate_entry();
-    if( is_null( $this->adjudicate_entry ) ) 
-      throw
-
-    $db_test = $db_test_entry->get_test();
-    $db_participant = $db_test_entry->get_assignment()->get_participant();
-
-    $db_test_type = $db_test->get_test_type();
+    $record = $this->get_record();
+    $db_test = $record->get_test();
+    $db_participant = $record->get_assignment()->get_participant();
+    $this->adjudicate_entry = $record->get_adjudicate_entry();
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_adjudicate
     $this->test_entry_widget = lib::create( 
-      'ui\widget\test_entry_' . $db_test_type->name . '_adjudicate', $this->arguments );
+      'ui\widget\test_entry_' . $db_test->get_test_type()->name . '_adjudicate', 
+        $this->arguments );
+
     $this->test_entry_widget->set_parent( $this );
 
     $modifier = NULL;
@@ -80,19 +77,19 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $record = $this->get_record();
     $db_test = $record->get_test();
 
-    $db_adjudicate_entry = $record->get_adjudicate_entry();
-
     $this->set_variable( 'audio_fault_1', $record->audio_fault );
     $this->set_variable( 'adjudicate_1', $record->adjudicate );
     $this->set_variable( 'deferred_1', $record->deferred );
     $this->set_variable( 'completed_1', $record->completed );
     $this->set_variable( 'user_1', $record->get_assignment()->get_user()->name );
-    $this->set_variable( 'id_2', $db_adjudicate_entry->id );
-    $this->set_variable( 'audio_fault_2', $db_adjudicate_entry->audio_fault );
-    $this->set_variable( 'adjudicate_2', $db_adjudicate_entry->adjudicate );
-    $this->set_variable( 'deferred_2', $db_adjudicate_entry->deferred );
-    $this->set_variable( 'completed_2', $db_adjudicate_entry->completed );
-    $this->set_variable( 'user_2', $db_adjudicate_entry->get_assignment()->get_user()->name );
+
+    $this->set_variable( 'id_2', $this->adjudicate_entry->id );
+    $this->set_variable( 'audio_fault_2', $this->adjudicate_entry->audio_fault );
+    $this->set_variable( 'adjudicate_2', $this->adjudicate_entry->adjudicate );
+    $this->set_variable( 'deferred_2', $this->adjudicate_entry->deferred );
+    $this->set_variable( 'completed_2', $this->adjudicate_entry->completed );
+    $this->set_variable( 'user_2', $this->adjudicate_entry->get_assignment()->get_user()->name );
+
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
 

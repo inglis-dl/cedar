@@ -10,8 +10,11 @@
 {% block javascript %}
 
   {{ parent() }}
+
   {% if allow_transcribe %}
+
     <script type="text/javascript">
+
       $( function() {
         // make test_entry transcribe button icon
         $( "button.{{ widget.full }}_test_entry_transcribe" ).button( {
@@ -24,13 +27,39 @@
           slot_load( {{ slot }}, "test_entry", "transcribe", args );
         } );
       } );
+
+    <script>
+
+  {% elseif allow_adjudicate %}
+    
+    <script type="text/javascript">
+
+      $( function() {
+        $( "button.{{ widget.full }}_test_entry_adjudicate" ).button( {
+          text: false,
+          icons: { primary: "ui-icon-pencil" }
+        } ).click( function() {
+          var args = new Object();
+          var id_string = $(this).attr( "id" );
+          args.id = parseInt( id_string.substring( id_string.lastIndexOf("_") + 1 ) );
+          slot_load( {{ slot }}, "test_entry", "adjudicate", args );
+        } );
+      } );
+
     </script>
+
   {% endif %}
 
 {% endblock javascript %}
 
 {% block header_button_columns %}
-  {% if allow_transcribe %}<th width="1%"></th>{% endif %}
+
+  {% if allow_transcribe %}
+    <th width="1%"></th>
+  {% elseif allow_adjudicate %}
+    <th width="1%"></th> 
+  {% endif %}
+
 {% endblock header_button_columns %}
 
 {% block button_columns %}
@@ -40,6 +69,13 @@
               {{ row.columns['assignment.allow_transcribe'] ? '' : 'disabled' }}
               id="{{ widget.full }}_test_entry_transcribe_{{ row.columns['assignment.test_entry_id'] }}">transcribe</button>
     </td>
+  {% elseif allow_adjudicate %}
+    <td>
+      <button class="{{ widget.full }}_test_entry_adjudicate"
+              {{ row.columns['assignment.allow_adjudicate'] ? '' : 'disabled' }}
+              id="{{ widget.full }}_test_entry_adjudicate_{{ row.columns['assignment.test_entry_id'] }}">adjudicate</button>
+    </td>
   {% endif %}
+
 {% endblock button_columns %}
 
