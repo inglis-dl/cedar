@@ -68,11 +68,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $test_entry_classification_class_name = 
       lib::get_class_name('database\test_entry_classification');
     $completed = $test_entry_classification_class_name::count( $modifier ) > 0 ? 1 : 0;
-    if( $db_test_entry->completed != $completed )
-    {   
-      $db_test_entry->completed = $completed;
-      $db_test_entry->save();
-    } 
-    $db_test_entry->adjudicate();
+    $db_test_entry->update_status_fields( $completed );
   }
 }

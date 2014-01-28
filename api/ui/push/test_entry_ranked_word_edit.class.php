@@ -52,11 +52,6 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     $num_empty_variant = $test_entry_ranked_word_class_name::count( $modifier );
    
     $completed = $num_empty_selected == 0 && $num_empty_variant == 0 ? 1 : 0;
-    if( $db_test_entry->completed != $completed )
-    {   
-      $db_test_entry->completed = $completed;
-      $db_test_entry->save();
-    } 
-    $db_test_entry->adjudicate();
+    $db_test_entry->update_status_fields( $completed );
   }
 }

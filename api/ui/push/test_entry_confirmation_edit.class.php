@@ -40,11 +40,6 @@ class test_entry_confirmation_edit extends \cenozo\ui\push\base_edit
     $db_test_entry_confirmation = $this->get_record();
     $db_test_entry = $db_test_entry_confirmation->get_test_entry();
     $completed = is_null( $db_test_entry_confirmation ) ? 0 : 1;
-    if( $db_test_entry->completed != $completed )
-    {   
-      $db_test_entry->completed = $completed;
-      $db_test_entry->save();
-    }
-    $db_test_entry->adjudicate();
+    $db_test_entry->update_status_fields( $completed );
   }  
 }

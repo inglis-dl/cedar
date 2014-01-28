@@ -59,13 +59,13 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     parent::execute();
 
     $db_test_entry_alpha_numeric = $this->get_record();
-    $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();
+    $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();    
     $db_dictionary = $db_test_entry->get_test()->get_dictionary();
 
     $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
 
-    // does the word candidate exist in the primary dictionary ?
+    // does the word candidate exist in the primary dictionary?
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
     $modifier->where( 'language', '=', $language );
@@ -79,20 +79,17 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $db_test_entry_alpha_numeric->save();
     }
 
-    // consider the test entry completed if 1 or more entries exist
+    // consider the test entry completed if 1 or more entries exist and
+    // the entry is not deferred
     // if none exist, the typist must defer to the admin to set completed status
 
+    
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'word_id', '!=', '' );
     $test_entry_alpha_numeric_class_name = 
       lib::get_class_name('database\test_entry_alpha_numeric');
     $completed = $test_entry_alpha_numeric_class_name::count( $modifier ) > 0 ? 1 : 0;
-    if( $db_test_entry->completed != $completed )
-    {   
-      $db_test_entry->completed = $completed;
-      $db_test_entry->save();
-    }    
-    $db_test_entry->adjudicate();
+    $db_test_entry->update_status_fields( $completed );
   }
 
   /**
