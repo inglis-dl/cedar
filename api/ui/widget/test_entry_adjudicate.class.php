@@ -77,19 +77,21 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $record = $this->get_record();
     $db_test = $record->get_test();
 
-    $this->set_variable( 'audio_fault_1', $record->audio_fault );
+    $this->set_variable( 'id_1', $record->id );
+    //$this->set_variable( 'audio_fault_1', $record->audio_fault );
     $this->set_variable( 'adjudicate_1', $record->adjudicate );
     $this->set_variable( 'deferred_1', $record->deferred );
     $this->set_variable( 'completed_1', $record->completed );
     $this->set_variable( 'user_1', $record->get_assignment()->get_user()->name );
 
     $this->set_variable( 'id_2', $this->adjudicate_entry->id );
-    $this->set_variable( 'audio_fault_2', $this->adjudicate_entry->audio_fault );
+    //$this->set_variable( 'audio_fault_2', $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'adjudicate_2', $this->adjudicate_entry->adjudicate );
     $this->set_variable( 'deferred_2', $this->adjudicate_entry->deferred );
     $this->set_variable( 'completed_2', $this->adjudicate_entry->completed );
     $this->set_variable( 'user_2', $this->adjudicate_entry->get_assignment()->get_user()->name );
 
+    $this->set_variable( 'audio_fault', $record->audio_fault || $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
 

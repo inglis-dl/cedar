@@ -41,7 +41,7 @@ class test_entry_confirmation_adjudicate extends \cenozo\ui\widget
    
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
-    $heading = $db_test->name . ' test entry form';
+    $heading = $db_test->name . ' test adjudicate form';
 
     //TODO put this somewhere else
     if( $db_test_entry->deferred )
@@ -93,8 +93,9 @@ class test_entry_confirmation_adjudicate extends \cenozo\ui\widget
     $entry_data = array( 'id_1' => $a->id,
                          'confirmation_1' => is_null( $a->confirmation ) ? '' : $a->confirmation,
                          'id_2' => $b->id,
-                         'confirmation_2' => is_null( $b->confirmation ) ? '' : $b->    confirmation,
+                         'confirmation_2' => is_null( $b->confirmation ) ? '' : $b->confirmation,
                          'instruction' => $instruction );
-    $this->set_variable( 'entry_data', $entry_data );                     
+    $this->set_variable( 'entry_data', $entry_data );
+    log::debug( $entry_data );
   }
 }

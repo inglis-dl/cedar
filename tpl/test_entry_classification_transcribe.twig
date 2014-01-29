@@ -40,7 +40,7 @@
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
         var columns = new Object();
-        columns["id"] = $(this).attr("id").split("__")[0];
+        args.id = $(this).attr("id").split("__")[0];
         columns["rank"] = $(this).attr("id").split("__")[1];
         columns["test_entry_id"] = "{{ parent.id }}";
         columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
@@ -58,8 +58,7 @@
       // loop over all input elements and clear them
       // update the db to reflect the changes
       $( "#{{ parent.full }}_Reset" ).click(function() {
-        var id = "{{ parent.id }}";
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
           input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
           input.each( function() {
               $(this).val( "" );
@@ -114,6 +113,7 @@
 
   <table id="{{ widget.full }}__entry_table">
 
+    <tbody>
     {% set numcell = 4 %}
     {% set kprev= 'true' %}
     {% for i in range(0, entry_data|length-1, numcell) %}
@@ -145,11 +145,11 @@
                        {% set kprev = 'true' %}
                    {% endif %}
                    
-                   value="{{ value }}"></td>
+                   value={{ value }}></td>
           {% endfor %}    
       </tr>
     {% endfor %}
-
+    </tbody>
   </table>
 
 {% endblock widget %}

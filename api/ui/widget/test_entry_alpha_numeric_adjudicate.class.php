@@ -43,7 +43,7 @@ class test_entry_alpha_numeric_adjudicate extends \cenozo\ui\widget
     $db_test_entry = $this->parent->get_record();
 
     $db_test = $db_test_entry->get_test();
-    $heading = $db_test->name . ' test entry form';
+    $heading = $db_test->name . ' test adjudicate form';
 
     //TODO put this somewhere else
     if( $db_test_entry->deferred )
@@ -76,24 +76,23 @@ class test_entry_alpha_numeric_adjudicate extends \cenozo\ui\widget
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
+    $a = $db_test_entry->get_test_entry_alpha_numeric_list( clone $modifier );
+    $b = $db_test_entry_adjudicate->get_test_entry_alpha_numeric_list( clone $modifier );
 
-    $a = $db_test_entry->get_test_entry_alpha_numeric_list( $modifier );
-    $b = $db_test_entry_adjudicate->get_test_entry_alpha_numeric_list( $modifier );
     $entry_data = array();
-
     while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) )
     {
       $a_obj = current( $a );
       $b_obj = current( $b );
-      if( $a_obj->rank != $b_obj->rank ||
-          $a_obj->word_id != $b_obj->word_id )
+      if( $a_obj->word_id != $b_obj->word_id &&
+          !( is_null( $a_obj->word_id ) && is_null( $b_obj->word_id ) ) )
       {    
-        $db_word_1 = is_null(  $a_obj->word_id ) ? null :
+        $db_word_1 = is_null( $a_obj->word_id ) ? null :
           lib::create( 'database\word', $a_obj->word_id );
-        $db_word_2 = is_null(  $b_obj->word_id ) ? null :
+        $db_word_2 = is_null( $b_obj->word_id ) ? null :
           lib::create( 'database\word', $b_obj->word_id );
 
-        $row = array(
+        $entry_data[] = array(
                  'id_1' => $a_obj->id,
                  'id_2' => $b_obj->id,
                  'rank' => $a_obj->rank,
@@ -101,8 +100,6 @@ class test_entry_alpha_numeric_adjudicate extends \cenozo\ui\widget
                  'word_1' => is_null( $db_word_1 ) ? '' :  $db_word_1->word,
                  'word_id_2' => is_null( $db_word_2 ) ? '' :  $db_word_2->id,
                  'word_2' => is_null( $db_word_2 ) ? '' :  $db_word_2->word );
-
-        $entry_data[] = $row;
       }
       next( $a );
       next( $b );

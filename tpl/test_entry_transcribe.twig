@@ -14,11 +14,9 @@
     $( function () {
 
       if( "{{ test_type }}" == "confirmation" ) {
-        $("#{{ widget.full }}__audio_control").attr( "disabled", "disabled" );
-        $("#{{ widget.full }}__audio_fault").attr( "disabled", "disabled" );
+        $("#audio_control").children().attr( "disabled", "disabled" );
       } else {
-        $("#{{ widget.full }}__audio_control").removeAttr( "disabled" );
-        $("#{{ widget.full }}__audio_fault").removeAttr( "disabled" );
+        $("#audio_control").children().removeAttr( "disabled" );
       }
 
       $("#{{ widget.full }}__audio_fault").click( function() {
@@ -117,13 +115,15 @@
           <tr>
             <td align="left"
                 style="white-space: nowrap">
-              <audio id="{{ widget.full }}__audio_control"
-                controls="controls">
-                <embed height="50" style="width:100%">
-              </audio>
-              <input type="checkbox" id="{{ widget.full }}__audio_fault" 
-                {{ audio_fault ? "checked":"" }}/>
-              <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
+              <div id="audio_control">
+                <audio id="{{ widget.full }}__audio_player"
+                  controls="controls">
+                  <embed height="50" style="width:100%">
+                </audio>
+                <input type="checkbox" id="{{ widget.full }}__audio_fault" 
+                  {{ audio_fault ? "checked":"" }}/>
+                <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
+              </div>  
             </td>
             <td>
               <div>

@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * test_entry_classification: record
  */
-class test_entry_classification extends \cenozo\database\has_rank
+class test_entry_classification extends \cenozo\database\record
 {
   /** 
    * Compare test entry lists for adjudication.  Returns true

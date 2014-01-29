@@ -33,7 +33,7 @@
       $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
         var args = new Object();
         var columns = new Object();
-        columns["id"] = $(this).attr( "name" );
+        args.id = $(this).attr( "name" );
         columns["test_entry_id"] = "{{ parent.id }}";
         if( $(this).val() == "yes" ) {
           columns["confirmation"] = 1;
@@ -47,8 +47,7 @@
       } ); // end radio input change
 
       $( "#{{ parent.full }}_Reset" ).click(function() {
-        var id = "{{ parent.id }}";
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ id }} } ) ) {
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
           input = $("#{{ widget.full }}__entry_table" ).find( "input" );
           input.each( function() {
             $(this).removeAttr( "checked" );
@@ -80,8 +79,16 @@
 
   <div class="spacer">
 
-  <table id="{{ widget.full }}__entry_table">
+  <table id="{{ widget.full }}__entry_table" style="width:20%">
+      
+      <thead>
+        <tr>
+          <th>Yes</th>
+          <th>No</th>
+        </tr>
+      </thead>
 
+      <tbody>
       <tr>
           <td><input
              id="{{ widget.full }}__Yes"
@@ -89,20 +96,16 @@
              value="yes"
              type="radio"
              {{ entry_data.confirmation == '1' ? "checked" : "" }}>
-             <label for="{{ widget.full }}__Yes">Yes</label>
           </td>
-       </tr> 
-      <tr>
           <td><input
              id="{{ widget.full }}__No"
              name={{ entry_data.id }}
              value="no"
              type="radio"
              {{ entry_data.confirmation == '0' ? "checked" : "" }}>
-             <label for="{{ widget.full }}__No">No</label>
           </td>
        </tr> 
-
+    </tbody>
   </table> 
 
 {% endblock widget %}
