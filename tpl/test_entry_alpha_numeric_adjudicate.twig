@@ -22,19 +22,19 @@
       configure_ui();
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
-        var args = new Object();
-        var columns = new Object();
-        columns["id"] = $(this).attr("id").split("__")[0];
-        columns["rank"] = $(this).attr("id").split("__")[1];
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
-        columns["word_value"] = $(this).val();
-        args.columns = columns;
+        //var args = new Object();
+        //var columns = new Object();
+        //columns["id"] = $(this).attr("id").split("__")[0];
+        //columns["rank"] = $(this).attr("id").split("__")[1];
+        //columns["test_entry_id"] = "{{ parent.id }}";
+        //columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
+        //columns["word_value"] = $(this).val();
+        //args.columns = columns;
 
         // refresh with updated information
-        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          slot_refresh( {{ slot }} );
-        }
+        //if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+        //  slot_refresh( {{ slot }} );
+        //}
       } );// end text input change
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
@@ -59,6 +59,7 @@
         <th>Entry #</th>
         <th colspan="2">{{ user_1 }}</th>
         <th colspan="2">{{ user_2 }}</th>
+        <th colspan="2">Adjudication</th>
       </tr>
     </thead>
 
@@ -78,23 +79,37 @@
                    type="text"
                    style="width:20%"
                    name={{ entry.word_id_1 ? entry.word_id_1 : 'undefined' }}
-                   value={{ value_1 }}>
-        </td>
-        <td><input id="{{ entry.id_1 }}__Accept"
+                   value={{ value_1 }}></td>
+        <td>
+          {% if entry.adjudicate is defined %}
+            <input id="{{ entry.id_1 }}__Accept"
                    type="radio"
                    value="accept">
                    <label for="{{ entry.id_1 }}__Accept">Accept</label>
+          {% endif %}
         </td>
         <td><input id="{{ entry.id_2 }}__{{ entry.rank }}__2"
                    type="text"
                    style="width:20%"
                    name={{ entry.word_id_2 ? entry.word_id_2 : 'undefined' }}
                    value={{ value_2 }}></td>
-        <td><input id="{{ entry.id_2 }}__Accept"
+        <td>
+          {% if entry.adjudicate is defined %}
+            <input id="{{ entry.id_2 }}__Accept"
                    type="radio"
                    value="accept">
                    <label for="{{ entry.id_2 }}__Accept">Accept</label>
+          {% endif %}
         </td>
+        <td>
+          {% if entry.adjudicate is defined %}
+            <input id="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}"
+                   type="text"
+                   style="width:20%"
+                   name={{ entry.word_id_2 ? entry.word_id_2 : 'undefined' }}
+                   value="">
+          {% endif %}
+        </td>  
       </tr>
     {% endfor %}
     </tbody>

@@ -90,12 +90,14 @@ class test_entry_confirmation_adjudicate extends \cenozo\ui\widget
     $b = $test_entry_confirmation_class_name::get_unique_record(
       'test_entry_id', $db_test_entry_adjudicate->id );
     
-    $entry_data = array( 'id_1' => $a->id,
-                         'confirmation_1' => is_null( $a->confirmation ) ? '' : $a->confirmation,
-                         'id_2' => $b->id,
-                         'confirmation_2' => is_null( $b->confirmation ) ? '' : $b->confirmation,
-                         'instruction' => $instruction );
+    $entry_data[ 'instruction' ] = $instruction;
+    if( $a->confirmation != $b->confirmation )
+    {
+      $entry_data[ 'id_1' ] = $a->id;
+      $entry_data[ 'id_2' ] = $b->id;
+      $entry_data[ 'confirmation_1' ] = is_null( $a->confirmation ) ? '' : $a->confirmation;
+      $entry_data[ 'confirmation_2' ] = is_null( $b->confirmation ) ? '' : $b->confirmation;
+    }                     
     $this->set_variable( 'entry_data', $entry_data );
-    log::debug( $entry_data );
   }
 }

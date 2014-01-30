@@ -24,6 +24,7 @@
       // find and handle confirmation radio element change events
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value!="accept"]' ).change(
         function() {
+        /*
         var args = new Object();
         var columns = new Object();
         args.id = $(this).attr( "id" ).split("__")[0];
@@ -36,6 +37,7 @@
         console.log( args );
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
         }
+        */
       } ); // end radio input change
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
@@ -65,54 +67,56 @@
         <th colspan="3">{{ user_2 }}</th>
       </tr>
     </thead>
-
+    
     <tbody>
-      <tr>
-        <td><input
-           id="{{ entry_data.id_1 }}__Yes"
-           name="{{ entry_data.id_1 }}__confirmation"
-           value="yes"
-           type="radio"
-           {{ entry_data.confirmation_1 == '1' ? "checked" : "" }}>
-           <label for="{{ entry_data.id_1 }}__Yes">Yes</label>
-        </td>
-        <td><input
-           id="{{ entry_data.id_1 }}__No"
-           name="{{ entry_data.id_1 }}__confirmation"
-           value="no"
-           type="radio"
-           {{ entry_data.confirmation_1 == '1' ? "" : "checked" }}>
-           <label for="{{ entry_data.id_1 }}__No">No</label>
-        </td>
-        <td><input
-           id="{{ entry_data.id_1 }}__Accept"
-           value="accept"
-           type="radio">
-           <label for="{{ entry_data.id_1 }}__Accept">Accept</label>
-        </td>
-        <td><input
-           id="{{ entry_data.id_2 }}__Yes"
-           name="{{ entry_data.id_2 }}__confirmation"
-           value="yes"
-           type="radio"
-           {{ entry_data.confirmation_2 == '1' ? "checked" : "" }}>
-           <label for="{{ entry_data.id_2 }}__Yes">Yes</label>
-        </td>
-        <td><input
-           id="{{ entry_data.id_2 }}__No"
-           name="{{ entry_data.id_2 }}__confirmation"
-           value="no"
-           type="radio"
-           {{ entry_data.confirmation_2 == '1' ? "" : "checked" }}>
-           <label for="{{ entry_data.id_2 }}__No">No</label>
-        </td>
-        <td><input
-           id="{{ entry_data.id_2 }}__Accept"
-           value="accept"
-           type="radio">
-           <label for="{{ entry_data.id_2 }}__Accept">Accept</label>
-        </td>
-      </tr>
+      {% if entry_data.id_1 is defined and entry_data.id_2 is defined %}
+        <tr>
+          <td><input
+             id="{{ entry_data.id_1 }}__Yes"
+             name="{{ entry_data.id_1 }}__confirmation"
+             value="yes"
+             type="radio"
+             {{ entry_data.confirmation_1 == '1' ? "checked" : "" }}>
+             <label for="{{ entry_data.id_1 }}__Yes">Yes</label>
+          </td>
+          <td><input
+             id="{{ entry_data.id_1 }}__No"
+             name="{{ entry_data.id_1 }}__confirmation"
+             value="no"
+             type="radio"
+             {{ entry_data.confirmation_1 == '1' ? "" : "checked" }}>
+             <label for="{{ entry_data.id_1 }}__No">No</label>
+          </td>
+          <td><input
+             id="{{ entry_data.id_1 }}__Accept"
+             value="accept"
+             type="radio">
+             <label for="{{ entry_data.id_1 }}__Accept">Accept</label>
+          </td>
+          <td><input
+             id="{{ entry_data.id_2 }}__Yes"
+             name="{{ entry_data.id_2 }}__confirmation"
+             value="yes"
+             type="radio"
+             {{ entry_data.confirmation_2 == '1' ? "checked" : "" }}>
+             <label for="{{ entry_data.id_2 }}__Yes">Yes</label>
+          </td>
+          <td><input
+             id="{{ entry_data.id_2 }}__No"
+             name="{{ entry_data.id_2 }}__confirmation"
+             value="no"
+             type="radio"
+             {{ entry_data.confirmation_2 == '1' ? "" : "checked" }}>
+             <label for="{{ entry_data.id_2 }}__No">No</label>
+          </td>
+          <td><input
+             id="{{ entry_data.id_2 }}__Accept"
+             value="accept"
+             type="radio">
+             <label for="{{ entry_data.id_2 }}__Accept">Accept</label>
+          </td>
+        </tr>
+      {% endif %}
     </tbody>    
   </table> 
 

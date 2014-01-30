@@ -22,6 +22,7 @@
       configure_ui();
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
+        /*
         var args = new Object();
         var columns = new Object();
         columns["id"] = $(this).attr("id").split("__")[0];
@@ -34,6 +35,7 @@
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           slot_refresh( {{ slot }} );
         }
+        */
       } );// end text input change
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(

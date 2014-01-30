@@ -84,9 +84,10 @@ class test_entry_alpha_numeric_adjudicate extends \cenozo\ui\widget
     {
       $a_obj = current( $a );
       $b_obj = current( $b );
-      if( $a_obj->word_id != $b_obj->word_id &&
-          !( is_null( $a_obj->word_id ) && is_null( $b_obj->word_id ) ) )
-      {    
+      if( !(is_null( $a_obj->word_id ) && is_null( $b_obj->word_id )) )
+      {
+        $adjudicate = $a_obj->word_id != $b_obj->word_id ? true : false;
+              
         $db_word_1 = is_null( $a_obj->word_id ) ? null :
           lib::create( 'database\word', $a_obj->word_id );
         $db_word_2 = is_null( $b_obj->word_id ) ? null :
@@ -99,11 +100,13 @@ class test_entry_alpha_numeric_adjudicate extends \cenozo\ui\widget
                  'word_id_1' => is_null( $db_word_1 ) ? '' :  $db_word_1->id,
                  'word_1' => is_null( $db_word_1 ) ? '' :  $db_word_1->word,
                  'word_id_2' => is_null( $db_word_2 ) ? '' :  $db_word_2->id,
-                 'word_2' => is_null( $db_word_2 ) ? '' :  $db_word_2->word );
+                 'word_2' => is_null( $db_word_2 ) ? '' :  $db_word_2->word,
+                 'adjudicate' => $adjudicate );
       }
       next( $a );
       next( $b );
     }
+    
     $this->set_variable( 'entry_data', $entry_data );
   }
 }

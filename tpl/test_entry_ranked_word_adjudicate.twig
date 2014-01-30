@@ -43,6 +43,7 @@
       // enable/disable the text entry element depending on
       // which radio button was selected
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value!="accept"]' ).change( function() {
+        /*
         var args = new Object();
         var columns = new Object();
         args.id = $(this).attr( "id" ).split("__")[0];
@@ -70,16 +71,16 @@
         } else {
           error_dialog( "Error", "Push to database failed." );
         }
-     
+        */
         configure_ui( do_text );
-
+        
       } );// end radio input change
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         if( $(this).val().length == 0 ) {
           error_dialog( "Error", "Blank variant entry not permitted." );
         } else {
-
+          /*
           var args = new Object();
           var columns = new Object();
           args.id = $(this).attr( "id" ).split("__")[0];
@@ -102,6 +103,7 @@
               }                   
             } );// end each input
           }
+          */
 
           configure_ui();
         }
