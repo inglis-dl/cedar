@@ -21,7 +21,7 @@ name_limesurvey
 name_limesurvey2
 
 - create db in mysql:
-create database name_myapp;
+create database name_myapp character set utf8;
 grant all on name_myapp.* to 'name'@'localhost';
 
 - create all the other 'name_*' dbs listed above
@@ -67,3 +67,10 @@ and Role List entries (administrator, typist)
 - create the log file in the root of your app's repository: touch log, chmod 666 log
 - for testing, release participants from name_cenozo with
 insert into service_has_participant (service_id, participant_id, datetime) select service.id, participant.id, utc_timestamp() from service, participant where service.name='cedar';
+
+debugging tips
+- in php source files, use log::debug( $var );
+- for db debugging, in php source files, bracket the code of interest with:
+\cenozo\database\database::$debug=true;
+\cenozo\database\database::$debug=false;
+
