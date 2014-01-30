@@ -346,6 +346,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
   `adjudicate` TINYINT(1) NOT NULL DEFAULT 0,
+  `submitted` TINYINT(1) NOT NULL DEFAULT 0,
   `note` TEXT NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
