@@ -341,16 +341,18 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_id` INT UNSIGNED NOT NULL,
-  `assignment_id` INT UNSIGNED NULL DEFAULT NULL,
+  `assignment_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'NULL id signifies adjudicate entry',
+  `participant_id` INT UNSIGNED NULL DEFAULT NULL,
   `audio_fault` TINYINT(1) NOT NULL DEFAULT 0,
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
   `adjudicate` TINYINT(1) NOT NULL DEFAULT 0,
-  `note` TEXT NULL DEFAULT NULL,
+  `note` TEXT NULL DEFAULT NULL COMMENT 'id required to track adjudicate progenitors',
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
   INDEX `fk_assignment_id` (`assignment_id` ASC),
   UNIQUE INDEX `uq_test_id_assignment_id` (`test_id` ASC, `assignment_id` ASC),
+  INDEX `fk_test_entry_participant1_idx` (`participant_id` ASC),
   CONSTRAINT `fk_test_entry_test_id`
     FOREIGN KEY (`test_id`)
     REFERENCES `cedar`.`test` (`id`)
@@ -359,6 +361,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   CONSTRAINT `fk_test_entry_assignment_id`
     FOREIGN KEY (`assignment_id`)
     REFERENCES `cedar`.`assignment` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_participant1`
+    FOREIGN KEY (`participant_id`)
+    REFERENCES `cenozo`.`participant` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
