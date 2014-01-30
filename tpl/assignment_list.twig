@@ -53,13 +53,7 @@
 {% endblock javascript %}
 
 {% block header_button_columns %}
-
-  {% if allow_transcribe %}
-    <th width="1%"></th>
-  {% elseif allow_adjudicate %}
-    <th width="1%"></th> 
-  {% endif %}
-
+  <th width="1%"></th>
 {% endblock header_button_columns %}
 
 {% block button_columns %}
@@ -69,7 +63,7 @@
               {{ row.columns['assignment.allow_transcribe'] ? '' : 'disabled' }}
               id="{{ widget.full }}_test_entry_transcribe_{{ row.columns['assignment.test_entry_id'] }}">transcribe</button>
     </td>
-  {% elseif allow_adjudicate %}
+  {% elseif allow_adjudicate and row.columns['assignment.test_entry_id'] is defined %}
     <td>
       <button class="{{ widget.full }}_test_entry_adjudicate"
               {{ row.columns['assignment.allow_adjudicate'] ? '' : 'disabled' }}
