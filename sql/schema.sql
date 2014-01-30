@@ -381,7 +381,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_confirmation` (
   CONSTRAINT `fk_test_entry_confirmation_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -402,12 +402,12 @@ CREATE TABLE IF NOT EXISTS `cedar`.`user_has_cohort` (
   CONSTRAINT `fk_user_has_cohort_user_id`
     FOREIGN KEY (`user_id`)
     REFERENCES `cenozo`.`user` (`id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_user_has_cohort_cohort_id`
     FOREIGN KEY (`cohort_id`)
     REFERENCES `cenozo`.`cohort` (`id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -492,7 +492,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_ranked_word` (
   CONSTRAINT `fk_test_entry_ranked_word_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_test_entry_ranked_word_word_id`
     FOREIGN KEY (`word_id`)
@@ -521,7 +521,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_classification` (
   CONSTRAINT `fk_test_entry_classification_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_test_entry_classification_word_id`
     FOREIGN KEY (`word_id`)
@@ -549,7 +549,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_alpha_numeric` (
   CONSTRAINT `fk_test_entry_alpha_numeric_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_test_entry_alpha_numeric_word_id`
     FOREIGN KEY (`word_id`)
