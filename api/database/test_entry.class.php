@@ -25,7 +25,8 @@ class test_entry extends \cenozo\database\record
     $db_prev_test_entry = NULL;
     if( is_null( $this->id ) )
     {
-       log::warning( 'tried to get previous test_entry on test_entry with no id' );
+       throw lib::create( 'exception\runtime',
+         'Tried to get previous test_entry on test_entry with no id', __METHOD__ );
     }
     else
     {
@@ -34,7 +35,7 @@ class test_entry extends \cenozo\database\record
       if( !is_null( $db_prev_test ) ) 
         $db_prev_test_entry = static::get_unique_record( 
           array( 'test_id', 'assignment_id' ),
-          array( $db_prev_test->id, $this->assignment_id ) );
+          array( $db_prev_test->id, $this->assignment_id ) );  
     }
     return $db_prev_test_entry;
   }
@@ -50,7 +51,8 @@ class test_entry extends \cenozo\database\record
     $db_next_test_entry = NULL;
     if( is_null( $this->id ) )
     {
-       log::warning( 'tried to get next test_entry on test_entry with no id' );
+     throw lib::create( 'exception\runtime',
+       'Tried to get next test_entry on test_entry with no id', __METHOD__ );
     }
     else
     {
