@@ -108,7 +108,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         {  
           $test_entry_id = $db_test_entry[0]->id;
           $allow_transcribe = true;
-          if( !$allow_transcribe_operation ) $allow_transcribe_operation = true;
+          $allow_transcribe_operation |= $allow_transcribe;
         }
       }
       else if( $db_role->name == 'administrator' )
@@ -124,7 +124,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
            {  
              $test_entry_id = $db_test_entry[0]->id;
              $allow_adjudicate = true;
-             if( !$allow_adjudicate_operation ) $allow_adjudicate_operation = true;
+             $allow_adjudicate_operation |= $allow_adjudicate;
            }
         }
       }
@@ -153,6 +153,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );
     $this->set_variable( 'allow_adjudicate',
       ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
-        $allow_adjudicate_operation ) );   
+        $allow_adjudicate_operation ) );
   }
 }
