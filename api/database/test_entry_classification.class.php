@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * test_entry_classification: record
  */
-class test_entry_classification extends \cenozo\database\record
+class test_entry_classification extends \cenozo\database\has_rank
 {
   /** 
    * Compare test entry lists for adjudication.  Returns true
@@ -37,4 +37,12 @@ class test_entry_classification extends \cenozo\database\record
     }   
     return count( $a ) != count( $b );
   }
+
+  /** 
+   * The type of record which the record has a rank for.
+   * @var string
+   * @access protected
+   * @static
+   */
+  protected static $rank_parent = 'test_entry';
 }
