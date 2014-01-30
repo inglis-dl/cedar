@@ -76,10 +76,8 @@ class test_entry_classification_adjudicate extends \cenozo\ui\widget
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
-    $a = $db_test_entry->get_test_entry_alpha_numeric_list( /*clone $modifier*/ );
-    $b = $db_test_entry_adjudicate->get_test_entry_alpha_numeric_list( /*clone $modifier*/ );
-
-    log::debug( array( $a, $b ));
+    $a = $db_test_entry->get_test_entry_classification_list( clone $modifier );
+    $b = $db_test_entry_adjudicate->get_test_entry_classification_list( clone $modifier );
 
     $entry_data = array();
     while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
