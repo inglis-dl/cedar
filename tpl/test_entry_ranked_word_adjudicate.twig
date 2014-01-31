@@ -12,6 +12,7 @@
   <script type="text/javascript">
 
     function configure_ui( do_text ) {
+      /*
       var disable = $( 'input:radio[value="accept"]:checked' ).length == 
                     $( 'input:radio[value="accept"]' ).length ? false : true;
       $("#{{ parent.full }}_Submit").button( { disabled : disable } );
@@ -33,45 +34,30 @@
             }
         } );
       }
+      */
     }
 
     $( function () {
      
       configure_ui();
 
-      // find and handle radio element change events:
-      // enable/disable the text entry element depending on
-      // which radio button was selected
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value!="accept"]' ).change( function() {
-        /*
-        var args = new Object();
-        var columns = new Object();
-        args.id = $(this).attr( "id" ).split("__")[0];
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" );
-        columns["selection"] = $(this).val();
+      //hijack all the non-accept radio buttons so that
+      //a non-greyed out appearance can be maintained instead
+      //of assigning the disabled attribute
+      $('input:radio[value!="accept"]').click(function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $('input:text[name=="' + {{ widget.full }} + '"]').bind( 'keypress keydown keyup', function(e) {
+        e.preventDefault();
+        return false;
+      });
 
-        var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
-        var do_text = true;
-        if( $(this).val() == "variant" ) {
-          // disable inputs until the variant is entered
-          $( "#{{ widget.full }}__entry_table" ).find( "input" ).attr( "disabled", "disabled" );
-          $(text_id).removeAttr( "disabled" );
-          $(text_id).focus();
-          do_text = false;
-        } else {
-          $(text_id).attr( "disabled", "disabled" );
-          $(text_id).val( "" );
-        }
+
+      // find and handle radio input change events:
+      // copy the progenitor to the adjudicate entry
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value=="accept"]' ).change( function() {
         
-        columns["word_candidate"] = $(text_id).val();
-        args.columns = columns;
-
-        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-        } else {
-          error_dialog( "Error", "Push to database failed." );
-        }
-        */
         configure_ui( do_text );
         
       } );// end radio input change
@@ -132,9 +118,14 @@
         <th>Entry</th>
         <th colspan="4">{{ user_1 }}</th>
         <th colspan="4">{{ user_2 }}</th>
+        <th colspan="4">Adjudicate</th>
       </tr>
       <tr>
         <th></th>
+        <th>Yes</th>
+        <th>No</th>
+        <th>Variant</th>
+        <td></td>
         <th>Yes</th>
         <th>No</th>
         <th>Variant</th>
@@ -151,58 +142,75 @@
       <tr>
         {% if entry.word_1 is defined %}
 
-          <td class="heading" style="text-align:center">{{ entry.word_1  }}</td>
+          <td class="heading" style="text-align:center">{{ entry.word_1 }}</td>
 
           <td><input type="radio"
                id="{{ entry.id_1 }}__yes"
-               name={{ entry.word_id_1 }}
+               name="{{ entry.word_id_1 }}__1"
                value="yes"
                {{ entry.selection_1 == 'yes' ? "checked" : "" }}></td>
           <td><input type="radio"
                id="{{ entry.id_1 }}__no"
-               name={{ entry.word_id_1 }}
+               name="{{ entry.word_id_1 }}__1"
                value="no"
                {{ entry.selection_1 == 'no' ? "checked" : "" }}></td>
           <td><input type="radio"
                id="{{ entry.id_1 }}__variant"
-               name={{ entry.word_id_1 }}
+               name="{{ entry.word_id_1 }}__1"
                value="variant"
                {{ entry.selection_1 == 'variant' ? "checked" : "" }}>
                <input type="text"
                id="{{ entry.id_1 }}__candidate"
-               name={{ entry.word_id_1 }}
-               {{ entry.selection_1 == 'variant' ? "" : "disabled" }}
-               value={{ entry.word_candidate_1 }}></td>
+               name={{ widget.full }}
+               value="{{ entry.word_candidate_1 }}"
+               {{ entry.selection_1 == 'variant' ? "" : "disabled" }}></td>
           <td><input type="radio"
-               id="{{ entry.id_1 }}__Accept"
+               id="{{ entry.id_1 }}__accept"
+               name="{{ entry.word_id_1 }}__accept"
                value="accept">
-               <label for="{{ entry.id_1 }}__Accept">Accept</label></td>
+               <label for="{{ entry.id_1 }}__accept">Accept</label></td>
 
           <td><input type="radio"
                id="{{ entry.id_2 }}__yes"
-               name={{ entry.word_id_1 }}
+               name="{{ entry.word_id_2 }}__2"
                value="yes"
                {{ entry.selection_2 == 'yes' ? "checked" : "" }}></td>
           <td><input type="radio"
                id="{{ entry.id_2 }}__no"
-               name={{ entry.word_id_1 }}
+               name="{{ entry.word_id_2 }}__2"
                value="no"
                {{ entry.selection_2 == 'no' ? "checked" : "" }}></td>
           <td><input type="radio"
                id="{{ entry.id_2 }}__variant"
-               name={{ entry.word_id_1 }}
+               name="{{ entry.word_id_2 }}__2"
                value="variant"
                {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
               <input type="text"
-               id="{{ entry.id_2 }}__candidate"
-               name={{ entry.word_id_1 }}
-               {{ entry.selection_2 == 'variant' ? "" : "disabled" }}
-               value={{ entry.word_candidate_2 }}></td>
+               id="{{ entry.id_2 }}__candidate__2"
+               name={{ widget.full }}
+               value="{{ entry.word_candidate_2 }}"
+               {{ entry.selection_2 == 'variant' ? "" : "disabled" }}></td>
           <td><input type="radio"
-               id="{{ entry.id_2 }}__Accept"
+               id="{{ entry.id_2 }}__accept"
+               name="{{ entry.word_id_2 }}__accept"
                value="accept">
-               <label for="{{ entry.id_2 }}__Accept">Accept</label></td>
+               <label for="{{ entry.id_2 }}__accept">Accept</label></td>
 
+          <td><input type="radio"
+               id="{{ entry.id_1 }}__{{ entry.id_2 }}__yes"
+               name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+               value="yes"></td>
+          <td><input type="radio"
+               id="{{ entry.id_1 }}__{{ entry.id_2 }}__no"
+               name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+               value="no"></td>
+          <td><input type="radio"
+               id="{{ entry.id_1 }}__{{ entry.id_2 }}__variant"
+               name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+               value="variant">
+              <input type="text"
+               id="{{ entry.id_1 }}__{{ entry.id_2 }}__candidate"
+               value=""></td>
         {% else %}
 
           <td class="heading" style="text-align:center">"intrusion"</td>
@@ -210,22 +218,29 @@
           <td></td><td></td><td></td>     
           <td><input type="text"
                id="{{ entry.id_1 }}__intrusion"
-               name=""
-               value={{ entry.word_candidate_1 }}></td>
+               name={{ widget.full }}
+               value="{{ entry.word_candidate_1 }}"></td>
           <td><input type="radio"
-               id="{{ entry.id_1 }}__Accept"
+               id="{{ entry.id_1 }}__accept"
+               name="{{ entry.id_1 }}__{{ entry.id_2 }}__accept"
                value="accept">
-               <label for="{{ entry.id_1 }}__Accept">Accept</label></td>
+               <label for="{{ entry.id_1 }}__accept">Accept</label></td>
 
           <td></td><td></td><td></td>     
           <td><input type="text"
                id="{{ entry.id_2 }}__intrusion"
-               name=""
-               value={{ entry.word_candidate_2 }}></td>
+               name={{ widget.full }}
+               value="{{ entry.word_candidate_2 }}"></td>
           <td><input type="radio"
-               id="{{ entry.id_2 }}__Accept"
+               id="{{ entry.id_2 }}__accept"
+               name="{{ entry.id_1 }}__{{ entry.id_2 }}__accept"
                value="accept">
-               <label for="{{ entry.id_2 }}__Accept">Accept</label></td>
+               <label for="{{ entry.id_2 }}__accept">Accept</label></td>
+
+          <td></td><td></td><td></td>     
+          <td><input type="text"
+               id="{{ entry.id_1 }}__{{ entry.id_2 }}__intrusion"
+               value=""></td>
 
         {% endif %}
       </tr>

@@ -103,10 +103,10 @@
         </td>
         <td>
           {% if entry.adjudicate is defined %}
-            <input id="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}"
+            <input id="{{ widget.full }}__{{ entry.rank }}__confirmation"
                    type="text"
                    style="width:20%"
-                   name={{ entry.word_id_2 ? entry.word_id_2 : 'undefined' }}
+                   name="confirmation"
                    value="">
           {% endif %}
         </td>  
