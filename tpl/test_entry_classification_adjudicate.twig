@@ -13,7 +13,7 @@
 
     function configure_ui() {
       var disable = $( 'input:radio[value="accept"]:checked' ).length == 
-                    $( 'input:radio[value="accept"]' ).length ? 0 : 1;
+                    ( $( 'input:radio[value="accept"]' ).length / 2 )  ? false : true;
       $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
     }
 
@@ -21,27 +21,43 @@
 
       configure_ui();
 
-      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
-        /*
-        var args = new Object();
-        var columns = new Object();
-        columns["id"] = $(this).attr("id").split("__")[0];
-        columns["rank"] = $(this).attr("id").split("__")[1];
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
-        columns["word_candidate"] = $(this).val();
-        args.columns = columns;
-
-        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          slot_refresh( {{ slot }} );
-        }
-        */
-      } );// end text input change
-
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
         function() {
+        var entry_id = $(this).attr( "id" ).split( "__" )[0];
+        var target_text_id = '#' + $(this).attr( "name" ) + "__adjudicate";
+        var source_text_id = '#' + entry_id + "__candidate";
+        $( target_text_id ).val( $( source_text_id ).val() );
+        $( target_text_id ).removeAttr( "disabled" );
+
         configure_ui();
       } ); // end radio input change
+
+      // TODO handle changes to adjudicate text input by the administrator
+      // if the new entry differs from the progenetors, uncheck their radio inputs
+      // check that the word is not empty, if it is, 
+
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:text[id$="adjudicate"]' ).change( function() {
+        if( $(this).val().length == 0 ) {
+          error_dialog( "Error", "Blank entry not permitted." );
+
+          // refill with the corresponding accepted text entry
+          var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
+          var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept"
+          if( $( id_1 ).attr( "checked" ) ) {
+            var text_id = id_1.replace( "accept", "candidate" );
+            $(this).val( $( text_id ).val() );
+          } else if ( $( id_2 ).attr("checked") ) {
+            var text_id = id_2.replace( "accept", "candidate" );
+            $(this).val( $( text_id ).val() );
+          } else {
+            // disable and uncheck the accept radio inputs
+            $( id_1 ).removeAttr( "checked" );
+            $( id_2 ).removeAttr( "checked" );
+            $(this).attr( "disabled", "disabled" );
+          }
+        }
+        configure_ui();
+      } );// end text input change 
 
     } );
   </script>
@@ -60,6 +76,7 @@
         <th>Entry #</th>
         <th colspan="2">{{ user_1 }}</th>
         <th colspan="2">{{ user_2 }}</th>
+        <th colspan="2">Adjudicate</th>
       </tr>
     </thead>
 
@@ -67,6 +84,7 @@
     {% for entry in entry_data %}
       <tr>
         <td class="heading">{{ entry.rank }}</td>
+
           {% set value_1 = '' %}
           {% set value_2 = '' %}
           {% if entry.word_id_1 is defined %}
@@ -79,26 +97,29 @@
           {% elseif entry.word_candidate_2 is defined %}
             {% set value_2 = entry.word_candidate_2 %}
           {% endif %}
-          <td><input id="{{ entry.id_1 }}__{{ entry.rank }}__1"
-               type="text"
-               name={{ entry.word_id_1 ? entry.word_id_1 : 'undefined' }}
-               value={{ value_1 }}>
-          </td>
-          <td><input id="{{ entry.id_1 }}__Accept"
-                     type="radio"
-                     value="accept">
-                     <label for="{{ entry.id_1 }}__Accept">Accept</label>
-          </td>
-          <td><input id="{{ entry.id_2 }}__{{ entry.rank }}__2"
-               type="text"
-               name={{ entry.word_id_2 ? entry.word_id_2 : 'undefined' }}
-               value={{ value_2 }}>
-          </td>
-          <td><input id="{{ entry.id_2 }}__Accept"
-                     type="radio"
-                     value="accept">
-                     <label for="{{ entry.id_2 }}__Accept">Accept</label>
-          </td>
+
+          <td><input type="text"
+               id="{{ entry.id_1 }}__candidate"
+               value={{ value_1 }}></td>
+          <td bgcolor=#B1F3B1><input type="radio"
+               id="{{ entry.id_1 }}__accept"
+               name="{{ entry.id_1 }}__{{ entry.id_2 }}"
+               value="accept">
+               <label for="{{ entry.id_1 }}__accept">Accept</label></td>
+
+          <td><input type="text"
+               id="{{ entry.id_2 }}__candidate"
+               value={{ value_2 }}></td>
+          <td bgcolor=#B1F3B1><input type="radio"
+               id="{{ entry.id_2 }}__accept"
+               name="{{ entry.id_1 }}__{{ entry.id_2 }}"
+               value="accept">
+               <label for="{{ entry.id_2 }}__accept">Accept</label></td>
+
+          <td><input type="text"
+               id="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+               disabled="disabled"
+               value=""></td>
       </tr>
     {% endfor %}
     </tbody>

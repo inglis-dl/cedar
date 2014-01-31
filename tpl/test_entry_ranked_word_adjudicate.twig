@@ -88,23 +88,50 @@
         configure_ui();
       } );// end adjudicate radio input change
 
-      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:text' ).change( function() {
         if( $(this).val().length == 0 ) {
           error_dialog( "Error", "Blank variant entry not permitted." );
 
-          // refill with the corresponding accepted variant entry
-          var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
-          var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept"
-          if( $(id_1).attr( "checked" ) ) {
-            var text_id = id_1.replace( "accept", "candidate" );
-            $(this).val( $( text_id ).val() );
-          } else if ( $(id_2).attr("checked") ) {
-            var text_id = id_2.replace( "accept", "candidate" );
-            $(this).val( $( text_id ).val() );
+          // refill with the corresponding accepted text entry
+          var is_intrusion = $(this).attr( "id" ).indexOf( "intrusion" ) != -1 ? true : false;
+
+          var entry_id_1 =  $(this).attr( "id" ).split( "__" )[0];
+          var entry_id_2 =  $(this).attr( "id" ).split( "__" )[1];
+
+          var id_1 = '#' + entry_id_1;
+          var id_2 = '#' + entry_id_2;
+          var text_id_1 = id_1;
+          var text_id_2 = id_2;
+
+          if( is_intrusion ) {
+            id_1 = id_1 + "__intrusion__accept";
+            text_id_1 = text_id_1 + "__intrusion";
+            id_2 = id_2 + "__intrusion__accept";
+            text_id_2 = text_id_2 + "__intrusion";
           } else {
+            id_1 = id_1 + "__accept";
+            text_id_1 = text_id_1 + "__candidate";
+            id_2 = id_2 + "__accept";
+            text_id_2 = text_id_2 + "__candidate";
           }
-          $(this).focus();
+
+          if( $( id_1 ).attr( "checked" ) ) {
+            $(this).val( $( text_id_1 ).val() );
+          } else if ( $( id_2 ).attr( "checked" ) ) {
+            $(this).val( $( text_id_2 ).val() );
+          } else {
+            // uncheck the accept radio inputs
+            $( id_1 ).removeAttr( "checked" );
+            $( id_2 ).removeAttr( "checked" );
+            // disable this text input
+            $(this).attr( "disabled", "disabled" );
+            // if not an intrusion, uncheck all the adjudicate radion entries 
+            if( !is_intrusion ) {
+              $( 'input:radio[name="' + $(this).attr( "id" ) + '"]' ).removeAttr( "checked" );
+            }
+          }
         }
+
         configure_ui();
       } );// end text input change  
 
@@ -248,6 +275,7 @@
           <td></td><td></td><td></td>     
           <td><input type="text"
                id="{{ entry.id_1 }}__{{ entry.id_2 }}__intrusion"
+               disabled="disabled"
                value=""></td>
 
         {% endif %}
