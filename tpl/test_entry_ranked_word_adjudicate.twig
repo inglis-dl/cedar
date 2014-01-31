@@ -8,33 +8,21 @@
 {% extends "widget.twig" %}
 
 {% block javascript %}
+
   {{ parent() }}
+
   <script type="text/javascript">
 
-    function configure_ui( do_text ) {
-      /*
-      var disable = $( 'input:radio[value="accept"]:checked' ).length == 
-                    $( 'input:radio[value="accept"]' ).length ? false : true;
+    function configure_ui() {
+      var numTotal = $( 'input:radio[value="accept"]' ).length / 2;
+      var numYes = $( 'input:radio[value="yes"][name$="adjudicate"]:checked').length;
+      var numNo = $( 'input:radio[value="no"][name$="adjudicate"]:checked').length;
+      var numVariant = $( 'input:radio[value="variant"][name$="adjudicate"]:checked').length;
+      var numIntrusion = $( 'input:radio[id$="intrusion__accept"]:checked' ).length;
+
+      var disable = ( numYes + numNo + numVariant + numIntrusion ) == numTotal ? false : true;
       $("#{{ parent.full }}_Submit").button( { disabled : disable } );
 
-      do_text = (typeof do_text == 'undefined') ? true : do_text;
-      if( do_text ) {
-        // if no radio items are checked yet, disable all text inputs
-        $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
-            var disable = false;
-            var is_candidate = $(this).attr( "id" ).split( "__" )[1] == "candidate" ? true : false;
-            if( is_candidate ) {
-              var id = "#" + $(this).attr( "id" ).split( "__" )[0] + "__variant";
-              disable = $( id ).attr( "checked" ) ? false : true;              
-            }
-            if( disable ) { 
-              $(this).attr( "disabled", "disabled" );
-            } else {
-              $(this).removeAttr( "disabled" );
-            }
-        } );
-      }
-      */
     }
 
     $( function () {
@@ -44,11 +32,7 @@
       //hijack all the non-accept radio buttons so that
       //a non-greyed out appearance can be maintained instead
       //of assigning the disabled attribute
-      $('input:radio[value!="accept"]').click(function(e) {
-        e.preventDefault();
-        return false;
-      });
-      $('input:text[name=="' + {{ widget.full }} + '"]').bind( 'keypress keydown keyup', function(e) {
+      $('input:radio[value!="accept"]:not([name$="adjudicate"])').click(function(e) {
         e.preventDefault();
         return false;
       });
@@ -56,50 +40,73 @@
 
       // find and handle radio input change events:
       // copy the progenitor to the adjudicate entry
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value=="accept"]' ).change( function() {
-        
-        configure_ui( do_text );
-        
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change( function() {
+        var is_intrusion = $(this).attr( "id" ).indexOf( "intrusion" ) == -1 ? false : true;
+        var entry_id = $(this).attr( "id" ).split( "__" )[0];
+        if( is_intrusion ) {
+          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="intrusion"]' ).attr( "id" );
+          var source_text_id = '#' + entry_id + "__intrusion";
+          $( target_id ).val( $( source_id ).val() );
+        } else {
+          var radio_id = $('input[type="radio"][id^="'+entry_id+'__"]:checked').attr( "id" );
+          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="adjudicate"]' ).attr( "id" );
+          if( radio_id.indexOf( "variant" ) != -1 ) {
+            var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
+            $( target_text_id ).val( $( source_text_id ).val() );
+            $( target_text_id ).removeAttr( "disabled" );
+          } else {
+            $( target_text_id ).val( "" );
+            $( target_text_id ).attr( "disabled", "disabled" );
+          }
+          var source_id = '#' + radio_id;
+          var source_value = $( source_id ).val();
+          var target_id = '#' + $( 'input[type="radio"][id*="' + 
+                                    entry_id + '__"][name$="adjudicate"][value="' +
+                                    source_value + '"]' ).attr( "id" );
+          $( target_id ).attr( "checked", $( source_id ).attr( "checked" ) );  
+        }
+
+        configure_ui();
       } );// end radio input change
+
+      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[name$="adjudicate"]' ).change( function() {
+        var disable = $(this).attr( "id" ).indexOf( "variant" ) != -1 ? false : true; 
+        var target_text_id = '#' +  $(this).attr( "name" );
+        if( disable ) {
+          $( target_text_id ).attr( "disabled", "disabled" );
+          $( target_text_id ).val( "" );
+        } else {
+          $( target_text_id ).removeAttr( "disabled", "disabled" );
+          $( target_text_id ).focus();
+        }
+        // make sure the corresponding accept radio items are both unchecked
+        var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
+        $( id_1 ).removeAttr( "checked" ); 
+        $( id_2 ).removeAttr( "checked" ); 
+
+        configure_ui();
+      } );// end adjudicate radio input change
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         if( $(this).val().length == 0 ) {
           error_dialog( "Error", "Blank variant entry not permitted." );
-        } else {
-          /*
-          var args = new Object();
-          var columns = new Object();
-          args.id = $(this).attr( "id" ).split("__")[0];
-          var is_intrusion = $(this).attr( "id" ).split("__")[1] === "intrusion" ? true : false;
-          columns["test_entry_id"] = "{{ parent.id }}";
-          columns["word_id"] = $(this).attr( "name" );
-          columns["word_candidate"] = $(this).val();
-          columns["selection"] = is_intrusion ? "" : "variant";
-          args.columns = columns;
-          
-          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-            input = $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value!="accept"]' );
-            input.each( function() {
-              $(this).removeAttr( "disabled" );
-              if( $(this).val() == "variant" ) {
-                var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
-                if( $(text_id).val().length > 0 ) {
-                  $(text_id).removeAttr( "disabled" );
-                }  
-              }                   
-            } );// end each input
+
+          // refill with the corresponding accepted variant entry
+          var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
+          var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept"
+          if( $(id_1).attr( "checked" ) ) {
+            var text_id = id_1.replace( "accept", "candidate" );
+            $(this).val( $( text_id ).val() );
+          } else if ( $(id_2).attr("checked") ) {
+            var text_id = id_2.replace( "accept", "candidate" );
+            $(this).val( $( text_id ).val() );
+          } else {
           }
-          */
-
-          configure_ui();
+          $(this).focus();
         }
-        
-      } );// end text input change  
-
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
-        function() {
         configure_ui();
-      } ); // end radio input change
+      } );// end text input change  
 
     } );
   </script>
@@ -154,7 +161,7 @@
                name="{{ entry.word_id_1 }}__1"
                value="no"
                {{ entry.selection_1 == 'no' ? "checked" : "" }}></td>
-          <td><input type="radio"
+          <td style="white-space: nowrap"><input type="radio"
                id="{{ entry.id_1 }}__variant"
                name="{{ entry.word_id_1 }}__1"
                value="variant"
@@ -164,7 +171,7 @@
                name={{ widget.full }}
                value="{{ entry.word_candidate_1 }}"
                {{ entry.selection_1 == 'variant' ? "" : "disabled" }}></td>
-          <td><input type="radio"
+          <td bgcolor=#B1F3B1><input type="radio"
                id="{{ entry.id_1 }}__accept"
                name="{{ entry.word_id_1 }}__accept"
                value="accept">
@@ -180,17 +187,17 @@
                name="{{ entry.word_id_2 }}__2"
                value="no"
                {{ entry.selection_2 == 'no' ? "checked" : "" }}></td>
-          <td><input type="radio"
+          <td style="white-space: nowrap"><input type="radio"
                id="{{ entry.id_2 }}__variant"
                name="{{ entry.word_id_2 }}__2"
                value="variant"
                {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
               <input type="text"
-               id="{{ entry.id_2 }}__candidate__2"
+               id="{{ entry.id_2 }}__candidate"
                name={{ widget.full }}
                value="{{ entry.word_candidate_2 }}"
                {{ entry.selection_2 == 'variant' ? "" : "disabled" }}></td>
-          <td><input type="radio"
+          <td bgcolor=#B1F3B1><input type="radio"
                id="{{ entry.id_2 }}__accept"
                name="{{ entry.word_id_2 }}__accept"
                value="accept">
@@ -204,12 +211,13 @@
                id="{{ entry.id_1 }}__{{ entry.id_2 }}__no"
                name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
                value="no"></td>
-          <td><input type="radio"
+          <td style="white-space: nowrap"><input type="radio"
                id="{{ entry.id_1 }}__{{ entry.id_2 }}__variant"
                name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
                value="variant">
               <input type="text"
-               id="{{ entry.id_1 }}__{{ entry.id_2 }}__candidate"
+               id="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+               disabled="disabled"
                value=""></td>
         {% else %}
 
@@ -220,8 +228,8 @@
                id="{{ entry.id_1 }}__intrusion"
                name={{ widget.full }}
                value="{{ entry.word_candidate_1 }}"></td>
-          <td><input type="radio"
-               id="{{ entry.id_1 }}__accept"
+          <td bgcolor=#B1F3B1><input type="radio"
+               id="{{ entry.id_1 }}__intrusion__accept"
                name="{{ entry.id_1 }}__{{ entry.id_2 }}__accept"
                value="accept">
                <label for="{{ entry.id_1 }}__accept">Accept</label></td>
@@ -231,8 +239,8 @@
                id="{{ entry.id_2 }}__intrusion"
                name={{ widget.full }}
                value="{{ entry.word_candidate_2 }}"></td>
-          <td><input type="radio"
-               id="{{ entry.id_2 }}__accept"
+          <td bgcolor=#B1F3B1><input type="radio"
+               id="{{ entry.id_2 }}__intrusion__accept"
                name="{{ entry.id_1 }}__{{ entry.id_2 }}__accept"
                value="accept">
                <label for="{{ entry.id_2 }}__accept">Accept</label></td>
