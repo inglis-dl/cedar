@@ -88,10 +88,8 @@ class test_entry_alpha_numeric_adjudicate extends \cenozo\ui\widget
       {
         $adjudicate = $a_obj->word_id != $b_obj->word_id ? true : false;
               
-        $db_word_1 = is_null( $a_obj->word_id ) ? null :
-          lib::create( 'database\word', $a_obj->word_id );
-        $db_word_2 = is_null( $b_obj->word_id ) ? null :
-          lib::create( 'database\word', $b_obj->word_id );
+        $db_word_1 = lib::create( 'database\word', $a_obj->word_id );
+        $db_word_2 = lib::create( 'database\word', $b_obj->word_id );
 
         $entry_data[] = array(
                  'id_1' => $a_obj->id,

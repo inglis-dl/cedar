@@ -12,8 +12,8 @@
   <script type="text/javascript">
 
     function configure_ui() {
-      var disable = $( 'input:radio[value="accept"]:checked' ).length == 
-                    ( $( 'input:radio[value="accept"]' ).length / 2 )  ? false : true;
+      var disable = $( 'input:text[id$="adjudicate"]:not([value=""])' ).length !=
+                    ( $( 'input:radio[value="accept"]' ).length / 2 )  ? true : false;
       $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
     }
 
@@ -32,17 +32,14 @@
         configure_ui();
       } ); // end radio input change
 
-      // TODO handle changes to adjudicate text input by the administrator
-      // if the new entry differs from the progenetors, uncheck their radio inputs
-      // check that the word is not empty, if it is, 
-
       $( "#{{ widget.full }}__entry_table" ).find( 'input:text[id$="adjudicate"]' ).change( function() {
+        var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
+
         if( $(this).val().length == 0 ) {
           error_dialog( "Error", "Blank entry not permitted." );
 
           // refill with the corresponding accepted text entry
-          var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
-          var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept"
           if( $( id_1 ).attr( "checked" ) ) {
             var text_id = id_1.replace( "accept", "candidate" );
             $(this).val( $( text_id ).val() );
@@ -50,14 +47,38 @@
             var text_id = id_2.replace( "accept", "candidate" );
             $(this).val( $( text_id ).val() );
           } else {
-            // disable and uncheck the accept radio inputs
+            // disable this text input and uncheck the accept radio inputs
+            $(this).attr( "disabled", "disabled" );
             $( id_1 ).removeAttr( "checked" );
             $( id_2 ).removeAttr( "checked" );
-            $(this).attr( "disabled", "disabled" );
-          }
+          }        
+        } else {
+          // uncheck the accept radio and checkbox inputs
+          $( id_1 ).removeAttr( "checked" );
+          $( id_2 ).removeAttr( "checked" );
+          $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
         }
+
         configure_ui();
-      } );// end text input change 
+      } );// end text input change
+
+      $( 'input:checkbox[value="all"]' ).click( function() {
+        $( 'input:checkbox[value="all"]' ).not($(this)).removeAttr( "checked" );
+        $(this).attr( "checked", $(this).attr( "checked" ) );
+        var is_checked = $(this).attr( "checked" );
+        var id = $(this).attr( "id" ).split("__")[3];
+         var radio_class = "div.radio__accept__" + id + " :radio";
+        if( is_checked ){
+         $( radio_class ).attr( "checked", "checked" ).trigger( "change" );
+        } else {
+         $( radio_class ).removeAttr( "checked" );
+         $text_adjudicate = $( 'div.adjudicate :text' ); 
+         $text_adjudicate.attr( "disabled", "disabled" );  
+         $text_adjudicate.val( "" );  
+        }
+
+        configure_ui();
+      } );// end checkbox click
 
     } );
   </script>
@@ -83,7 +104,7 @@
     <tbody>
     {% for entry in entry_data %}
       <tr>
-        <td class="heading">{{ entry.rank }}</td>
+        <td class="heading" style="text-align:center">{{ entry.rank }}</td>
 
           {% set value_1 = '' %}
           {% set value_2 = '' %}
@@ -98,30 +119,66 @@
             {% set value_2 = entry.word_candidate_2 %}
           {% endif %}
 
-          <td><input type="text"
-               id="{{ entry.id_1 }}__candidate"
-               value={{ value_1 }}></td>
-          <td bgcolor=#B1F3B1><input type="radio"
-               id="{{ entry.id_1 }}__accept"
-               name="{{ entry.id_1 }}__{{ entry.id_2 }}"
-               value="accept">
-               <label for="{{ entry.id_1 }}__accept">Accept</label></td>
-
-          <td><input type="text"
-               id="{{ entry.id_2 }}__candidate"
-               value={{ value_2 }}></td>
-          <td bgcolor=#B1F3B1><input type="radio"
-               id="{{ entry.id_2 }}__accept"
-               name="{{ entry.id_1 }}__{{ entry.id_2 }}"
-               value="accept">
-               <label for="{{ entry.id_2 }}__accept">Accept</label></td>
-
-          <td><input type="text"
-               id="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-               disabled="disabled"
-               value=""></td>
+          <td>
+            <input type="text"
+              id="{{ entry.id_1 }}__candidate"
+              value={{ value_1 }}>
+          </td>
+          <td bgcolor=#B1F3B1>
+            <div class="radio__accept__1">
+              <input type="radio"
+                id="{{ entry.id_1 }}__accept"
+                name="{{ entry.id_1 }}__{{ entry.id_2 }}"
+                value="accept">
+              <label for="{{ entry.id_1 }}__accept">Accept</label>
+            </div>
+          </td>
+          <td>
+            <input type="text"
+              id="{{ entry.id_2 }}__candidate"
+              value={{ value_2 }}>
+          </td>
+          <td bgcolor=#B1F3B1>
+            <div class="radio__accept__2">
+              <input type="radio"
+                id="{{ entry.id_2 }}__accept"
+                name="{{ entry.id_1 }}__{{ entry.id_2 }}"
+                value="accept">
+              <label for="{{ entry.id_2 }}__accept">Accept</label>
+            </div>
+          </td>
+          <td>
+            <div class="adjudicate">
+              <input type="text"
+                id="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+                disabled="disabled"
+                value="">
+            </div>
+          </td>
       </tr>
+
     {% endfor %}
+
+      <tr>
+        <td colspan="2"></td>
+        <td bgcolor=#B1F3B1>
+          <input type="checkbox"
+            id="{{ widget.full }}__accept__all__1"
+            name="{{ widget.full }}__accept__all"
+            value="all">
+            <label for="{{ widget.full }}__accept__all__1">All</label>
+        </td>
+        <td></td>
+        <td bgcolor=#B1F3B1>
+          <input type="checkbox"
+            id="{{ widget.full }}__accept__all__2"
+            name="{{ widget.full }}__accept__all"
+            value="all">
+            <label for="{{ widget.full }}__accept__all__2">All</label>
+        </td>
+        <td colspan="3"></td>
+      </tr>
+
     </tbody>
   </table>
 

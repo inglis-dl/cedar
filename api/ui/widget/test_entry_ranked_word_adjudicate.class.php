@@ -94,7 +94,6 @@ class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
       {        
         if( $a_obj->word_id != $b_obj->word_id )
         {
-          log::debug( array( $a_obj, $b_obj ));
           throw lib::create( 'exception\runtime',
             'Unmatched words found in adjudicate pair',  __METHOD__ );
         }    
