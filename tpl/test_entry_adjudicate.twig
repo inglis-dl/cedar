@@ -18,21 +18,32 @@
       } ); // end Quit click
 
       $("#{{ widget.full }}_Submit").click( function() {
+        var args = new Object();
+        var columns = new Object();
+        columns['participant_id']={{ participant_id }};
+        columns['test_id']={{ test_id }};
+        columns['completed']=1;
+        args.columns = columns;
+        if( ajax_push( "{{ widget.subject }}", "submit", args ) ) {
+          console.log("success");
 
-      } ); // end Submit click
+        }
+
+      } ); // end Submit clickI
 
       $( "#{{ widget.full }}_Prev").click( function() {
         slot_load( {{ slot }}, 
           "{{ widget.subject }}", "{{ widget.name }}", 
-          { id : {{ prev_test_entry_id}} } );
+          { id : {{ prev_test_entry_id }} } );
       } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } ); // end Prev click
+
       $( "#{{ widget.full }}_Next" ).click( function() {
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
         {% else %}  
           slot_load( {{ slot }}, 
             "{{ widget.subject }}", "{{ widget.name }}", 
-            { id : {{ next_test_entry_id}} } );
+            { id : {{ next_test_entry_id }} } );
         {% endif %}  
       } ); // end Next click
 

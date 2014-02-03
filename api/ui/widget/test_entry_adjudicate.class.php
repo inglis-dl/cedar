@@ -77,19 +77,33 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $record = $this->get_record();
     $db_test = $record->get_test();
 
+    $db_assignment = $record->get_assignment();
+    if( empty( $db_assignment ) || is_null( $db_assignment ) )
+      throw lib::create( 'exception\runtime',
+        'Test entry adjudication requires a valid assignment', __METHOD__ );
+
+    $this->set_variable( 'test_id', $record->test_id );
+    $this->set_variable( 'participant_id', $db_assignment->get_participant()->id );
+
     $this->set_variable( 'id_1', $record->id );
     //$this->set_variable( 'audio_fault_1', $record->audio_fault );
     $this->set_variable( 'adjudicate_1', $record->adjudicate );
     $this->set_variable( 'deferred_1', $record->deferred );
     $this->set_variable( 'completed_1', $record->completed );
-    $this->set_variable( 'user_1', $record->get_assignment()->get_user()->name );
+    $this->set_variable( 'user_1', $db_assignment->get_user()->name );
 
     $this->set_variable( 'id_2', $this->adjudicate_entry->id );
     //$this->set_variable( 'audio_fault_2', $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'adjudicate_2', $this->adjudicate_entry->adjudicate );
     $this->set_variable( 'deferred_2', $this->adjudicate_entry->deferred );
     $this->set_variable( 'completed_2', $this->adjudicate_entry->completed );
-    $this->set_variable( 'user_2', $this->adjudicate_entry->get_assignment()->get_user()->name );
+
+    $db_adjudicate_assignment = $this->adjudicate_entry->get_assignment();
+    if( empty( $db_adjudicate_assignment ) || is_null( $db_adjudicate_assignment ) )
+      throw lib::create( 'exception\runtime',
+        'Test entry adjudication requires a valid assignment', __METHOD__ );
+
+    $this->set_variable( 'user_2', $db_adjudicate_assignment->get_user()->name );
 
     $this->set_variable( 'audio_fault', $record->audio_fault || $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'rank', $db_test->rank );
