@@ -352,7 +352,8 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   INDEX `fk_test_id` (`test_id` ASC),
   INDEX `fk_assignment_id` (`assignment_id` ASC),
   UNIQUE INDEX `uq_test_id_assignment_id` (`test_id` ASC, `assignment_id` ASC),
-  INDEX `fk_test_entry_participant1_idx` (`participant_id` ASC),
+  INDEX `fk_participant_id` (`participant_id` ASC),
+  UNIQUE INDEX `uq_test_id_participant_id` (`test_id` ASC, `participant_id` ASC),
   CONSTRAINT `fk_test_entry_test_id`
     FOREIGN KEY (`test_id`)
     REFERENCES `cedar`.`test` (`id`)
@@ -363,7 +364,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
     REFERENCES `cedar`.`assignment` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_test_entry_participant1`
+  CONSTRAINT `fk_test_entry_participant_id`
     FOREIGN KEY (`participant_id`)
     REFERENCES `cenozo`.`participant` (`id`)
     ON DELETE NO ACTION
