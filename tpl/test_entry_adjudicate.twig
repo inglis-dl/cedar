@@ -9,29 +9,16 @@
 {% block javascript %}
 
   {{ parent() }}
+
   <script type="text/javascript">   
 
     $( function () {
 
-      $("#{{ widget.full }}_Quit").click( function() {
+      $( "#{{ widget.full }}_Quit" ).click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click
 
-      $("#{{ widget.full }}_Submit").click( function() {
-        var args = new Object();
-        var columns = new Object();
-        columns['participant_id']={{ participant_id }};
-        columns['test_id']={{ test_id }};
-        columns['completed']=1;
-        args.columns = columns;
-        if( ajax_push( "{{ widget.subject }}", "submit", args ) ) {
-          console.log("success");
-
-        }
-
-      } ); // end Submit clickI
-
-      $( "#{{ widget.full }}_Prev").click( function() {
+      $( "#{{ widget.full }}_Prev" ).click( function() {
         slot_load( {{ slot }}, 
           "{{ widget.subject }}", "{{ widget.name }}", 
           { id : {{ prev_test_entry_id }} } );
