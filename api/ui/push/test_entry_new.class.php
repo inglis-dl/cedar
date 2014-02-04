@@ -28,26 +28,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
   }
 
   /** 
-   * Validate the operation.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
-   * @access protected
-   */
-  protected function validate()
-  {
-    parent::validate();
-
-    // make sure the name column isn't blank
-    $columns = $this->get_argument( 'columns' );
-
-    if( !array_key_exists( 'assignment_id', $columns ) && 
-        !array_key_exists( 'participant_id', $columns ) ) 
-      throw lib::create( 'exception\runtime',
-        'Either an assignment or a participant id must be specified.', __METHOD__ );
-  }
-
-  /** 
    * Finishes the operation with any post-execution instructions that may be necessary.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -58,18 +38,28 @@ class test_entry_new extends \cenozo\ui\push\base_new
   {
     parent::finish();
 
+    $columns = $this->get_argument( 'columns', array() );
+
+    log::debug( $columns );
+
+    // if the assignment id is null and the participant id is not null
+    // this is an adjudication
+    // otherwise,
+    // if the assignment id is not null and the participant id is null 
+    // this is a standard new
+
     $record = $this->get_record();
-    $db_assignment = $record->get_assignment();      
-    $db_test = $record->get_test();
 
     $db_participant = NULL;
-    if( empty( $db_assignment ) || is_null( $db_assignment ) )
+    $adjudicate = ( is_null( $record->assignment_id ) && !is_null( $record->test_id ) );
+    log::debug( $adjudicate );
+    if( $adjudicate )
     {
       $db_participant = $record->get_participant();
     }
     else
     {
-      $db_participant = $db_assignment->get_participant();
+      $db_participant = $record->get_assignment()->get_participant();
     }
 
     if( is_null( $db_participant ) ) 
@@ -80,6 +70,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
     $language = is_null( $language ) ? 'en' : $language;
 
     // create default test_entry sub tables
+    $db_test = $record->get_test();
     $test_type_name = $db_test->get_test_type()->name;
     
     if( $test_type_name == 'ranked_word' )
@@ -98,6 +89,10 @@ class test_entry_new extends \cenozo\ui\push\base_new
         $operation = lib::create( 'ui\push\test_entry_ranked_word_new', $args );
         $operation->process();
       }
+
+      if( $adjudicate )
+      {
+      }
     }
     else if( $test_type_name == 'confirmation' )
     {
@@ -105,6 +100,9 @@ class test_entry_new extends \cenozo\ui\push\base_new
       $args['columns']['test_entry_id'] = $record->id;
       $operation = lib::create( 'ui\push\test_entry_confirmation_new', $args );
       $operation->process();
+      if( $adjudicate )
+      {
+      }
     }
     else if( $test_type_name == 'classification' )
     {
@@ -116,6 +114,9 @@ class test_entry_new extends \cenozo\ui\push\base_new
         $args['columns']['rank'] = $rank;
         $operation = lib::create( 'ui\push\test_entry_classification_new', $args );
         $operation->process();
+      }
+      if( $adjudicate )
+      {
       }
     }
     else if( $test_type_name == 'alpha_numeric' )
@@ -132,6 +133,9 @@ class test_entry_new extends \cenozo\ui\push\base_new
         $args['columns']['rank'] = $rank;
         $operation = lib::create( 'ui\push\test_entry_alpha_numeric_new', $args );
         $operation->process();
+      }
+      if( $adjudicate )
+      {
       }
     }
     else
