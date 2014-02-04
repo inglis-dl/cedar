@@ -92,6 +92,42 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
       if( $adjudicate )
       {
+        $data = $columns['data'];
+        $c = $record->get_test_entry_ranked_word_list();
+        foreach( $c as $db_entry )
+        {
+          if( array_key_exists( $db_entry->word_id, $data ) )
+          {
+            $db_entry->selection = $data[$db_entry->word_id]['selection'];
+            if( !is_null( $db_entry->selection ) && $db_entry->selection == 'variant' )
+              $db_entry->word_candidate = $data[$db_entry->word_id]['word_candidate'];
+            $db_entry->save();
+          }
+        }
+        $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
+        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $a = $db_test_entry_1->get_test_entry_ranked_word_list();
+        $b = $db_test_entry_2->get_test_entry_ranked_word_list();
+        reset( $c );
+        while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) && !is_null( ( key ( $c ) ) ) )
+        {
+          $a_obj = current( $a );
+          $b_obj = current( $b );
+          $c_obj = current( $c );
+          if( $a_obj->selection == $b_obj->selection &&
+              $a_obj->word_id == $b_obj->word_id &&
+              $a_obj->word_candidate == $b_obj->word_candidate )
+          {
+            $c_obj->selection = $a_obj->selection;
+            $c_obj->word_id = $a_obj->word_id;
+            $c_obj->word_candidate = $a_obj->word_candidate;
+            $c_obj->save();
+          }
+          next( $a );
+          next( $b );
+          next( $c );
+        }
       }
     }
     else if( $test_type_name == 'confirmation' )

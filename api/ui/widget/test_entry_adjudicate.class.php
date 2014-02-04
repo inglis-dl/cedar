@@ -37,8 +37,15 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     parent::prepare();
 
     $record = $this->get_record();
+
+    $db_assignment = $record->get_assignment();
+
+    if( is_null( $db_assignment ) )
+      throw lib::create( 'exception\notice',
+        'The test entry must have a link to the assignment table.', __METHOD__ );
+
     $db_test = $record->get_test();
-    $db_participant = $record->get_assignment()->get_participant();
+    $db_participant = $db_assignment->get_participant();
     $this->adjudicate_entry = $record->get_adjudicate_entry();
 
     // create the test_entry sub widget
