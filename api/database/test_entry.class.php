@@ -75,7 +75,7 @@ class test_entry extends \cenozo\database\record
    */
   public function get_adjudicate_entry()
   {
-    if( !$this->completed || $this->deferred )
+    if( is_null( $this->completed ) || $this->completed == 0 || $this->deferred == 1 )
       return NULL;
     
     // find a matching assignment based on participant id and user id uniqueness
@@ -114,7 +114,7 @@ class test_entry extends \cenozo\database\record
   public function adjudicate()
   {
     $db_test_entry_match = $this->get_adjudicate_entry();
-    if( is_null( $db_test_entry_match ) ) return 0;
+    if( is_null( $db_test_entry_match ) ) return false;
 
     // get all the sub entries for each entry
     $entry_type_name = $this->get_test()->get_test_type()->name;
@@ -138,7 +138,7 @@ class test_entry extends \cenozo\database\record
       $db_test_entry_match->save();
     }
 
-    return 1;
+    return true;
   }
 
   /** 

@@ -12,7 +12,7 @@
   <script type="text/javascript">
 
     function configure_ui() {
-      var disable = $(':input[type="radio"]:checked').length == 0 && !{{ deferred }};
+      var disable = $( ':input[type="radio"]:checked' ).length == 0 && !{{ deferred }} ? true : false;
       $("#{{ parent.full }}_Next").button( { disabled : disable } );
 
       //disable elements based on deferred status
@@ -30,16 +30,12 @@
       configure_ui();
 
       // find and handle radio element change events
-      $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).attr( "name" );
+        args.id = $(this).attr( "id" ).split( "__" )[0];
         columns["test_entry_id"] = "{{ parent.id }}";
-        if( $(this).val() == "yes" ) {
-          columns["confirmation"] = 1;
-        } else {
-          columns["confirmation"] = 0;
-        }
+        columns["confirmation"] = ( $(this).val() === "yes" ) ? 1 : 0;
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           configure_ui();
@@ -48,7 +44,7 @@
 
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
+          input = $( "#{{ widget.full }}__entry_table" ).find( "input" );
           input.each( function() {
             $(this).removeAttr( "checked" );
           } );
@@ -81,30 +77,30 @@
 
   <table id="{{ widget.full }}__entry_table" style="width:20%">
       
-      <thead>
-        <tr>
-          <th>Yes</th>
-          <th>No</th>
-        </tr>
-      </thead>
-
-      <tbody>
+    <thead>
       <tr>
-          <td><input
-             id="{{ widget.full }}__Yes"
-             name={{ entry_data.id }}
-             value="yes"
-             type="radio"
-             {{ entry_data.confirmation == '1' ? "checked" : "" }}>
-          </td>
-          <td><input
-             id="{{ widget.full }}__No"
-             name={{ entry_data.id }}
-             value="no"
-             type="radio"
-             {{ entry_data.confirmation == '0' ? "checked" : "" }}>
-          </td>
-       </tr> 
+        <th>Yes</th>
+        <th>No</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>
+          <input type="radio"
+            id="{{ entry_data.id }}__yes"
+            name="confirmation"
+            value="yes"
+            {{ entry_data.confirmation == '1' ? "checked" : "" }}>
+        </td>
+        <td>
+          <input type="radio"
+            id="{{ entry_data.id }}__no"
+            name="confirmation"
+            value="no"
+            {{ entry_data.confirmation == '0' ? "checked" : "" }}>
+        </td>
+      </tr> 
     </tbody>
   </table> 
 
