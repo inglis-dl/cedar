@@ -118,37 +118,43 @@
     {% set kprev= 'true' %}
     {% for i in range(0, entry_data|length-1, numcell) %}
       <tr>
-          {% set kmax = i+numcell-1 %}
-          {% for k in i..kmax %}
+      {% set kmax = i+numcell-1 %}
+      {% for k in i..kmax %}
 
-            {% set value = '' %}
-            {% if entry_data[k].word_id is defined %}
-              {% set value = entry_data[k].word %}
-            {% elseif entry_data[k].word_candidate is defined %}  
-                {% set value = entry_data[k].word_candidate %}
-            {% endif %}
-            {% set status = entry_data[k].word_id ? "word" : 
-                           entry_data[k].word_candidate ? "candidate" : "empty" %} 
+        {% set value = '' %}
+        {% if entry_data[k].word_id is defined %}
+          {% set value = entry_data[k].word %}
+        {% elseif entry_data[k].word_candidate is defined %}  
+            {% set value = entry_data[k].word_candidate %}
+        {% endif %}
+        {% set status = entry_data[k].word_id ? "word" : 
+                        entry_data[k].word_candidate ? "candidate" : "empty" %} 
 
-              <td><input id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-                   type="text"
-                   name={{ entry_data[k].word_id ? entry_data[k].word_id : 'undefined' }}
+        <td>
+          <input type="text"
+           id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
+           name={{ entry_data[k].word_id ? entry_data[k].word_id : 'undefined' }}
 
-                   {% if status == 'empty'  %} 
-                     {% if kprev == 'false' %}
-                       {{ "disabled" }}
-                     {% endif %}
-                     {% set kprev = 'false' %}
-                   {% elseif status == 'candidate' %}
-                       {% set kprev = 'true' %}
-                   {% elseif status == 'word' %}
-                       {% set kprev = 'true' %}
-                   {% endif %}
-                   
-                   value={{ value }}></td>
-          {% endfor %}    
+           {% if status == 'empty'  %} 
+             {% if kprev == 'false' %}
+               {{ "disabled" }}
+             {% endif %}
+             {% set kprev = 'false' %}
+           {% elseif status == 'candidate' %}
+               {% set kprev = 'true' %}
+           {% elseif status == 'word' %}
+               {% set kprev = 'true' %}
+           {% endif %}
+             
+           value={{ value }}>
+        </td>
+
+      {% endfor %}
+
       </tr>
+
     {% endfor %}
+
     </tbody>
   </table>
 
