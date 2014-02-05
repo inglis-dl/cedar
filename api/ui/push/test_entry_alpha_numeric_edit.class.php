@@ -82,8 +82,6 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     // consider the test entry completed if 1 or more entries exist and
     // the entry is not deferred
     // if none exist, the typist must defer to the admin to set completed status
-
-    
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'word_id', '!=', '' );
     $test_entry_alpha_numeric_class_name = 

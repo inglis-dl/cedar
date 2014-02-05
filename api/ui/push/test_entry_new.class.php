@@ -72,6 +72,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
     // create default test_entry sub tables
     $db_test = $record->get_test();
     $test_type_name = $db_test->get_test_type()->name;
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     
     if( $test_type_name == 'ranked_word' )
     {
@@ -92,24 +93,27 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
       if( $adjudicate )
       {
-        $data = $columns['data'];
-        $c = $record->get_test_entry_ranked_word_list();
-        foreach( $c as $db_entry )
-        {
-          if( array_key_exists( $db_entry->word_id, $data ) )
-          {
-            $db_entry->selection = $data[$db_entry->word_id]['selection'];
-            if( !is_null( $db_entry->selection ) && $db_entry->selection == 'variant' )
-              $db_entry->word_candidate = $data[$db_entry->word_id]['word_candidate'];
-            $db_entry->save();
-          }
-        }
-        $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
         $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
         $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+
         $a = $db_test_entry_1->get_test_entry_ranked_word_list();
         $b = $db_test_entry_2->get_test_entry_ranked_word_list();
-        reset( $c );
+        $c = $record->get_test_entry_ranked_word_list();
+
+        $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
+
+        if( $count > 0 )
+        {
+          $args = array();
+          $args['columns']['test_entry_id'] = $record->id;
+          for( $i = 0; $i < $count; $i++ )
+          {
+            $operation = lib::create( 'ui\push\test_entry_ranked_word_new', $args );
+            $operation->process();
+          }
+        }
+
+        $c = $record->get_test_entry_ranked_word_list();
         while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) && !is_null( ( key ( $c ) ) ) )
         {
           $a_obj = current( $a );
@@ -128,16 +132,55 @@ class test_entry_new extends \cenozo\ui\push\base_new
           next( $b );
           next( $c );
         }
+
+        $data = $columns['data'];
+        reset( $c );
+        foreach( $c as $db_entry )
+        {
+          if( array_key_exists( $db_entry->word_id, $data ) )
+          {
+            $db_entry->selection = $data[$db_entry->word_id]['selection'];
+            if( !is_null( $db_entry->selection ) && $db_entry->selection == 'variant' )
+              $db_entry->word_candidate = $data[$db_entry->word_id]['word_candidate'];
+            $db_entry->save();
+          }
+        }
+        $db_test_entry_1->adjudicate = 0;
+        $db_test_entry_2->adjudicate = 0;
+        $db_test_entry_1->save();
+        $db_test_entry_2->save();
+        $record->complete = 1;
+        $record->save();
       }
     }
     else if( $test_type_name == 'confirmation' )
     {
       $args = array();
       $args['columns']['test_entry_id'] = $record->id;
-      $operation = lib::create( 'ui\push\test_entry_confirmation_new', $args );
-      $operation->process();
+
       if( $adjudicate )
       {
+        $data = $columns['data'];
+        if( !array_key_exists( 'confirmation', $data ) )
+          throw lib::create( 'exception\runtime',
+            'Test entry adjudication requires a valid confirmation', __METHOD__ );
+
+        $args['columns']['confirmation'] = $data['confirmation'];  
+      }
+
+      $operation = lib::create( 'ui\push\test_entry_confirmation_new', $args );
+      $operation->process();
+
+      if( $adjudicate )
+      {
+        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
+        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $db_test_entry_1->adjudicate = 0;
+        $db_test_entry_2->adjudicate = 0;
+        $db_test_entry_1->save();
+        $db_test_entry_2->save();
+        $record->complete = 1;
+        $record->save();
       }
     }
     else if( $test_type_name == 'classification' )
@@ -153,6 +196,85 @@ class test_entry_new extends \cenozo\ui\push\base_new
       }
       if( $adjudicate )
       {
+        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
+        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+
+        $modifier = lib::create('database\modifier');
+        $modifier->order( 'rank' );
+
+        $a = $db_test_entry_1->get_test_entry_classification_list( clone $modifier );
+        $b = $db_test_entry_2->get_test_entry_classification_list( clone $modifier );
+        $c = $record->get_test_entry_classification_list( clone $modifier );
+
+        $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
+
+        if( $count > 0 )
+        {
+          $args = array();
+          $args['columns']['test_entry_id'] = $record->id;
+          for( $i = 0; $i < $count; $i++ )
+          {
+            $operation = lib::create( 'ui\push\test_entry_classification_new', $args );
+            $operation->process();
+          }
+        }
+
+        $c = $record->get_test_entry_classification_list( clone $modifier );
+        while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) && !is_null( ( key ( $c ) ) ) )
+        {
+          $a_obj = current( $a );
+          $b_obj = current( $b );
+          $c_obj = current( $c );
+          if( $a_obj->word_id == $b_obj->word_id &&
+              $a_obj->word_candidate == $b_obj->word_candidate )
+          {
+            $c_obj->word_id = $a_obj->word_id;
+            $c_obj->word_candidate = $a_obj->word_candidate;
+            $c_obj->save();
+          }
+          next( $a );
+          next( $b );
+          next( $c );
+        }
+
+        $data = $columns['data'];
+        $db_dictionary = $db_test->get_dictionary();
+        $word_class_name = lib::get_class_name( 'database\word' );
+        $base_mod = lib::create( 'database\modifier' );
+        $base_mod->where( 'dictionary_id', '=', $db_dictionary->id );
+        $base_mod->where( 'language', '=', $language );
+        $base_mod->limit( 1 );
+        reset( $c );
+        foreach( $c as $db_entry )
+        {
+          if( array_key_exists( $db_entry->rank, $data ) )
+          {
+            $db_entry->word_candidate = $data[$db_entry->rank]['word_candidate'];
+            $db_entry->word_id = $data[$db_entry->rank]['word_id'];
+            if( $db_entry->word_id == 'candidate' )
+            {
+              // does the word candidate exist in the primary dictionary ?
+              $modifier = clone $base_mod;
+              $modifier->where( 'word', '=', $db_entry->word_candidate );
+              $db_word = $word_class_name::select( $modifier );
+              if( !empty( $db_word ) ) 
+              {   
+                $db_entry->word_id = $db_word[0]->id;
+                $db_entry->word_candidate = NULL;
+              }
+              else $db_entry->word_id = NULL;
+            }
+            $db_entry->save();
+          }
+        }
+        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
+        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $db_test_entry_1->adjudicate = 0;
+        $db_test_entry_2->adjudicate = 0;
+        $db_test_entry_1->save();
+        $db_test_entry_2->save();
+        $record->complete = 1;
+        $record->save();
       }
     }
     else if( $test_type_name == 'alpha_numeric' )
@@ -172,6 +294,81 @@ class test_entry_new extends \cenozo\ui\push\base_new
       }
       if( $adjudicate )
       {
+        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
+        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+
+        $modifier = lib::create('database\modifier');
+        $modifier->order( 'rank' );
+
+        $a = $db_test_entry_1->get_test_entry_classification_list( clone $modifier );
+        $b = $db_test_entry_2->get_test_entry_classification_list( clone $modifier );
+        $c = $record->get_test_entry_classification_list( clone $modifier );
+
+        $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
+
+        if( $count > 0 )
+        {
+          $args = array();
+          $args['columns']['test_entry_id'] = $record->id;
+          for( $i = 0; $i < $count; $i++ )
+          {
+            $operation = lib::create( 'ui\push\test_entry_classification_new', $args );
+            $operation->process();
+          }
+        }
+
+        $c = $record->get_test_entry_classification_list( clone $modifier );
+        while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) && !is_null( ( key ( $c ) ) ) )
+        {
+          $a_obj = current( $a );
+          $b_obj = current( $b );
+          $c_obj = current( $c );
+          if( $a_obj->word_id == $b_obj->word_id )
+          {
+            $c_obj->word_id = $a_obj->word_id;
+            $c_obj->save();
+          }
+          next( $a );
+          next( $b );
+          next( $c );
+        }
+
+        $data = $columns['data'];
+        $db_dictionary = $db_test->get_dictionary();
+        $word_class_name = lib::get_class_name( 'database\word' );
+        $base_mod = lib::create( 'database\modifier' );
+        $base_mod->where( 'dictionary_id', '=', $db_dictionary->id );
+        $base_mod->where( 'language', '=', $language );
+        $base_mod->limit( 1 );
+        reset( $c );
+        foreach( $c as $db_entry )
+        {   
+          if( array_key_exists( $db_entry->rank, $data ) ) 
+          {   
+            $word_candidate = $data[$db_entry->rank]['word_candidate'];
+            $db_entry->word_id = $data[$db_entry->rank]['word_id'];
+            if( $db_entry->word_id == 'candidate' )
+            {   
+              // does the word candidate exist in the primary dictionary ?
+              $modifier = clone $base_mod;
+              $modifier->where( 'word', '=', $word_candidate );              $db_word = $word_class_name::select( $modifier );
+              if( !empty( $db_word ) ) 
+              {   
+                $db_entry->word_id = $db_word[0]->id;
+              }     
+              else $db_entry->word_id = NULL;
+            }     
+            $db_entry->save();
+          }     
+        }
+        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
+        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $db_test_entry_1->adjudicate = 0;
+        $db_test_entry_2->adjudicate = 0;
+        $db_test_entry_1->save();
+        $db_test_entry_2->save();
+        $record->complete = 1;
+        $record->save();
       }
     }
     else

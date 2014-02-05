@@ -35,7 +35,7 @@
 
         $( 'input:text[id$="adjudicate"]' ).each( function() {
           var id = $(this).attr( "id" ).split( "__" )[2];
-          data[id] = { 'word_candidate' : $(this).val() };
+          data[id] = { 'word_id' : $(this).attr( "name" ), 'word_candidate' : $(this).val() };
         } );
  
         columns['data'] = data;
@@ -52,6 +52,7 @@
         var target_text_id = '#' + $(this).attr( "name" ) + "__adjudicate";
         var source_text_id = '#' + entry_id + "__candidate";
         $( target_text_id ).val( $( source_text_id ).val() );
+        $( target_text_id ).attr( "name", $( source_text_id ).attr( "name" ) );
         $( target_text_id ).removeAttr( "disabled" );
 
         configure_ui();
@@ -60,20 +61,23 @@
       $( "#{{ widget.full }}__entry_table" ).find( 'input:text[id$="adjudicate"]' ).change( function() {
         var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
         var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
+        var text_id_1 = id_1.replace( "accept", "candidate" );
+        var text_id_2 = id_2.replace( "accept", "candidate" );
 
         if( $(this).val().length == 0 ) {
           error_dialog( "Error", "Blank entry not permitted." );
 
           // refill with the corresponding accepted text entry
           if( $( id_1 ).attr( "checked" ) ) {
-            var text_id = id_1.replace( "accept", "candidate" );
-            $(this).val( $( text_id ).val() );
+            $(this).val( $( text_id_1 ).val() );
+            $(this).attr( "name", $( text_id_1 ).attr( "name" ) );
           } else if ( $( id_2 ).attr("checked") ) {
-            var text_id = id_2.replace( "accept", "candidate" );
-            $(this).val( $( text_id ).val() );
+            $(this).val( $( text_id_2 ).val() );
+            $(this).attr( "name", $( text_id_2 ).attr( "name" ) );
           } else {
             // disable this text input and uncheck the accept radio inputs
             $(this).attr( "disabled", "disabled" );
+            $(this).attr( "name", "candidate" );
             $( id_1 ).removeAttr( "checked" );
             $( id_2 ).removeAttr( "checked" );
           }        
@@ -82,6 +86,7 @@
           $( id_1 ).removeAttr( "checked" );
           $( id_2 ).removeAttr( "checked" );
           $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+          $(this).attr( "name", "candidate" );
         }
 
         configure_ui();
@@ -100,6 +105,7 @@
          $text_adjudicate = $( 'div.adjudicate :text' ); 
          $text_adjudicate.attr( "disabled", "disabled" );  
          $text_adjudicate.val( "" );  
+         $text_adjudicate.attr( "name", "candidate" );  
         }
 
         configure_ui();
@@ -141,13 +147,18 @@
 
             {% set value_1 = '' %}
             {% set value_2 = '' %}
+            {% set name_1 = 'candidate' %}
+            {% set name_2 = 'candidate' %}
+
             {% if entry.word_id_1 is defined %}
               {% set value_1 = entry.word_1 %}
+              {% set name_1 = entry.word_id_1 %}
             {% elseif entry.word_candidate_1 is defined %}
               {% set value_1 = entry.word_candidate_1 %}
             {% endif %}
             {% if entry.word_id_2 is defined %}
               {% set value_2 = entry.word_2 %}
+              {% set name_2 = entry.word_id_2 %}
             {% elseif entry.word_candidate_2 is defined %}
               {% set value_2 = entry.word_candidate_2 %}
             {% endif %}
@@ -155,6 +166,7 @@
             <td>
               <input type="text"
                 id="{{ entry.id_1 }}__candidate"
+                name={{ name_1 }}
                 value={{ value_1 }}
                 readonly>
             </td>
@@ -170,6 +182,7 @@
             <td>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
+                name={{ name_2 }}
                 value={{ value_2 }}
                 readonly>
             </td>
@@ -187,6 +200,7 @@
                 <input type="text"
                   id="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}__adjudicate"
                   disabled="disabled"
+                  name="candidate"
                   value="">
               </div>
             </td>
