@@ -10,7 +10,7 @@
 {% block javascript %}
   {{ parent() }}
   <script type="text/javascript">
-
+  
     function configure_ui() {
       var disable = $(':input[type="text"][value!=""]').length == 0 && !{{ deferred }};
       $("#{{ parent.full }}_Next").button( { disabled : disable } );
@@ -37,7 +37,16 @@
 
       configure_ui();
 
-      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
+      var testcomplete = ['value','aword','label','aword_1'];
+
+      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
+         source: testcomplete,
+         minLength: 1,
+         select: function( event, ui ) {
+             $(this).val( ui.item.value );
+             $(this).trigger( 'change' );
+           }
+         } ).change( function() {
         var args = new Object();
         var columns = new Object();
         args.id = $(this).attr("id").split("__")[0];
