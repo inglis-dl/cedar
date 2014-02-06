@@ -39,20 +39,10 @@ class test_entry_new extends \cenozo\ui\push\base_new
     parent::finish();
 
     $columns = $this->get_argument( 'columns', array() );
-
-    log::debug( $columns );
-
-    // if the assignment id is null and the participant id is not null
-    // this is an adjudication
-    // otherwise,
-    // if the assignment id is not null and the participant id is null 
-    // this is a standard new
-
     $record = $this->get_record();
 
     $db_participant = NULL;
     $adjudicate = ( is_null( $record->assignment_id ) && !is_null( $record->test_id ) );
-    log::debug( $adjudicate );
     if( $adjudicate )
     {
       $db_participant = $record->get_participant();
@@ -72,7 +62,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
     // create default test_entry sub tables
     $db_test = $record->get_test();
     $test_type_name = $db_test->get_test_type()->name;
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     
     if( $test_type_name == 'ranked_word' )
     {
@@ -93,8 +82,8 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
       if( $adjudicate )
       {
-        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
-        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $db_test_entry_1 = lib::create( 'database\test_entry', $columns['id_1'] );
+        $db_test_entry_2 = lib::create( 'database\test_entry', $columns['id_2'] );
 
         $a = $db_test_entry_1->get_test_entry_ranked_word_list();
         $b = $db_test_entry_2->get_test_entry_ranked_word_list();
@@ -149,7 +138,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
         $db_test_entry_2->adjudicate = 0;
         $db_test_entry_1->save();
         $db_test_entry_2->save();
-        $record->complete = 1;
+        $record->completed = 1;
         $record->save();
       }
     }
@@ -173,13 +162,13 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
       if( $adjudicate )
       {
-        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
-        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $db_test_entry_1 = lib::create( 'database\test_entry', $columns['id_1'] );
+        $db_test_entry_2 = lib::create( 'database\test_entry', $columns['id_2'] );
         $db_test_entry_1->adjudicate = 0;
         $db_test_entry_2->adjudicate = 0;
         $db_test_entry_1->save();
         $db_test_entry_2->save();
-        $record->complete = 1;
+        $record->completed = 1;
         $record->save();
       }
     }
@@ -196,8 +185,8 @@ class test_entry_new extends \cenozo\ui\push\base_new
       }
       if( $adjudicate )
       {
-        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
-        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $db_test_entry_1 = lib::create( 'database\test_entry', $columns['id_1'] );
+        $db_test_entry_2 = lib::create( 'database\test_entry', $columns['id_2'] );
 
         $modifier = lib::create('database\modifier');
         $modifier->order( 'rank' );
@@ -267,13 +256,11 @@ class test_entry_new extends \cenozo\ui\push\base_new
             $db_entry->save();
           }
         }
-        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
-        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
         $db_test_entry_1->adjudicate = 0;
         $db_test_entry_2->adjudicate = 0;
         $db_test_entry_1->save();
         $db_test_entry_2->save();
-        $record->complete = 1;
+        $record->completed = 1;
         $record->save();
       }
     }
@@ -294,8 +281,8 @@ class test_entry_new extends \cenozo\ui\push\base_new
       }
       if( $adjudicate )
       {
-        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
-        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
+        $db_test_entry_1 = lib::create( 'database\test_entry', $columns['id_1'] );
+        $db_test_entry_2 = lib::create( 'database\test_entry', $columns['id_2'] );
 
         $modifier = lib::create('database\modifier');
         $modifier->order( 'rank' );
@@ -351,7 +338,8 @@ class test_entry_new extends \cenozo\ui\push\base_new
             {   
               // does the word candidate exist in the primary dictionary ?
               $modifier = clone $base_mod;
-              $modifier->where( 'word', '=', $word_candidate );              $db_word = $word_class_name::select( $modifier );
+              $modifier->where( 'word', '=', $word_candidate );
+              $db_word = $word_class_name::select( $modifier );
               if( !empty( $db_word ) ) 
               {   
                 $db_entry->word_id = $db_word[0]->id;
@@ -361,13 +349,11 @@ class test_entry_new extends \cenozo\ui\push\base_new
             $db_entry->save();
           }     
         }
-        $db_test_entry_1 = $test_entry_class_name::get_unique_record( 'id', $columns['id_1'] );
-        $db_test_entry_2 = $test_entry_class_name::get_unique_record( 'id', $columns['id_2'] );
         $db_test_entry_1->adjudicate = 0;
         $db_test_entry_2->adjudicate = 0;
         $db_test_entry_1->save();
         $db_test_entry_2->save();
-        $record->complete = 1;
+        $record->completed = 1;
         $record->save();
       }
     }

@@ -44,9 +44,10 @@
         columns['data'] = data;
         args.columns = columns;
 
-        console.log( args ); 
-        //if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
-        //}
+        if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
+          $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
+          $( "#{{ parent.full }}_Next" ).trigger( "click" );
+        }
       } );
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
