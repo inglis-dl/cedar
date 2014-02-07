@@ -81,7 +81,19 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'completed', $record->completed );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
+    $db_dictionary = $db_test->get_dictionary();
+    $dictionary_id = '';
+    if( !empty( $db_dictionary ) )
+      $dictionary_id = $db_dictionary->id;
+    $this->set_variable( 'dictionary_id', $dictionary_id );
 
+    $language = 'en';
+    $db_participant = $record->get_participant();
+    if( !empty( $db_participant ) ) 
+      $language =  
+        is_null( $db_participant->language ) ? 'en' : $db_participant->language;
+    $this->set_variable( 'language', $language );    
+     
     // find the ids of the prev and next test_entrys
     $db_prev_test_entry = $record->get_previous();
     $db_next_test_entry = $record->get_next();

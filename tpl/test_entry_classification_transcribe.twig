@@ -8,7 +8,9 @@
 {% extends "widget.twig" %}
 
 {% block javascript %}
+
   {{ parent() }}
+
   <script type="text/javascript">
   
     function configure_ui() {
@@ -33,10 +35,20 @@
       }
     }
 
+    // Overrides the default autocomplete filter function to search only from the beginning of the string
+    $.ui.autocomplete.filter = function (array, term) {
+      var matcher = new RegExp("^" + $.ui.autocomplete.escapeRegex(term), "i");
+      return $.grep(array, function (value) {
+        return matcher.test(value.label || value.value || value);
+      });
+    };
+
+
     function get_text_complete() {
       var args = new Object();
       var columns = new Object();
-      columns['test_entry_id'] = "{{ parent.id }}";
+      columns['dictionary_id'] = "{{ dictionary_id }}";
+      columns['language'] = "{{ language }}";
       args.columns = columns;
       return ajax_pull( "word", "list", args );
     }
