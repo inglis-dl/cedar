@@ -178,5 +178,7 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "word", "new", true, "Creates a new dictionary word." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "word", "view", true, "View the details of a dictionary's words." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "word", "list", true, "Retrieves a list of words from a dictionary." );
 
 COMMIT;

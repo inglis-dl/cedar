@@ -12,20 +12,20 @@
   <script type="text/javascript">
   
     function configure_ui() {
-      var disable = $(':input[type="text"][value!=""]').length == 0 && !{{ deferred }};
-      $("#{{ parent.full }}_Next").button( { disabled : disable } );
+      var disable = $( 'input:text[value!=""]' ).length == 0 && !{{ deferred }};
+      $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
 
       //disable elements based on deferred status
       if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
+        $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
+        $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
           $(this).attr( "disabled", "disabled" );
         } );
       } else {
         // set focus to the next empty input field
         $( 'input:text' ).each( function() {
-          if( this.value ==='' && !$(this).attr( "disabled" ) ) {
+          if( this.value === '' && !$(this).attr( "disabled" ) ) {
             this.focus();
             return false;
           }
@@ -33,14 +33,23 @@
       }
     }
 
+    function get_text_complete() {
+      var args = new Object();
+      var columns = new Object();
+      columns['test_entry_id'] = "{{ parent.id }}";
+      args.columns = columns;
+      return ajax_pull( "word", "list", args );
+    }
+
     $( function () {
 
       configure_ui();
 
-      var testcomplete = ['value','aword','label','aword_1'];
-
+      var word_list = get_text_complete();
+      
+      //get_text_complete();
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
-         source: testcomplete,
+         source: word_list,
          minLength: 1,
          select: function( event, ui ) {
              $(this).val( ui.item.value );
@@ -60,7 +69,10 @@
         // TODO if the candidate is found in the dictionary,  
         // change the element text area background color
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          slot_refresh( {{ slot }} );
+          var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
+          $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
+
+          configure_ui();
         }
       } );// end text input change
 
