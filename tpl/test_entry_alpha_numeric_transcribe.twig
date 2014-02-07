@@ -49,7 +49,9 @@
 
         // refresh with updated information
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          slot_refresh( {{ slot }} );
+          var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
+          $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
+          configure_ui();
         }
       } );// end text input change
 
