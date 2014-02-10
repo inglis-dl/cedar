@@ -57,7 +57,9 @@
         $( target_text_id ).removeAttr( "disabled" );
 
         configure_ui();
-      } ); // end radio input change
+      } ).click( function () {
+        $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+      } );// end radio input change and click
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:text[id$="adjudicate"]' ).change( function() {
         var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
@@ -167,9 +169,9 @@
             <td>
               <input type="text"
                 id="{{ entry.id_1 }}__candidate"
+                readonly
                 name={{ name_1 }}
-                value={{ value_1 }}
-                readonly>
+                value={{ value_1 }}>
             </td>
             <td bgcolor=#B1F3B1>
               <div class="radio__accept__1">
@@ -183,9 +185,9 @@
             <td>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
+                readonly
                 name={{ name_2 }}
-                value={{ value_2 }}
-                readonly>
+                value={{ value_2 }}>
             </td>
             <td bgcolor=#B1F3B1>
               <div class="radio__accept__2">

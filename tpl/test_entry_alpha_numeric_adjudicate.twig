@@ -14,9 +14,10 @@
   <script type="text/javascript">
 
     function configure_ui() {
-      var disable = $( 'input:text[id$="adjudicate"]:not([value=""])' ).length !=
-                    ( $( 'input:radio[value="accept"]' ).length / 2 ) ? true : false;    
-      $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
+      var disable = $( 'input:radio[value="accept"]:checked' ).length !=
+                    ( $( 'input:radio[value="accept"]' ).length / 2 ) ? true : false;
+                    
+      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );        
     }
 
     $( function () {
@@ -56,8 +57,9 @@
         $( target_text_id ).removeAttr( "disabled" );
 
         configure_ui();
-      } );// end radio input change
-
+      } ).click( function () {
+        $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+      } );// end radio input change and click
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:text[id$="adjudicate"]' ).change( function() {
         var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
@@ -102,7 +104,7 @@
         if( is_checked ){
          $( radio_class ).attr( "checked", "checked" ).trigger( "change" );
         } else {
-         $( radio_class ).removeAttr( "checked" );
+         $( 'input:radio[value="accept"]' ).removeAttr( "checked" );
          $text_adjudicate = $( 'div.adjudicate :text' ); 
          $text_adjudicate.attr( "disabled", "disabled" );  
          $text_adjudicate.val( "" );  
@@ -164,9 +166,9 @@
             <input type="text"
               style="width:10%; text-align:center"
               id="{{ entry.id_1 }}__candidate"
+              readonly
               name={{ name_1 }}
-              value={{ value_1 }}
-              readonly>
+              value={{ value_1 }}>
           </td>
 
           {% if entry.adjudicate is defined %}
@@ -187,9 +189,9 @@
             <input type="text"
               style="width:10%; text-align:center"
               id="{{ entry.id_2 }}__candidate"
+              readonly
               name={{ name_2 }}
-              value={{ value_2 }}
-              readonly>
+              value={{ value_2 }}>
           </td>
 
           {% if entry.adjudicate is defined %}

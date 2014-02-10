@@ -99,7 +99,9 @@
         }
 
         configure_ui();
-      } );// end radio input change
+      } ).click( function () {
+        $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+      } );// end radio input change and click
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[name$="adjudicate"]' ).change( function() {
         var disable = $(this).attr( "id" ).indexOf( "variant" ) != -1 ? false : true; 
@@ -253,9 +255,9 @@
                 {{ entry.selection_1 == 'variant' ? "checked" : "" }}>
               <input type="text"
                 id="{{ entry.id_1 }}__candidate"
+                readonly
                 name={{ widget.full }}
                 value="{{ entry.word_candidate_1 }}"
-                readonly
                 {{ entry.selection_1 == 'variant' ? "" : "disabled" }}>
             </td>
             <td bgcolor=#B1F3B1>
@@ -290,9 +292,9 @@
                 {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
+                readonly
                 name={{ widget.full }}
                 value="{{ entry.word_candidate_2 }}"
-                readonly
                 {{ entry.selection_2 == 'variant' ? "" : "disabled" }}>
             </td>
             <td bgcolor=#B1F3B1>
