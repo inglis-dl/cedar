@@ -73,7 +73,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
-      $test_count = $test_entry_class_name::count( $base_mod );
+      $test_count = $test_entry_class_name::count( clone $base_mod );
 
       $mod_complete = clone $base_mod;
       $mod_complete->where( 'completed', '=', true );
@@ -115,17 +115,46 @@ class assignment_list extends \cenozo\ui\widget\base_list
       {
         if( $complete_count == $test_count && $adjudicate_count > 0 )
         {
-           $mod_test_entry = clone $base_mod;
-           $mod_test_entry->where( 'adjudicate', '=', true );
-           $mod_test_entry->order( 'test.rank' );
-           $mod_test_entry->limit( 1 );
-           $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
-           if( !is_null( $db_test_entry[0] ) ) 
-           {  
-             $test_entry_id = $db_test_entry[0]->id;
-             $allow_adjudicate = true;
-             $allow_adjudicate_operation |= $allow_adjudicate;
-           }
+          $allow_adjudicate = true;
+          $mod_test_entry = clone $base_mod;
+          $mod_test_entry->where( 'adjudicate', '=', true );
+          $adjudicate_assignment_id = NULL;
+          foreach( $test_entry_class_name::select( $mod_test_entry ) as $db_test_entry )
+          {
+            $db_adjudicate_entry = $db_test_entry->get_adjudicate_entry();
+            if( $db_adjudicate_entry == NULL )
+            {
+              $allow_adjudicate = false;
+              break;
+             }
+             
+             if( $adjudicate_assignment_id == NULL )
+             {
+               $adjudicate_assignment_id = $db_adjudicate_entry->get_assignment()->id;
+               $mod_complete = lib::create( 'database\modifier' );
+               $mod_complete->where( 'assignment_id', '=', $adjudicate_assignment_id );
+               $mod_complete->where( 'completed', '=', false );
+               $adjudicate_complete_count = $test_entry_class_name::count( $mod_complete );
+               if( $adjudicate_complete_count > 0 )
+               {
+                 $allow_adjudicate = false;
+                 break;
+               }
+             }
+          }
+          if( $allow_adjudicate )
+          {
+            $mod_test_entry = clone $base_mod;
+            $mod_test_entry->where( 'adjudicate', '=', true );
+            $mod_test_entry->order( 'test.rank' );
+            $mod_test_entry->limit( 1 );
+            $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
+            if( !empty( $db_test_entry ) )
+            {
+              $test_entry_id = $db_test_entry[0]->id;
+              $allow_adjudicate_operation = $allow_adjudicate;
+            }
+          }
         }
       }
 
