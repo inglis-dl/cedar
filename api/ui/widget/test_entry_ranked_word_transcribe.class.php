@@ -72,7 +72,8 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
               'Widget requires test type to be ranked word, not ' . 
               $test_type_name, __METHOD__ );
 
-    $language = $db_test_entry->get_assignment()->get_participant()->language;
+    $db_participant = $db_test_entry->get_assignment()->get_participant();
+    $language = $db_participant->language;
     $language = is_null( $language ) ? 'en' : $language;
     
     $word_list = array();
@@ -97,6 +98,15 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
         $intrusion_list[] = $data;
       }
     }    
+
+    $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
+    $sabretooth_manager->use_machine_credentials( true );
+    $args = array();
+    $args['qnaire_rank'] = 1;
+    $args['participant_id'] = $db_participant->id;
+    $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
+    log::debug( $recording_list );
+
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );

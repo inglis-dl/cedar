@@ -17,8 +17,15 @@ $SETTINGS['general']['version'] = '0.1.2';
 // always leave as false when running as production server
 $SETTINGS['general']['development_mode'] = false;
 
+// Defines the username and password used by cedar when communicating as a machine
+$SETTINGS['general']['machine_user'] = NULL;
+$SETTINGS['general']['machine_password'] = NULL;
+
 // the name of the cohort associated with this application
 $SETTINGS['general']['cohort'] = 'default';
+
+// the url of mastodon (set to NULL to disable sabretooth support)
+$SETTINGS['url']['SABRETOOTH'] = NULL;
 
 // the location of cedar internal path
 $SETTINGS['path']['APPLICATION'] = '/usr/local/lib/cedar';
