@@ -151,7 +151,13 @@ class test_entry extends \cenozo\database\record
    */
   public function update_status_fields( $completed )
   {
-    $this->completed = is_null( $completed ) ? 0 : $completed;
-    if( !$this->adjudicate() ) $this->save();
+    $completed = is_null( $completed ) ? 0 : $completed;
+    $update = false;
+    if( $this->completed != $completed ) 
+    {
+      $this->completed = $completed;
+      $update = true;
+    }
+    if( !$this->adjudicate() || $update ) $this->save();
   }
 }

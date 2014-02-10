@@ -15,10 +15,10 @@ INSERT IGNORE INTO test( id, name, rank, test_type_id,
 VALUES( 2, "AFT", 2, 4, 1, 2 );
 
 INSERT IGNORE INTO test( id, name, strict, rank, test_type_id, dictionary_id )
-VALUES( 3, "MAT (alphabet)", true, 3, 1, 3 );
+VALUES( 3, "MAT (counting)", true, 3, 1, 3 );
 
 INSERT IGNORE INTO test( id, name, strict, rank, test_type_id, dictionary_id )
-VALUES( 4, "MAT (counting)", true, 4, 1, 3 );
+VALUES( 4, "MAT (alphabet)", true, 4, 1, 3 );
 
 INSERT IGNORE INTO test( id, name, strict, rank, test_type_id, dictionary_id )
 VALUES( 5, "MAT (alternation)", true, 5, 2, 4 );
