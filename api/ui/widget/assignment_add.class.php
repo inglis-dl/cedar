@@ -144,6 +144,17 @@ class assignment_add extends \cenozo\ui\widget\base_view
     $limit = 10;
     $offset = 0;
     $participant_count = 0;
+
+    $sabretooth_manager = NULL;
+    $args = array();
+    if( $has_tracking )
+    {
+      $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
+      $sabretooth_manager->use_machine_credentials( true );
+      $args['qnaire_rank'] = 1;
+    }  
+    $assignment_mod_base = lib::create( 'database\modifier' );
+    $assignment_mod_base->where( 'user_id', '=', $db_user->id );
     do
     {
       $mod_limit = clone $base_mod;
@@ -154,24 +165,36 @@ class assignment_add extends \cenozo\ui\widget\base_view
       if( $participant_count > 0 )
       {
         foreach( $participant_list as $db_participant )
-        {   
-          $assignment_mod = lib::create( 'database\modifier' );
+        { 
+          $db_cohort = $db_participant->get_cohort();
+          $assignment_mod = clone $assignment_mod_base;
           $assignment_mod->where( 'participant_id', '=', $db_participant->id );
 
-          if( $assignment_class_name::count(  $assignment_mod ) < 2 )
+          if( $assignment_class_name::count( $assignment_mod ) == 0 )
           {
-            $assignment_mod->where( 'user_id', '=', $db_user->id );
-
-            if( $assignment_class_name::count( $assignment_mod ) == 0 )
+            if( $db_cohort->name == 'tracking' && $has_tracking )
+            {
+              // see if they have any valid recordings
+              $args['participant_id'] = $db_participant->id;
+              $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
+              if( $recording_list->success && is_array( $recording_list->data ) && 
+                count( $recording_list->data ) > 0  )
+              {    
+                $found = true;
+              }
+            }
+            else
+            {
+              $found = true;
+            }  
+            if( $found )
             {
               $uid = $db_participant->uid;
               $language = $db_participant->language;
               $language = is_null( $language ) ? 'en' : $language;
               $participant_id = $db_participant->id;
-              $db_cohort = $db_participant->get_cohort();
               $cohort = $db_cohort->name;
-              $cohort_id = $db_cohort->id;
-              $found = true;
+              $cohort_id = $db_cohort->id;              
               break;
             }
           }
