@@ -13,7 +13,7 @@ use cenozo\lib, cenozo\log, cedar\util;
  * Class for word list pull operations.
  *
  */
-class word_list extends \cenozo\ui\pull\base_list
+class word_list extends \cenozo\ui\pull
 {
   /**
    * Constructor.
@@ -23,7 +23,7 @@ class word_list extends \cenozo\ui\pull\base_list
    */
   public function __construct( $args )
   {
-    parent::__construct( 'word', $args );
+    parent::__construct( 'word', 'list', $args );
   }
 
   /**
@@ -38,18 +38,22 @@ class word_list extends \cenozo\ui\pull\base_list
     
     $this->data = array();
     
-    $columns = $this->get_argument( 'columns' );
+    $dictionary_id = $this->get_argument( 'dictionary_id' );
+    $language = $this->get_argument( 'language', 'any' );
+    $words_only = $this->get_argument( 'words_only', '0' );
 
-    if( array_key_exists( 'dictionary_id', $columns ) &&
-        array_key_exists( 'language', $columns ) )
+    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'dictionary_id', '=', $dictionary_id );
+    if( 'any' != $language ) $modifier->where( 'language', '=', $language );
+    if( $words_only )
     {
-
-      $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'dictionary_id', '=', $columns['dictionary_id'] );
-      $modifier->where( 'language', '=', $columns['language'] );
+      $this->data = $dictionary_class_name::get_word_list_words( $modifier );
+    }
+    else
+    {
       $this->data = $dictionary_class_name::get_word_list( $modifier );
-    }   
+    }  
   }
   
   /** 

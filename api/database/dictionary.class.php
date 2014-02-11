@@ -23,7 +23,7 @@ class dictionary extends \cenozo\database\record
   * @static
   * @access public
   */
-  public static function get_word_list( $modifier = NULL )
+  public static function get_word_list_words( $modifier = NULL )
   {
     if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
 

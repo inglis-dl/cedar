@@ -87,11 +87,11 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $dictionary_id = $db_dictionary->id;
     $this->set_variable( 'dictionary_id', $dictionary_id );
 
-    $language = 'en';
+    $language = 'any';
     $db_participant = $record->get_participant();
     if( !empty( $db_participant ) ) 
       $language =  
-        is_null( $db_participant->language ) ? 'en' : $db_participant->language;
+        is_null( $db_participant->language ) ? 'any' : $db_participant->language;
     $this->set_variable( 'language', $language );    
      
     // find the ids of the prev and next test_entrys

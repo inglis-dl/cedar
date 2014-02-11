@@ -91,6 +91,18 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'test_id', $record->test_id );
     $this->set_variable( 'participant_id', $db_assignment->get_participant()->id );
+    $db_dictionary = $db_test->get_dictionary();
+    $dictionary_id = ''; 
+    if( !empty( $db_dictionary ) ) 
+      $dictionary_id = $db_dictionary->id;
+    $this->set_variable( 'dictionary_id', $dictionary_id );
+
+    $language = 'any';
+    $db_participant = $record->get_participant();
+    if( !empty( $db_participant ) ) 
+      $language =   
+        is_null( $db_participant->language ) ? 'any' : $db_participant->language;
+    $this->set_variable( 'language', $language );
 
     $this->set_variable( 'id_1', $record->id );
     //$this->set_variable( 'audio_fault_1', $record->audio_fault );

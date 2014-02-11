@@ -43,13 +43,11 @@
       });
     };
 
-
     function get_text_complete() {
       var args = new Object();
-      var columns = new Object();
-      columns['dictionary_id'] = "{{ dictionary_id }}";
-      columns['language'] = "{{ language }}";
-      args.columns = columns;
+      args['dictionary_id'] = "{{ dictionary_id }}";
+      args['language'] = "{{ language }}";
+      args['words_only'] = 1;  
       return ajax_pull( "word", "list", args );
     }
 
