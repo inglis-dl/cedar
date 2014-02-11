@@ -10,7 +10,13 @@
 
   {{ parent() }}
   <script type="text/javascript">   
-
+  /*
+        <audio controls
+          id="{{ widget.full }}__recording__" 
+          <embed height="50" style="width:100%">
+          <source src="" type="audio/wav">
+        </audio>
+*/
     $( function () {
 
       if( "{{ test_type }}" == "confirmation" ) {
@@ -110,33 +116,39 @@
 
     <div class="spacer">
 
-      <div>
-        <table>
-          <tr>
-            <td align="left"
-                style="white-space: nowrap">
-              <div id="audio_control">
-                <audio controls
-                  id="{{ widget.full }}__audio_player"
-                  <embed height="50" style="width:100%">
-                </audio>
-                <input type="checkbox" id="{{ widget.full }}__audio_fault" 
-                  {{ audio_fault ? "checked":"" }}/>
-                <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
-              </div>  
-            </td>
-            <td>
-              <div>
-                {% from 'macros.twig' import confirm_buttons %}
-                  {{ confirm_buttons( slot, widget.full, 
-                    ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-              </div>
-            </td>
-          </tr>
-        </table>
-      </div>
+    <div id="audio_control">
+      
+      {% if recording_data is defined %}
+      
+      <table>
+        {% set recording_id = 0 %}
+        {% for recording in recording_data %}
+        
+        <tr>
+          "{{ recording }}"
+        </tr>
+
+        {% set recording_id = recording_id+1 %}
+
+
+        {% endfor %}
+      </table>
+
+      {% endif %}
+
+      <input type="checkbox" id="{{ widget.full }}__audio_fault" 
+        {{ audio_fault ? "checked":"" }}/>
+      <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
+       
+    </div>  
+
+    <div class="spacer">
+    
+    <div>
+      {% from 'macros.twig' import confirm_buttons %}
+        {{ confirm_buttons( slot, widget.full, 
+          ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
     </div>
-  </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>
 

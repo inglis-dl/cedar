@@ -81,6 +81,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'completed', $record->completed );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
+
     $db_dictionary = $db_test->get_dictionary();
     $dictionary_id = '';
     if( !empty( $db_dictionary ) )
@@ -88,12 +89,36 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'dictionary_id', $dictionary_id );
 
     $language = 'any';
-    $db_participant = $record->get_participant();
-    if( !empty( $db_participant ) ) 
-      $language =  
-        is_null( $db_participant->language ) ? 'any' : $db_participant->language;
+    $db_participant = $record->get_assignment()->get_participant();
+    if( empty( $db_participant ) || is_null( $db_participant ) )
+      throw lib::create( 'exception\runtime', 
+        'The participant id must be set', __METHOD__ );
+    
+    $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
     $this->set_variable( 'language', $language );    
-     
+    
+    $db_cohort = $db_participant->get_cohort();
+    if( $db_cohort->name == 'tracking' )
+    {   
+      $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
+      $sabretooth_manager->use_machine_credentials( true );
+      $args = array();
+      $args['qnaire_rank'] = 1;
+      $args['participant_id'] = $db_participant->id;
+      $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
+      $recording_data = array();
+      if( $recording_list->success == 1 && count( $recording_list->data ) > 0 )
+      {
+        foreach( $recording_list->data as $data )
+        {
+          $url = SABRETOOTH_URL . '/' . $data->url;
+          // has to be this servers domain not localhost
+          $recording_data[] = str_replace( 'localhost', $_SERVER['SERVER_NAME'], $url );
+        }
+      }
+      $this->set_variable( 'recording_data', $recording_data );
+    }
+ 
     // find the ids of the prev and next test_entrys
     $db_prev_test_entry = $record->get_previous();
     $db_next_test_entry = $record->get_next();

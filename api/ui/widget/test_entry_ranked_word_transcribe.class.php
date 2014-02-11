@@ -99,18 +99,6 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
       }
     }
 
-    $db_cohort = $db_participant->get_cohort();
-    if( $db_cohort->name == 'tracking' )
-    {
-      $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
-      $sabretooth_manager->use_machine_credentials( true );
-      $args = array();
-      $args['qnaire_rank'] = 1;
-      $args['participant_id'] = $db_participant->id;
-      $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
-      log::debug( $recording_list );
-    }
-
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
     $entry_data = array();
