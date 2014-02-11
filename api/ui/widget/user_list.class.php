@@ -70,6 +70,8 @@ class user_list extends \cenozo\ui\widget\user_list
       // assemble the row for this record
       $this->add_row( $record->id,
         array( 'name' => $record->name,
+               'first_name' => $record->first_name,
+               'last_name' => $record->last_name,
                'active' => $record->active,
                'site.name' => $site,
                'role.name' => $role,
