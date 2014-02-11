@@ -39,16 +39,22 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
     $db_test_entry_classification = $this->get_record();
     $db_test_entry = $db_test_entry_classification->get_test_entry();
-    $db_dictionary = $db_test_entry->get_test()->get_dictionary();
+    $db_test = $db_test_entry->get_test();
+    $db_dictionary = $db_test->get_dictionary();
 
     $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
 
     // does the word candidate exist in the primary dictionary ?
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id','=',$db_dictionary->id);
-    $modifier->where( 'language','=',$language);
-    $modifier->where( 'word','=',$db_test_entry_classification->word_candidate);
+    $modifier->where( 'dictionary_id','=', $db_dictionary->id );
+
+    // allow bilingual responses for FAS classification tests
+    if( !preg_match( '/FAS/', $db_test->name ) )
+    {
+      $modifier->where( 'language', '=', $language );
+    }  
+    $modifier->where( 'word', '=', $db_test_entry_classification->word_candidate );
     $modifier->limit( 1 );
     $word_class_name = lib::get_class_name( 'database\word' );
     $db_word = $word_class_name::select( $modifier );
