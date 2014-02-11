@@ -36,6 +36,8 @@ class test_entry_view extends \cenozo\ui\widget\base_view
    */
   protected function prepare()
   {
+    $this->set_removable( false );
+
     parent::prepare();
 
     // add items to the view
