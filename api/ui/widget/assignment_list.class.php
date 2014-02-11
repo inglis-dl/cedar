@@ -38,12 +38,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
-    $this->add_column( 'participant.uid', 'string', 'UId', true );
-    $this->add_column( 'cohort', 'string', 'Cohort', false );
-    $this->add_column( 'user.name', 'string', 'User', true );
-    $this->add_column( 'defer', 'string', 'Defer', false );
-    $this->add_column( 'adjudicate', 'string', 'Adjudicate', false );
-    $this->add_column( 'complete', 'string', 'Complete', false );    
+    $this->add_column( 'uid', 'string', 'UId', true );
+    $this->add_column( 'cohort', 'string', 'Cohort', true );
+    $this->add_column( 'user', 'string', 'User', true );
+    $this->add_column( 'defer', 'string', 'Defer', true );
+    $this->add_column( 'adjudicate', 'string', 'Adjudicate', true );
+    $this->add_column( 'complete', 'string', 'Complete', true );    
   }
   
   /**
@@ -159,9 +159,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
       }
 
       $this->add_row( $db_assignment->id,
-        array( 'participant.uid' => $db_participant->uid,
+        array( 'uid' => $db_participant->uid,
                'cohort' => $db_participant->get_cohort()->name,
-               'user.name' => $db_assignment->get_user()->name,
+               'user' => $db_assignment->get_user()->name,
                'defer' => 
                  $defer_count > 0 ? $defer_count . '/' . $test_count : 'none',
                'adjudicate' => 
