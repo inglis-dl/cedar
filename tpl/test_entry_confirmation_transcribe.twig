@@ -8,7 +8,9 @@
 {% extends "widget.twig" %}
 
 {% block javascript %}
+
   {{ parent() }}
+
   <script type="text/javascript">
 
     function configure_ui() {
@@ -17,8 +19,9 @@
 
       //disable elements based on deferred status
       if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
+        $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
+        $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
+        $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
           $(this).attr( "disabled", "disabled" );
         } );
@@ -56,16 +59,6 @@
   </script>
 
 {% endblock javascript %}
-
-{% block defer_action %}
-  <script type="text/javascript">
-  if( {{ deferred }} ) {
-    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-    $(this).attr( "disabled", "disabled" );
-    } );
-  }
-  </script>
-{% endblock defer_action %}
 
 {% block widget %}
     
@@ -105,4 +98,3 @@
   </table> 
 
 {% endblock widget %}
-

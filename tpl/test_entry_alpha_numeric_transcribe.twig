@@ -8,17 +8,21 @@
 {% extends "widget.twig" %}
 
 {% block javascript %}
+
   {{ parent() }}
+
   <script type="text/javascript">
 
     function configure_ui() {
-      var disable = $(':input[type="text"][value!=""]').length == 0 && !{{ deferred }};
-      $("#{{ parent.full }}_Next").button( { disabled : disable } );
+       
+      var disable = $( ':input[type="text"][value!=""]' ).length == 0 && !{{ deferred }};
+      $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
 
       //disable elements based on deferred status
       if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
+        $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
+        $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
+        $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
           $(this).attr( "disabled", "disabled" );
         } );
@@ -63,8 +67,7 @@
       // update the db to reflect the changes
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
-          input.each( function() {
+          $("#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
               $(this).val( "" );
               $(this).attr("name", "undefined" );
               var rank = $(this).attr( "id" ).split("__")[1];
@@ -82,16 +85,6 @@
   </script>
 
 {% endblock javascript %}
-
-{% block defer_action %}
-  <script type="text/javascript">
-  if( {{ deferred }} ) {
-    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-    $(this).attr( "disabled", "disabled" );
-    } );
-  }
-  </script>
-{% endblock defer_action %}
 
 {% block widget %}
 
