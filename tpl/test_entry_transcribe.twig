@@ -93,44 +93,42 @@
 
 {% block record %}
 
+  <div class="spacer">
+
   <div>
-    
-    <div class="spacer">
+    {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
+  </div>  
 
-    <div>
-      {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
-    </div>  
+  <div class="spacer">
 
-    <div class="spacer">
+  <div id="audio_control">
+    {% if recording_data is defined %}
+      <table>
+        {% set recording_id = 0 %}
+        {% for recording in recording_data %}
+          <tr>
+            <audio controls
+              id="{{ widget.full }}__recording__{{ recording_id }}" 
+              <embed height="50" style="width:100%">
+              <source src="{{ recording }}" type="audio/wav">
+            </audio>
+          </tr>
+          {% set recording_id = recording_id+1 %}
+        {% endfor %}
+      </table>
+    {% endif %}
+    <input type="checkbox" id="{{ widget.full }}__audio_fault" 
+      {{ audio_fault ? "checked":"" }}/>
+    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
+  </div>  
 
-    <div id="audio_control">
-      {% if recording_data is defined %}
-        <table>
-          {% set recording_id = 0 %}
-          {% for recording in recording_data %}
-            <tr>
-              <audio controls
-                id="{{ widget.full }}__recording__{{ recording_id }}" 
-                <embed height="50" style="width:100%">
-                <source src="{{ recording }}" type="audio/wav">
-              </audio>
-            </tr>
-            {% set recording_id = recording_id+1 %}
-          {% endfor %}
-        </table>
-      {% endif %}
-      <input type="checkbox" id="{{ widget.full }}__audio_fault" 
-        {{ audio_fault ? "checked":"" }}/>
-      <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
-    </div>  
-
-    <div class="spacer">
-    
-    <div>
-      {% from 'macros.twig' import confirm_buttons %}
-        {{ confirm_buttons( slot, widget.full, 
-          ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-    </div>
+  <div class="spacer">
+  
+  <div>
+    {% from 'macros.twig' import confirm_buttons %}
+      {{ confirm_buttons( slot, widget.full, 
+        ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
+  </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>
 

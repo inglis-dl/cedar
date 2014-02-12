@@ -15,13 +15,13 @@
 
     function configure_ui() {
       var numTotal = $( 'input:radio[value="accept"]' ).length / 2;
-      var numYes = $( 'input:radio[value="yes"][name$="adjudicate"]:checked').length;
-      var numNo = $( 'input:radio[value="no"][name$="adjudicate"]:checked').length;
-      var numVariant = $( 'input:radio[value="variant"][name$="adjudicate"]:checked').length;
+      var numYes = $( 'input:radio[value="yes"][name$="adjudicate"]:checked' ).length;
+      var numNo = $( 'input:radio[value="no"][name$="adjudicate"]:checked' ).length;
+      var numVariant = $( 'input:radio[value="variant"][name$="adjudicate"]:checked' ).length;
       var numIntrusion = $( 'input:radio[id$="intrusion__accept"]:checked' ).length;
 
       var disable = ( numYes + numNo + numVariant + numIntrusion ) == numTotal ? false : true;
-      $("#{{ parent.full }}_Submit").button( { disabled : disable } );
+      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );
     }
 
     $( function () {
@@ -31,7 +31,7 @@
       //hijack all the non-accept radio buttons so that
       //a non-greyed out appearance can be maintained instead
       //of assigning the disabled attribute
-      $('input:radio[value!="accept"]:not([name$="adjudicate"])').click(function(e) {
+      $( 'input:radio[value!="accept"]:not([name$="adjudicate"])' ).click(function(e) {
         e.preventDefault();
         return false;
       });
