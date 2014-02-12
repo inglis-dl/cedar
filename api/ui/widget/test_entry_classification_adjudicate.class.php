@@ -84,10 +84,15 @@ class test_entry_classification_adjudicate extends \cenozo\ui\widget
     {   
       $a_obj = current( $a );
       $b_obj = current( $b );
-      if( $a_obj->rank != $b_obj->rank ||
-          $a_obj->word_id != $b_obj->word_id ||
-          $a_obj->word_candidate != $b_obj->word_candidate )
+
+      if( !(is_null( $a_obj->word_id ) && is_null( $b_obj->word_id ) &&
+            is_null( $a_obj->word_candidate ) && is_null( $b_obj->word_candidate )) )
       {
+      
+        $adjudicate = ( $a_obj->rank != $b_obj->rank ||
+                        $a_obj->word_id != $b_obj->word_id ||
+                        $a_obj->word_candidate != $b_obj->word_candidate ) ? true : false;
+      
         $db_word_1 = is_null(  $a_obj->word_id ) ? null :
           lib::create( 'database\word', $a_obj->word_id );
         $db_word_2 = is_null(  $b_obj->word_id ) ? null :
@@ -104,7 +109,8 @@ class test_entry_classification_adjudicate extends \cenozo\ui\widget
                  'word_candidate_1' => is_null( $a_obj->word_candidate ) ? '' :
                    $a_obj->word_candidate,
                  'word_candidate_2' => is_null( $b_obj->word_candidate ) ? '' :
-                   $b_obj->word_candidate );
+                   $b_obj->word_candidate,
+                 'adjudicate' => $adjudicate );
       }
       next( $a );
       next( $b );

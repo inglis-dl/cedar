@@ -16,7 +16,7 @@
     function configure_ui() {
       var disable = $( 'input:text[id$="adjudicate"]:not([value=""])' ).length !=
                     ( $( 'input:radio[value="accept"]' ).length / 2 )  ? true : false;
-      $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
+      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );        
     }
 
     // Overrides the default autocomplete filter function to search only from the beginning of the string
@@ -199,6 +199,8 @@
                 name={{ name_1 }}
                 value={{ value_1 }}>
             </td>
+
+            {% if entry.adjudicate is defined %}
             <td bgcolor=#B1F3B1>
               <div class="radio__accept__1">
                 <input type="radio"
@@ -208,6 +210,10 @@
                 <label for="{{ entry.id_1 }}__accept">Accept</label>
               </div>
             </td>
+            {% else %}
+              <td></td>
+            {% endif %}  
+
             <td>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
@@ -215,6 +221,8 @@
                 name={{ name_2 }}
                 value={{ value_2 }}>
             </td>
+
+            {% if entry.adjudicate is defined %}
             <td bgcolor=#B1F3B1>
               <div class="radio__accept__2">
                 <input type="radio"
@@ -224,6 +232,11 @@
                 <label for="{{ entry.id_2 }}__accept">Accept</label>
               </div>
             </td>
+            {% else %}
+              <td></td>
+            {% endif %}
+
+            {% if entry.adjudicate is defined %}
             <td>
               <div class="adjudicate">
                 <input type="text"
@@ -233,6 +246,9 @@
                   value="">
               </div>
             </td>
+            {% else %}
+              <td></td>
+            {% endif %}
         </tr>
 
       {% endfor %}
