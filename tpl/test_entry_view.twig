@@ -6,3 +6,10 @@
  # @see base_view.twig for parameters
  #}
 {% extends "base_view.twig" %}
+
+{% block record %}
+  
+  {{ parent() }}
+
+  {% include "test_entry_transcribe.twig" with test_entry_transcribe %}
+{% endblock record %}

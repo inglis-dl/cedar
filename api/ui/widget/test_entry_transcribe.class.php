@@ -36,17 +36,17 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   {
     parent::prepare();
 
-    $db_test_entry = $this->get_record();
-    $db_test = $db_test_entry->get_test();
-    $db_participant = $db_test_entry->get_assignment()->get_participant();
-
-    $db_test_type = $db_test->get_test_type();
+    $record = $this->get_record();
+    $db_test = $record->get_test();
+    $db_participant = $record->get_assignment()->get_participant();
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_transcribe
     $this->test_entry_widget = lib::create( 
-      'ui\widget\test_entry_' . $db_test_type->name . '_transcribe', $this->arguments );
+      'ui\widget\test_entry_' . $db_test->get_test_type()->name . '_transcribe', $this->arguments );
     $this->test_entry_widget->set_parent( $this );
+    if( !$this->editable )
+      $this->test_entry_widget->set_validate_access( false );
 
     $modifier = NULL;
     if( $db_participant->get_cohort()->name == 'tracking' )
@@ -97,8 +97,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
     $this->set_variable( 'language', $language );    
     
-    $db_cohort = $db_participant->get_cohort();
-    if( $db_cohort->name == 'tracking' )
+    if( $db_participant->get_cohort()->name == 'tracking' )
     {   
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
       $sabretooth_manager->use_machine_credentials( true );
@@ -107,7 +106,8 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $args['participant_id'] = $db_participant->id;
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
       $recording_data = array();
-      if( $recording_list->success == 1 && count( $recording_list->data ) > 0 )
+      if( !is_null( $recording_list ) && 
+           $recording_list->success == 1 && count( $recording_list->data ) > 0 )
       {
         foreach( $recording_list->data as $data )
         {
@@ -129,6 +129,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'next_test_entry_id', 
       is_null($db_next_test_entry) ? 0 : $db_next_test_entry->id );
 
+    $this->set_variable( 'editable', $this->editable );
+    $this->set_variable( 'actionable', $this->actionable );
+    
     try 
     {   
       $this->test_entry_widget->process();
@@ -136,6 +139,60 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     }   
     catch( \cenozo\exception\permission $e ) {}
   }
+
+  /** 
+   * Determines whether the record can be edited.
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   */
+  public function get_editable()
+  {
+    return $this->editable;
+  }
+
+  /** 
+   * Determines whether the action buttons are enabled.
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   */
+  public function get_actionable()
+  {
+    return $this->actionable;
+  }
+
+  /** 
+   * Set whether the record can be edited.
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   */
+  public function set_editable( $enable )
+  {
+    $this->editable = $enable;
+  }
+
+  /** 
+   * Set whether the action buttons are enabled.
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   */
+  public function set_actionable( $enable )
+  {
+    $this->actionable = $enable;
+  }
+
+  /**
+   * Determines whether the html input elements are enabled.
+   * @var boolean
+   * @access private
+   */
+  private $editable = true;
+
+  /**
+   * Determines whether the action buttons should be available.
+   * @var boolean
+   * @access private
+   */
+   private $actionable = true;
 
   /**
    * The test entry widget.
