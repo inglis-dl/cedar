@@ -115,6 +115,9 @@
              id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
              name={{ entry_data[k].word_id ? entry_data[k].word_id : 'undefined' }}
 
+             {% if editable == false %}
+               { readonly }
+             {% endif %}
              {% if status == 'empty'  %} 
                {% if kprev == 'false' %}
                  {{ "disabled" }}

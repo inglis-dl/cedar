@@ -180,25 +180,40 @@
                id="{{ entry.id }}__yes"
                name={{ entry.word_id }}
                value="yes"
+               {% if editable == false %}
+                 { readonly }
+               {% endif %}
                {{ entry.selection == 'yes' ? "checked" : "" }}></td>
           <td><input type="radio"
                id="{{ entry.id }}__no"
                name="{{ entry.word_id }}" 
                value="no"
+               {% if editable == false %}
+                 { readonly }
+               {% endif %}
                {{ entry.selection == 'no' ? "checked" : "" }}></td>
           <td><input type="radio"
                id="{{ entry.id }}__variant"
                name={{ entry.word_id }} 
                value="variant"
+               {% if editable == false %}
+                 { readonly }
+               {% endif %}
                {{ entry.selection == 'variant' ? "checked" : "" }}></td>
           <td><input type="text"
                id="{{ entry.id }}__candidate"
                name={{ entry.word_id }}
+               {% if editable == false %}
+                 { readonly }
+               {% endif %}
                value={{ entry.word_candidate }}></td>
         {% else %}
           <td class="heading">intrusion</td>
           <td><input type="text"
                id="{{ entry.id }}__intrusion"
+               {% if editable == false %}
+                 { readonly }
+               {% endif %}
                name=""
                value={{ entry.word_candidate }}></td>
         {% endif %}
