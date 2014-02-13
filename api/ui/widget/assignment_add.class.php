@@ -63,7 +63,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
   protected function setup()
   {
     parent::setup();
-    
+
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
     $db_user = $session->get_user();
@@ -147,14 +147,22 @@ class assignment_add extends \cenozo\ui\widget\base_view
 
     $sabretooth_manager = NULL;
     $args = array();
+    $auth = array();
     if( $has_tracking )
     {
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
       $sabretooth_manager->use_machine_credentials( true );
       $args['qnaire_rank'] = 1;
+      
+      $setting_manager = lib::create( 'business\setting_manager' );
+      $user = $setting_manager->get_setting( 'general', 'machine_user' );
+      $pass = $setting_manager->get_setting( 'general', 'machine_password' );
+      $auth['httpauth'] = $user.':'.$pass;
     }  
     $assignment_mod_base = lib::create( 'database\modifier' );
     $assignment_mod_base->where( 'user_id', '=', $db_user->id );
+    $max_try = 10;
+    $try = 0;
     do
     {
       $mod_limit = clone $base_mod;
@@ -174,13 +182,22 @@ class assignment_add extends \cenozo\ui\widget\base_view
           {
             if( $db_cohort->name == 'tracking' && $has_tracking )
             {
-              // see if they have any valid recordings
+              // are there  any valid recordings?
               $args['participant_id'] = $db_participant->id;
               $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
-              if( $recording_list->success && is_array( $recording_list->data ) && 
-                count( $recording_list->data ) > 0  )
-              {    
-                $found = true;
+
+              if( !is_null( $recording_list ) && $recording_list->success == 1 && 
+                   is_array( $recording_list->data ) && count( $recording_list->data ) > 0  )
+              { 
+                 foreach( $recording_list->data as $data )
+                 {
+                   $url = str_replace( 'localhost', $_SERVER['SERVER_NAME'],
+                                        SABRETOOTH_URL . '/' . $data->url );
+                   $response = array();
+                   http_head( $url, $auth, $response );
+                   if( array_key_exists( 'response_code', $response ) )             
+                     $found |= $response['response_code'] == 200 ? true : false; 
+                 }
               }
             }
             else
@@ -201,7 +218,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
         }
         $offset += $limit;
       }
-    } while( !$found && $participant_count > 0 );
+    } while( !$found && $participant_count > 0 && $max_try > $try++ );
       
     // throw a notice if no participant was found
     if( !$found ) 
