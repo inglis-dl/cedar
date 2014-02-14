@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * test_entry: record
  */
-class test_entry extends \cenozo\database\record
+class test_entry extends has_note
 {
   /** 
    * Get the previous record according to test rank.
