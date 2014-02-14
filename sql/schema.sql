@@ -567,6 +567,35 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_alpha_numeric` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `cedar`.`test_entry_note`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`test_entry_note` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_note` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `test_entry_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `datetime` DATETIME NOT NULL,
+  `note` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_test_entry_id` (`test_entry_id` ASC),
+  INDEX `fk_user_id` (`user_id` ASC),
+  CONSTRAINT `fk_test_entry_note_test_entry_id`
+    FOREIGN KEY (`test_entry_id`)
+    REFERENCES `cedar`.`test_entry` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_note_user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
