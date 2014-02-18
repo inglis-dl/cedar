@@ -27,6 +27,7 @@ class self_menu extends \cenozo\ui\widget\self_menu
     
     $this->exclude_list( array( 
       'event_type', 
+      'cohort',
       'participant', 
       'ranked_word_set', 
       'service', 
