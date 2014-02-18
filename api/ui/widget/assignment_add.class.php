@@ -58,6 +58,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
    * Finish setting the variables in a widget.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
    * @access protected
    */
   protected function setup()
@@ -74,12 +75,19 @@ class assignment_add extends \cenozo\ui\widget\base_view
     $has_comprehensive = false;
     $cohort_list = array();
     if( $db_role->name == 'typist' )
+    {
       $cohort_list = $db_user->get_cohort_list();
+      if( is_null( $cohort_list ) || empty( $cohort_list ) )
+        throw lib::create( 'exception\notice',
+          'There must be one or more cohorts assigned to user: '. $db_user->name, 
+            __METHOD__ );
+    } 
     else
     {
       $cohort_class_name = lib::get_class_name( 'database\cohort' );  
       $cohort_list = $cohort_class_name::select();
     }
+
 
     foreach( $cohort_list as $db_cohort )
     {
