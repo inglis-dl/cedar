@@ -47,7 +47,6 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'test_id', 'constant', 'Test' );
     $this->add_item( 'audio_fault', 'boolean', 'Audio Fault' );
     $this->add_item( 'deferred', 'boolean', 'Deferred' );
-    $this->add_item( 'note', 'constant', 'Deferral Note' );
     $this->add_item( 'completed', 'boolean', 'Completed' );
     $this->add_item( 'adjudicate', 'constant', 'Adjudicate' );
 
@@ -87,7 +86,6 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->set_item( 'test_id', $db_test->name );
     $this->set_item( 'audio_fault', $record->audio_fault );
     $this->set_item( 'deferred', $record->deferred  );
-    $this->set_item( 'note', $record->note  );
     $this->set_item( 'completed', $record->completed );
     $this->set_item( 'adjudicate', $record->adjudicate ? 'Yes' : 'No' );
 
