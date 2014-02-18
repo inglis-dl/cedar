@@ -26,25 +26,55 @@
       } ); // end Quit click
 
       $( "#{{ widget.full }}_Defer" ).click( function() {
-        var args = new Object();
-        args.category = "{{ widget.subject }}";
-        args.category_id = {{ id }};
-        slot_load( "note", "note", "list", args );
-        
-        $( "#note_slot" ).dialog( {
-          title: "{{ widget.subject|capitalize }} notes",
-          modal: true,
-          width: 550,
-          height: 600,
-          beforeClose: function( event, ui ) { 
-            $(this).html( "" ); 
-          },
-          close: function( event, ui ) {
-            // refresh the main slot to refresh any note counts
-            slot_refresh( "main" );
-          }
-        } );
 
+        $dialog = $( "#{{ widget.full }}__note_dialog" );
+        var buttons = new Object;
+        buttons.Ok = function() {
+          var note = $("#{{ widget.full }}__note").val();
+          if( note.length == 0 ) {
+            error_dialog( "Error", "You cannot leave a blank note." );
+          } else {
+            var args = new Object();
+            args.columns = { 
+              deferred : 1
+              };
+
+            args.id = {{ id }};
+            if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+
+              args = new Object();
+              args.note = note;
+              args.category = "{{ widget.subject }}";
+              args.category_id = {{ id }};
+              
+              if( ajax_push( "note", "new", args ) ) {
+                $dialog.dialog( "close" );
+
+                $("#{{ widget.full }}_Next").button( { disabled : false } );
+                $("#{{ widget.full }}_Reset").button( { disabled : true } );
+                $("#{{ widget.full }}_Defer").button( { disabled : true } );
+
+                slot_refresh( {{ slot }} );
+              }
+            }
+          }
+        };  
+        buttons.Cancel = function() { $dialog.dialog( "close" ); };
+
+        var html = "A note is required indicating the reason for deferral.";
+        html += "<textarea id=\"{{ widget.full }}__note\"></textarea>";
+
+        $dialog.html( html );
+
+        $dialog.dialog( {
+          closeOnEscape: true,
+          title: "Deferral Note",
+          modal: true,
+          dialogClass: "alert",
+          width: 450,
+          buttons: buttons,
+          open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
+        } );
 
       } ).button( { disabled : {{ deferred }} } ); // end Defer click
 
@@ -111,8 +141,9 @@
     {% from 'macros.twig' import confirm_buttons %}
       {{ confirm_buttons( slot, widget.full, 
         ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-
+   
     {% from 'macros.twig' import note_widget %}    
+    {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
     {% endif %}    
   </div>
 
