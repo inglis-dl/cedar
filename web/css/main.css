@@ -1,0 +1,11 @@
+/**
+ * main.css
+ * 
+ * Main styles used throughout the application
+ */
+
+input.nondict:enabled {
+  background: #FFFF66;
+  border: 1px solid #C0C0C0;
+  -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+}
