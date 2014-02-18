@@ -578,11 +578,13 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_note` (
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_entry_id` INT UNSIGNED NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
+  `sticky` TINYINT(1) NOT NULL DEFAULT 0,
   `datetime` DATETIME NOT NULL,
   `note` TEXT NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_user_id` (`user_id` ASC),
+  INDEX `dk_sticky_datetime` (`sticky` ASC, `datetime` ASC),
   CONSTRAINT `fk_test_entry_note_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)

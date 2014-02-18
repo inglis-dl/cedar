@@ -3,5 +3,6 @@
 SET AUTOCOMMIT=0;
 
 SOURCE test_entry_note.sql;
+SOURCE operations.sql;
 
 COMMIT;
