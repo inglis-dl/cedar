@@ -85,7 +85,7 @@ class test_entry extends \cenozo\database\has_note
     $assign_mod->where( 'user_id', '!=', $db_assignment->user_id );
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $db_assignment_match = $assignment_class_name::select( $assign_mod );
-    if( empty( $db_assignment_match ) || is_null( $db_assignment_match ) )   
+    if( empty( $db_assignment_match ) )   
       return NULL;
     
     $db_assignment_match = $db_assignment_match[0];
@@ -98,7 +98,7 @@ class test_entry extends \cenozo\database\has_note
     $entry_mod->where( 'test_id', '=', $this->test_id );
     $entry_mod->where( 'completed', '=', 1 );
     $db_test_entry_match = $test_entry_class_name::select( $entry_mod );
-    if( empty( $db_test_entry_match ) || is_null( $db_test_entry_match ) )    
+    if( empty( $db_test_entry_match ) )    
       return NULL;
  
     return $db_test_entry_match[0];

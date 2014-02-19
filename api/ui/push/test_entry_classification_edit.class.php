@@ -32,48 +32,56 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
+   * @throws exception\runtime
    */
   protected function execute()
   {
     parent::execute();
 
-    $db_test_entry_classification = $this->get_record();
-    $db_test_entry = $db_test_entry_classification->get_test_entry();
+    $record = $this->get_record();
+    $db_test_entry = $record->get_test_entry();
     $db_test = $db_test_entry->get_test();
-    $db_dictionary = $db_test->get_dictionary();
 
-    $language = $db_test_entry->get_assignment()->get_participant()->language;
-    $language = is_null( $language ) ? 'en' : $language;
-
-    // does the word candidate exist in the primary dictionary ?
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id','=', $db_dictionary->id );
+    // note that for adjudication entries, there is no assignment and such
+    // entries cannot be edited
+    $db_assignment = $db_test_entry->get_assignment();
+    if( is_null( $db_assignment ) )
+      throw lib::create( 'exception\runtime',
+        'Tried to edit an adjudication entry', __METHOD__ );
 
     // allow bilingual responses for FAS classification tests
+    $language = 'any';
     if( !preg_match( '/FAS/', $db_test->name ) )
     {
-      $modifier->where( 'language', '=', $language );
+      $language = $db_assignment->get_participant()->language;
+      $language = is_null( $language ) ? 'en' : $language;
     }  
-    $modifier->where( 'word', '=', $db_test_entry_classification->word_candidate );
-    $modifier->limit( 1 );
-    $word_class_name = lib::get_class_name( 'database\word' );
-    $db_word = $word_class_name::select( $modifier );
-    if( !empty( $db_word ) )
-    {
-      $db_test_entry_classification->word_id = $db_word[0]->id;
-      $db_test_entry_classification->word_candidate = NULL;
-      $db_test_entry_classification->save();
-    }
+    
+    $data = $db_test->get_word_classification( $record->word_candidate, $language );
+    $db_word = $data['word'];
+
+    log::debug( $data );
 
     // consider the test entry completed if 1 or more entries exist
     // if none exist, the typist must defer to the admin to set completed status
+    $completed = false;
+    if( $db_word !== NULL )
+    {
+      $record->word_id = $db_word->id;
+      $record->word_candidate = NULL;
+      $record->save();
+      $completed = true;
+    }
+    else
+    {
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'word_id', '!=', '' );
+      $modifier->where( 'word_candidate', '!=', '', true, true );
+      $test_entry_classification_class_name = 
+        lib::get_class_name('database\test_entry_classification');
+      $completed = $test_entry_classification_class_name::count( $modifier ) > 0 ? true : false;
+    }
 
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'word_id', '!=', '' );
-    $modifier->where( 'word_candidate', '!=', '', true, true );
-    $test_entry_classification_class_name = 
-      lib::get_class_name('database\test_entry_classification');
-    $completed = $test_entry_classification_class_name::count( $modifier ) > 0 ? 1 : 0;
     $db_test_entry->update_status_fields( $completed );
   }
 }

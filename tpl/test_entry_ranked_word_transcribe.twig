@@ -92,9 +92,16 @@
         args.columns = columns;
 
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-        } else {
-          error_dialog( "Error", "Push to database failed." );
-        }
+          args.id = "{{ test_id }}";
+          args['language'] = "{{ language }}";
+          args['word_candidate'] = $(this).val();
+          var classification = ajax_pull( "test", "classify_word", args );
+          if( undefined != classification )
+          {
+            console.log( classification );
+            $(this).attr( "name", classification );
+          }        
+        } 
 
         configure_ui( do_text ); 
 
@@ -203,6 +210,7 @@
           <td><input type="text"
                id="{{ entry.id }}__candidate"
                name={{ entry.word_id }}
+               class="{{ entry.classification }}"   
                {% if editable == false %}
                  { readonly }
                {% endif %}

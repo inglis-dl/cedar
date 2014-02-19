@@ -93,6 +93,9 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test", "add_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test", "delete_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, primary, 
+intrusion or variant." );
 
 -- test_entry
 
@@ -190,8 +193,5 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "word", "view", true, "View the details of a dictionary's words." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "word", "list", true, "Retrieves a list of words from a dictionary." );
-INSERT IGNORE INTO operation( type, subject, name, restricted, description )
-VALUES( "pull", "word", "classify", false, "Classifies a word candidate as either candidate, primary, 
-intrusion or variant." );
 
 COMMIT;

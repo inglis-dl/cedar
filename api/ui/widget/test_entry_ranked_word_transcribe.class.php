@@ -80,6 +80,11 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
     $intrusion_list = array();
     foreach( $db_test_entry->get_test_entry_ranked_word_list() as $db_test_entry_ranked_word )
     {
+
+      // if this entry has a word_id, the id refers to that of the ranked word
+      // the the selection is variant, then the word_candidate should not be empty
+      // if the selection is null and the word_id is null, and the word_candidate is not empty
+      // this is an intrusion
       $data = 
           array(
             'id' => $db_test_entry_ranked_word->id,
@@ -87,16 +92,18 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
                $db_test_entry_ranked_word->selection,  
             'word_candidate' => 
               is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
-                $db_test_entry_ranked_word->word_candidate );
+                $db_test_entry_ranked_word->word_candidate,
+            'classification' => 'empty' );
 
       if( !is_null( $db_test_entry_ranked_word->word_id ) )
       {
         $word_list[ $db_test_entry_ranked_word->get_word()->word ] = $data;
       }
       else
-      {
+      { 
         $intrusion_list[] = $data;
       }
+      log::debug( $data );
     }
 
     $modifier = lib::create( 'database\modifier' );
@@ -118,7 +125,8 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
            'word_id' => $db_word->id,
            'word' => $db_word->word,       
            'selection' => $word_list[ $db_word->word ][ 'selection' ],
-           'word_candidate' => $word_list[ $db_word->word ][ 'word_candidate' ] );
+           'word_candidate' => $word_list[ $db_word->word ][ 'word_candidate' ],
+           'classification' => $word_list[ $db_word->word ][ 'classification' ] );
       }
     }
 
@@ -129,7 +137,8 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
         'word_id' => '',
         'word' => '',
         'selection' => '',
-        'word_candidate' => $intrusion[ 'word_candidate' ] );      
+        'word_candidate' => $intrusion[ 'word_candidate' ],
+        'classification' => 'intrusion' );      
     }
     $this->set_variable( 'entry_data', $entry_data );
   }

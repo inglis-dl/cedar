@@ -13,7 +13,7 @@ VALUES( "widget", "note", "list", false, "Displays a list of notes." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "note", "new", false, "Creates a new note." );
 
--- word
+-- test
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
-VALUES( "pull", "word", "classify", false, "Classifies a word candidate as either candidate, 
+VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, 
 primary, intrusion or variant." );

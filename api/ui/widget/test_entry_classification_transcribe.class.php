@@ -72,12 +72,16 @@ class test_entry_classification_transcribe extends \cenozo\ui\widget
               'Widget requires test type to be classification, not ' .
               $test_type_name, __METHOD__ );
 
+    $db_participant = $db_test_entry->get_assignment()->get_participant();
+    $language = $db_participant->language;
+    $language = is_null( $language ) ? 'en' : $language;
+
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
     $entry_data = array();
     foreach( $db_test_entry->get_test_entry_classification_list( $modifier ) as $db_test_entry_classification )
     {
-      $db_word = is_null(  $db_test_entry_classification->word_id ) ? null :
+      $db_word = is_null(  $db_test_entry_classification->word_id ) ? NULL :
         lib::create( 'database\word', $db_test_entry_classification->word_id );
       $row = array(
                'id' => $db_test_entry_classification->id,
@@ -86,8 +90,16 @@ class test_entry_classification_transcribe extends \cenozo\ui\widget
                'word' => is_null( $db_word ) ? '' :  $db_word->word,
                'word_candidate' => 
                  is_null( $db_test_entry_classification->word_candidate ) ? '' :
-                 $db_test_entry_classification->word_candidate );
+                 $db_test_entry_classification->word_candidate,
+               'classification' => is_null( $db_word ) ? 'empty' : 'primary'  );
 
+      if( $row['classification'] == 'empty' &&
+          !is_null( $db_test_entry_classification->word_candidate ) )
+      {
+        $data = $db_test->get_word_classification( 
+          $db_test_entry_classification->word_candidate, $language );
+        $row['classification'] = $data['classification'];
+      }
       $entry_data[] = $row;              
     }
     $this->set_variable( 'entry_data', $entry_data );

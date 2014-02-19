@@ -17,7 +17,7 @@
       var disable = $( 'input:text[value!=""]' ).length == 0 && !{{ deferred }};
       $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
 
-      //disable elements based on deferred status
+      // disable elements based on deferred status
       if( {{ deferred }} ) {
         $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
@@ -36,35 +36,34 @@
       }
     }
 
-    // Overrides the default autocomplete filter function to search only from the beginning of the string
-    $.ui.autocomplete.filter = function (array, term) {
-      var matcher = new RegExp("^" + $.ui.autocomplete.escapeRegex(term), "i");
-      return $.grep(array, function (value) {
-        return matcher.test(value.label || value.value || value);
-      });
+    // overrides the default autocomplete filter function to search only from the beginning
+    // of the string
+    $.ui.autocomplete.filter = function ( array, term ) {
+      var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
+      return $.grep( array, function ( value ) {
+        return matcher.test( value.label || value.value || value );
+      } );
     };
 
     function get_text_complete() {
       var args = new Object();
       args['dictionary_id'] = "{{ dictionary_id }}";
       args['language'] = "{{ language }}";
-      args['words_only'] = 1;  
+      args['words_only'] = 1;
       return ajax_pull( "word", "list", args );
     }
 
     $( function () {
 
       configure_ui();
-
-      var word_list = get_text_complete();
       
-      //get_text_complete();
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
-         source: word_list,
+         source: get_text_complete(),
          minLength: 1,
          select: function( event, ui ) {
              $(this).val( ui.item.value );
-             $(this).trigger( 'change' );
+             // TODO see if latest version of jquery has double enter key bug fixed
+             //$(this).trigger( 'change' );
            }
          } ).change( function() {
         var args = new Object();
@@ -72,14 +71,19 @@
         args.id = $(this).attr("id").split("__")[0];
         columns["rank"] = $(this).attr("id").split("__")[1];
         columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
+        columns["word_id"] = "";
         columns["word_candidate"] = $(this).val();
         args.columns = columns;
 
-        // refresh with updated information
-        // TODO if the candidate is found in the dictionary,  
-        // change the element text area background color
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          args.id = "{{ test_id }}";
+          args['language'] = "{{ language }}";
+          args['word_candidate'] = $(this).val();
+          var classification = ajax_pull( "test", "classify_word", args );
+          if( undefined != classification )
+          {
+            $(this).addClass( classification );
+          }
           var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
           $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
 
@@ -87,17 +91,14 @@
         }
       } );// end text input change
 
-      // loop over all input elements and clear them
-      // update the db to reflect the changes
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
           input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
           input.each( function() {
               $(this).val( "" );
-              $(this).attr("name", "undefined" );
+              $(this).removeClass( "primary candidate intrusion variant" );
               var rank = $(this).attr( "id" ).split("__")[1];
               if( rank == "1" ) {
-                //$(this).css( 'background-color', 'yellow');
                 $(this).removeAttr( "disabled" );
               } else {
                 $(this).attr( "disabled", "disabled" );
@@ -106,23 +107,6 @@
           configure_ui();
         }
       } );// end Reset button click
-
-     //   TODO: set background color according to entry status below 
-                   // if status == 'empty'   }  
-                   //   if kprev == 'false' 
-                   //     "disabled" 
-                   //   else 
-                   //     "style='background-color:white;'" 
-                   //   endif 
-                   //   set kprev = 'false' 
-                   // elseif status == 'candidate' 
-                   //     "style='background-color:lightyellow;'" 
-                   //     set kprev = 'true' 
-                   // elseif status == 'word' 
-                   //     "style='background-color:palegreen;'" 
-                   //     set kprev = 'true' 
-                   // endif 
-                   
 
     } );
   </script>
@@ -155,11 +139,12 @@
         <td>
           <input type="text"
            id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-           name={{ entry_data[k].word_id ? entry_data[k].word_id : 'undefined' }}
-
+           class="{{ entry_data[k].classification }}"
+           
            {% if editable == false %}
              { readonly }
            {% endif %}
+
            {% if status == 'empty'  %} 
              {% if kprev == 'false' %}
                {{ "disabled" }}
@@ -169,6 +154,7 @@
                {% set kprev = 'true' %}
            {% elseif status == 'word' %}
                {% set kprev = 'true' %}
+               
            {% endif %}
              
            value={{ value }}>
