@@ -47,14 +47,6 @@ class assignment_view extends \cenozo\ui\widget\base_view
     $this->test_entry_list = lib::create( 'ui\widget\test_entry_list', $this->arguments );
     $this->test_entry_list->set_parent( $this );
     $this->test_entry_list->set_heading( 'Tests' );
-
-    $operation_class_name = lib::get_class_name( 'database\operation' );
-    $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'transcribe' );
-    if( lib::create( 'business\session' )->is_allowed( $db_operation ) ) 
-    {   
-      $this->add_action( 'transcribe', 'Transcribe', $db_operation,
-        'Transcribe the cognitive test recordings made during an interview.' );
-    }
   }
 
   /**
