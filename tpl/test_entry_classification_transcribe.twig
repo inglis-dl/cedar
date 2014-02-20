@@ -48,6 +48,10 @@
     function get_text_complete() {
       var args = new Object();
       args['dictionary_id'] = "{{ dictionary_id }}";
+      if( undefined != {{ intrusion_dictionary_id }} ) {
+        args['intrusion_dictionary_id'] = "{{ intrusion_dictionary_id }}";
+      }
+
       args['language'] = "{{ language }}";
       args['words_only'] = 1;
       return ajax_pull( "word", "list", args );
@@ -66,44 +70,48 @@
              //$(this).trigger( 'change' );
            }
          } ).change( function() {
-        var args = new Object();
-        var columns = new Object();
-        args.id = $(this).attr("id").split("__")[0];
-        columns["rank"] = $(this).attr("id").split("__")[1];
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = "";
-        columns["word_candidate"] = $(this).val();
-        args.columns = columns;
 
-        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          args.id = "{{ test_id }}";
-          args['language'] = "{{ language }}";
-          args['word_candidate'] = $(this).val();
-          var classification = ajax_pull( "test", "classify_word", args );
-          if( undefined != classification )
-          {
-            $(this).addClass( classification );
+          var args = new Object();
+          var columns = new Object();
+          args.id = $(this).attr("id").split("__")[0];
+          columns["rank"] = $(this).attr("id").split("__")[1];
+          columns["test_entry_id"] = "{{ parent.id }}";
+          columns["word_id"] = "";
+          var candidate = $(this).val().trim().toLowerCase();
+          columns["word_candidate"] = candidate;
+          args.columns = columns;
+
+          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            $(this).val( candidate );
+            args.id = "{{ test_id }}";
+            args['language'] = "{{ language }}";
+            args['word_candidate'] = candidate;
+            var classification = ajax_pull( "test", "classify_word", args );
+            if( undefined != classification )
+            {
+              $(this).removeClass( "candidate intrusion variant" );
+              $(this).addClass( classification );
+            }
+            var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
+            $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
+
+            configure_ui();
           }
-          var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
-          $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
-
-          configure_ui();
-        }
       } );// end text input change
 
-      $( "#{{ parent.full }}_Reset" ).click(function() {
+      $( "#{{ parent.full }}_Reset" ).click( function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
-          input.each( function() {
+          $("#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
               $(this).val( "" );
-              $(this).removeClass( "primary candidate intrusion variant" );
-              var rank = $(this).attr( "id" ).split("__")[1];
-              if( rank == "1" ) {
+              $(this).removeClass( "candidate intrusion variant" );
+              var rank = parseInt( $(this).attr( "id" ).split("__")[1] );
+              if( rank === 1 ) {
                 $(this).removeAttr( "disabled" );
               } else {
                 $(this).attr( "disabled", "disabled" );
               }
           } );
+
           configure_ui();
         }
       } );// end Reset button click
@@ -139,7 +147,9 @@
         <td>
           <input type="text"
            id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-           class="{{ entry_data[k].classification }}"
+           {% if entry_data[k].classification is defined %}
+             class="{{ entry_data[k].classification }}"
+           {% endif %}  
            
            {% if editable == false %}
              { readonly }
@@ -147,7 +157,7 @@
 
            {% if status == 'empty'  %} 
              {% if kprev == 'false' %}
-               {{ "disabled" }}
+               { disabled }
              {% endif %}
              {% set kprev = 'false' %}
            {% elseif status == 'candidate' %}

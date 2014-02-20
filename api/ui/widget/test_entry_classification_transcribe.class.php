@@ -81,27 +81,37 @@ class test_entry_classification_transcribe extends \cenozo\ui\widget
     $entry_data = array();
     foreach( $db_test_entry->get_test_entry_classification_list( $modifier ) as $db_test_entry_classification )
     {
-      $db_word = is_null(  $db_test_entry_classification->word_id ) ? NULL :
-        lib::create( 'database\word', $db_test_entry_classification->word_id );
+      $word_id = is_null( $db_test_entry_classification->word_id ) ? 
+                     '' : $db_test_entry_classification->word_id;
+      $word = '';
+      $word_candidate = is_null( $db_test_entry_classification->word_candidate ) ? 
+                           '' :  $db_test_entry_classification->word_candidate;
+      $classification = '';
+
+      if( !empty( $word_id ) )
+      {
+        $db_word = lib::create( 'database\word', $word_id );
+        $data = $db_test->get_word_classification( $db_word->word, $db_word->language );
+        $word = $db_word->word;
+        $classification = $data['classification'];
+      }
+      else if( !empty( $word_candidate ) )
+      {
+        $data = $db_test->get_word_classification( $word_candidate, $language );
+        $classification = $data['classification'];
+      }
+      
       $row = array(
                'id' => $db_test_entry_classification->id,
                'rank' => $db_test_entry_classification->rank,
-               'word_id' => is_null( $db_word ) ? '' :  $db_word->id,
-               'word' => is_null( $db_word ) ? '' :  $db_word->word,
-               'word_candidate' => 
-                 is_null( $db_test_entry_classification->word_candidate ) ? '' :
-                 $db_test_entry_classification->word_candidate,
-               'classification' => is_null( $db_word ) ? 'empty' : 'primary'  );
+               'word_id' => $word_id,
+               'word' => $word,
+               'word_candidate' => $word_candidate,
+               'classification' => $classification  );
 
-      if( $row['classification'] == 'empty' &&
-          !is_null( $db_test_entry_classification->word_candidate ) )
-      {
-        $data = $db_test->get_word_classification( 
-          $db_test_entry_classification->word_candidate, $language );
-        $row['classification'] = $data['classification'];
-      }
       $entry_data[] = $row;              
     }
+
     $this->set_variable( 'entry_data', $entry_data );
   }
 }

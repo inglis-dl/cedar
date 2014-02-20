@@ -15,6 +15,44 @@ use cenozo\lib, cenozo\log, cedar\util;
 class test extends \cenozo\database\has_rank
 {
   /** 
+   * Get the variant dictionary.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   * @return record()
+   */
+  public function get_variant_dictionary()
+  {
+    if( is_null( $this->variant_dictionary_id ) )
+    {
+      return NULL;
+    }
+    else
+    {
+      return lib::create( 'database\dictionary', $this->variant_dictionary_id );
+    }
+  }
+
+  /** 
+   * Get the intrusion dictionary.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   * @return record()
+   */
+  public function get_intrusion_dictionary()
+  {
+    if( is_null( $this->intrusion_dictionary_id ) )
+    {
+      return NULL;
+    }
+    else
+    {
+      return lib::create( 'database\dictionary', $this->intrusion_dictionary_id );
+    }
+  }
+
+  /** 
    * Classify a word candidate based on dictionary membership.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -49,7 +87,7 @@ class test extends \cenozo\database\has_rank
     }    
     else
     {   
-      if( $this->strict != 0 ) 
+      if( !$this->strict ) 
       {   
         $modifier = clone $base_mod;
         $modifier->where( 'dictionary_id', '=', $this->get_intrusion_dictionary()->id );

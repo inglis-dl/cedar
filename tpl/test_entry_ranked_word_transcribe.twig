@@ -60,6 +60,23 @@
       }
     }
 
+    // overrides the default autocomplete filter function to search only from the beginning
+    // of the string
+    $.ui.autocomplete.filter = function ( array, term ) {
+      var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
+      return $.grep( array, function ( value ) {
+        return matcher.test( value.label || value.value || value );
+      } );
+    };
+
+    function get_text_complete() {
+      var args = new Object();
+      args['variant_dictionary_id'] = "{{ variant_dictionary_id }}";
+      args['language'] = "{{ language }}";
+      args['words_only'] = 1;
+      return ajax_pull( "word", "list", args );
+    }
+
     $( function () {
 
       configure_ui(); 
@@ -88,18 +105,19 @@
           $(text_id).val( "" );
         }
         
-        columns["word_candidate"] = $(text_id).val();
+        var candidate = $(text_id).val();
+        columns["word_candidate"] = candidate;
         args.columns = columns;
 
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           args.id = "{{ test_id }}";
           args['language'] = "{{ language }}";
-          args['word_candidate'] = $(this).val();
+          args['word_candidate'] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
           {
-            console.log( classification );
-            $(this).attr( "name", classification );
+            $(text_id).removeClass( "candidate intrusion variant" );
+            $(text_id).addClass( classification );
           }        
         } 
 
@@ -107,33 +125,48 @@
 
       } );// end radio input change
 
-      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
-        if( $(this).val().length == 0 ) {
-          error_dialog( "Error", "Blank variant entry not permitted." );
-        } else {
+      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
+         source: get_text_complete(),
+         minLength: 1,
+         select: function( event, ui ) {
+             $(this).val( ui.item.value );
+             // TODO see if latest version of jquery has double enter key bug fixed
+             //$(this).trigger( 'change' );
+           }
+         } ).change( function() {
 
-          var args = new Object();
-          var columns = new Object();
-          args.id = $(this).attr( "id" ).split("__")[0];
-          var is_intrusion = $(this).attr( "id" ).split("__")[1] === "intrusion" ? true : false;
-          columns["test_entry_id"] = "{{ parent.id }}";
-          columns["word_id"] = $(this).attr( "name" );
-          columns["word_candidate"] = $(this).val();
-          columns["selection"] = is_intrusion ? "" : "variant";
-          args.columns = columns;
-          
-          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-            input = $( "#{{ widget.full }}__entry_table" ).find( "input:radio" );
-            input.each( function() {
-              $(this).removeAttr( "disabled" );
-              if( $(this).val() == 'variant' ) {
-                var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
-                if( $(text_id).val().length > 0 ) {
-                  $(text_id).removeAttr( "disabled" );
-                }  
-              }
-            } );
+        var args = new Object();
+        var columns = new Object();
+        args.id = $(this).attr( "id" ).split("__")[0];
+        var is_intrusion = $(this).attr( "id" ).split("__")[1] === "intrusion" ? true : false;
+        var candidate = $(this).val().trim().toLowerCase();
+        if( candidate.length == 0 ) return false;
+        columns["test_entry_id"] = "{{ parent.id }}";
+        columns["word_id"] = $(this).attr( "name" );
+        columns["word_candidate"] = candidate;
+        columns["selection"] = is_intrusion ? "" : "variant";
+        args.columns = columns;
+        
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          args.id = "{{ test_id }}";
+          args['language'] = "{{ language }}";
+          args['word_candidate'] = candidate;
+          var classification = ajax_pull( "test", "classify_word", args );
+          if( undefined != classification )
+          {
+             $(this).removeClass( "candidate intrusion variant" );
+             $(this).addClass( classification );
           }
+           
+          $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).each( function() {
+            $(this).removeAttr( "disabled" );
+            if( $(this).val() == 'variant' ) {
+              var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
+              if( $(text_id).val().length > 0 ) {
+                $(text_id).removeAttr( "disabled" );
+              }  
+            }
+          } );
 
           configure_ui(); 
         }
@@ -143,13 +176,13 @@
       // loop over and clear all input elements
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
-          input.each( function() {
+          $("#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
             if( this.type == "radio" ) {
               $(this).removeAttr( "checked" );
             } else if ( this.type == "text" ) {
               $(this).val( "" );
               $(this).attr( "disabled", "disabled" );
+              $(this).removeClass( "candidate intrusion variant" );
             }
           } );
 
@@ -210,9 +243,12 @@
           <td><input type="text"
                id="{{ entry.id }}__candidate"
                name={{ entry.word_id }}
-               class="{{ entry.classification }}"   
+               class={{ entry.classification }}   
                {% if editable == false %}
                  { readonly }
+               {% endif %}
+               {% if entry.classification is defined %}
+                 class={{ entry.classification }}
                {% endif %}
                value={{ entry.word_candidate }}></td>
         {% else %}
@@ -221,6 +257,9 @@
                id="{{ entry.id }}__intrusion"
                {% if editable == false %}
                  { readonly }
+               {% endif %}
+               {% if entry.classification is defined %}
+                 class={{ entry.classification }}
                {% endif %}
                name=""
                value={{ entry.word_candidate }}></td>

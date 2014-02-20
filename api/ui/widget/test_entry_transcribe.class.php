@@ -75,19 +75,37 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     $record = $this->get_record();
     $db_test = $record->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
 
     $this->set_variable( 'audio_fault', $record->audio_fault );
     $this->set_variable( 'deferred', $record->deferred );
     $this->set_variable( 'completed', $record->completed );
     $this->set_variable( 'rank', $db_test->rank );
-    $this->set_variable( 'test_type', $db_test->get_test_type()->name );
+    $this->set_variable( 'test_type', $test_type_name );
     $this->set_variable( 'test_id', $db_test->id );
 
-    $db_dictionary = $db_test->get_dictionary();
     $dictionary_id = '';
+    $variant_dictionary_id = '';
+    $intrusion_dictionary_id = '';
+
+    $db_dictionary = $db_test->get_dictionary();
     if( !is_null( $db_dictionary ) )
       $dictionary_id = $db_dictionary->id;
+
+    if( !preg_match( '/FAS/', $db_test->name ) )
+    {
+      $db_variant_dictionary = $db_test->get_variant_dictionary();
+      if( !is_null( $db_variant_dictionary ) )
+        $variant_dictionary_id = $db_variant_dictionary->id;
+    }
+    
+    $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
+    if( !is_null( $db_intrusion_dictionary ) )
+      $intrusion_dictionary_id = $db_intrusion_dictionary->id;
+
     $this->set_variable( 'dictionary_id', $dictionary_id );
+    $this->set_variable( 'variant_dictionary_id', $variant_dictionary_id );
+    $this->set_variable( 'intrusion_dictionary_id', $intrusion_dictionary_id );
 
     $language = 'any';
     $db_participant = $record->get_assignment()->get_participant();

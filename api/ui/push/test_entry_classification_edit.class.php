@@ -60,8 +60,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $data = $db_test->get_word_classification( $record->word_candidate, $language );
     $db_word = $data['word'];
 
-    log::debug( $data );
-
     // consider the test entry completed if 1 or more entries exist
     // if none exist, the typist must defer to the admin to set completed status
     $completed = false;

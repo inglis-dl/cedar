@@ -37,14 +37,33 @@ class word_list extends \cenozo\ui\pull
     parent::execute();
     
     $this->data = array();
+    $dictionary = array();
+    $dictionary['dictionary_id'] = $this->get_argument( 'dictionary_id', NULL );
+    $dictionary['variant_dictionary_id'] = $this->get_argument( 'variant_dictionary_id', NULL );
+    $dictionary['intrusion_dictionary_id'] = $this->get_argument( 'intrusion_dictionary_id', NULL );
     
-    $dictionary_id = $this->get_argument( 'dictionary_id' );
+    $dictionary = array_filter( $dictionary );
+
     $language = $this->get_argument( 'language', 'any' );
-    $words_only = $this->get_argument( 'words_only', '0' );
+    $words_only = $this->get_argument( 'words_only', false );
 
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', '=', $dictionary_id );
+
+    $first = true;
+    foreach( $dictionary as $key => $value )
+    {
+      if( $first )
+      {
+        $modifier->where( 'dictionary_id', '=', $value );
+        $first = false;
+      }
+      else
+      {
+        $modifier->where( 'dictionary_id', '=', $value, true, true );
+      }
+    }
+
     if( 'any' != $language ) $modifier->where( 'language', '=', $language );
     if( $words_only )
     {
@@ -53,7 +72,7 @@ class word_list extends \cenozo\ui\pull
     else
     {
       $this->data = $dictionary_class_name::get_word_list( $modifier );
-    }  
+    }
   }
   
   /** 

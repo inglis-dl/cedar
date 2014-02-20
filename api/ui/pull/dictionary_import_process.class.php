@@ -201,7 +201,6 @@ class dictionary_import_process extends \cenozo\ui\pull
       }
     }
 
-    log::debug( $word_array_final );
     $this->data[ 'duplicate_word_count' ] = $duplicate_word_count;
     $this->data[ 'unique_word_count' ] = $unique_word_count;
     if( $unique_word_count > 0 )

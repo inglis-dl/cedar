@@ -103,7 +103,6 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
       { 
         $intrusion_list[] = $data;
       }
-      log::debug( $data );
     }
 
     $modifier = lib::create( 'database\modifier' );
