@@ -27,7 +27,7 @@ class test extends \cenozo\database\has_rank
     if( is_null( $this->id ) )
       throw lib::create( 'exception\runtime',
         'Tried to classify a word candidate on a test with no id', __METHOD__ );
-    
+
     $data = array();
     $data['classification'] = 'candidate';
     $data['word'] = NULL;
