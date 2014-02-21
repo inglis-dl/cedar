@@ -17,3 +17,8 @@ VALUES( "push", "note", "new", false, "Creates a new note." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, 
 primary, intrusion or variant." );
+
+-- cenozo push
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "self", "temporary_file", false,
+"Upload a temporary file to the server." );
