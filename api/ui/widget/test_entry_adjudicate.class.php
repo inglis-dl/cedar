@@ -37,7 +37,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     parent::prepare();
 
     $record = $this->get_record();
-
     $db_assignment = $record->get_assignment();
 
     if( is_null( $db_assignment ) )
@@ -89,13 +88,31 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid assignment', __METHOD__ );
 
-    $this->set_variable( 'test_id', $record->test_id );
+    $this->set_variable( 'test_id', $db_test->id );
     $this->set_variable( 'participant_id', $db_assignment->get_participant()->id );
-    $db_dictionary = $db_test->get_dictionary();
+
     $dictionary_id = ''; 
-    if( !empty( $db_dictionary ) ) 
+    $variant_dictionary_id = ''; 
+    $intrusion_dictionary_id = ''; 
+
+    $db_dictionary = $db_test->get_dictionary();
+    if( !is_null( $db_dictionary ) ) 
       $dictionary_id = $db_dictionary->id;
+
+    if( !preg_match( '/FAS/', $db_test->name ) ) 
+    {   
+      $db_variant_dictionary = $db_test->get_variant_dictionary();
+      if( !is_null( $db_variant_dictionary ) ) 
+        $variant_dictionary_id = $db_variant_dictionary->id;
+    }   
+    
+    $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
+    if( !is_null( $db_intrusion_dictionary ) ) 
+      $intrusion_dictionary_id = $db_intrusion_dictionary->id;
+
     $this->set_variable( 'dictionary_id', $dictionary_id );
+    $this->set_variable( 'variant_dictionary_id', $variant_dictionary_id );
+    $this->set_variable( 'intrusion_dictionary_id', $intrusion_dictionary_id );
 
     $language = 'any';
     $db_participant = $record->get_assignment()->get_participant();
@@ -106,8 +123,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
     $this->set_variable( 'language', $language );
 
-    $db_cohort = $db_participant->get_cohort();
-    if( $db_cohort->name == 'tracking' )
+    if( $db_participant->get_cohort()->name == 'tracking' )
     {   
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
       $sabretooth_manager->use_machine_credentials( true );
@@ -129,14 +145,12 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     }
 
     $this->set_variable( 'id_1', $record->id );
-    //$this->set_variable( 'audio_fault_1', $record->audio_fault );
     $this->set_variable( 'adjudicate_1', $record->adjudicate );
     $this->set_variable( 'deferred_1', $record->deferred );
     $this->set_variable( 'completed_1', $record->completed );
     $this->set_variable( 'user_1', $db_assignment->get_user()->name );
 
     $this->set_variable( 'id_2', $this->adjudicate_entry->id );
-    //$this->set_variable( 'audio_fault_2', $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'adjudicate_2', $this->adjudicate_entry->adjudicate );
     $this->set_variable( 'deferred_2', $this->adjudicate_entry->deferred );
     $this->set_variable( 'completed_2', $this->adjudicate_entry->completed );

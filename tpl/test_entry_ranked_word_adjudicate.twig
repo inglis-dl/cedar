@@ -24,6 +24,23 @@
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );
     }
 
+    // overrides the default autocomplete filter function to search only from the beginning
+    // of the string
+    $.ui.autocomplete.filter = function ( array, term ) {
+      var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
+      return $.grep( array, function ( value ) {
+        return matcher.test( value.label || value.value || value );
+      } );
+    };
+
+    function get_text_complete() {
+      var args = new Object();
+      args['variant_dictionary_id'] = "{{ variant_dictionary_id }}";
+      args['language'] = "{{ language }}";
+      args['words_only'] = 1;
+      return ajax_pull( "word", "list", args );
+    }
+
     $( function () {
      
       configure_ui();
@@ -40,11 +57,11 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
-        columns['participant_id']={{ participant_id }};
-        columns['test_id']={{ test_id }};
-        columns['completed']=1;
-        columns['id_1']= {{ id_1 }};
-        columns['id_2']= {{ id_2 }};
+        columns['participant_id'] = {{ participant_id }};
+        columns['test_id'] = {{ test_id }};
+        columns['completed'] = 1;
+        columns['id_1'] = {{ id_1 }};
+        columns['id_2'] = {{ id_2 }};
 
         $( 'input:radio[name$="adjudicate"]:checked' ).each( function() {
           var id = $(this).attr( "id" ).split( "__" )[0] + "__" + $(this).val();
@@ -122,7 +139,16 @@
         configure_ui();
       } );// end adjudicate radio input change
 
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:text' ).change( function() {
+      $( "#{{ widget.full }}__entry_table" ).find( 'div.adjudicate :text' ).autocomplete( {
+        source: get_text_complete(),
+        minLength: 1,
+        select: function( event, ui ) {
+          $(this).val( ui.item.value );
+          // TODO see if latest version of jquery has double enter key bug fixed
+          $(this).trigger( 'change' );
+          }
+        } ).change( function() {
+
         if( $(this).val().length == 0 ) {
           error_dialog( "Error", "Blank variant entry not permitted." );
 
@@ -163,6 +189,18 @@
             if( !is_intrusion ) {
               $( 'input:radio[name="' + $(this).attr( "id" ) + '"]' ).removeAttr( "checked" );
             }
+          }
+        } else {
+          var candidate = $(this).val().trim().toLowerCase();
+          var args = new Object();
+          args.id = "{{ test_id }}";
+          args['language'] = "{{ language }}";
+          args['word_candidate'] = candidate;
+          var classification = ajax_pull( "test", "classify_word", args );
+          if( undefined != classification )
+          {
+            $(this).removeClass( "candidate intrusion variant" );
+            $(this).addClass( classification );
           }
         }
 
@@ -255,6 +293,9 @@
                 {{ entry.selection_1 == 'variant' ? "checked" : "" }}>
               <input type="text"
                 id="{{ entry.id_1 }}__candidate"
+                {% if entry.classification_1 is defined %}
+                  class="{{ entry.classification_1 }}"
+                {% endif %}
                 readonly
                 name={{ widget.full }}
                 value="{{ entry.word_candidate_1 }}"
@@ -292,6 +333,9 @@
                 {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
+                {% if entry.classification_2 is defined %}
+                  class="{{ entry.classification_2 }}"
+                {% endif %}
                 readonly
                 name={{ widget.full }}
                 value="{{ entry.word_candidate_2 }}"

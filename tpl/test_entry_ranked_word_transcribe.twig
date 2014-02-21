@@ -126,14 +126,14 @@
       } );// end radio input change
 
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
-         source: get_text_complete(),
-         minLength: 1,
-         select: function( event, ui ) {
-             $(this).val( ui.item.value );
-             // TODO see if latest version of jquery has double enter key bug fixed
-             //$(this).trigger( 'change' );
-           }
-         } ).change( function() {
+        source: get_text_complete(),
+        minLength: 1,
+        select: function( event, ui ) {
+          $(this).val( ui.item.value );
+          // TODO see if latest version of jquery has double enter key bug fixed
+          //$(this).trigger( 'change' );
+          }
+        } ).change( function() {
 
         var args = new Object();
         var columns = new Object();

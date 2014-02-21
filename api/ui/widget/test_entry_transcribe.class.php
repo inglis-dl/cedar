@@ -125,8 +125,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $args['participant_id'] = $db_participant->id;
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
       $recording_data = array();
-      if( !is_null( $recording_list ) && 
-           $recording_list->success == 1 && count( $recording_list->data ) > 0 )
+      if( $recording_list->success == 1 && count( $recording_list->data ) > 0 )
       {
         foreach( $recording_list->data as $data )
         {

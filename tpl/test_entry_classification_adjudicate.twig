@@ -32,6 +32,9 @@
     function get_text_complete() {
       var args = new Object();
       args['dictionary_id'] = "{{ dictionary_id }}";
+      if( undefined != {{ intrusion_dictionary_id }} ) {
+        args['intrusion_dictionary_id'] = "{{ intrusion_dictionary_id }}";
+      }
       args['language'] = "{{ language }}";
       args['words_only'] = 1;  
       return ajax_pull( "word", "list", args );
@@ -79,15 +82,16 @@
         $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
       } );// end radio input change and click
 
-      $( "#{{ widget.full }}__entry_table" ).find( 
-         'input:text[id$="adjudicate"]' ).autocomplete( {
+      $( "#{{ widget.full }}__entry_table" ).find( 'div.adjudicate :text' ).autocomplete( {
          source: get_text_complete(),
          minLength: 1,
          select: function( event, ui ) {
              $(this).val( ui.item.value );
+             // TODO see if latest version of jquery has double enter key bug fixed
              $(this).trigger( 'change' );
            }
          } ).change( function() {
+
         var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
         var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
         var text_id_1 = id_1.replace( "accept", "candidate" );
@@ -116,6 +120,17 @@
           $( id_2 ).removeAttr( "checked" );
           $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
           $(this).attr( "name", "candidate" );
+          var candidate = $(this).val().trim().toLowerCase();
+          var args = new Object();
+          args.id = "{{ test_id }}";
+          args['language'] = "{{ language }}";
+          args['word_candidate'] = candidate;
+          var classification = ajax_pull( "test", "classify_word", args );
+          if( undefined != classification )
+          {
+            $(this).removeClass( "candidate intrusion variant" );
+            $(this).addClass( classification );
+          }
         }
 
         configure_ui();
@@ -195,6 +210,9 @@
             <td>
               <input type="text"
                 id="{{ entry.id_1 }}__candidate"
+                {% if entry.classification_1 is defined %}
+                  class="{{ entry.classification_1 }}"
+                {% endif %}
                 readonly
                 name={{ name_1 }}
                 value={{ value_1 }}>
@@ -217,6 +235,9 @@
             <td>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
+                {% if entry.classification_2 is defined %}
+                  class="{{ entry.classification_2 }}"
+                {% endif %}
                 readonly
                 name={{ name_2 }}
                 value={{ value_2 }}>
@@ -232,11 +253,6 @@
                 <label for="{{ entry.id_2 }}__accept">Accept</label>
               </div>
             </td>
-            {% else %}
-              <td></td>
-            {% endif %}
-
-            {% if entry.adjudicate is defined %}
             <td>
               <div class="adjudicate">
                 <input type="text"
@@ -247,7 +263,7 @@
               </div>
             </td>
             {% else %}
-              <td></td>
+              <td></td><td></td>
             {% endif %}
         </tr>
 
