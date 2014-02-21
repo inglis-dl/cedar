@@ -59,8 +59,8 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
-    $db_test_entry_alpha_numeric = $this->get_record();
-    $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();    
+    $record = $this->get_record();
+    $db_test_entry = $record->get_test_entry();    
     $db_dictionary = $db_test_entry->get_test()->get_dictionary();
 
     $language = $db_test_entry->get_assignment()->get_participant()->language;
@@ -78,7 +78,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $db_word = $word_class_name::select( $modifier );
     if( !empty( $db_word ) )
     {
-      $db_test_entry_alpha_numeric->word_id = $db_word[0]->id;
+      $record->word_id = $db_word[0]->id;
     }
     else
     {
@@ -87,10 +87,10 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $db_new_word->word = $word_value;
       $db_new_word->language = $language;
       $db_new_word->save();
-      $db_test_entry_alpha_numeric->word_id = static::db()->insert_id();
+      $record->word_id = static::db()->insert_id();
     }
 
-    $db_test_entry_alpha_numeric->save();
+    $record->save();
 
     // consider the test entry completed if 1 or more entries exist and
     // the entry is not deferred
