@@ -22,10 +22,22 @@
         $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
+        $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
           $(this).attr( "disabled", "disabled" );
         } );
       } else {
+      var filled = true;
+      $('input:text').each( function() {
+        filled = filled && $(this).val().length > 0;
+      });
+      if( filled ) {
+        $( "#{{ widget.full }}_Add" ).button( { disabled : false } );
+      }
+      else {
+        $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
+      }
+      
         // set focus to the next empty input field
         $( 'input:text' ).each( function() {
           if( this.value === '' && !$(this).attr( "disabled" ) ) {
@@ -58,6 +70,21 @@
     }
 
     $( function () {
+
+      $( "#{{ widget.full }}_Add" ).button( {
+        text: false,
+        icons: { primary: "ui-icon-plusthick" }
+        } ).click( function() {
+
+         var html =
+          '<tr>'+
+          '<td><input type="text"'+
+          'id="__intrusion"'+
+          'disabled'+
+          'name=""'+
+          '</td></tr>';
+
+      } );
 
       configure_ui();
       
@@ -164,7 +191,6 @@
                {% set kprev = 'true' %}
            {% elseif status == 'word' %}
                {% set kprev = 'true' %}
-               
            {% endif %}
              
            value={{ value }}>
@@ -175,6 +201,15 @@
       </tr>
 
     {% endfor %}
+
+      <tr>
+        <td colspan=4>
+            <button class="{{ widget.full }}__add_entry"
+              style="float:right"
+              disabled
+              id="{{ widget.full }}_Add">Add</button>
+         </td>     
+      </tr>
 
     </tbody>
   </table>

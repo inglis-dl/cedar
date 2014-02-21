@@ -25,12 +25,14 @@
  
       var disable = ( numYes + numNo + numVariant ) != numRadio && !{{ deferred }};
       $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
+      $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
 
       // disable elements based on deferred status
       if( {{ deferred }} ) {
         $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
+        $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
           $(this).attr( "disabled", "disabled" );
         } );
@@ -78,6 +80,37 @@
     }
 
     $( function () {
+
+      $( "#{{ widget.full }}_Add" ).button( {
+        text: false,
+        icons: { primary: "ui-icon-plusthick" }
+        } ).click( function() {
+
+         var html =
+          '<tr><td class="heading">INTRUSION</td>'+
+          '<td></td><td></td><td></td>'+
+          '<td><input type="text"'+
+          'id="__intrusion"'+
+          'disabled'+
+          'name=""'+
+          '</td></tr>';
+
+         $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
+         var last_input = $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( "input:text" );
+         last_input.removeAttr( 'disabled' );
+         last_input.focus();
+
+         // create a new test_entry_ranked_word and reload the page
+         //var args = new Object();
+         //var columns =  new Object();
+         //columns['test_entry_id'] = "{{ parent.id }}";
+         //args.columns = columns;
+
+         //if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
+         //  slot_refresh( {{ slot }} );
+         //
+         //}
+      } );
 
       configure_ui(); 
        
@@ -214,8 +247,8 @@
     <tbody>
     {% for entry in entry_data %}
       <tr>
-        <td class="heading">{{ entry.word }}</td>
         {% if entry.word is defined %}
+          <td class="heading">{{ entry.word }}</td>
           <td><input type="radio" 
                id="{{ entry.id }}__yes"
                name={{ entry.word_id }}
@@ -252,7 +285,8 @@
                {% endif %}
                value={{ entry.word_candidate }}></td>
         {% else %}
-          <td class="heading">intrusion</td>
+          <td class="heading">INTRUSION</td>
+          <td></td><td></td><td></td>
           <td><input type="text"
                id="{{ entry.id }}__intrusion"
                {% if editable == false %}
@@ -266,6 +300,16 @@
         {% endif %}
       </tr>
     {% endfor %}  
+
+      <tr>
+        <td colspan=5>
+            <button class="{{ widget.full }}__add_entry"
+              style="float:right"
+              disabled
+              id="{{ widget.full }}_Add">Add</button>
+         </td>      
+      </tr>
+
     </tbody>   
   </table>
 
