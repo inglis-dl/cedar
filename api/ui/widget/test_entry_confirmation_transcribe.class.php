@@ -22,7 +22,7 @@ class test_entry_confirmation_transcribe extends base_transcribe
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_confirmation', 'transcribe', $args );
+    parent::__construct( 'test_entry_confirmation', $args );
   }
 
   /** 

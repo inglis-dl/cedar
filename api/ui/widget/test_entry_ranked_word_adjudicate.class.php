@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * widget test_entry_ranked_word adjudicate
  */
-class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
+class test_entry_ranked_word_adjudicate extends base_adjudicate
 {
   /** 
    * Constructor.
@@ -22,34 +22,7 @@ class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_ranked_word', 'adjudicate', $args );
-  }
-
-  /**
-   * Processes arguments, preparing them for the operation.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
-   * @access protected
-   */
-  protected function prepare()
-  {
-    parent::prepare();
-
-    // parent must be a test_entry_adjudicate widget
-    if( is_null( $this->parent ) )
-      throw lib::create( 'exception\runtime', 'This class must have a parent', __METHOD__ );
-   
-    $db_test_entry = $this->parent->get_record();
-
-    $db_test = $db_test_entry->get_test();
-    $heading = $db_test->name . ' test adjudicate form';
-
-    //TODO put this somewhere else
-    if( $db_test_entry->deferred )
-      $heading = $heading . ' NOTE: this test is currently deferred';
-
-    $this->set_heading( $heading );
+    parent::__construct( 'test_entry_ranked_word', $args );
   }
 
   /** 

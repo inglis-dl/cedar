@@ -22,7 +22,7 @@ class test_entry_classification_transcribe extends base_transcribe
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_classification', 'transcribe', $args );
+    parent::__construct( 'test_entry_classification', $args );
   }
 
   /** 

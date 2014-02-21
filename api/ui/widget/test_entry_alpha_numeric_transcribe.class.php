@@ -22,7 +22,7 @@ class test_entry_alpha_numeric_transcribe extends base_transcribe
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_alpha_numeric', 'transcribe', $args );
+    parent::__construct( 'test_entry_alpha_numeric', $args );
   }
 
   /** 
