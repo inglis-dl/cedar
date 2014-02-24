@@ -18,13 +18,19 @@
       var numYes = $( ':input[type="radio"][value="yes"]:checked' ).length;
       var numNo = $( ':input[type="radio"][value="no"]:checked' ).length;
       var numVariant = $( ':input[type="radio"][value="variant"]:checked' ).length;
+
       // count number of items with value "yes"
       // count number of items with value "no"
       // count number of items with value "variant"
       // total yes + no + variant == total radio / 3 => enable next button
  
-      var disable = ( numYes + numNo + numVariant ) != numRadio && !{{ deferred }};
+      var disable = ( numYes + numNo + numVariant ) !== numRadio && !{{ deferred }};
       $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
+      if( !disable ) {
+        var numIntrusion = $( ':input[type="text"][id$="intrusion"]' ).length;
+        var numEmptyText = $( ':input[type="text"][id$="intrusion"][value=""]' ).length;
+        disable = numEmptyText > 0 && numIntrusion > 0;
+      }  
       $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
 
       // disable elements based on deferred status
@@ -43,7 +49,7 @@
         // if no radio items are checked yet, disable all text inputs
         $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
             var disable = false;
-            if( numYes == 0 && numNo == 0 && numVariant == 0 ) {
+            if( numYes === 0 && numNo === 0 && numVariant === 0 ) {
               disable = true;
             }
             else {
@@ -80,6 +86,8 @@
     }
 
     $( function () {
+      
+      configure_ui(); 
 
       $( "#{{ widget.full }}_Add" ).button( {
         text: false,
@@ -90,29 +98,19 @@
           '<tr><td class="heading">INTRUSION</td>'+
           '<td></td><td></td><td></td>'+
           '<td><input type="text"'+
-          'id="__intrusion"'+
-          'disabled'+
-          'name=""'+
           '</td></tr>';
 
-         $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
-         var last_input = $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( "input:text" );
-         last_input.removeAttr( 'disabled' );
-         last_input.focus();
+         var args = new Object();
+         var columns =  new Object();
+         columns["test_entry_id"] = "{{ parent.id }}";
+         args.columns = columns;
 
-         // create a new test_entry_ranked_word and reload the page
-         //var args = new Object();
-         //var columns =  new Object();
-         //columns['test_entry_id'] = "{{ parent.id }}";
-         //args.columns = columns;
+         if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
+           slot_refresh( {{ slot }} );
+           $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( "td:last" ).focus();
+         }
+      } ); // end Add button click
 
-         //if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
-         //  slot_refresh( {{ slot }} );
-         //
-         //}
-      } );
-
-      configure_ui(); 
        
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
@@ -124,36 +122,23 @@
         columns["test_entry_id"] = "{{ parent.id }}";
         columns["word_id"] = $(this).attr( "name" );
         columns["selection"] = $(this).val();
-
-        var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
-        var do_text = true;
-        if( $(this).val() == "variant" ) {
-          // disable inputs until the variant is entered
-          $( "#{{ widget.full }}__entry_table" ).find( "input" ).attr( "disabled", "disabled" );
-          $(text_id).removeAttr( "disabled" );
-          $(text_id).focus();
-          do_text = false;
-        } else {
-          $(text_id).attr( "disabled", "disabled" );
-          $(text_id).val( "" );
-        }
-        
-        var candidate = $(text_id).val();
-        columns["word_candidate"] = candidate;
         args.columns = columns;
-
-        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          args.id = "{{ test_id }}";
-          args['language'] = "{{ language }}";
-          args['word_candidate'] = candidate;
-          var classification = ajax_pull( "test", "classify_word", args );
-          if( undefined != classification )
-          {
-            $(text_id).removeClass( "candidate intrusion variant" );
-            $(text_id).addClass( classification );
-          }        
-        } 
-
+        var do_text = true;
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) )
+        {
+          var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
+          $(text_id).removeClass( "candidate intrusion variant" );
+          if( $(this).val() == "variant" ) {
+            // disable inputs until the variant is entered
+            $( "#{{ widget.full }}__entry_table" ).find( "input" ).attr( "disabled", "disabled" );
+            $(text_id).removeAttr( "disabled" );
+            $(text_id).focus();
+            do_text = false;
+          } else {
+            $(text_id).attr( "disabled", "disabled" );
+            $(text_id).val( "" );
+          }
+        }
         configure_ui( do_text ); 
 
       } );// end radio input change
@@ -182,8 +167,8 @@
         
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           args.id = "{{ test_id }}";
-          args['language'] = "{{ language }}";
-          args['word_candidate'] = candidate;
+          args["language"] = "{{ language }}";
+          args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
           {
@@ -193,7 +178,7 @@
            
           $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).each( function() {
             $(this).removeAttr( "disabled" );
-            if( $(this).val() == 'variant' ) {
+            if( $(this).val() === "variant" ) {
               var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
               if( $(text_id).val().length > 0 ) {
                 $(text_id).removeAttr( "disabled" );
@@ -206,20 +191,9 @@
         
       } );// end text input change  
 
-      // loop over and clear all input elements
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          $("#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-            if( this.type == "radio" ) {
-              $(this).removeAttr( "checked" );
-            } else if ( this.type == "text" ) {
-              $(this).val( "" );
-              $(this).attr( "disabled", "disabled" );
-              $(this).removeClass( "candidate intrusion variant" );
-            }
-          } );
-
-        configure_ui();
+          slot_refresh( {{ slot }} );
         }
       } );// end Reset button click
 
@@ -276,7 +250,9 @@
           <td><input type="text"
                id="{{ entry.id }}__candidate"
                name={{ entry.word_id }}
-               class={{ entry.classification }}   
+               {% if entry.classificatioin is defined %}
+                 class={{ entry.classification }}
+               {% endif %}  
                {% if editable == false %}
                  { readonly }
                {% endif %}

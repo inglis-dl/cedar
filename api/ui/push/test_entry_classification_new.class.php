@@ -24,6 +24,14 @@ class test_entry_classification_new extends \cenozo\ui\push\base_new
    */
   public function __construct( $args )
   {
+    if( !array_key_exists( 'rank', $args['columns'] ) || empty( $args['columns']['rank'] ) )
+    {
+      $test_entry_classification_class_name = 
+        lib::get_class_name( 'database\test_entry_classification' );
+      $args['columns']['rank'] = $test_entry_classification_class_name::count() + 1;
+        
+    }
+
     parent::__construct( 'test_entry_classification', $args );
   }
 }

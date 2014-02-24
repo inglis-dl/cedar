@@ -57,11 +57,6 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as 
              $db_test_entry_ranked_word )
     {
-      // if this entry has a word_id, the id refers to that of the ranked word
-      // if the selection is 'variant', then the word_candidate should not be empty
-      // if the selection is null and the word_id is null, and the word_candidate is not empty
-      // this is an intrusion
-
       $selection = is_null( $db_test_entry_ranked_word->selection ) ? '' :
                             $db_test_entry_ranked_word->selection;                            
       $word_candidate = is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :

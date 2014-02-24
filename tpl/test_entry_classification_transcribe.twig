@@ -27,24 +27,14 @@
           $(this).attr( "disabled", "disabled" );
         } );
       } else {
-      var filled = true;
-      $('input:text').each( function() {
-        filled = filled && $(this).val().length > 0;
-      });
-      if( filled ) {
-        $( "#{{ widget.full }}_Add" ).button( { disabled : false } );
-      }
-      else {
-        $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
-      }
-      
-        // set focus to the next empty input field
+        var filled = false;
         $( 'input:text' ).each( function() {
-          if( this.value === '' && !$(this).attr( "disabled" ) ) {
+          filled = filled && this.value.length > 0;
+          // set focus to the next empty input field
+          if( this.value === '' && !$(this).attr( "disabled" ) ) 
             this.focus();
-            return false;
-          }
-        } );  
+        });
+        $( "#{{ widget.full }}_Add" ).button( { disabled : filled } );
       }
     }
 
@@ -63,7 +53,6 @@
       if( undefined != {{ intrusion_dictionary_id }} ) {
         args['intrusion_dictionary_id'] = "{{ intrusion_dictionary_id }}";
       }
-
       args['language'] = "{{ language }}";
       args['words_only'] = 1;
       return ajax_pull( "word", "list", args );
@@ -76,14 +65,27 @@
         icons: { primary: "ui-icon-plusthick" }
         } ).click( function() {
 
-         var html =
-          '<tr>'+
-          '<td><input type="text"'+
-          'id="__intrusion"'+
-          'disabled'+
-          'name=""'+
-          '</td></tr>';
+         var html =          
+          '<td><input type="text"></td>';
 
+          var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
+          var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
+          var numTd = $( "#{{ widget.full }}__entry_table tr:nth-child(" + targetRow + ") td" ).length;
+          if( numTd === maxTd ) {
+            html = "<tr>" + html + "</tr>";
+            $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
+          } else {
+            $( "#{{ widget.full }}__entry_table tr:last" ).prev().append( html );
+          }
+          var args = new Object();
+          var columns =  new Object();
+          columns["test_entry_id"] = "{{ parent.id }}";          
+          columns["rank"] = "";
+          args.columns = columns;
+          if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
+            slot_refresh( {{ slot }} );
+            $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( "td:last" ).focus();
+          }
       } );
 
       configure_ui();
@@ -155,11 +157,22 @@
   <table id="{{ widget.full }}__entry_table">
 
     <tbody>
+
     {% set numcell = 4 %}
     {% set kprev= 'true' %}
-    {% for i in range(0, entry_data|length-1, numcell) %}
+    {% set imax = entry_data|length-1 %}
+    {% if numcell > imax %}
+      {% set numcell = imax %}
+    {% endif %}  
+    
+    {% for i in range(0, imax, numcell) %}
+
       <tr>
+
       {% set kmax = i+numcell-1 %}
+      {% if kmax > imax %}
+        {% set kmax = imax %}
+      {% endif %}  
       {% for k in i..kmax %}
 
         {% set value = '' %}
