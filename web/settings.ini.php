@@ -24,7 +24,7 @@ $SETTINGS['general']['machine_password'] = NULL;
 // the name of the cohort associated with this application
 $SETTINGS['general']['cohort'] = 'default';
 
-// the url of mastodon (set to NULL to disable sabretooth support)
+// the url of sabretooth (set to NULL to disable sabretooth support)
 $SETTINGS['url']['SABRETOOTH'] = NULL;
 
 // the location of cedar internal path
