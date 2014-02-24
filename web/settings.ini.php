@@ -17,12 +17,15 @@ $SETTINGS['general']['version'] = '0.1.2';
 // always leave as false when running as production server
 $SETTINGS['general']['development_mode'] = false;
 
-// Defines the username and password used by cedar when communicating as a machine
+// defines the username and password used by cedar when communicating as a machine
 $SETTINGS['general']['machine_user'] = NULL;
 $SETTINGS['general']['machine_password'] = NULL;
 
 // the name of the cohort associated with this application
 $SETTINGS['general']['cohort'] = 'default';
+
+// the default number of classification test entry inputs
+$SETTINGS['interface']['classification_max_rank'] = 5;
 
 // the url of sabretooth (set to NULL to disable sabretooth support)
 $SETTINGS['url']['SABRETOOTH'] = NULL;

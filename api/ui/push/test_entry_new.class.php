@@ -174,8 +174,10 @@ class test_entry_new extends \cenozo\ui\push\base_new
     }
     else if( $test_type_name == 'classification' )
     {
-      // create a default of 40 to start with
-      for( $rank = 1; $rank < 41; $rank++ )
+      $setting_manager = lib::create( 'business\setting_manager' );
+      $max_rank = $setting_manager->get_setting( 'interface', 'classification_max_rank' );
+
+      for( $rank = 1; $rank <= $max_rank; $rank++ )
       {
         $args = array();
         $args['columns']['test_entry_id'] = $record->id;
