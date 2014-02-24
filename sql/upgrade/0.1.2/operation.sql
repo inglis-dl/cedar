@@ -18,6 +18,9 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, 
 primary, intrusion or variant." );
 
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry_ranked_word", "delete", true, "Deletes an entry for an ranked word test type." );
+
 -- cenozo push
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "self", "temporary_file", false,

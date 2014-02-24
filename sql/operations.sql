@@ -162,7 +162,7 @@ VALUES( "push", "test_entry_ranked_word", "edit", true, "Edits an entry for an r
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_ranked_word", "new", true, "Creates a new entry for an ranked word test type." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
-VALUES( "push", "test_entry_ranked_word", "deletes", true, "Deletes an entry for an ranked word test type." );
+VALUES( "push", "test_entry_ranked_word", "delete", true, "Deletes an entry for an ranked word test type." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_ranked_word", "transcribe", true, "Transcribe an entry for an ranked word test type." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
