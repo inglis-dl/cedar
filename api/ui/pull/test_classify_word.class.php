@@ -41,9 +41,7 @@ class test_classify_word extends \cenozo\ui\pull\base_record
     $language = $this->get_argument( 'language', 'any' );
 
     $data = $record->get_word_classification( $word_candidate, $language );
-    $db_word = $data['word'];
-
-    $this->data = $data['classification'];
+    $this->data = $data['classification'];   
   }
   
   /** 
