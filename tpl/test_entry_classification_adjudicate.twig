@@ -123,7 +123,7 @@
           var candidate = $(this).val().trim().toLowerCase();
           var args = new Object();
           args.id = {{ test_id }};
-          args["language"] = {{ language }};
+          args["language"] = "{{ language }}";
           args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )

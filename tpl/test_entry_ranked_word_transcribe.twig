@@ -168,7 +168,7 @@
         
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           args.id = {{ test_id }};
-          args["language"] = {{ language }};
+          args["language"] = "{{ language }}";
           args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
