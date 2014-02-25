@@ -106,6 +106,8 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     }
     else if( $test_type_name == 'alpha_numeric' )
     {
+      //TODO consider pruning extra entries beyond default number which
+      // is the number of alpha numeric words in a given language
       foreach( $db_test_entry->get_test_entry_alpha_numeric_list() as
         $db_test_entry_alpha_numeric )
       {

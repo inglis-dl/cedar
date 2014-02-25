@@ -30,11 +30,11 @@
         } );
       }
       else {
-        disable = numFilled === numInput ? false : true;
         var last_input = $( 'input:text[value=""]' ).first();
         if( !last_input.attr( "disabled" ) ) {
           last_input.focus();
         }  
+        disable = numFilled === numInput ? false : true;
         $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
       }
     }
@@ -110,6 +110,7 @@
           args.columns = columns;
 
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            $(this).val( candidate );
             $(this).attr( "value", candidate );
             args.id = {{ test_id }};
             args["language"] = "{{ language }}";
@@ -215,7 +216,7 @@
     {% endfor %}
 
       <tr>
-        <td colspan=4>
+        <td colspan={{ numcell }}>
             <button class="{{ widget.full }}__add_entry"
               style="float:right"
               disabled
