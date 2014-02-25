@@ -31,12 +31,12 @@
 
     function get_text_complete() {
       var args = new Object();
-      args['dictionary_id'] = "{{ dictionary_id }}";
-      if( undefined != {{ intrusion_dictionary_id }} ) {
-        args['intrusion_dictionary_id'] = "{{ intrusion_dictionary_id }}";
+      args["dictionary_id"] = "{{ dictionary_id }}";
+      if( undefined != "{{ intrusion_dictionary_id }}" ) {
+        args["intrusion_dictionary_id"] = "{{ intrusion_dictionary_id }}";
       }
-      args['language'] = "{{ language }}";
-      args['words_only'] = 1;  
+      args["language"] = "{{ language }}";
+      args["words_only"] = 1;  
       return ajax_pull( "word", "list", args );
     }
 
@@ -48,18 +48,18 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
-        columns['participant_id']={{ participant_id }};
-        columns['test_id']={{ test_id }};
-        columns['completed']=1;
-        columns['id_1']= {{ id_1 }};
-        columns['id_2']= {{ id_2 }};
+        columns["participant_id"] = {{ participant_id }};
+        columns["test_id"] = {{ test_id }};
+        columns["completed"] = 1;
+        columns["id_1"] = {{ id_1 }};
+        columns["id_2"] = {{ id_2 }};
 
         $( 'input:text[id$="adjudicate"]' ).each( function() {
-          var id = $(this).attr( "id" ).split( "__" )[2];
-          data[id] = { 'word_id' : $(this).attr( "name" ), 'word_candidate' : $(this).val() };
+          var id = $(this).prop( "id" ).split( "__" )[2];
+          data[id] = { 'word_id' : $(this).prop( "name" ), 'word_candidate' : $(this).val() };
         } );
  
-        columns['data'] = data;
+        columns["data"] = data;
         args.columns = columns;
 
         if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
@@ -70,16 +70,16 @@
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
         function() {
-        var entry_id = $(this).attr( "id" ).split( "__" )[0];
-        var target_text_id = '#' + $(this).attr( "name" ) + "__adjudicate";
+        var entry_id = $(this).prop( "id" ).split( "__" )[0];
+        var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
         var source_text_id = '#' + entry_id + "__candidate";
         $( target_text_id ).val( $( source_text_id ).val() );
-        $( target_text_id ).attr( "name", $( source_text_id ).attr( "name" ) );
-        $( target_text_id ).removeAttr( "disabled" );
+        $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
+        $( target_text_id ).removeProp( "disabled" );
 
         configure_ui();
       } ).click( function () {
-        $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+        $( 'input:checkbox[value="all"]' ).removeProp( "checked" );
       } );// end radio input change and click
 
       $( "#{{ widget.full }}__entry_table" ).find( 'div.adjudicate :text' ).autocomplete( {
@@ -88,12 +88,12 @@
          select: function( event, ui ) {
              $(this).val( ui.item.value );
              // TODO see if latest version of jquery has double enter key bug fixed
-             $(this).trigger( 'change' );
+             //$(this).trigger( 'change' );
            }
          } ).change( function() {
 
-        var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
-        var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
+        var id_1 = '#' + $(this).prop( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = '#' + $(this).prop( "id" ).split( "__" )[1] + "__accept";
         var text_id_1 = id_1.replace( "accept", "candidate" );
         var text_id_2 = id_2.replace( "accept", "candidate" );
 
@@ -101,30 +101,30 @@
           error_dialog( "Error", "Blank entry not permitted." );
 
           // refill with the corresponding accepted text entry
-          if( $( id_1 ).attr( "checked" ) ) {
+          if( $( id_1 ).prop( "checked" ) ) {
             $(this).val( $( text_id_1 ).val() );
-            $(this).attr( "name", $( text_id_1 ).attr( "name" ) );
-          } else if ( $( id_2 ).attr("checked") ) {
+            $(this).prop( "name", $( text_id_1 ).prop( "name" ) );
+          } else if ( $( id_2 ).prop("checked") ) {
             $(this).val( $( text_id_2 ).val() );
-            $(this).attr( "name", $( text_id_2 ).attr( "name" ) );
+            $(this).prop( "name", $( text_id_2 ).prop( "name" ) );
           } else {
             // disable this text input and uncheck the accept radio inputs
-            $(this).attr( "disabled", "disabled" );
-            $(this).attr( "name", "candidate" );
-            $( id_1 ).removeAttr( "checked" );
-            $( id_2 ).removeAttr( "checked" );
+            $(this).prop( "disabled", "disabled" );
+            $(this).prop( "name", "candidate" );
+            $( id_1 ).removeProp( "checked" );
+            $( id_2 ).removeProp( "checked" );
           }        
         } else {
           // uncheck the accept radio and checkbox inputs
-          $( id_1 ).removeAttr( "checked" );
-          $( id_2 ).removeAttr( "checked" );
-          $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
-          $(this).attr( "name", "candidate" );
+          $( id_1 ).removeProp( "checked" );
+          $( id_2 ).removeProp( "checked" );
+          $( 'input:checkbox[value="all"]' ).removeProp( "checked" );
+          $(this).prop( "name", "candidate" );
           var candidate = $(this).val().trim().toLowerCase();
           var args = new Object();
-          args.id = "{{ test_id }}";
-          args['language'] = "{{ language }}";
-          args['word_candidate'] = candidate;
+          args.id = {{ test_id }};
+          args["language"] = {{ language }};
+          args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
           {
@@ -137,19 +137,20 @@
       } );// end text input change
 
       $( 'input:checkbox[value="all"]' ).click( function() {
-        $( 'input:checkbox[value="all"]' ).not($(this)).removeAttr( "checked" );
-        $(this).attr( "checked", $(this).attr( "checked" ) );
-        var is_checked = $(this).attr( "checked" );
-        var id = $(this).attr( "id" ).split("__")[3];
+        $( 'input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
+        $(this).prop( "checked", $(this).prop( "checked" ) );
+        var is_checked = $(this).prop( "checked" );
+        var id = $(this).prop( "id" ).split("__")[3];
          var radio_class = "div.radio__accept__" + id + " :radio";
         if( is_checked ){
-         $( radio_class ).attr( "checked", "checked" ).trigger( "change" );
+         $( radio_class ).prop( "checked", "checked" ).trigger( "change" );
         } else {
-         $( radio_class ).removeAttr( "checked" );
+         $( radio_class ).removeProp( "checked" );
          $text_adjudicate = $( 'div.adjudicate :text' ); 
-         $text_adjudicate.attr( "disabled", "disabled" );  
+         $text_adjudicate.prop( "disabled", "disabled" );  
          $text_adjudicate.val( "" );  
-         $text_adjudicate.attr( "name", "candidate" );  
+         $text_adjudicate.attr( "value", "" );  
+         $text_adjudicate.prop( "name", "candidate" );  
         }
 
         configure_ui();

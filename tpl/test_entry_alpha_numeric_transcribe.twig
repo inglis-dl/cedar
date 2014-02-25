@@ -20,16 +20,16 @@
 
       //disable elements based on deferred status
       if( {{ deferred }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
+        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", "disabled" );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
+          $(this).prop( "disabled", "disabled" );
         } );
       } else {
         // set focus to the next empty input field
         $( 'input:text' ).each( function() {
-          if( this.value ==='' && !$(this).attr( "disabled" ) ) {
+          if( this.value === '' && !$(this).prop( "disabled" ) ) {
             this.focus();
             return false;
           }
@@ -44,21 +44,22 @@
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).attr("id").split("__")[0];
-        columns["rank"] = $(this).attr("id").split("__")[1];
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
+        args.id = $(this).prop("id").split("__")[0];
+        columns["rank"] = $(this).prop("id").split("__")[1];
+        columns["test_entry_id"] = {{ parent.id }};
+        columns["word_id"] = $(this).prop( "name" ) == "undefined" ? "" : $(this).prop( "name" );
         columns["word_value"] = $(this).val();
         args.columns = columns;
 
         // refresh with updated information
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
-          $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
+          $( 'input:text[id$="' + next_rank_id + '"]' ).removeProp( "disabled" );
           configure_ui();
         }
         else {
           $(this).val( "" );
+          $(this).attr( "value", "" );
           $(this).focus();
         }
       } );// end text input change
@@ -67,14 +68,14 @@
       // update the db to reflect the changes
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          $("#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
-              $(this).val( "" );
-              $(this).attr("name", "undefined" );
-              var rank = $(this).attr( "id" ).split("__")[1];
-              if( rank == "1" ) {
-                $(this).removeAttr( "disabled" );
+          $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).val( "" ).each( function() {
+              $(this).attr( "value", "" );
+              $(this).prop("name", "undefined" );
+              var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
+              if( rank === 1 ) {
+                $(this).removeProp( "disabled" );
               } else {
-                $(this).attr( "disabled", "disabled" );
+                $(this).prop( "disabled", "disabled" );
               }
           } );
           configure_ui();

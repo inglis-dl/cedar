@@ -14,7 +14,9 @@
   <script type="text/javascript">
   
     function configure_ui() {
-      var disable = $( 'input:text[value!=""]' ).length == 0 && !{{ deferred }};
+      var numFilled = $( 'input:text[value!=""]' ).length;
+      var numInput = $( 'input:text' ).length;
+      var disable = numFilled == 0 && !{{ deferred }};
       $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
 
       // disable elements based on deferred status
@@ -26,15 +28,14 @@
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
           $(this).attr( "disabled", "disabled" );
         } );
-      } else {
-        var filled = false;
-        $( 'input:text' ).each( function() {
-          filled = filled && this.value.length > 0;
-          // set focus to the next empty input field
-          if( this.value === '' && !$(this).attr( "disabled" ) ) 
-            this.focus();
-        });
-        $( "#{{ widget.full }}_Add" ).button( { disabled : filled } );
+      }
+      else {
+        disable = numFilled === numInput ? false : true;
+        var last_input = $( 'input:text[value=""]' ).first();
+        if( !last_input.attr( "disabled" ) ) {
+          last_input.focus();
+        }  
+        $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
       }
     }
 
@@ -49,25 +50,25 @@
 
     function get_text_complete() {
       var args = new Object();
-      args['dictionary_id'] = "{{ dictionary_id }}";
-      if( undefined != {{ intrusion_dictionary_id }} ) {
-        args['intrusion_dictionary_id'] = "{{ intrusion_dictionary_id }}";
+      args["dictionary_id"] = "{{ dictionary_id }}";
+      if( undefined != "{{ intrusion_dictionary_id }}" ) {
+        args["intrusion_dictionary_id"] = "{{ intrusion_dictionary_id }}";
       }
-      args['language'] = "{{ language }}";
-      args['words_only'] = 1;
+      args["language"] = "{{ language }}";
+      args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
 
     $( function () {
+
+      configure_ui();
 
       $( "#{{ widget.full }}_Add" ).button( {
         text: false,
         icons: { primary: "ui-icon-plusthick" }
         } ).click( function() {
 
-         var html =          
-          '<td><input type="text"></td>';
-
+          var html = '<td><input type="text"></td>';
           var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
           var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
           var numTd = $( "#{{ widget.full }}__entry_table tr:nth-child(" + targetRow + ") td" ).length;
@@ -79,7 +80,7 @@
           }
           var args = new Object();
           var columns =  new Object();
-          columns["test_entry_id"] = "{{ parent.id }}";          
+          columns["test_entry_id"] = {{ parent.id }};          
           columns["rank"] = "";
           args.columns = columns;
           if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
@@ -88,8 +89,6 @@
           }
       } );
 
-      configure_ui();
-      
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
          source: get_text_complete(),
          minLength: 1,
@@ -102,26 +101,26 @@
 
           var args = new Object();
           var columns = new Object();
-          args.id = $(this).attr("id").split("__")[0];
-          columns["rank"] = $(this).attr("id").split("__")[1];
-          columns["test_entry_id"] = "{{ parent.id }}";
+          args.id = $(this).prop( "id" ).split( "__" )[0];
+          columns["rank"] = parseInt( $(this).prop( "id" ).split( "__" )[1] );
+          columns["test_entry_id"] = {{ parent.id }};
           columns["word_id"] = "";
           var candidate = $(this).val().trim().toLowerCase();
           columns["word_candidate"] = candidate;
           args.columns = columns;
 
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-            $(this).val( candidate );
-            args.id = "{{ test_id }}";
-            args['language'] = "{{ language }}";
-            args['word_candidate'] = candidate;
+            $(this).attr( "value", candidate );
+            args.id = {{ test_id }};
+            args["language"] = "{{ language }}";
+            args["word_candidate"] = candidate;
             var classification = ajax_pull( "test", "classify_word", args );
             if( undefined != classification )
             {
               $(this).removeClass( "candidate intrusion variant" );
               $(this).addClass( classification );
             }
-            var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
+            var next_rank_id = "__" + ( parseInt( columns["rank"] ) + 1 );
             $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
 
             configure_ui();
@@ -130,14 +129,14 @@
 
       $( "#{{ parent.full }}_Reset" ).click( function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          $("#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
-              $(this).val( "" );
+          $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).val( "" ).each( function() {
+              $(this).attr( "value", "" );
               $(this).removeClass( "candidate intrusion variant" );
-              var rank = parseInt( $(this).attr( "id" ).split("__")[1] );
+              var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
               if( rank === 1 ) {
-                $(this).removeAttr( "disabled" );
+                $(this).removeProp( "disabled" );
               } else {
-                $(this).attr( "disabled", "disabled" );
+                $(this).prop( "disabled", "disabled" );
               }
           } );
 
@@ -205,7 +204,7 @@
            {% elseif status == 'word' %}
                {% set kprev = 'true' %}
            {% endif %}
-             
+           
            value={{ value }}>
         </td>
 

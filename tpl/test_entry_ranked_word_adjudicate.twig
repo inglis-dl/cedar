@@ -35,9 +35,9 @@
 
     function get_text_complete() {
       var args = new Object();
-      args['variant_dictionary_id'] = "{{ variant_dictionary_id }}";
-      args['language'] = "{{ language }}";
-      args['words_only'] = 1;
+      args["variant_dictionary_id"] = "{{ variant_dictionary_id }}";
+      args["language"] = "{{ language }}";
+      args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
 
@@ -57,84 +57,85 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
-        columns['participant_id'] = {{ participant_id }};
-        columns['test_id'] = {{ test_id }};
-        columns['completed'] = 1;
-        columns['id_1'] = {{ id_1 }};
-        columns['id_2'] = {{ id_2 }};
+        columns["participant_id"] = {{ participant_id }};
+        columns["test_id"] = {{ test_id }};
+        columns["completed"] = 1;
+        columns["id_1"] = {{ id_1 }};
+        columns["id_2"] = {{ id_2 }};
 
         $( 'input:radio[name$="adjudicate"]:checked' ).each( function() {
-          var id = $(this).attr( "id" ).split( "__" )[0] + "__" + $(this).val();
-          var word_id = $( 'input:radio[id="' + id + '"]' ).attr( "name" ).split( "__" )[0];
+          var id = $(this).prop( "id" ).split( "__" )[0] + "__" + $(this).val();
+          var word_id = $( 'input:radio[id="' + id + '"]' ).prop( "name" ).split( "__" )[0];
           var candidate = "";
-          if( $(this).val() == 'variant' ) {
-            candidate = $( 'input:text[id="' + $(this).attr( "name" ) + '"]' ).val();
+          if( $(this).val() === "variant" ) {
+            candidate = $( 'input:text[id="' + $(this).prop( "name" ) + '"]' ).val();
           } 
           data[word_id] = { 'selection' : $(this).val(), 'word_candidate' : candidate };
         } );
         
         $( 'input:text[id$="intrusion"]' ).each( function() {
-          var intrusion_id = $(this).attr( "id" ).replace( "__intrusion", "" );
+          var intrusion_id = $(this).prop( "id" ).replace( "__intrusion", "" );
           data[intrusion_id] = { 'selection' : "" , 'word_candidate' : $(this).val() };
         } );
  
-        columns['data'] = data;
+        columns["data"] = data;
         args.columns = columns;
 
         if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
           $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
           $( "#{{ parent.full }}_Next" ).trigger( "click" );
         }
-      } ); 
+      } ); // end Submit button click
 
       // find and handle radio input change events:
       // copy the progenitor to the adjudicate entry
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change( function() {
-        var is_intrusion = $(this).attr( "id" ).indexOf( "intrusion" ) == -1 ? false : true;
-        var entry_id = $(this).attr( "id" ).split( "__" )[0];
+        var is_intrusion = $(this).prop( "id" ).indexOf( "intrusion" ) == -1 ? false : true;
+        var entry_id = $(this).prop( "id" ).split( "__" )[0];
         if( is_intrusion ) {
-          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="intrusion"]' ).attr( "id" );
+          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="intrusion"]' ).prop( "id" );
           var source_text_id = '#' + entry_id + "__intrusion";
           $( target_id ).val( $( source_id ).val() );
         } else {
-          var radio_id = $('input[type="radio"][id^="'+entry_id+'__"]:checked').attr( "id" );
-          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="adjudicate"]' ).attr( "id" );
+          var radio_id = $('input[type="radio"][id^="'+entry_id+'__"]:checked').prop( "id" );
+          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
           if( radio_id.indexOf( "variant" ) != -1 ) {
             var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
             $( target_text_id ).val( $( source_text_id ).val() );
-            $( target_text_id ).removeAttr( "disabled" );
+            $( target_text_id ).removeProp( "disabled" );
           } else {
             $( target_text_id ).val( "" );
-            $( target_text_id ).attr( "disabled", "disabled" );
+            $( target_text_id ).prop( "disabled", "disabled" );
           }
           var source_id = '#' + radio_id;
           var source_value = $( source_id ).val();
           var target_id = '#' + $( 'input[type="radio"][id*="' + 
                                     entry_id + '__"][name$="adjudicate"][value="' +
-                                    source_value + '"]' ).attr( "id" );
-          $( target_id ).attr( "checked", $( source_id ).attr( "checked" ) );  
+                                    source_value + '"]' ).prop( "id" );
+          $( target_id ).prop( "checked", $( source_id ).prop( "checked" ) );  
         }
 
         configure_ui();
       } ).click( function () {
-        $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+        $( 'input:checkbox[value="all"]' ).removeProp( "checked" );
       } );// end radio input change and click
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[name$="adjudicate"]' ).change( function() {
-        var disable = $(this).attr( "id" ).indexOf( "variant" ) != -1 ? false : true; 
-        var target_text_id = '#' +  $(this).attr( "name" );
+        var disable = $(this).prop( "id" ).indexOf( "variant" ) != -1 ? false : true; 
+        var target_text_id = '#' +  $(this).prop( "name" );
         if( disable ) {
-          $( target_text_id ).attr( "disabled", "disabled" );
+          $( target_text_id ).prop( "disabled", "disabled" );
           $( target_text_id ).val( "" );
+          $( target_text_id ).attr( "value", "" );
         } else {
-          $( target_text_id ).removeAttr( "disabled", "disabled" );
+          $( target_text_id ).removeProp( "disabled", "disabled" );
           $( target_text_id ).focus();
         }
         // make sure the corresponding accept radio items are both unchecked
-        var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
-        var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
-        $( id_1 ).removeAttr( "checked" ); 
-        $( id_2 ).removeAttr( "checked" ); 
+        var id_1 = '#' + $(this).prop( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = '#' + $(this).prop( "id" ).split( "__" )[1] + "__accept";
+        $( id_1 ).removeProp( "checked" ); 
+        $( id_2 ).removeProp( "checked" ); 
 
         configure_ui();
       } );// end adjudicate radio input change
@@ -145,7 +146,7 @@
         select: function( event, ui ) {
           $(this).val( ui.item.value );
           // TODO see if latest version of jquery has double enter key bug fixed
-          $(this).trigger( 'change' );
+          //$(this).trigger( 'change' );
           }
         } ).change( function() {
 
@@ -153,10 +154,10 @@
           error_dialog( "Error", "Blank variant entry not permitted." );
 
           // refill with the corresponding accepted text entry
-          var is_intrusion = $(this).attr( "id" ).indexOf( "intrusion" ) != -1 ? true : false;
+          var is_intrusion = $(this).prop( "id" ).indexOf( "intrusion" ) != -1 ? true : false;
 
-          var entry_id_1 =  $(this).attr( "id" ).split( "__" )[0];
-          var entry_id_2 =  $(this).attr( "id" ).split( "__" )[1];
+          var entry_id_1 =  $(this).prop( "id" ).split( "__" )[0];
+          var entry_id_2 =  $(this).prop( "id" ).split( "__" )[1];
 
           var id_1 = '#' + entry_id_1;
           var id_2 = '#' + entry_id_2;
@@ -175,27 +176,27 @@
             text_id_2 = text_id_2 + "__candidate";
           }
 
-          if( $( id_1 ).attr( "checked" ) ) {
+          if( $( id_1 ).prop( "checked" ) ) {
             $(this).val( $( text_id_1 ).val() );
-          } else if ( $( id_2 ).attr( "checked" ) ) {
+          } else if ( $( id_2 ).prop( "checked" ) ) {
             $(this).val( $( text_id_2 ).val() );
           } else {
             // uncheck the accept radio inputs
-            $( id_1 ).removeAttr( "checked" );
-            $( id_2 ).removeAttr( "checked" );
+            $( id_1 ).removeProp( "checked" );
+            $( id_2 ).removeProp( "checked" );
             // disable this text input
-            $(this).attr( "disabled", "disabled" );
+            $(this).prop( "disabled", "disabled" );
             // if not an intrusion, uncheck all the adjudicate radio entries
             if( !is_intrusion ) {
-              $( 'input:radio[name="' + $(this).attr( "id" ) + '"]' ).removeAttr( "checked" );
+              $( 'input:radio[name="' + $(this).prop( "id" ) + '"]' ).removeProp( "checked" );
             }
           }
         } else {
           var candidate = $(this).val().trim().toLowerCase();
           var args = new Object();
-          args.id = "{{ test_id }}";
-          args['language'] = "{{ language }}";
-          args['word_candidate'] = candidate;
+          args.id = {{ test_id }};
+          args["language"] = {{ language }};
+          args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
           {
@@ -208,16 +209,16 @@
       } );// end text input change  
 
       $( 'input:checkbox[value="all"]' ).click( function() {
-        $( 'input:checkbox[value="all"]' ).not($(this)).removeAttr( "checked" );
-        $(this).attr( "checked", $(this).attr( "checked" ) );
-        var is_checked = $(this).attr( "checked" );
-        var id = $(this).attr( "id" ).split("__")[3];
+        $( 'input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
+        $(this).prop( "checked", $(this).prop( "checked" ) );
+        var is_checked = $(this).prop( "checked" );
+        var id = $(this).prop( "id" ).split("__")[3];
         if( is_checked ){
          var radio_class = "div.radio__accept__" + id + " :radio";
-         $( radio_class ).attr( "checked", "checked" ).trigger( "change" );
+         $( radio_class ).prop( "checked", "checked" ).trigger( "change" );
         } else {
-         $( 'div.adjudicate :radio' ).removeAttr( "checked" ).trigger( "change" );  
-         $( 'div.adjudicate :text' ).attr( "disabled", "disabled" );  
+         $( 'div.adjudicate :radio' ).removeProp( "checked" ).trigger( "change" );  
+         $( 'div.adjudicate :text' ).prop( "disabled", "disabled" );  
         }
       } );// end checkbox click
 

@@ -34,13 +34,13 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
-        columns['participant_id']={{ participant_id }};
-        columns['test_id']={{ test_id }};
-        columns['completed']=1;
-        columns['id_1']= {{ id_1 }};
-        columns['id_2']= {{ id_2 }};
+        columns["participant_id"] = {{ participant_id }};
+        columns["test_id"] = {{ test_id }};
+        columns["completed"] = 1;
+        columns["id_1"] = {{ id_1 }};
+        columns["id_2"] = {{ id_2 }};
 
-        data['confirmation'] =
+        data["confirmation"] =
           $( 'input:radio[name="adjudicate"]:checked' ).val() == "yes" ? 1 : 0;
         
         columns['data'] = data;
@@ -54,10 +54,10 @@
 
       $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
         function() {
-        var id = $(this).attr( "id" ).split( "__" )[0];
+        var id = $(this).prop( "id" ).split( "__" )[0];
         var confirmation = $( 'input:radio[id^="' + id + '"]:checked' ).val();
-        $( 'input:radio[name="adjudicate"]' ).removeAttr( "checked" );
-        $( 'input:radio[name="adjudicate"][value="' + confirmation +'"]' ).attr( "checked", "checked" );
+        $( 'input:radio[name="adjudicate"]' ).removeProp( "checked" );
+        $( 'input:radio[name="adjudicate"][value="' + confirmation +'"]' ).prop( "checked", "checked" );
 
         configure_ui();
       } );// end radio input change

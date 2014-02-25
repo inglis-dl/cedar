@@ -35,12 +35,12 @@
 
       // disable elements based on deferred status
       if( {{ deferred }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
+        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", "disabled" );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
+          $(this).prop( "disabled", "disabled" );
         } );
       }
 
@@ -53,16 +53,16 @@
               disable = true;
             }
             else {
-              var is_candidate = $(this).attr( "id" ).split( "__" )[1] == "candidate" ? true : false;
+              var is_candidate = $(this).prop( "id" ).split( "__" )[1] == "candidate" ? true : false;
               if( is_candidate ) {
-                var id = "#" + $(this).attr( "id" ).split( "__" )[0] + "__variant";
-                disable = $( id ).attr( "checked" ) ? false : true;              
+                var id = "#" + $(this).prop( "id" ).split( "__" )[0] + "__variant";
+                disable = $( id ).prop( "checked" ) ? false : true;              
               }
             }
             if( disable ) { 
-              $(this).attr( "disabled", "disabled" );
+              $(this).prop( "disabled", "disabled" );
             } else {
-              $(this).removeAttr( "disabled" );
+              $(this).removeProp( "disabled" );
             }
         } );
       }
@@ -79,9 +79,9 @@
 
     function get_text_complete() {
       var args = new Object();
-      args['variant_dictionary_id'] = "{{ variant_dictionary_id }}";
-      args['language'] = "{{ language }}";
-      args['words_only'] = 1;
+      args["variant_dictionary_id"] = "{{ variant_dictionary_id }}";
+      args["language"] = "{{ language }}";
+      args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
 
@@ -102,7 +102,7 @@
 
          var args = new Object();
          var columns =  new Object();
-         columns["test_entry_id"] = "{{ parent.id }}";
+         columns["test_entry_id"] = {{ parent.id }};
          args.columns = columns;
 
          if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
@@ -118,25 +118,26 @@
       $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).attr( "id" ).split("__")[0];
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" );
+        args.id = $(this).prop( "id" ).split("__")[0];
+        columns["test_entry_id"] = {{ parent.id }};
+        columns["word_id"] = $(this).prop( "name" );
         columns["selection"] = $(this).val();
         args.columns = columns;
         var do_text = true;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) )
         {
-          var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
+          var text_id = "input:text[name=" + $(this).prop( "name" ) + "]";
           $(text_id).removeClass( "candidate intrusion variant" );
-          if( $(this).val() == "variant" ) {
+          if( $(this).val() === "variant" ) {
             // disable inputs until the variant is entered
-            $( "#{{ widget.full }}__entry_table" ).find( "input" ).attr( "disabled", "disabled" );
-            $(text_id).removeAttr( "disabled" );
+            $( "#{{ widget.full }}__entry_table" ).find( "input" ).prop( "disabled", "disabled" );
+            $(text_id).removeProp( "disabled" );
             $(text_id).focus();
             do_text = false;
           } else {
-            $(text_id).attr( "disabled", "disabled" );
+            $(text_id).prop( "disabled", "disabled" );
             $(text_id).val( "" );
+            $(text_id).attr( "value", "" );
           }
         }
         configure_ui( do_text ); 
@@ -155,19 +156,19 @@
 
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).attr( "id" ).split("__")[0];
-        var is_intrusion = $(this).attr( "id" ).split("__")[1] === "intrusion" ? true : false;
+        args.id = $(this).prop( "id" ).split("__")[0];
+        var is_intrusion = $(this).prop( "id" ).split("__")[1] === "intrusion" ? true : false;
         var candidate = $(this).val().trim().toLowerCase();
         if( candidate.length == 0 ) return false;
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" );
+        columns["test_entry_id"] = {{ parent.id }};
+        columns["word_id"] = $(this).prop( "name" );
         columns["word_candidate"] = candidate;
         columns["selection"] = is_intrusion ? "" : "variant";
         args.columns = columns;
         
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          args.id = "{{ test_id }}";
-          args["language"] = "{{ language }}";
+          args.id = {{ test_id }};
+          args["language"] = {{ language }};
           args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
@@ -177,11 +178,11 @@
           }
            
           $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).each( function() {
-            $(this).removeAttr( "disabled" );
+            $(this).removeProp( "disabled" );
             if( $(this).val() === "variant" ) {
-              var text_id = "input:text[name=" + $(this).attr( "name" ) + "]";
+              var text_id = "input:text[name=" + $(this).prop( "name" ) + "]";
               if( $(text_id).val().length > 0 ) {
-                $(text_id).removeAttr( "disabled" );
+                $(text_id).removeProp( "disabled" );
               }  
             }
           } );

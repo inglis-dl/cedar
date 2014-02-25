@@ -19,11 +19,11 @@
 
       //disable elements based on deferred status
       if( {{ deferred }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
+        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", "disabled" );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
+          $(this).prop( "disabled", "disabled" );
         } );
       }
     }
@@ -36,8 +36,8 @@
       $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).attr( "id" ).split( "__" )[0];
-        columns["test_entry_id"] = "{{ parent.id }}";
+        args.id = $(this).prop( "id" ).split( "__" )[0];
+        columns["test_entry_id"] = {{ parent.id }};
         columns["confirmation"] = ( $(this).val() === "yes" ) ? 1 : 0;
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -47,9 +47,8 @@
 
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          input = $( "#{{ widget.full }}__entry_table" ).find( "input" );
-          input.each( function() {
-            $(this).removeAttr( "checked" );
+          $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
+            $(this).removeProp( "checked" );
           } );
           configure_ui();
         }

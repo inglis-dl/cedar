@@ -44,15 +44,15 @@
 
               args = new Object();
               args.note = note;
-              args.category = "{{ widget.subject }}";
+              args.category = {{ widget.subject }};
               args.category_id = {{ id }};
               
               if( ajax_push( "note", "new", args ) ) {
                 $dialog.dialog( "close" );
 
-                $("#{{ widget.full }}_Next").button( { disabled : false } );
-                $("#{{ widget.full }}_Reset").button( { disabled : true } );
-                $("#{{ widget.full }}_Defer").button( { disabled : true } );
+                $( "#{{ widget.full }}_Next" ).button( { disabled : false } );
+                $( "#{{ widget.full }}_Reset" ).button( { disabled : true } );
+                $( "#{{ widget.full }}_Defer" ).button( { disabled : true } );
 
                 slot_refresh( {{ slot }} );
               }
