@@ -14,8 +14,9 @@
   <script type="text/javascript">
 
     function configure_ui() {
-       
-      var disable = $( ':input[type="text"][value!=""]' ).length == 0 && !{{ deferred }};
+      var numFilled = $( 'input:text[value!=""]' ).length;       
+      var disable = numFilled == 0 && !{{ deferred }};
+      console.log( [numFilled, disable, !{{ deferred }}] );
       $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
 
       //disable elements based on deferred status
@@ -28,12 +29,10 @@
         } );
       } else {
         // set focus to the next empty input field
-        $( 'input:text' ).each( function() {
-          if( this.value === '' && !$(this).prop( "disabled" ) ) {
-            this.focus();
-            return false;
-          }
-        } );
+        var text_input = $( 'input:text[value=""]' ).first();
+        if( !text_input.prop( "disabled" ) ) {
+            text_input.focus();
+        }
       }      
     }
 
@@ -47,14 +46,17 @@
         args.id = $(this).prop("id").split("__")[0];
         columns["rank"] = $(this).prop("id").split("__")[1];
         columns["test_entry_id"] = {{ parent.id }};
-        columns["word_id"] = $(this).prop( "name" ) == "undefined" ? "" : $(this).prop( "name" );
-        columns["word_value"] = $(this).val();
+        columns["word_id"] = $(this).prop( "name" ) === "undefined" ? "" : $(this).prop( "name" );
+        var candidate = $(this).val().trim().toLowerCase();
+        columns["word_value"] = candidate;
         args.columns = columns;
 
         // refresh with updated information
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
           $( 'input:text[id$="' + next_rank_id + '"]' ).removeProp( "disabled" );
+          $(this).val( candidate );
+          $(this).attr( "value", candidate );
           configure_ui();
         }
         else {
