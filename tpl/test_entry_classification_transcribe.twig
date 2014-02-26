@@ -14,28 +14,29 @@
   <script type="text/javascript">
   
     function configure_ui() {
-      var numFilled = $( 'input:text[value!=""]' ).length;
-      var numInput = $( 'input:text' ).length;
-      var disable = numFilled == 0 && !{{ deferred }};
-      $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
 
       // disable elements based on deferred status
       if( {{ deferred }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).attr( "disabled", "disabled" );
+        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", "disabled" );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
         $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
+          $(this).prop( "disabled", true );
         } );
       }
       else {
+        var numFilled = $( 'input:text[value!=""]' ).length;
+        var numInput = $( 'input:text' ).length;
+        var disable = numFilled == 0;
+        $( "#{{ parent.full }}_Next" ).prop( "disabled", disable );
+        disable = numFilled !== numInput;
+        $( "#{{ widget.full }}_Add" ).prop( "disabled", disable );
+        
         var last_input = $( 'input:text[value=""]' ).first();
-        if( !last_input.attr( "disabled" ) ) {
+        if( !last_input.prop( "disabled" ) ) {
           last_input.focus();
         }  
-        disable = numFilled === numInput ? false : true;
-        $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
       }
     }
 
@@ -59,36 +60,7 @@
       return ajax_pull( "word", "list", args );
     }
 
-    $( function () {
-
-      configure_ui();
-
-      $( "#{{ widget.full }}_Add" ).button( {
-        text: false,
-        icons: { primary: "ui-icon-plusthick" }
-        } ).click( function() {
-
-          var html = '<td><input type="text"></td>';
-          var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
-          var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
-          var numTd = $( "#{{ widget.full }}__entry_table tr:nth-child(" + targetRow + ") td" ).length;
-          if( numTd === maxTd ) {
-            html = "<tr>" + html + "</tr>";
-            $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
-          } else {
-            $( "#{{ widget.full }}__entry_table tr:last" ).prev().append( html );
-          }
-          var args = new Object();
-          var columns =  new Object();
-          columns["test_entry_id"] = {{ parent.id }};          
-          columns["rank"] = "";
-          args.columns = columns;
-          if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
-            slot_refresh( {{ slot }} );
-            $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( "td:last" ).focus();
-          }
-      } );
-
+    function update_input_list() {
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
          source: get_text_complete(),
          minLength: 1,
@@ -118,7 +90,7 @@
             var classification = ajax_pull( "test", "classify_word", args );
             if( undefined != classification )
             {
-              $(this).removeClass( "candidate intrusion variant" );
+              $(this).removeClass( "candidate intrusion variant primary" );
               $(this).addClass( classification );
             }
             var next_rank_id = "__" + ( parseInt( columns["rank"] ) + 1 );
@@ -127,21 +99,51 @@
             configure_ui();
           }
       } );// end text input change
+    }
+
+    $( function () {
+
+      update_input_list();
+      configure_ui();
+
+      $( "#{{ widget.full }}_Add" ).button( {
+        text: false,
+        icons: { primary: "ui-icon-plusthick" }
+        } ).click( function() {
+
+          var html = '<td class="added"><input type="text"></td>';
+          var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
+          var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
+          var numTd = $( "#{{ widget.full }}__entry_table tr:nth-child(" + targetRow + ") td" ).length;
+          if( numTd === maxTd ) {
+            html = '<tr class="added">' + html + "</tr>";
+            $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
+          } else {
+            $( "#{{ widget.full }}__entry_table tr:last" ).prev().append( html );
+          }
+          var args = new Object();
+          var columns =  new Object();
+          columns["test_entry_id"] = {{ parent.id }};          
+          columns["rank"] = "";
+          args.columns = columns;
+          if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
+            update_input_list();
+            $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
+            $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( 'input:last' ).focus();
+          }                          
+        } ); // end Add button click
 
       $( "#{{ parent.full }}_Reset" ).click( function() {
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).val( "" ).each( function() {
-              $(this).attr( "value", "" );
-              $(this).removeClass( "candidate intrusion variant" );
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
+          $( 'input:text' ).each( function() {
+              $(this).removeClass( "candidate intrusion variant primary" );
               var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-              if( rank === 1 ) {
-                $(this).removeProp( "disabled" );
-              } else {
-                $(this).prop( "disabled", "disabled" );
-              }
+              $(this).val( "" );
+              $(this).attr( "value", "" );
+              $(this).prop( "disabled", rank !== 1 );
           } );
-
-          configure_ui();
+          $( "td.added" ).remove();
+          $( "tr.added" ).remove();
         }
       } );// end Reset button click
 

@@ -14,10 +14,6 @@
   <script type="text/javascript">
 
     function configure_ui() {
-      var numFilled = $( 'input:text[value!=""]' ).length;
-      var numInput = $( 'input:text' ).length;
-      var disable = numFilled == 0 && !{{ deferred }};
-      $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
 
       //disable elements based on deferred status
       if( {{ deferred }} ) {
@@ -29,6 +25,11 @@
           $(this).prop( "disabled", "disabled" );
         } );
       } else {
+        var numFilled = $( 'input:text[value!=""]' ).length;
+        var numInput = $( 'input:text' ).length;
+        var disable = numFilled == 0 && !{{ deferred }};
+        $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
+
         var last_input = $( 'input:text[value=""]' ).first();
         if( !last_input.prop( "disabled" ) ) {
             last_input.focus();
@@ -38,36 +39,7 @@
       }      
     }
 
-    $( function () {
-
-      configure_ui();
-
-      $( "#{{ widget.full }}_Add" ).button( {
-        text: false,
-        icons: { primary: "ui-icon-plusthick" }
-        } ).click( function() {
-
-          var html = '<td><input type="text" style="width:20%"></td>';
-          var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
-          var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
-          var numTd = $( "#{{ widget.full }}__entry_table tr:nth-child(" + targetRow + ") td" ).length;
-          if( numTd === maxTd ) {
-            html = "<tr>" + html + "</tr>";
-            $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
-          } else {
-            $( "#{{ widget.full }}__entry_table tr:last" ).prev().append( html );
-          }
-          var args = new Object();
-          var columns =  new Object();
-          columns["test_entry_id"] = {{ parent.id }};          
-          columns["rank"] = "";
-          args.columns = columns;
-          if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
-            slot_refresh( {{ slot }} );
-            $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( "td:last" ).focus();
-          }
-      } );
-
+    function update_input_list() {
       $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
         var args = new Object();
         var columns = new Object();
@@ -93,22 +65,55 @@
           $(this).focus();
         }
       } );// end text input change
+    }
+
+    $( function () {
+
+      update_input_list();
+      configure_ui();
+
+      $( "#{{ widget.full }}_Add" ).button( {
+        text: false,
+        icons: { primary: "ui-icon-plusthick" }
+        } ).click( function() {
+
+          var html = '<td class="added"><input type="text" style="width:20%"></td>';
+          var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
+          var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
+          var numTd = $( "#{{ widget.full }}__entry_table tr:nth-child(" + targetRow + ") td" ).length;
+          if( numTd === maxTd ) {
+            html = '<tr class="added">' + html + "</tr>";
+            $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
+          } else {
+            $( "#{{ widget.full }}__entry_table tr:last" ).prev().append( html );
+          }
+          var args = new Object();
+          var columns =  new Object();
+          columns["test_entry_id"] = {{ parent.id }};          
+          columns["rank"] = "";
+          args.columns = columns;
+          if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
+            update_input_list();
+            $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
+            $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( "input:last" ).focus();
+          }
+      } );
+
 
       // loop over all input elements and clear them
       // update the db to reflect the changes
       $( "#{{ parent.full }}_Reset" ).click(function() {
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).val( "" ).each( function() {
+          $( "input:text" ).each( function() {
+              $(this).val( "" );
               $(this).attr( "value", "" );
-              $(this).prop("name", "undefined" );
+              $(this).prop( "name", "undefined" );
               var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-              if( rank === 1 ) {
-                $(this).removeProp( "disabled" );
-              } else {
-                $(this).prop( "disabled", "disabled" );
-              }
+              $(this).prop( "disabled", rank !== 1 );
+            }
           } );
-          configure_ui();
+          $( "td.added" ).remove();
+          $( "tr.added" ).remove();
         }
       } );// end Reset button click
 

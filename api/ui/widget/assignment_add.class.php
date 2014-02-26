@@ -167,6 +167,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
       $pass = $setting_manager->get_setting( 'general', 'machine_password' );
       $auth['httpauth'] = $user.':'.$pass;
     }  
+
     $assignment_mod_base = lib::create( 'database\modifier' );
     $assignment_mod_base->where( 'user_id', '=', $db_user->id );
     $max_try = 10;
@@ -190,7 +191,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
           {
             if( $db_cohort->name == 'tracking' && $has_tracking )
             {
-              // are there  any valid recordings?
+              // are there any valid recordings?
               $args['participant_id'] = $db_participant->id;
               $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
 

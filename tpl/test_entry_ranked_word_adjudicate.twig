@@ -93,12 +93,12 @@
         var is_intrusion = $(this).prop( "id" ).indexOf( "intrusion" ) == -1 ? false : true;
         var entry_id = $(this).prop( "id" ).split( "__" )[0];
         if( is_intrusion ) {
-          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="intrusion"]' ).prop( "id" );
+          var target_text_id = '#' + $( 'input:text[id*="'+ entry_id + '__"][id$="intrusion"]' ).prop( "id" );
           var source_text_id = '#' + entry_id + "__intrusion";
           $( target_id ).val( $( source_id ).val() );
         } else {
-          var radio_id = $('input[type="radio"][id^="'+entry_id+'__"]:checked').prop( "id" );
-          var target_text_id = '#' + $( 'input[type="text"][id*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
+          var radio_id = $('input:radio[id^="'+entry_id+'__"]:checked').prop( "id" );
+          var target_text_id = '#' + $( 'input:text[id*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
           if( radio_id.indexOf( "variant" ) != -1 ) {
             var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
             $( target_text_id ).val( $( source_text_id ).val() );
@@ -109,7 +109,7 @@
           }
           var source_id = '#' + radio_id;
           var source_value = $( source_id ).val();
-          var target_id = '#' + $( 'input[type="radio"][id*="' + 
+          var target_id = '#' + $( 'input:radio[id*="' + 
                                     entry_id + '__"][name$="adjudicate"][value="' +
                                     source_value + '"]' ).prop( "id" );
           $( target_id ).prop( "checked", $( source_id ).prop( "checked" ) );  
