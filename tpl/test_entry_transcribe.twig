@@ -44,7 +44,7 @@
 
               args = new Object();
               args.note = note;
-              args.category = {{ widget.subject }};
+              args.category = "{{ widget.subject }}";
               args.category_id = {{ id }};
               
               if( ajax_push( "note", "new", args ) ) {
