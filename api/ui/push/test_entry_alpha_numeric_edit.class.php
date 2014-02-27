@@ -27,6 +27,32 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     parent::__construct( 'test_entry_alpha_numeric', $args );
   }
 
+  /** 
+   * Processes arguments, preparing them for the operation.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected function prepare()
+  {
+    $id = $this->get_argument( 'id' );
+    if( is_null( $id ) || $id == '' )
+    {   
+      // skip the parent method
+      $grand_parent = get_parent_class( get_parent_class( get_class() ) );
+      $grand_parent::prepare(); 
+      $columns = $this->get_argument( 'columns' );    
+      $class_name = lib::get_class_name( 'database\test_entry_alpha_numeric' );
+      $this->set_record( $class_name::get_unique_record( 
+        array( 'test_entry_id', 'rank' ),  
+        array( $columns['test_entry_id'], $columns['rank'] ) ) );
+    }     
+    else
+    {   
+      parent::prepare();
+    }   
+  }
+
   /**
    * Validate the operation.
    * 
@@ -42,7 +68,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
 
     if( array_key_exists( 'word_value', $columns ) ) 
     {   
-      if( !preg_match( '/^\d$/', $columns['word_value'] ) &&
+      if( !preg_match( '/^[1-9][0-9]*$/', $columns['word_value'] ) &&
           !preg_match( '/^\pL$/', $columns['word_value'] ) )
         throw lib::create( 'exception\notice',
           'The word must be a letter or a number.', __METHOD__ );     
@@ -87,7 +113,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $db_new_word->word = $word_value;
       $db_new_word->language = $language;
       $db_new_word->save();
-      $record->word_id = static::db()->insert_id();
+      $record->word_id = $word_class_name::db()->insert_id();
     }
 
     $record->save();

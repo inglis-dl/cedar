@@ -28,6 +28,32 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
   }
 
   /** 
+   * Processes arguments, preparing them for the operation.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected function prepare()
+  {
+    $id = $this->get_argument( 'id' );
+    if( is_null( $id ) || $id == '' )
+    {
+      // skip the parent method
+      $grand_parent = get_parent_class( get_parent_class( get_class() ) );
+      $grand_parent::prepare(); 
+      $columns = $this->get_argument( 'columns' );      
+      $class_name = lib::get_class_name( 'database\test_entry_classification' );
+      $this->set_record( $class_name::get_unique_record( 
+        array( 'test_entry_id', 'rank' ), 
+        array( $columns['test_entry_id'], $columns['rank'] ) ) );
+    }      
+    else
+    {
+      parent::prepare();
+    }
+  }
+
+  /** 
    * This method executes the operation's purpose.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -103,13 +129,14 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
               $db_test->name . ' test.', __METHOD__ );
           }   
           else
-          {   
+          { 
+            $word_class_name = lib::get_class_name( 'database\word' );
             $db_new_word = lib::create( 'database\word' );
             $db_new_word->dictionary_id = $db_dictionary->id;
             $db_new_word->word = $record->word_candidate;
             $db_new_word->language = $language;
             $db_new_word->save();
-            $record->word_id = static::db()->insert_id();
+            $record->word_id = $word_class_name::db()->insert_id();
             $record->word_candidate = NULL;
             $record->save();
           }
