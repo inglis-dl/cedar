@@ -22,7 +22,7 @@
         slot_load( {{ slot }}, 
           "{{ widget.subject }}", "{{ widget.name }}", 
           { id : {{ prev_test_entry_id }} } );
-      } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } ); // end Prev click
+      } ).button( { disabled : rank == 1 } ); // end Prev click
 
       $( "#{{ widget.full }}_Next" ).click( function() {
         {% if 0 == next_test_entry_id %}

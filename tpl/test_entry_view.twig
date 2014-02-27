@@ -26,7 +26,7 @@
         <button {% if action.description|default(false) %}
                   title="{{ action.description }}"
                 {% endif %}
-                id="{{ widget.full }}__{{ action_id }}">{{ action.heading }}</button>
+                id="{{ widget.full }}__{{ action_id }}">"{{ action.heading }}"</button>
       {% endfor %}
     </td>
   </tr>

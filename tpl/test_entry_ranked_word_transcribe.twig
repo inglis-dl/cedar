@@ -13,55 +13,59 @@
 
   <script type="text/javascript">
 
+    var table_selector = "#{{ widget.full }}__entry_table";
+
     function configure_ui( do_text ) {
 
       if( {{ deferred }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", "disabled" );
+        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", true );
         $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
-        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).prop( "disabled", "disabled" );
+        $( table_selector + " input" ).each( function() {
+          $(this).prop( "disabled", true );
         } );
       } else {
-        var numRadio = $( 'input:radio' ).length / 3;
-        var numYes = $( 'input:radio[value="yes"]:checked' ).length;
-        var numNo = $( 'input:radio[value="no"]:checked' ).length;
-        var numVariant = $( 'input:radio[value="variant"]:checked' ).length;
+        var numRadio = $( table_selector + ' input:radio' ).length / 3;
+        var numYes = $( table_selector + ' input:radio[value="yes"]:checked' ).length;
+        var numNo = $( table_selector + ' input:radio[value="no"]:checked' ).length;
+        var numVariant = $( table_selector + ' input:radio[value="variant"]:checked' ).length;
 
         // count number of items with value "yes"
         // count number of items with value "no"
         // count number of items with value "variant"
         // total yes + no + variant == total radio / 3 => enable next button
-   
-        var disable = ( numYes + numNo + numVariant ) !== numRadio;
+        var disable = ( numYes + numNo + numVariant ) != numRadio;
         $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
+
+        // disable the Reset button if there is nothing to reset
+        $( "#{{ parent.full }}_Reset" ).button( 
+          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant } );
         
-        if( !disable ) {
-          var numEmptyText = $( 'input:text[id$="intrusion"][value=""]' ).length;
-          disable = numEmptyText > 0;
-        }  
-        $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
+        // disable the Add button if the ranked word entries are incomplete
+        if( disable ) {
+          $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
+        } else {
+          // enable the Add button if all intrusion text entries are filled
+          var numIntrusion = $( table_selector + ' input:text[id$="intrusion"][value=""]' ).length;
+          $( "#{{ widget.full }}_Add" ).button( { disabled : numIntrusion > 0 } );
+        }
 
         do_text = (typeof do_text == 'undefined') ? true : do_text;
         if( do_text ) {
-          // if no radio items are checked yet, disable all text inputs
-          $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
+          // if no radio items are checked, disable all text inputs
+          $( table_selector + " input:text" ).each( function() {
               var disable = false;
-              if( numYes === 0 && numNo === 0 && numVariant === 0 ) {
+              if( 0 == numYes && 0 == numNo && 0 == numVariant ) {
                 disable = true;
               }
               else {
                 if( $(this).prop( "id" ).split( "__" )[1] === "candidate" ) {
                   var id = "#" + $(this).prop( "id" ).split( "__" )[0] + "__variant";
-                  disable = $( id ).prop( "checked" ) ? false : true;              
+                  disable = !$( id ).prop( "checked" );              
                 }
               }
-              if( disable ) { 
-                $(this).prop( "disabled", "disabled" );
-              } else {
-                $(this).removeProp( "disabled" );
-              }
+              $(this).prop( "disabled", disable );
           } );
         }
       }
@@ -78,14 +82,14 @@
 
     function get_text_complete() {
       var args = new Object();
-      args["variant_dictionary_id"] = "{{ variant_dictionary_id }}";
+      args["variant_dictionary_id"] = {{ variant_dictionary_id }};
       args["language"] = "{{ language }}";
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
 
     function update_input_list() {
-      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).autocomplete( {
+      $( table_selector + " input:text" ).autocomplete( {
         source: get_text_complete(),
         minLength: 1,
         select: function( event, ui ) {
@@ -93,12 +97,13 @@
           // TODO see if latest version of jquery has double enter key bug fixed
           //$(this).trigger( 'change' );
           }
-        } ).change( function() {
+        } )
+      .change( function() {
 
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split("__")[0];
-        var is_intrusion = $(this).prop( "id" ).split("__")[1] === "intrusion" ? true : false;
+        var is_intrusion = $(this).prop( "id" ).split("__")[1] === "intrusion";
         var candidate = $(this).val().trim().toLowerCase();
         if( candidate.length == 0 ) return false;
         columns["test_entry_id"] = {{ parent.id }};
@@ -107,9 +112,13 @@
         columns["selection"] = is_intrusion ? "" : "variant";
         args.columns = columns;
         
+        // push edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          // update past and present value
           $(this).val( candidate );
           $(this).attr( "value", candidate );
+
+          // get the classification of the word for coloring
           args.id = {{ test_id }};
           args["language"] = "{{ language }}";
           args["word_candidate"] = candidate;
@@ -118,14 +127,15 @@
           {
              $(this).removeClass( "candidate intrusion variant" );
              $(this).addClass( classification );
-          }
-           
-          $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).each( function() {
-            $(this).removeProp( "disabled" );
+          }           
+          
+          // re-enable all radio and variant text inputs
+          $( table_selector + " input:radio" ).each( function() {
+            $(this).prop( "disabled", false );
             if( $(this).val() === "variant" ) {
-              var text_id = "input:text[name=" + $(this).prop( "name" ) + "]";
+              var text_id = table_selector + " input:text[name=" + $(this).prop( "name" ) + "]";
               if( $(text_id).val().length > 0 ) {
-                $(text_id).removeProp( "disabled" );
+                $(text_id).prop( "disabled", false );
               }  
             }
           } );
@@ -143,21 +153,22 @@
       $( "#{{ widget.full }}_Add" ).button( {
         text: false,
         icons: { primary: "ui-icon-plusthick" }
-        } ).click( function() {
-         var args = new Object();
-         var columns =  new Object();
-         columns["test_entry_id"] = {{ parent.id }};
-         args.columns = columns;
-         if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
-           slot_refresh( {{ slot }} );           
-         }
+        } )
+      .click( function() {
+        var args = new Object();
+        var columns =  new Object();
+        columns["test_entry_id"] = {{ parent.id }};
+        args.columns = columns;
+        if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
+          slot_refresh( {{ slot }} );      
+        }
       } ); // end Add button click
 
        
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
       // which radio button was selected
-      $( "#{{ widget.full }}__entry_table" ).find( "input:radio" ).change( function() {
+      $( table_selector + " input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split("__")[0];
@@ -168,34 +179,40 @@
         var do_text = true;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) )
         {
-          var text_id = "input:text[name=" + $(this).prop( "name" ) + "]";
+          var text_id = table_selector + " input:text[name=" + $(this).prop( "name" ) + "]";
           $(text_id).removeClass( "candidate intrusion variant" );
           if( $(this).val() === "variant" ) {
             // disable inputs until the variant is entered
-            $( "#{{ widget.full }}__entry_table" ).find( "input" ).prop( "disabled", "disabled" );
-            $(text_id).removeProp( "disabled" );
+            $( table_selector + " input" ).prop( "disabled", true );
+            $(text_id).prop( "disabled", false );
             $(text_id).focus();
             do_text = false;
           } else {
-            $(text_id).prop( "disabled", "disabled" );
+            $(text_id).prop( "disabled", true );
             $(text_id).val( "" );
+            // update the value to present state
             $(text_id).attr( "value", "" );
           }
         }
-        configure_ui( do_text ); 
 
+        configure_ui( do_text );
       } );// end radio input change
 
       $( "#{{ parent.full }}_Reset" ).click( function() {
+        // push reset
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          $( 'input:text' ).each( function() {
-           $(this).removeClass( "candidate intrusion variant" );
-           $(this).val( "" );
-           $(this).attr( "value", "" );
-           $(this).prop( "disabled", true );
-          } ); 
-          $( 'tr.intrusion' ).remove();
-          $( 'input:radio' ).each( function() {
+          // clear all text entries
+          $( table_selector + ' input:text' ).each( function() {
+            $(this).removeClass( "candidate intrusion variant" );
+            $(this).val( "" );
+            // update the value to present state
+            $(this).attr( "value", "" );
+            $(this).prop( "disabled", true );
+          } );
+          // remove table rows added for intrusions
+          $( table_selector + ' tr.intrusion' ).remove();
+          // clear all radio inputs
+          $( table_selector + ' input:radio' ).each( function() {
             $(this).prop( "checked", false );
           } );
 
@@ -232,7 +249,7 @@
           <td class="heading">{{ entry.word }}</td>
           <td><input type="radio" 
                id="{{ entry.id }}__yes"
-               name={{ entry.word_id }}
+               name="{{ entry.word_id }}"
                value="yes"
                {% if editable == false %}
                  { readonly }
@@ -248,7 +265,7 @@
                {{ entry.selection == 'no' ? "checked" : "" }}></td>
           <td><input type="radio"
                id="{{ entry.id }}__variant"
-               name={{ entry.word_id }} 
+               name="{{ entry.word_id }}"
                value="variant"
                {% if editable == false %}
                  { readonly }
@@ -256,17 +273,17 @@
                {{ entry.selection == 'variant' ? "checked" : "" }}></td>
           <td><input type="text"
                id="{{ entry.id }}__candidate"
-               name={{ entry.word_id }}
+               name="{{ entry.word_id }}"
                {% if entry.classificatioin is defined %}
-                 class={{ entry.classification }}
+                 class="{{ entry.classification }}"
                {% endif %}  
                {% if editable == false %}
                  { readonly }
                {% endif %}
                {% if entry.classification is defined %}
-                 class={{ entry.classification }}
+                 class="{{ entry.classification }}"
                {% endif %}
-               value={{ entry.word_candidate }}></td>
+               value="{{ entry.word_candidate }}"></td>
         </tr>       
         {% else %}
         <tr class="intrusion">
@@ -278,16 +295,16 @@
                  { readonly }
                {% endif %}
                {% if entry.classification is defined %}
-                 class={{ entry.classification }}
+                 class="{{ entry.classification }}"
                {% endif %}
                name=""
-               value={{ entry.word_candidate }}></td>
+               value="{{ entry.word_candidate }}"></td>
          </tr>      
         {% endif %}
     {% endfor %}  
 
       <tr>
-        <td colspan=5>
+        <td colspan=5 class="button">
             <button class="{{ widget.full }}__add_entry"
               style="float:right"
               disabled

@@ -12,6 +12,8 @@
   {{ parent() }}
 
   <script type="text/javascript">
+
+    var table_selector = "#{{ widget.full }}__entry_table";
   
     function configure_ui() {
       // disable elements based on deferred status
@@ -20,7 +22,7 @@
         $( "#{{ parent.full }}_Defer" ).button( { "disabled": true } );
         $( "#{{ parent.full }}_Reset" ).button( { "disabled": true } );
         $( "#{{ widget.full }}_Add" ).button( { "disabled": true } );
-        $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).each( function() {
+        $( table_selector + " input:text" ).each( function() {
           $(this).prop( "disabled", true );
         } );
       } else {
@@ -30,7 +32,7 @@
         var numInput = 0;
         var lastEmpty = null;
 
-        $( 'input:text' ).each( function() {
+        $( table_selector + " input:text" ).each( function() {
           if( 0 < $(this).val().length ) {
             numFilled++;
           } else {
@@ -39,21 +41,21 @@
           numInput++;
         } );
 
-        console.log( [ numFilled, numInput, lastEmpty ] );
-
         // only enable the next button when there is at least one entry filled
-        $( "#{{ parent.full }}_Next" ).prop( "disabled", 0 == numFilled );
+        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled } );
+
+        // disable the Reset button if there is nothing to reset
+        $( "#{{ parent.full }}_Reset" ).button( { disabled : 0 == numFilled } );
 
         // only enable the add button when all inputs are filled
-        $( "#{{ widget.full }}_Add" ).button( { "disabled": numFilled != numInput } );
+        $( "#{{ widget.full }}_Add" ).button( { disabled : numFilled != numInput } );
         
-        if( null !== lastEmpty ) lastEmpty.focus();
+        if( null !== lastEmpty && numFilled != numInput ) lastEmpty.focus();
       }
     }
 
     // overrides the default autocomplete filter function to search only from the beginning
     // of the string
-/*
     $.ui.autocomplete.filter = function ( array, term ) {
       var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
       return $.grep( array, function ( value ) {
@@ -63,20 +65,19 @@
 
     function get_text_complete() {
       var args = new Object();
-      args["dictionary_id"] = "{{ dictionary_id }}";
+      args["dictionary_id"] = {{ dictionary_id }};
       if( undefined != "{{ intrusion_dictionary_id }}" ) {
-        args["intrusion_dictionary_id"] = "{{ intrusion_dictionary_id }}";
+        args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       }
       args["language"] = "{{ language }}";
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
-*/
 
     function update_input_list() {
-      $input_list = $( "#{{ widget.full }}__entry_table" ).find( "input:text" );
 
-/*
+      $input_list = $( table_selector + " input:text" );
+
       // set up the autocomplete on all text inputs
       $input_list.autocomplete( {
         source: get_text_complete(),
@@ -86,15 +87,19 @@
           // TODO see if latest version of jquery has double enter key bug fixed
           //$(this).trigger( 'change' );
         }
-      } );
-*/
+      } );// end autocomplete
 
       // callback for when text inputs are changed
       $input_list.change( function() {
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split( "__" )[0];
-        columns["rank"] = parseInt( $(this).prop( "id" ).split( "__" )[1] );
+        // test if this is from an Added text input
+        // if it is, the subject's edit class will use the uniqueness of
+        // test_entry_id and rank to find the record to edit
+        if( 0 == args.id ) args.id = '';
+        var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
+        columns["rank"] = rank;
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = "";
         var candidate = $(this).val().trim().toLowerCase();
@@ -105,11 +110,14 @@
         columns["word_candidate"] = candidate;
         args.columns = columns;
 
+        //push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           // we've trimmed and lower-cased the candidate, so update the UI
           $(this).val( candidate );
+          // update the value to present state
+          $(this).attr( "value", candidate );
 
-          // now determine what type of word this is
+          // determine what type of word this is
           args.id = {{ test_id }};
           args["language"] = "{{ language }}";
           args["word_candidate"] = candidate;
@@ -119,14 +127,22 @@
             $(this).addClass( classification );
           }
 
-          // now enable the next input
-          var next_rank_id = "__" + ( columns["rank"] + 1 );
-          $( 'input:text[id$="' + next_rank_id + '"]' ).prop( "disabled", false );
+          // enable the next empty input
+          var next_rank_id = "__" + ( rank + 1 );
+          $( table_selector + ' input:text[id$="' + 
+            next_rank_id + '"]' ).prop( "disabled", false );
 
           configure_ui();
+        } else {
+          alert( "Entry was not accepted, try again." );
+          $(this).val( "" );
+          $(this).attr( $(this).val() );
+          $(this).focus();
         }
+
       } );// end text input change
-    }
+
+    }// end function update_input_list
 
     $( function () {
 
@@ -138,43 +154,52 @@
         icons: { primary: "ui-icon-plusthick" }
         } )
       .click( function() {
-        var html = '<td class="added"><input type="text"></td>';
-        var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
-        var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
-        var numTd = $( "#{{ widget.full }}__entry_table tr:nth-child(" + targetRow + ") td" ).length;
+        // add a text input to the end of the table one row before the
+        // one containing the Add button
+        $td_selector = $( table_selector + " td" ).not( '.button' );
+        var rank = $td_selector.length + 1;
+        var html = '<td class="added"><input type="text" id="0__' + rank + '"></td>';
+        // the number of entries in a typical row
+        var maxTd = $( table_selector + " tr:first td" ).length;
+
+        // the number of entries in the target row
+        var targetRow = $( table_selector + " tr" ).length - 1;
+        var numTd = $( table_selector + " tr:nth-child(" + targetRow + ") td" ).length;
+
+        // add a new table row if required
         if( numTd === maxTd ) {
           html = '<tr class="added">' + html + "</tr>";
-          $( "#{{ widget.full }}__entry_table tr:last" ).before( html );
+          $( table_selector + " tr:last" ).before( html );
         } else {
-          $( "#{{ widget.full }}__entry_table tr:last" ).prev().append( html );
+          $( table_selector + " tr:last" ).prev().append( html );
         }
+
+        // create a new classification test entry
         var args = new Object();
         var columns =  new Object();
         columns["test_entry_id"] = {{ parent.id }};          
-        //TODO fix this rank bug ... needs to be set!!!
-        columns["rank"] = "";
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
           update_input_list();
-          $( "#{{ widget.full }}_Add" ).button( { "disabled": true } );
-          $( "#{{ widget.full }}__entry_table tr:last" ).prev().find( 'input:last' ).focus();
+          configure_ui();
         }                          
-      } ); // end Add button click
+      } );// end Add button click
 
       $( "#{{ parent.full }}_Reset" ).click( function() {
+        // push reset
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          $( 'input:text' ).each( function() {
+          // remove any cells and rows created with the Add button
+          $( table_selector + " td.added" ).remove();
+          $( table_selector + " tr.added" ).remove();
+          // clear all text fields and set focus to the first
+          $( table_selector + " input:text" ).each( function() {
             $(this).removeClass( "candidate intrusion variant primary" );
-            var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-
-            // note that the present state of the value is set here
-            // and attr( "value" ) will retain the original value
             $(this).val( "" );
-
-            $(this).prop( "disabled", rank !== 1 );
+            // update the value to present state
+            $(this).attr( "value", "" );
+            var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
+            $(this).prop( "disabled", rank != 1 );
           } );
-          $( "td.added" ).remove();
-          $( "tr.added" ).remove();
 
           configure_ui();
         }
@@ -250,11 +275,11 @@
     {% endfor %}
 
       <tr>
-        <td colspan="{{ numcell }}">
-            <button class="{{ widget.full }}__add_entry"
-              style="float:right"
-              id="{{ widget.full }}_Add">Add</button>
-         </td>     
+        <td colspan="{{ numcell }}" class="button">
+          <button class="{{ widget.full }}__add_entry"
+            style="float:right"
+            id="{{ widget.full }}_Add">Add</button>
+        </td>     
       </tr>
 
     </tbody>

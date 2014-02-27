@@ -35,10 +35,7 @@
             error_dialog( "Error", "You cannot leave a blank note." );
           } else {
             var args = new Object();
-            args.columns = { 
-              deferred : 1
-              };
-
+            args.columns = { deferred : 1 };
             args.id = {{ id }};
             if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
 
@@ -58,7 +55,7 @@
               }
             }
           }
-        };  
+        };
         buttons.Cancel = function() { $dialog.dialog( "close" ); };
 
         var html = "A note is required indicating the reason for deferral.";
@@ -82,7 +79,7 @@
         slot_load( {{ slot }}, 
           "{{ widget.subject }}", "{{ widget.name }}", 
           { id : {{ prev_test_entry_id}} } );
-      } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } ); // end Prev click
+      } ).button( { disabled : {{ rank }} == 1 } ); // end Prev click
 
       $( "#{{ widget.full }}_Next" ).click( function() {
         {% if 0 == next_test_entry_id %}
@@ -90,7 +87,7 @@
         {% else %}  
           slot_load( {{ slot }}, 
             "{{ widget.subject }}", "{{ widget.name }}", 
-            { id : {{ next_test_entry_id}} } );
+            { id : {{ next_test_entry_id }} } );
         {% endif %}  
       } ); // end Next click
 
@@ -125,7 +122,7 @@
         {% endfor %}
       </table>
     {% endif %}
-    <input type="checkbox" 
+    <input type="checkbox"
       {% if editable == false %}
         { readonly }  
       {% endif %}
