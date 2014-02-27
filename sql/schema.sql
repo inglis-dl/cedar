@@ -526,6 +526,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_classification` (
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_word_id` (`word_id` ASC),
+  UNIQUE INDEX `uq_test_entry_id_rank` (`test_entry_id` ASC, `rank` ASC),
   CONSTRAINT `fk_test_entry_classification_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
@@ -554,6 +555,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_alpha_numeric` (
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_word_id` (`word_id` ASC),
+  UNIQUE INDEX `uq_test_entry_id_rank` (`test_entry_id` ASC, `rank` ASC),
   CONSTRAINT `fk_test_entry_alpha_numeric_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
