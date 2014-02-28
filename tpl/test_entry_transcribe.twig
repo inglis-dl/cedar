@@ -31,7 +31,7 @@
         var buttons = new Object;
         buttons.Ok = function() {
           var note = $("#{{ widget.full }}__note").val();
-          if( note.length == 0 ) {
+          if( 0 == note.length ) {
             error_dialog( "Error", "You cannot leave a blank note." );
           } else {
             var args = new Object();

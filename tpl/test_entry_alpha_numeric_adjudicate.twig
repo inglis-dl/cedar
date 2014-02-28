@@ -31,7 +31,7 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
-        columns["participant_id"] = "{{ participant_id }}";
+        columns["participant_id"] = {{ participant_id }};
         columns["test_id"] = {{ test_id }};
         columns["completed"] = 1;
         columns["id_1"] = {{ id_1 }};
@@ -55,8 +55,8 @@
         var entry_id = $(this).prop( "id" ).split( "__" )[0];
         var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
         var source_text_id = '#' + entry_id + "__candidate";
-        $( target_text_id ).val( $( source_text_id ).val() );
-        $( target_text_id ).attr( "value", $( source_text_id ).val() );
+        var source_value = $( source_text_id ).val();
+        $( target_text_id ).val( source_value );
         $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
         $( target_text_id ).removeProp( "disabled" );
 
@@ -74,7 +74,7 @@
         var text_id_1 = id_1.replace( "accept", "candidate" );
         var text_id_2 = id_2.replace( "accept", "candidate" );
 
-        if( $(this).val().length == 0 ) {
+        if( 0 == $(this).val().length ) {
 
           alert( "Blank entry not permitted." );
 
@@ -84,7 +84,6 @@
             $(this).prop( "name", $( text_id_1 ).prop( "name" ) );
           } else if ( $( id_2 ).prop( "checked" ) ) {
             $(this).val( $( text_id_2 ).val() );
-            $(this).attr( "value", $(this).val() );
             $(this).prop( "name", $( text_id_2 ).prop( "name" ) );
           } else {
             // disable this text input and uncheck the accept radio inputs

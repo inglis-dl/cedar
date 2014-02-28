@@ -27,7 +27,7 @@
         } );
       } else {
         // only enable the next button when there is at least one entry filled
-        var disable = $( table_selector + ' input[type="radio"]:checked' ).length == 0;
+        var disable = 0 == $( table_selector + ' input[type="radio"]:checked' ).length;
         $("#{{ parent.full }}_Next").button( { disabled : disable } );
 
         // disable the Reset button if there is nothing to reset

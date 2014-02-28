@@ -107,7 +107,6 @@
             $( table_selector + ' input:text[id*="'+ entry_id + '__"][id$="intrusion"]' ).prop( "id" );
           var source_text_id = '#' + entry_id + "__intrusion";
           $( target_id ).val( $( source_id ).val() );
-          $( target_id ).attr( "value", $( source_id ).val() );
         } else {
           var radio_id = 
             $( table_selector + ' input:radio[id^="' + entry_id + '__"]:checked').prop( "id" );
@@ -116,7 +115,6 @@
           if( radio_id.indexOf( "variant" ) != -1 ) {
             var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
             $( target_text_id ).val( $( source_text_id ).val() );
-            $( target_text_id ).attr( "value", $( source_text_id ).val() );
             $( target_text_id ).prop( "disabled", false );
           } else {
             $( target_text_id ).val( "" );
@@ -170,7 +168,7 @@
         } )
       .change( function() {
 
-        if( $(this).val().length == 0 ) {
+        if( 0 == $(this).val().length ) {
 
           alert( "Blank entry not permitted." );
 
@@ -228,7 +226,7 @@
             $(this).addClass( classification );
           }
           $(this).val( candidate );
-          $(this).attr( "value", $(this).val() ); 
+          $(this).attr( "value", candidate );
         }
 
         configure_ui();

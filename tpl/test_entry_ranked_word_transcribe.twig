@@ -48,7 +48,7 @@
         } else {
           // enable the Add button if all intrusion text entries are filled
           var numIntrusion = $( table_selector + ' input:text[id$="intrusion"][value=""]' ).length;
-          $( "#{{ widget.full }}_Add" ).button( { disabled : numIntrusion > 0 } );
+          $( "#{{ widget.full }}_Add" ).button( { disabled : 0 < numIntrusion } );
         }
 
         do_text = (typeof do_text == 'undefined') ? true : do_text;
@@ -134,7 +134,7 @@
             $(this).prop( "disabled", false );
             if( $(this).val() === "variant" ) {
               var text_id = table_selector + " input:text[name=" + $(this).prop( "name" ) + "]";
-              if( $(text_id).val().length > 0 ) {
+              if( 0 < $(text_id).val().length ) {
                 $(text_id).prop( "disabled", false );
               }  
             }

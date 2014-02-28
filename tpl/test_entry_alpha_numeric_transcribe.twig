@@ -27,25 +27,35 @@
           $(this).prop( "disabled", true );
         } );
       } else {
-        var numFilled = $( table_selector + ' input:text[value!=""]' ).length;
-        var numInput = $( table_selector + ' input:text' ).length;
+        // count the number of inputs, how many have text in them and which is the last
+        // non-disabled entry
+        var numFilled = 0;
+        var numInput = 0;
+        var lastEmpty = null;
 
-        // enable the Next button if one text entry is filled
-        $( "#{{ parent.full }}_Next" ).button( { disabled : numFilled == 0 } );
+        $( table_selector + " input:text" ).each( function() {
+          if( 0 < $(this).val().length ) {
+            numFilled++;
+          } else {
+            if( !$(this).prop( "disabled" ) ) lastEmpty = $(this);
+          }            
+          numInput++;
+        } );
+
+        // only enable the next button when there is at least one entry filled
+        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled } );
 
         // disable the Reset button if there is nothing to reset
         $( "#{{ parent.full }}_Reset" ).button( { disabled : 0 == numFilled } );
 
-        // set focus to the last empty text entry
-        if( numFilled != numInput ) {
-          var last_input = $( table_selector + ' input:text[value=""]' ).first();
-          if( !last_input.prop( "disabled" ) ) {
-            last_input.focus();
-          }
-        }
-        
-        // enable the Add text entry field button if all entries are filled
+        // only enable the add button when all inputs are filled
         $( "#{{ widget.full }}_Add" ).button( { disabled : numFilled != numInput } );
+        
+        if( null !== lastEmpty && numFilled != numInput ) {
+          lastEmpty.focus();
+        } else {
+          $( table_selector + " input:text" ).last().blur();
+        }
       }      
     }
 
@@ -88,7 +98,7 @@
           alert( "Entry was not accepted, try again." );
           // clear the text entry and re-focus
           $(this).val( "" );
-          $(this).attr( $(this).val() );
+          $(this).attr( "value", "" );
           $(this).focus();
         }
       } );// end text input change
@@ -146,10 +156,10 @@
           // clear all text fields and set focus to the first
           $( table_selector + " input:text" ).each( function() {
             $(this).val( "" );
-            $(this).attr( $(this).val() );
+            $(this).attr( "value", "" );
             $(this).prop( "name", "undefined" );
             var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-            $(this).prop( "disabled", rank != 1 );
+            $(this).prop( "disabled", 1 != rank );
           } );
 
           configure_ui();

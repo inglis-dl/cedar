@@ -17,7 +17,7 @@
     
     function configure_ui() {
       var disable = 
-        $( table_selector + ' input:radio[value="accept"]:checked' ).length == 0;
+        0 == $( table_selector + ' input:radio[value="accept"]:checked' ).length;
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );        
     }
 

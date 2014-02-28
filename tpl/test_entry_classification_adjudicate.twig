@@ -77,7 +77,9 @@
           var entry_id = $(this).prop( "id" ).split( "__" )[0];
           var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
           var source_text_id = '#' + entry_id + "__candidate";
-          $( target_text_id ).val( $( source_text_id ).val() );
+          var source_value = $( source_text_id ).val();
+          $( target_text_id ).val( source_value );
+          }
           $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
           $( target_text_id ).prop( "disabled", false );
 
@@ -99,13 +101,14 @@
         }
       } )
       .change( function() {
-
+        // note that there is no ajax_push call to edit an entry:
+        // a new entry is created when the submit button is clicked
         var id_1 = '#' + $(this).prop( "id" ).split( "__" )[0] + "__accept";
         var id_2 = '#' + $(this).prop( "id" ).split( "__" )[1] + "__accept";
         var text_id_1 = id_1.replace( "accept", "candidate" );
         var text_id_2 = id_2.replace( "accept", "candidate" );
 
-        if( $(this).val().length == 0 ) {
+        if( 0 == $(this).val().length ) {
 
           alert( "Blank entry not permitted." );
 

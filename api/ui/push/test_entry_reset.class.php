@@ -106,13 +106,30 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     }
     else if( $test_type_name == 'alpha_numeric' )
     {
-      //TODO consider pruning extra entries beyond default number which
-      // is the number of alpha numeric words in a given language
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'language', '=', $language );
+      $max_rank = $db_test->get_dictionary()->get_word_count( $modifier );
+      $rank = 1;
+      $intrusion_list = array();
       foreach( $db_test_entry->get_test_entry_alpha_numeric_list() as
         $db_test_entry_alpha_numeric )
       {
-        $db_test_entry_alpha_numeric->word_id = NULL;
-        $db_test_entry_alpha_numeric->save(); 
+        if( $rank++ <= $max_rank )
+        {
+          $db_test_entry_alpha_numeric->word_id = NULL;
+          $db_test_entry_alpha_numeric->save();
+        }
+        else
+        {
+          $intrusion_list[] = $db_test_entry_alpha_numeric;
+        }
+      }  
+      foreach( $intrusion_list as $db_test_entry_alpha_numeric )
+      {
+        $args = array();
+        $args['id'] = $db_test_entry_alpha_numeric->id;
+        $operation = lib::create( 'ui\push\test_entry_alpha_numeric_delete', $args );
+        $operation->process();
       }
     }
     else

@@ -132,7 +132,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       $args['participant_id'] = $db_participant->id;
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
       $recording_data = array();
-      if( $recording_list->success == 1 && count( $recording_list->data ) > 0 ) 
+      if( 1 == $recording_list->success && 0 < count( $recording_list->data ) ) 
       {   
         foreach( $recording_list->data as $data )
         {   
@@ -171,10 +171,10 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $db_next_test_entry = $record->get_next();
 
     $this->set_variable( 'prev_test_entry_id', 
-      is_null($db_prev_test_entry) ? 0 : $db_prev_test_entry->id );
+      is_null( $db_prev_test_entry ) ? 0 : $db_prev_test_entry->id );
 
     $this->set_variable( 'next_test_entry_id', 
-      is_null($db_next_test_entry) ? 0 : $db_next_test_entry->id );
+      is_null( $db_next_test_entry ) ? 0 : $db_next_test_entry->id );
 
     try 
     {   
