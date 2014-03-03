@@ -96,10 +96,6 @@
         } )
       .change( function() {
 
-        var args = new Object();
-        var columns = new Object();
-        args.id = $(this).prop( "id" ).split("__")[0];
-        var is_intrusion = $(this).prop( "id" ).split("__")[1] === "intrusion";
         var candidate = $(this).val().trim().toLowerCase();
         $(this).val( candidate );
         $(this).attr( "value", candidate );
@@ -107,6 +103,10 @@
           configure_ui();
           return false;
         }  
+        var args = new Object();
+        var columns = new Object();
+        args.id = $(this).prop( "id" ).split("__")[0];
+        var is_intrusion = $(this).prop( "id" ).split("__")[1] === "intrusion";
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = $(this).prop( "name" );
         columns["word_candidate"] = candidate;
