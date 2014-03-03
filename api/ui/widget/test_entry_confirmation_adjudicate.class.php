@@ -41,7 +41,7 @@ class test_entry_confirmation_adjudicate extends base_adjudicate
 
     if( $test_type_name != 'confirmation' )
       throw lib::create( 'exception\runtime',
-              'Widget requires test type to be ranked word, not ' . 
+              'Widget requires test type to be confirmation, not ' . 
               $test_type_name, __METHOD__ );
     
     $instruction = "Was the participant able to ";
