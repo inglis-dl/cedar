@@ -68,7 +68,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
              __METHOD__ );
          }    
       }
-      else if( is_null( $record->selection ) )
+      else if( '' === $record->selection )
       {
         if( $classification == 'primary' ||
             $classification == 'variant' )
@@ -78,7 +78,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             $classification . ' words and cannot be entered as an intrusion.',
             __METHOD__ );
         }
-        else if( $classfication == 'candidate' )
+        else if( $classification == 'candidate' )
         {
           //get the test's intrusion dictionary and add it as an intrusion
           $db_dictionary = $db_test->get_intrusion_dictionary();
@@ -99,22 +99,27 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
           }
         }           
       }
-    }
+    } 
 
+    $test_entry_ranked_word_class_name = lib::get_class_name( 'database\test_entry_ranked_word' );
     $base_mod = lib::create( 'database\modifier' );
     $base_mod->where( 'test_entry_id', '=', $db_test_entry->id );
 
     $modifier = clone $base_mod;
-    $modifier->where( 'selection', '=', '' );
-    $test_entry_ranked_word_class_name = lib::get_class_name( 'database\test_entry_ranked_word' ); 
-    $num_empty_selected = $test_entry_ranked_word_class_name::count( $modifier );
-
+    $modifier->where( 'selection', '=', 'yes' );
+    $num_yes = $test_entry_ranked_word_class_name::count( $modifier );
+    $modifier = clone $base_mod;
+    $modifier->where( 'selection', '=', 'no' );
+    $num_no = $test_entry_ranked_word_class_name::count( $modifier );
     $modifier = clone $base_mod;
     $modifier->where( 'selection', '=', 'variant' );
-    $modifier->where( 'word_candidate', '=', '' );
-    $num_empty_variant = $test_entry_ranked_word_class_name::count( $modifier );
+    $modifier->where( 'word_candidate', '!=', '' );
+    $num_variant = $test_entry_ranked_word_class_name::count( $modifier );
+
+    $num_selection = $db_test->get_ranked_word_set_count();
    
-    $completed = 0 == $num_empty_selected && 0 == $num_empty_variant ? 1 : 0;
+    $completed = ( $num_yes + $num_no + $num_variant ) == $num_selection ? 1 : 0;
+
     $db_test_entry->update_status_fields( $completed );
   }
 }

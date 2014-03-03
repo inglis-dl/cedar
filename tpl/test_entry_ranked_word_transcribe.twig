@@ -30,26 +30,22 @@
         var numYes = $( table_selector + ' input:radio[value="yes"]:checked' ).length;
         var numNo = $( table_selector + ' input:radio[value="no"]:checked' ).length;
         var numVariant = $( table_selector + ' input:radio[value="variant"]:checked' ).length;
+        var numEmptyIntrusion = $( table_selector + ' input:text[id$="intrusion"][value=""]' ).length;
 
         // count number of items with value "yes"
         // count number of items with value "no"
         // count number of items with value "variant"
         // total yes + no + variant == total radio / 3 => enable next button
-        var disable = ( numYes + numNo + numVariant ) != numRadio;
+
+        // disable the Next and Add buttons if the ranked word entries are incomplete
+        // or if there are empty intrusion fields
+        var disable = ( numYes + numNo + numVariant ) != numRadio || 0 < numEmptyIntrusion;
         $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
+        $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
 
         // disable the Reset button if there is nothing to reset
         $( "#{{ parent.full }}_Reset" ).button( 
           { disabled : 0 == numYes && 0 == numNo && 0 == numVariant } );
-        
-        // disable the Add button if the ranked word entries are incomplete
-        if( disable ) {
-          $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
-        } else {
-          // enable the Add button if all intrusion text entries are filled
-          var numIntrusion = $( table_selector + ' input:text[id$="intrusion"][value=""]' ).length;
-          $( "#{{ widget.full }}_Add" ).button( { disabled : 0 < numIntrusion } );
-        }
 
         do_text = (typeof do_text == 'undefined') ? true : do_text;
         if( do_text ) {
@@ -105,7 +101,12 @@
         args.id = $(this).prop( "id" ).split("__")[0];
         var is_intrusion = $(this).prop( "id" ).split("__")[1] === "intrusion";
         var candidate = $(this).val().trim().toLowerCase();
-        if( candidate.length == 0 ) return false;
+        $(this).val( candidate );
+        $(this).attr( "value", candidate );
+        if( 0 == candidate.length ) { 
+          configure_ui();
+          return false;
+        }  
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = $(this).prop( "name" );
         columns["word_candidate"] = candidate;
@@ -114,9 +115,6 @@
         
         // push edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          // update past and present value
-          $(this).val( candidate );
-          $(this).attr( "value", candidate );
 
           // get the classification of the word for coloring
           args.id = {{ test_id }};
@@ -175,6 +173,9 @@
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = $(this).prop( "name" );
         columns["selection"] = $(this).val();
+        if( columns["selection"] !== "variant" ) {
+          columns["word_candidate"] = "";
+        }
         args.columns = columns;
         var do_text = true;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) )
