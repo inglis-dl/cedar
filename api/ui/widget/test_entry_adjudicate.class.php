@@ -168,8 +168,8 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
 
     // find the ids of the prev and next test_entrys
-    $db_prev_test_entry = $record->get_previous();
-    $db_next_test_entry = $record->get_next();
+    $db_prev_test_entry = $record->get_previous( true );
+    $db_next_test_entry = $record->get_next( true );
 
     $this->set_variable( 'prev_test_entry_id', 
       is_null( $db_prev_test_entry ) ? 0 : $db_prev_test_entry->id );

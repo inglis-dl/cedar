@@ -19,9 +19,13 @@
       } ); // end Quit click
 
       $( "#{{ widget.full }}_Prev" ).click( function() {
-        slot_load( {{ slot }}, 
-          "{{ widget.subject }}", "{{ widget.name }}", 
-          { id : {{ prev_test_entry_id }} } );
+        {% if 0 == prev_test_entry_id %}
+          slot_load( {{ slot }}, "assignment", "list" );
+        {% else %}  
+          slot_load( {{ slot }}, 
+            "{{ widget.subject }}", "{{ widget.name }}", 
+            { id : {{ prev_test_entry_id }} } );
+        {% endif %}
       } ).button( { disabled : 1 == {{ rank }} } ); // end Prev click
 
       $( "#{{ widget.full }}_Next" ).click( function() {
