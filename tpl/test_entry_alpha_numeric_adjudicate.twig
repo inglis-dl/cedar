@@ -109,7 +109,7 @@
         $(this).prop( "checked", $(this).prop( "checked" ) );
         if( $(this).prop( "checked" ) ) {
           var id = $(this).prop( "id" ).split("__")[3];
-          $radio_selector = table_selector + " div.radio__accept__" + id + " :radio";
+          $radio_selector = $( table_selector + " div.radio__accept__" + id + " :radio" );
           $radio_selector.prop( "checked", true ).trigger( "change" );
         } else {
           $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
