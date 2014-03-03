@@ -49,11 +49,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_adjudicate
-    $this->test_entry_widget = lib::create( 
+    $this->test_entry_adjudicate_widget = lib::create( 
       'ui\widget\test_entry_' . $db_test->get_test_type()->name . '_adjudicate', 
         $this->arguments );
 
-    $this->test_entry_widget->set_parent( $this );
+    $this->test_entry_adjudicate_widget->set_parent( $this );
 
     $modifier = NULL;
     if( $db_participant->get_cohort()->name == 'tracking' )
@@ -162,7 +162,8 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'user_2', $db_adjudicate_assignment->get_user()->name );
 
-    $this->set_variable( 'audio_fault', $record->audio_fault || $this->adjudicate_entry->audio_fault );
+    $this->set_variable( 'audio_fault', 
+      $record->audio_fault || $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
 
@@ -178,15 +179,16 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     try 
     {   
-      $this->test_entry_widget->process();
-      $this->set_variable( 'test_entry_args', $this->test_entry_widget->get_variables() );
+      $this->test_entry_adjudicate_widget->process();
+      $this->set_variable( 'test_entry_args', 
+        $this->test_entry_adjudicate_widget->get_variables() );
     }   
     catch( \cenozo\exception\permission $e ) {}
   }
 
   /**
    * Get the adjudicate test entry sibling.
-   * @var test_entry_widget
+   * @var test_entry_adjudicate_widget
    * @access protected
    */
   public function get_adjudicate_entry() 
@@ -196,14 +198,14 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
   
   /**
    * The test entry widget.
-   * @var test_entry_widget
+   * @var test_entry_adjudicate_widget
    * @access protected
    */
-  protected $test_entry_widget = NULL;
+  protected $test_entry_adjudicate_widget = NULL;
 
   /**
    * The adjudicate test entry sibling.
-   * @var test_entry_widget
+   * @var test_entry_adjudicate_widget
    * @access protected
    */
   protected $adjudicate_entry = NULL;
