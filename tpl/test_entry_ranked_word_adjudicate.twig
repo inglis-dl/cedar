@@ -100,7 +100,7 @@
       // find and handle radio input change events:
       // copy the progenitor to the adjudicate entry
       $( table_selector + ' input:radio[value="accept"]' ).change( function() {
-        var is_intrusion = $(this).prop( "id" ).indexOf( "intrusion" ) == -1 ? false : true;
+        var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
         var entry_id = $(this).prop( "id" ).split( "__" )[0];
         if( is_intrusion ) {
           var target_text_id = '#' + 
@@ -112,7 +112,7 @@
             $( table_selector + ' input:radio[id^="' + entry_id + '__"]:checked').prop( "id" );
           var target_text_id = '#' + 
             $( table_selector + ' input:text[id*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
-          if( radio_id.indexOf( "variant" ) != -1 ) {
+          if( -1 != radio_id.indexOf( "variant" ) ) {
             var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
             $( target_text_id ).val( $( source_text_id ).val() );
             $( target_text_id ).prop( "disabled", false );
@@ -137,7 +137,7 @@
       } );// end radio input change and click
 
       $( table_selector + ' input:radio[name$="adjudicate"]' ).change( function() {
-        var disable = $(this).prop( "id" ).indexOf( "variant" ) != -1 ? false : true; 
+        var disable = -1 == $(this).prop( "id" ).indexOf( "variant" ); 
         var target_text_id = '#' +  $(this).prop( "name" );
         if( disable ) {
           $( target_text_id ).prop( "disabled", true );
@@ -153,6 +153,9 @@
         var id_2 = '#' + $(this).prop( "id" ).split( "__" )[1] + "__accept";
         $( id_1 ).removeProp( "checked" ); 
         $( id_2 ).removeProp( "checked" ); 
+
+        // uncheck the "All" checkboxes if not all Accept radio items are selected
+        $( table_selector + ' input:checkbox' ).removeProp( "checked" );  
 
         configure_ui();
       } );// end adjudicate radio input change
@@ -238,8 +241,8 @@
         $(this).prop( "checked", $(this).prop( "checked" ) );
         if( $(this).prop( "checked" ) ){
           var id = $(this).prop( "id" ).split("__")[3];
-          $radio_selector = "div.radio__accept__" + id + " :radio";
-          $radio_selector.prop( "checked", true ).trigger( "change" );
+          var radio_selector_id = " div.radio__accept__" + id + " :radio";
+          $( table_selector + radio_selector_id ).prop( "checked", true ).trigger( "change" );
         } else {
          $( table_selector + ' div.adjudicate :radio' ).removeProp( "checked" ).trigger( "change" );  
          $( table_selector + ' div.adjudicate :text' ).prop( "disabled", true );  
