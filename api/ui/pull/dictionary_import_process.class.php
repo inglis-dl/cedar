@@ -133,7 +133,7 @@ class dictionary_import_process extends \cenozo\ui\pull
       }
       else
       {
-        if( $row_entry_count != 0 )
+        if( 0 != $row_entry_count )
         {
           $this->data['error_entries'][] =
             'Error: invalid number of elements ( ' . $row_entry_count . ' ) on line ' 

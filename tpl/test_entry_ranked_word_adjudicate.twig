@@ -178,7 +178,7 @@
           alert( "Blank entry not permitted." );
 
           // refill with the corresponding accepted text entry
-          var is_intrusion = $(this).prop( "id" ).indexOf( "intrusion" ) != -1 ? true : false;
+          var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
 
           var entry_id_1 =  $(this).prop( "id" ).split( "__" )[0];
           var entry_id_2 =  $(this).prop( "id" ).split( "__" )[1];
