@@ -13,10 +13,32 @@
 
   <script type="text/javascript">
 
+    var table_selector = "#{{ widget.full }}__entry_table";
+
     function configure_ui() {
-      var disable = $( 'input:text[id$="adjudicate"]:not([value=""])' ).length !=
-                    ( $( 'input:radio[value="accept"]' ).length / 2 )  ? true : false;
-      $("#{{ parent.full }}_Submit").button( { disabled : disable } );        
+      var numFilled = $( table_selector + ' input:text[id$="adjudicate"][value!=""]' ).length;
+      var numInput = $( table_selector + ' input:text[id$="adjudicate"]' ).length;
+      $( "#{{ parent.full }}_Submit" ).button( { disabled : numFilled != numInput } );        
+    }
+
+    // overrides the default autocomplete filter function to search only from the beginning
+    // of the string
+    $.ui.autocomplete.filter = function ( array, term ) {
+      var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
+      return $.grep( array, function ( value ) {
+        return matcher.test( value.label || value.value || value );
+      } );
+    };
+
+    function get_text_complete() {
+      var args = new Object();
+      args["dictionary_id"] = {{ dictionary_id }};
+      if( undefined != "{{ intrusion_dictionary_id }}" ) {
+        args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
+      }
+      args["language"] = "{{ language }}";
+      args["words_only"] = 1;  
+      return ajax_pull( "word", "list", args );
     }
 
     $( function () {
@@ -27,92 +49,137 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
-        columns['participant_id']={{ participant_id }};
-        columns['test_id']={{ test_id }};
-        columns['completed']=1;
-        columns['id_1']= {{ id_1 }};
-        columns['id_2']= {{ id_2 }};
+        columns["participant_id"] = {{ participant_id }};
+        columns["test_id"] = {{ test_id }};
+        columns["completed"] = 1;
+        columns["id_1"] = {{ id_1 }};
+        columns["id_2"] = {{ id_2 }};
 
-        $( 'input:text[id$="adjudicate"]' ).each( function() {
-          var id = $(this).attr( "id" ).split( "__" )[2];
-          data[id] = { 'word_id' : $(this).attr( "name" ), 'word_candidate' : $(this).val() };
+        // collect all the adjudication entries
+        $( table_selector + ' input:text[id$="adjudicate"]' ).each( function() {
+          var id = $(this).prop( "id" ).split( "__" )[2];
+          data[id] = { 'word_id' : $(this).prop( "name" ), 'word_candidate' : $(this).val() };
         } );
  
-        columns['data'] = data;
+        columns["data"] = data;
         args.columns = columns;
 
+        // push new test_entry
         if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
+          // disable Submit button and navigate to next page
           $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
           $( "#{{ parent.full }}_Next" ).trigger( "click" );
         }
-      } );
+      } );// end Submit button click
 
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
+
+      // find and handle radio input change events:
+      // copy the progenitor to the adjudicate entry
+      $( table_selector + ' input:radio[value="accept"]' ).change(
         function() {
-        var entry_id = $(this).attr( "id" ).split( "__" )[0];
-        var target_text_id = '#' + $(this).attr( "name" ) + "__adjudicate";
-        var source_text_id = '#' + entry_id + "__candidate";
-        $( target_text_id ).val( $( source_text_id ).val() );
-        $( target_text_id ).attr( "name", $( source_text_id ).attr( "name" ) );
-        $( target_text_id ).removeAttr( "disabled" );
+          var entry_id = $(this).prop( "id" ).split( "__" )[0];
+          var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
+          var source_text_id = '#' + entry_id + "__candidate";
+          var source_value = $( source_text_id ).val();
+          $( target_text_id ).removeClass( "candidate intrusion variant" );
+          $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
+          $( target_text_id ).val( source_value );
+          $( target_text_id ).attr( "value", source_value );
+          $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
+          $( target_text_id ).prop( "disabled", false );
 
-        configure_ui();
-      } ).click( function () {
-        $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+          configure_ui();
+        } )
+      .click( function () {
+
+        $( table_selector + ' input:checkbox' ).removeProp( "checked" );
+
       } );// end radio input change and click
 
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:text[id$="adjudicate"]' ).change( function() {
-        var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
-        var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
+      $( table_selector + ' div.adjudicate :text' ).autocomplete( {
+        source: get_text_complete(),
+        minLength: 1,
+        select: function( event, ui ) {
+          $(this).val( ui.item.value );
+          // TODO see if latest version of jquery has double enter key bug fixed
+          //$(this).trigger( 'change' );
+        }
+      } )
+      .change( function() {
+        // note that there is no ajax_push call to edit an entry:
+        // a new entry is created when the submit button is clicked
+        var id_1 = '#' + $(this).prop( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = '#' + $(this).prop( "id" ).split( "__" )[1] + "__accept";
         var text_id_1 = id_1.replace( "accept", "candidate" );
         var text_id_2 = id_2.replace( "accept", "candidate" );
 
-        if( $(this).val().length == 0 ) {
-          error_dialog( "Error", "Blank entry not permitted." );
+        var candidate = $(this).val().trim().toLowerCase();
+        $(this).val( candidate );
+        $(this).attr( "value", candidate );
+        $(this).removeClass( "candidate intrusion variant" );
+
+        if( 0 == candidate.length ) {
+
+          alert( "Blank entry not permitted." );
 
           // refill with the corresponding accepted text entry
-          if( $( id_1 ).attr( "checked" ) ) {
+          if( $( id_1 ).prop( "checked" ) ) {
             $(this).val( $( text_id_1 ).val() );
-            $(this).attr( "name", $( text_id_1 ).attr( "name" ) );
-          } else if ( $( id_2 ).attr("checked") ) {
+            $(this).attr( "value", $(this).val() );
+            $(this).addClass( $( text_id_1 ).prop( "class" ) );
+            $(this).prop( "name", $( text_id_1 ).prop( "name" ) );
+          } else if ( $( id_2 ).prop("checked") ) {
             $(this).val( $( text_id_2 ).val() );
-            $(this).attr( "name", $( text_id_2 ).attr( "name" ) );
+            $(this).attr( "value", $(this).val() );
+            $(this).addClass( $( text_id_2 ).prop( "class" ) );
+            $(this).prop( "name", $( text_id_2 ).prop( "name" ) );
           } else {
             // disable this text input and uncheck the accept radio inputs
-            $(this).attr( "disabled", "disabled" );
-            $(this).attr( "name", "candidate" );
-            $( id_1 ).removeAttr( "checked" );
-            $( id_2 ).removeAttr( "checked" );
+            $(this).prop( "disabled", "disabled" );
+            $(this).prop( "name", "candidate" );
+            $( id_1 ).removeProp( "checked" );
+            $( id_2 ).removeProp( "checked" );
           }        
         } else {
           // uncheck the accept radio and checkbox inputs
-          $( id_1 ).removeAttr( "checked" );
-          $( id_2 ).removeAttr( "checked" );
-          $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
-          $(this).attr( "name", "candidate" );
+          $( id_1 ).removeProp( "checked" );
+          $( id_2 ).removeProp( "checked" );
+          $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
+          $(this).prop( "name", "candidate" );
+          var args = new Object();
+          args.id = {{ test_id }};
+          args["language"] = "{{ language }}";
+          args["word_candidate"] = candidate;
+          var classification = ajax_pull( "test", "classify_word", args );
+          if( undefined != classification )
+          {
+            $(this).addClass( classification );
+          }
         }
 
         configure_ui();
       } );// end text input change
 
-      $( 'input:checkbox[value="all"]' ).click( function() {
-        $( 'input:checkbox[value="all"]' ).not($(this)).removeAttr( "checked" );
-        $(this).attr( "checked", $(this).attr( "checked" ) );
-        var is_checked = $(this).attr( "checked" );
-        var id = $(this).attr( "id" ).split("__")[3];
-         var radio_class = "div.radio__accept__" + id + " :radio";
-        if( is_checked ){
-         $( radio_class ).attr( "checked", "checked" ).trigger( "change" );
+      $( table_selector + ' input:checkbox[value="all"]' ).click( function() {
+        // toggle check state of companion All checkbox
+        $( table_selector + ' input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
+        $(this).prop( "checked", $(this).prop( "checked" ) );
+        if( $(this).prop( "checked" ) ){
+          var id = $(this).prop( "id" ).split("__")[3];
+          var radio_selector = table_selector + " div.radio__accept__" + id + " :radio";
+          $( radio_selector ).prop( "checked", true ).trigger( "change" );
         } else {
-         $( radio_class ).removeAttr( "checked" );
-         $text_adjudicate = $( 'div.adjudicate :text' ); 
-         $text_adjudicate.attr( "disabled", "disabled" );  
-         $text_adjudicate.val( "" );  
-         $text_adjudicate.attr( "name", "candidate" );  
+         $( radio_class ).removeProp( "checked" );
+         $text_selector = $( table_selector + ' div.selector :text' ); 
+         $text_selector.prop( "disabled", true );  
+         // update previous and present state of value
+         $text_selector.val( "" );  
+         $text_selector.attr( "value", "" );  
+         $text_selector.prop( "name", "candidate" );  
         }
 
         configure_ui();
-      } );// end checkbox click
+      } );// end All checkbox click
 
     } );
   </script>
@@ -137,8 +204,8 @@
       <thead>
         <tr style="height:40px">
           <th>Entry #</th>
-          <th colspan="2">{{ user_1 }}</th>
-          <th colspan="2">{{ user_2 }}</th>
+          <th colspan="2">"{{ user_1 }}"</th>
+          <th colspan="2">"{{ user_2 }}"</th>
           <th colspan="2">Adjudicate</th>
         </tr>
       </thead>
@@ -169,10 +236,15 @@
             <td>
               <input type="text"
                 id="{{ entry.id_1 }}__candidate"
+                {% if entry.classification_1 is defined %}
+                  class="{{ entry.classification_1 }}"
+                {% endif %}
                 readonly
-                name={{ name_1 }}
-                value={{ value_1 }}>
+                name="{{ name_1 }}"
+                value="{{ value_1 }}">
             </td>
+
+            {% if entry.adjudicate is defined %}
             <td bgcolor=#B1F3B1>
               <div class="radio__accept__1">
                 <input type="radio"
@@ -182,13 +254,22 @@
                 <label for="{{ entry.id_1 }}__accept">Accept</label>
               </div>
             </td>
+            {% else %}
+              <td></td>
+            {% endif %}  
+
             <td>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
+                {% if entry.classification_2 is defined %}
+                  class="{{ entry.classification_2 }}"
+                {% endif %}
                 readonly
-                name={{ name_2 }}
-                value={{ value_2 }}>
+                name="{{ name_2 }}"
+                value="{{ value_2 }}">
             </td>
+
+            {% if entry.adjudicate is defined %}
             <td bgcolor=#B1F3B1>
               <div class="radio__accept__2">
                 <input type="radio"
@@ -202,11 +283,14 @@
               <div class="adjudicate">
                 <input type="text"
                   id="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}__adjudicate"
-                  disabled="disabled"
+                  disabled
                   name="candidate"
                   value="">
               </div>
             </td>
+            {% else %}
+              <td></td><td></td>
+            {% endif %}
         </tr>
 
       {% endfor %}

@@ -37,7 +37,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     parent::prepare();
 
     $record = $this->get_record();
-
     $db_assignment = $record->get_assignment();
 
     if( is_null( $db_assignment ) )
@@ -50,11 +49,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_adjudicate
-    $this->test_entry_widget = lib::create( 
+    $this->test_entry_adjudicate_widget = lib::create( 
       'ui\widget\test_entry_' . $db_test->get_test_type()->name . '_adjudicate', 
         $this->arguments );
 
-    $this->test_entry_widget->set_parent( $this );
+    $this->test_entry_adjudicate_widget->set_parent( $this );
 
     $modifier = NULL;
     if( $db_participant->get_cohort()->name == 'tracking' )
@@ -89,18 +88,69 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid assignment', __METHOD__ );
 
-    $this->set_variable( 'test_id', $record->test_id );
+    $this->set_variable( 'test_id', $db_test->id );
     $this->set_variable( 'participant_id', $db_assignment->get_participant()->id );
 
+    $dictionary_id = ''; 
+    $variant_dictionary_id = ''; 
+    $intrusion_dictionary_id = ''; 
+
+    $db_dictionary = $db_test->get_dictionary();
+    if( !is_null( $db_dictionary ) ) 
+      $dictionary_id = $db_dictionary->id;
+
+    if( !preg_match( '/FAS/', $db_test->name ) ) 
+    {   
+      $db_variant_dictionary = $db_test->get_variant_dictionary();
+      if( !is_null( $db_variant_dictionary ) ) 
+        $variant_dictionary_id = $db_variant_dictionary->id;
+    }   
+    
+    $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
+    if( !is_null( $db_intrusion_dictionary ) ) 
+      $intrusion_dictionary_id = $db_intrusion_dictionary->id;
+
+    $this->set_variable( 'dictionary_id', $dictionary_id );
+    $this->set_variable( 'variant_dictionary_id', $variant_dictionary_id );
+    $this->set_variable( 'intrusion_dictionary_id', $intrusion_dictionary_id );
+
+    $language = 'any';
+    $db_participant = $record->get_assignment()->get_participant();
+    if( empty( $db_participant ) || is_null( $db_participant ) )
+      throw lib::create( 'exception\runtime',
+        'The participant id must be set', __METHOD__ );
+
+    $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
+    $this->set_variable( 'language', $language );
+
+    if( $db_participant->get_cohort()->name == 'tracking' )
+    {   
+      $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
+      $sabretooth_manager->use_machine_credentials( true );
+      $args = array();
+      $args['qnaire_rank'] = 1;
+      $args['participant_id'] = $db_participant->id;
+      $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
+      $recording_data = array();
+      if( 1 == $recording_list->success && 0 < count( $recording_list->data ) ) 
+      {   
+        foreach( $recording_list->data as $data )
+        {   
+          $url = SABRETOOTH_URL . '/' . $data->url;
+          // has to be this servers domain not localhost
+          $recording_data[] = str_replace( 'localhost', $_SERVER['SERVER_NAME'], $url );
+        }   
+      }   
+      $this->set_variable( 'recording_data', $recording_data );
+    }
+
     $this->set_variable( 'id_1', $record->id );
-    //$this->set_variable( 'audio_fault_1', $record->audio_fault );
     $this->set_variable( 'adjudicate_1', $record->adjudicate );
     $this->set_variable( 'deferred_1', $record->deferred );
     $this->set_variable( 'completed_1', $record->completed );
     $this->set_variable( 'user_1', $db_assignment->get_user()->name );
 
     $this->set_variable( 'id_2', $this->adjudicate_entry->id );
-    //$this->set_variable( 'audio_fault_2', $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'adjudicate_2', $this->adjudicate_entry->adjudicate );
     $this->set_variable( 'deferred_2', $this->adjudicate_entry->deferred );
     $this->set_variable( 'completed_2', $this->adjudicate_entry->completed );
@@ -112,31 +162,33 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'user_2', $db_adjudicate_assignment->get_user()->name );
 
-    $this->set_variable( 'audio_fault', $record->audio_fault || $this->adjudicate_entry->audio_fault );
+    $this->set_variable( 'audio_fault', 
+      $record->audio_fault || $this->adjudicate_entry->audio_fault );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
 
     // find the ids of the prev and next test_entrys
-    $db_prev_test_entry = $record->get_previous();
-    $db_next_test_entry = $record->get_next();
+    $db_prev_test_entry = $record->get_previous( true );
+    $db_next_test_entry = $record->get_next( true );
 
     $this->set_variable( 'prev_test_entry_id', 
-      is_null($db_prev_test_entry) ? 0 : $db_prev_test_entry->id );
+      is_null( $db_prev_test_entry ) ? 0 : $db_prev_test_entry->id );
 
     $this->set_variable( 'next_test_entry_id', 
-      is_null($db_next_test_entry) ? 0 : $db_next_test_entry->id );
+      is_null( $db_next_test_entry ) ? 0 : $db_next_test_entry->id );
 
     try 
     {   
-      $this->test_entry_widget->process();
-      $this->set_variable( 'test_entry_args', $this->test_entry_widget->get_variables() );
+      $this->test_entry_adjudicate_widget->process();
+      $this->set_variable( 'test_entry_args', 
+        $this->test_entry_adjudicate_widget->get_variables() );
     }   
     catch( \cenozo\exception\permission $e ) {}
   }
 
   /**
    * Get the adjudicate test entry sibling.
-   * @var test_entry_widget
+   * @var test_entry_adjudicate_widget
    * @access protected
    */
   public function get_adjudicate_entry() 
@@ -146,14 +198,14 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
   
   /**
    * The test entry widget.
-   * @var test_entry_widget
+   * @var test_entry_adjudicate_widget
    * @access protected
    */
-  protected $test_entry_widget = NULL;
+  protected $test_entry_adjudicate_widget = NULL;
 
   /**
    * The adjudicate test entry sibling.
-   * @var test_entry_widget
+   * @var test_entry_adjudicate_widget
    * @access protected
    */
   protected $adjudicate_entry = NULL;

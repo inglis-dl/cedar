@@ -1,5 +1,5 @@
 {##
- # test_entry_classfication_transcribe.twig
+ # test_entry_alpha_numeric_transcribe.twig
  # 
  # Transcribe a alpha_numeric type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
@@ -8,90 +8,172 @@
 {% extends "widget.twig" %}
 
 {% block javascript %}
+
   {{ parent() }}
+
   <script type="text/javascript">
 
-    function configure_ui() {
-      var disable = $(':input[type="text"][value!=""]').length == 0 && !{{ deferred }};
-      $("#{{ parent.full }}_Next").button( { disabled : disable } );
+    var table_selector = "#{{ widget.full }}__entry_table"; 
 
-      //disable elements based on deferred status
+    function configure_ui() {
+
+      // disable elements based on deferred status
       if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
-        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
+        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", true );
+        $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
+        $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
+        $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
+        $( table_selector + " input:text" ).each( function() {
+          $(this).prop( "disabled", true );
         } );
       } else {
-        // set focus to the next empty input field
-        $( 'input:text' ).each( function() {
-          if( this.value ==='' && !$(this).attr( "disabled" ) ) {
-            this.focus();
-            return false;
-          }
+        // count the number of inputs, how many have text in them and which is the last
+        // non-disabled entry
+        var numFilled = 0;
+        var numInput = 0;
+        var lastEmpty = null;
+        var numEmptyAdded = 0;
+
+        $( table_selector + " input:text" ).each( function() {
+          if( 0 < $(this).val().length ) {
+            numFilled++;
+          } else {
+            if( !$(this).prop( "disabled" ) ) lastEmpty = $(this);
+            if( $(this).parent().hasClass( "added" ) ) numEmptyAdded++;
+          }            
+          numInput++;
         } );
+
+        // only enable the next button when there is at least one entry filled
+        // additionally, disable if there are any empty added fields
+        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled || 0 < numEmptyAdded } );
+
+        // disable the Reset button if there is nothing to reset
+        $( "#{{ parent.full }}_Reset" ).button( { disabled : 0 == numFilled } );
+
+        // only enable the add button when all inputs are filled
+        $( "#{{ widget.full }}_Add" ).button( { disabled : numFilled != numInput } );
+        
+        if( null !== lastEmpty && numFilled != numInput ) {
+          lastEmpty.focus();
+        } else {
+          $( table_selector + " input:text" ).last().blur();
+        }
       }      
     }
 
-    $( function () {
+    function update_input_list() {
 
-      configure_ui();
+      $( table_selector + ' input:text' ).change( function() {
 
-      $( "#{{ widget.full }}__entry_table" ).find( "input:text" ).change( function() {
+        var candidate = $(this).val().trim().toLowerCase();
+        // we've trimmed and lower-cased the candidate, so update the UI
+        $(this).val( candidate );
+        // update the value to present state
+        $(this).attr( "value", candidate );
+        if( 0 == candidate.length ) {
+          alert( "Blank entries are not permitted" );
+          configure_ui();
+          return false;
+        }  
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).attr("id").split("__")[0];
-        columns["rank"] = $(this).attr("id").split("__")[1];
-        columns["test_entry_id"] = "{{ parent.id }}";
-        columns["word_id"] = $(this).attr( "name" ) == "undefined" ? "" : $(this).attr( "name" );
-        columns["word_value"] = $(this).val();
+        args.id = $(this).prop("id").split("__")[0];
+        // test if this is from an Added text input
+        // if it is, the subject's edit class will use the uniqueness of
+        // test_entry_id and rank to find the record to edit
+        if( 0 == args.id ) args.id = '';
+        var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
+        columns["rank"] = rank;
+        columns["test_entry_id"] = {{ parent.id }};
+        columns["word_id"] = $(this).prop( "name" ) === "undefined" ? "" : $(this).prop( "name" );
+        columns["word_value"] = candidate;
         args.columns = columns;
 
-        // refresh with updated information
+        // push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          var next_rank_id = "__" + ( parseInt( columns['rank'] ) + 1 );
-          $( 'input:text[id$="' + next_rank_id + '"]' ).removeAttr( "disabled" );
+
+          // enable the next empty input
+          var next_rank_id = "__" + ( rank + 1 );
+          $( table_selector + ' input:text[id$="' + next_rank_id + '"]' ).prop( "disabled", false );
+
           configure_ui();
-        }
-        else {
+        } else {
+          alert( "Entry was not accepted, try again." );
+          // clear the text entry and re-focus
           $(this).val( "" );
+          $(this).attr( "value", "" );
           $(this).focus();
         }
       } );// end text input change
 
-      // loop over all input elements and clear them
-      // update the db to reflect the changes
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input:text" );
-          input.each( function() {
-              $(this).val( "" );
-              $(this).attr("name", "undefined" );
-              var rank = $(this).attr( "id" ).split("__")[1];
-              if( rank == "1" ) {
-                $(this).removeAttr( "disabled" );
-              } else {
-                $(this).attr( "disabled", "disabled" );
-              }
-          } );
+    }// end function update_input_list
+
+    $( function () {
+
+      update_input_list();
+      configure_ui();
+
+      $( "#{{ widget.full }}_Add" ).button( {
+        text: false,
+        icons: { primary: "ui-icon-plusthick" }
+        } )
+      .click( function() {        
+        // add a text input to the end of the table one row before the 
+        // one containing the Add button
+        $td_selector = $( table_selector + " td" ).not( '.button' );
+        var rank = $td_selector.length + 1;
+        var html = '<td class="added"><input type="text" style="width:20%" id="0__' + 
+          rank + '"></td>';
+        // the number of entries in a typical row
+        var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
+
+        // the number of entries in the target row
+        var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
+        var numTd = $( table_selector + " tr:nth-child(" + targetRow + ") td" ).length;
+
+        // add a new table row if required
+        if( numTd == maxTd ) {
+          html = '<tr class="added">' + html + "</tr>";
+          $( table_selector + ' tr:last' ).before( html );
+        } else {
+          $( table_selector + ' tr:last' ).prev().append( html );
+        }
+
+        // create a new alpha numeric test entry
+        var args = new Object();
+        var columns =  new Object();
+        columns["test_entry_id"] = {{ parent.id }};
+        args.columns = columns;
+        if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
+          update_input_list();
           configure_ui();
         }
+      } );// end Add button click
+
+      $( "#{{ parent.full }}_Reset" ).click(function() {
+        // push reset
+        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
+          // remove any cells and rows created with the Add button
+          $( table_selector + ' td.added' ).remove();
+          $( table_selector + ' tr.added' ).remove();
+          // clear all text fields and set focus to the first
+          $( table_selector + " input:text" ).each( function() {
+            $(this).val( "" );
+            $(this).attr( "value", "" );
+            $(this).prop( "name", "undefined" );
+            var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
+            $(this).prop( "disabled", 1 != rank );
+          } );
+
+          configure_ui();
+        }        
       } );// end Reset button click
 
     } );
   </script>
 
 {% endblock javascript %}
-
-{% block defer_action %}
-  <script type="text/javascript">
-  if( {{ deferred }} ) {
-    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-    $(this).attr( "disabled", "disabled" );
-    } );
-  }
-  </script>
-{% endblock defer_action %}
 
 {% block widget %}
 
@@ -101,7 +183,7 @@
 
     <tbody>
     {% set numcell =  10 %}
-    {% set kprev= 'true' %}
+    {% set kprev = true %}
     {% for i in range(0, entry_data|length-1, numcell) %}
       <tr>
       {% set kmax = i+numcell-1 %}
@@ -113,6 +195,9 @@
         {% set value = '' %}
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
+          {% set name = entry_data[k].word_id %}
+        {% else %}
+          {% set name = 'undefined' %}          
         {% endif %}
         {% set status = entry_data[k].word_id ? "word" : "empty" %} 
 
@@ -120,15 +205,18 @@
             <input type="text"
              style="width:20%"
              id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-             name={{ entry_data[k].word_id ? entry_data[k].word_id : 'undefined' }}
+             name="{{ name }}"
 
+             {% if editable == false %}
+               { readonly }
+             {% endif %}
              {% if status == 'empty'  %} 
-               {% if kprev == 'false' %}
-                 {{ "disabled" }}
+               {% if kprev == false %}
+                 { disabled }
                {% endif %}
-               {% set kprev = 'false' %}
+               {% set kprev = false %}
              {% elseif status == 'word' %}
-                 {% set kprev = 'true' %}
+               {% set kprev = true %}
              {% endif %}
                
              value="{{ value }}">
@@ -139,6 +227,15 @@
       </tr>
 
     {% endfor %}
+
+      <tr>
+        <td colspan="{{ numcell }}" class="button">
+          <button class="{{ widget.full }}__add_entry"
+            style="float:right"
+            disabled
+            id="{{ widget.full }}_Add">Add</button>
+        </td>
+      </tr>
 
     </tbody>
   </table>

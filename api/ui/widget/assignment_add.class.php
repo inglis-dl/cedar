@@ -64,7 +64,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
   protected function setup()
   {
     parent::setup();
-    
+
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
     $db_user = $session->get_user();
@@ -152,6 +152,26 @@ class assignment_add extends \cenozo\ui\widget\base_view
     $limit = 10;
     $offset = 0;
     $participant_count = 0;
+
+    $sabretooth_manager = NULL;
+    $args = array();
+    $auth = array();
+    if( $has_tracking )
+    {
+      $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
+      $sabretooth_manager->use_machine_credentials( true );
+      $args['qnaire_rank'] = 1;
+      
+      $setting_manager = lib::create( 'business\setting_manager' );
+      $user = $setting_manager->get_setting( 'general', 'machine_user' );
+      $pass = $setting_manager->get_setting( 'general', 'machine_password' );
+      $auth['httpauth'] = $user.':'.$pass;
+    }  
+
+    $assignment_mod_base = lib::create( 'database\modifier' );
+    $assignment_mod_base->where( 'user_id', '=', $db_user->id );
+    $max_try = 10;
+    $try = 0;
     do
     {
       $mod_limit = clone $base_mod;
@@ -159,34 +179,55 @@ class assignment_add extends \cenozo\ui\widget\base_view
       $participant_list = $participant_class_name::select( $mod_limit );
 
       $participant_count = count( $participant_list );
-      if( $participant_count > 0 )
+      if( 0 < $participant_count )
       {
         foreach( $participant_list as $db_participant )
-        {   
-          $assignment_mod = lib::create( 'database\modifier' );
+        { 
+          $db_cohort = $db_participant->get_cohort();
+          $assignment_mod = clone $assignment_mod_base;
           $assignment_mod->where( 'participant_id', '=', $db_participant->id );
 
-          if( $assignment_class_name::count(  $assignment_mod ) < 2 )
+          if( 0 == $assignment_class_name::count( $assignment_mod ) )
           {
-            $assignment_mod->where( 'user_id', '=', $db_user->id );
+            if( $db_cohort->name == 'tracking' && $has_tracking )
+            {
+              // are there any valid recordings?
+              $args['participant_id'] = $db_participant->id;
+              $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
 
-            if( $assignment_class_name::count( $assignment_mod ) == 0 )
+              if( !is_null( $recording_list ) && 1 == $recording_list->success && 
+                   is_array( $recording_list->data ) && 0 < count( $recording_list->data ) )
+              { 
+                 foreach( $recording_list->data as $data )
+                 {
+                   $url = str_replace( 'localhost', $_SERVER['SERVER_NAME'],
+                                        SABRETOOTH_URL . '/' . $data->url );
+                   $response = array();
+                   http_head( $url, $auth, $response );
+                   if( array_key_exists( 'response_code', $response ) )
+                     $found |= 200 == $response['response_code'] ? true : false; 
+                 }
+              }
+            }
+            else
+            {
+              $found = true;
+            }  
+            if( $found )
             {
               $uid = $db_participant->uid;
               $language = $db_participant->language;
               $language = is_null( $language ) ? 'en' : $language;
               $participant_id = $db_participant->id;
-              $db_cohort = $db_participant->get_cohort();
               $cohort = $db_cohort->name;
-              $cohort_id = $db_cohort->id;
-              $found = true;
+              $cohort_id = $db_cohort->id;              
               break;
             }
           }
         }
         $offset += $limit;
       }
-    } while( !$found && $participant_count > 0 );
+    } while( !$found && $participant_count > 0 && $max_try > $try++ );
       
     // throw a notice if no participant was found
     if( !$found ) 

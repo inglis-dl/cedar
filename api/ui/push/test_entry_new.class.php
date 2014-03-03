@@ -91,7 +91,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
 
-        if( $count > 0 )
+        if( 0 < $count )
         {
           $args = array();
           $args['columns']['test_entry_id'] = $record->id;
@@ -174,8 +174,10 @@ class test_entry_new extends \cenozo\ui\push\base_new
     }
     else if( $test_type_name == 'classification' )
     {
-      // create a default of 40 to start with
-      for( $rank = 1; $rank < 41; $rank++ )
+      $setting_manager = lib::create( 'business\setting_manager' );
+      $max_rank = $setting_manager->get_setting( 'interface', 'classification_max_rank' );
+
+      for( $rank = 1; $rank <= $max_rank; $rank++ )
       {
         $args = array();
         $args['columns']['test_entry_id'] = $record->id;
@@ -183,8 +185,10 @@ class test_entry_new extends \cenozo\ui\push\base_new
         $operation = lib::create( 'ui\push\test_entry_classification_new', $args );
         $operation->process();
       }
+
       if( $adjudicate )
       {
+        // get the two records that required adjudication
         $db_test_entry_1 = lib::create( 'database\test_entry', $columns['id_1'] );
         $db_test_entry_2 = lib::create( 'database\test_entry', $columns['id_2'] );
 
@@ -193,11 +197,13 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         $a = $db_test_entry_1->get_test_entry_classification_list( clone $modifier );
         $b = $db_test_entry_2->get_test_entry_classification_list( clone $modifier );
+
+        // the new record created for the adjudication
         $c = $record->get_test_entry_classification_list( clone $modifier );
 
+        // ensure the adjudication record can hold the maximum required entries
         $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
-
-        if( $count > 0 )
+        if( 0 < $count )
         {
           $args = array();
           $args['columns']['test_entry_id'] = $record->id;
@@ -208,6 +214,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
           }
         }
 
+        // loop over the records and identify differences that required adjudication
         $c = $record->get_test_entry_classification_list( clone $modifier );
         while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) && !is_null( ( key ( $c ) ) ) )
         {
@@ -226,6 +233,8 @@ class test_entry_new extends \cenozo\ui\push\base_new
           next( $c );
         }
 
+        // data is set in the test_entry_classification_adjudicate.twig file
+        // during the submit
         $data = $columns['data'];
         $db_dictionary = $db_test->get_dictionary();
         $word_class_name = lib::get_class_name( 'database\word' );
@@ -266,7 +275,8 @@ class test_entry_new extends \cenozo\ui\push\base_new
     }
     else if( $test_type_name == 'alpha_numeric' )
     {
-      // Alpha numeric MAT alternation test has a dictionary of a-z and 1-20.
+      // Alpha numeric MAT alternation test has a dictionary of a-z and initially
+      // a minimal number set containing 1-20.
       // Create empty entry fields for the maximum possible number of entries.
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'language', '=', $language );
@@ -293,18 +303,18 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
 
-        if( $count > 0 )
+        if( 0 < $count )
         {
           $args = array();
           $args['columns']['test_entry_id'] = $record->id;
           for( $i = 0; $i < $count; $i++ )
           {
-            $operation = lib::create( 'ui\push\test_entry_classification_new', $args );
+            $operation = lib::create( 'ui\push\test_entry_alpha_numeric_new', $args );
             $operation->process();
           }
         }
 
-        $c = $record->get_test_entry_classification_list( clone $modifier );
+        $c = $record->get_test_entry_alpha_numeric_list( clone $modifier );
         while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) && !is_null( ( key ( $c ) ) ) )
         {
           $a_obj = current( $a );

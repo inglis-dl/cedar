@@ -72,14 +72,16 @@ class test_entry_list extends \cenozo\ui\widget\base_list
     foreach( $this->get_record_list() as $record )
     {
       $db_test = $record->get_test();
-      $data = array( 'test.rank' => $db_test->rank,
+      $columns = array( 'test.rank' => $db_test->rank,
                'test_id' => $db_test->name,
                'audio_fault' => $record->audio_fault,
                'deferred' => $record->deferred,
-               'completed' => $record->completed );
+               'completed' => $record->completed,
+               // note count isn't a column, it's used for the note button
+               'note_count' => $record->get_note_count() );
       if( $this->adjudicate_allowed )
-        $data['adjudicate'] = $record->adjudicate;
-      $this->add_row( $record->id, $data );   
+        $columns['adjudicate'] = $record->adjudicate;
+      $this->add_row( $record->id, $columns );   
     }
   }
 

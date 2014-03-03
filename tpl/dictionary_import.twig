@@ -42,14 +42,14 @@
                   var err_count = data.error_count;
                   var html = '<table style="width:90%; margin-left:10%; margin-right:10%; text-align:left">';
 
-                  if( err_count != 0 ) {
+                  if( 0 != err_count ) {
                     html += '<tr><td class="heading"> ERRORS </td></tr>';
                     var err_entries = data.error_entries;
                     for( var i = 0; i < err_count; i++ ) {
                       html += '<tr><td>' + err_entries[i] + '</td></tr>';
                     }
                   }
-                  if( data.unique_word_count > 0 ) {
+                  if( 0 < data.unique_word_count ) {
                     allow_proceed = true;
                   }
 

@@ -526,6 +526,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_classification` (
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_word_id` (`word_id` ASC),
+  UNIQUE INDEX `uq_test_entry_id_rank` (`test_entry_id` ASC, `rank` ASC),
   CONSTRAINT `fk_test_entry_classification_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
@@ -554,6 +555,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_alpha_numeric` (
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_word_id` (`word_id` ASC),
+  UNIQUE INDEX `uq_test_entry_id_rank` (`test_entry_id` ASC, `rank` ASC),
   CONSTRAINT `fk_test_entry_alpha_numeric_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
@@ -563,6 +565,37 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_alpha_numeric` (
     FOREIGN KEY (`word_id`)
     REFERENCES `cedar`.`word` (`id`)
     ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`test_entry_note`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`test_entry_note` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_note` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `test_entry_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `sticky` TINYINT(1) NOT NULL DEFAULT 0,
+  `datetime` DATETIME NOT NULL,
+  `note` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_test_entry_id` (`test_entry_id` ASC),
+  INDEX `fk_user_id` (`user_id` ASC),
+  INDEX `dk_sticky_datetime` (`sticky` ASC, `datetime` ASC),
+  CONSTRAINT `fk_test_entry_note_test_entry_id`
+    FOREIGN KEY (`test_entry_id`)
+    REFERENCES `cedar`.`test_entry` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_note_user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 

@@ -9,17 +9,12 @@
 {% block javascript %}
 
   {{ parent() }}
-  <script type="text/javascript">   
 
+  <script type="text/javascript">
+  
     $( function () {
 
-      if( "{{ test_type }}" == "confirmation" ) {
-        $("#audio_control").children().attr( "disabled", "disabled" );
-      } else {
-        $("#audio_control").children().removeAttr( "disabled" );
-      }
-
-      $("#{{ widget.full }}__audio_fault").click( function() {
+      $( "#{{ widget.full }}__audio_fault" ).click( function() {
         var args = new Object();
         args.columns = { audio_fault : $(this).is(':checked') ? 1 : 0 };
         args.id = {{ id }};
@@ -30,34 +25,37 @@
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click
 
-      $("#{{ widget.full }}_Defer").click( function() {
+      $( "#{{ widget.full }}_Defer" ).click( function() {
+
         $dialog = $( "#{{ widget.full }}__note_dialog" );
         var buttons = new Object;
         buttons.Ok = function() {
           var note = $("#{{ widget.full }}__note").val();
-          if( note.length == 0 ) {
+          if( 0 == note.length ) {
             error_dialog( "Error", "You cannot leave a blank note." );
           } else {
             var args = new Object();
-            args.columns = { 
-              note : $("#{{ widget.full }}__note").val(), 
-              deferred : 1
-              };
-
+            args.columns = { deferred : 1 };
             args.id = {{ id }};
             if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-              $dialog.dialog( "close" );
 
-              $("#{{ widget.full }}_Next").button( { disabled : false } );
-              $("#{{ widget.full }}_Reset").button( { disabled : true } );
-              $("#{{ widget.full }}_Defer").button( { disabled : true } );
+              args = new Object();
+              args.note = note;
+              args.category = "{{ widget.subject }}";
+              args.category_id = {{ id }};
+              
+              if( ajax_push( "note", "new", args ) ) {
+                $dialog.dialog( "close" );
 
-              slot_refresh( {{ slot }} );
+                $( "#{{ widget.full }}_Next" ).button( { disabled : false } );
+                $( "#{{ widget.full }}_Reset" ).button( { disabled : true } );
+                $( "#{{ widget.full }}_Defer" ).button( { disabled : true } );
 
-              {% block defer_action %} {% endblock defer_action %}
+                slot_refresh( {{ slot }} );
+              }
             }
           }
-        };  
+        };
         buttons.Cancel = function() { $dialog.dialog( "close" ); };
 
         var html = "A note is required indicating the reason for deferral.";
@@ -77,11 +75,15 @@
 
       } ).button( { disabled : {{ deferred }} } ); // end Defer click
 
-      $( "#{{ widget.full }}_Prev").click( function() {
-        slot_load( {{ slot }}, 
-          "{{ widget.subject }}", "{{ widget.name }}", 
-          { id : {{ prev_test_entry_id}} } );
-      } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } ); // end Prev click
+      $( "#{{ widget.full }}_Prev" ).click( function() {
+        {% if 0 == prev_test_entry_id %}
+          slot_load( {{ slot }}, "assignment", "list" );
+        {% else %}
+          slot_load( {{ slot }}, 
+            "{{ widget.subject }}", "{{ widget.name }}", 
+            { id : {{ prev_test_entry_id}} } );
+        {% endif %}
+      } ).button( { disabled : 1 == {{ rank }} } ); // end Prev click
 
       $( "#{{ widget.full }}_Next" ).click( function() {
         {% if 0 == next_test_entry_id %}
@@ -89,8 +91,8 @@
         {% else %}  
           slot_load( {{ slot }}, 
             "{{ widget.subject }}", "{{ widget.name }}", 
-            { id : {{ next_test_entry_id}} } );
-        {% endif %}  
+            { id : {{ next_test_entry_id }} } );
+        {% endif %}
       } ); // end Next click
 
     } );
@@ -100,42 +102,50 @@
 
 {% block record %}
 
+  <div class="spacer">
+
   <div>
-    
-    <div class="spacer">
+    {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
+  </div>  
 
-    <div>
-      {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
-    </div>  
+  <div class="spacer">
 
-    <div class="spacer">
-
-      <div>
-        <table>
+  <div id="audio_control">
+    {% if recording_data is defined %}
+      <table>
+        {% set recording_id = 0 %}
+        {% for recording in recording_data %}
           <tr>
-            <td align="left"
-                style="white-space: nowrap">
-              <div id="audio_control">
-                <audio controls
-                  id="{{ widget.full }}__audio_player"
-                  <embed height="50" style="width:100%">
-                </audio>
-                <input type="checkbox" id="{{ widget.full }}__audio_fault" 
-                  {{ audio_fault ? "checked":"" }}/>
-                <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
-              </div>  
-            </td>
-            <td>
-              <div>
-                {% from 'macros.twig' import confirm_buttons %}
-                  {{ confirm_buttons( slot, widget.full, 
-                    ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-              </div>
-            </td>
+            <audio controls
+              id="{{ widget.full }}__recording__{{ recording_id }}" 
+              <embed height="50" style="width:100%">
+              <source src="{{ recording }}" type="audio/wav">
+            </audio>
           </tr>
-        </table>
-      </div>
-    </div>
+          {% set recording_id = recording_id+1 %}
+        {% endfor %}
+      </table>
+    {% endif %}
+    <input type="checkbox"
+      {% if editable == false %}
+        { readonly }  
+      {% endif %}
+      id="{{ widget.full }}__audio_fault"
+      {{ audio_fault ? "checked":"" }}/>
+    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
+  </div>  
+
+  <div class="spacer">
+  
+  <div>
+    {% if actionable == true %}
+    {% from 'macros.twig' import confirm_buttons %}
+      {{ confirm_buttons( slot, widget.full, 
+        ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
+   
+    {% from 'macros.twig' import note_widget %}    
+    {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
+    {% endif %}    
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>

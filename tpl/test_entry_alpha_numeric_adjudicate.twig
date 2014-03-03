@@ -13,11 +13,14 @@
 
   <script type="text/javascript">
 
+    var table_selector = "#{{ widget.full }}__entry_table";
+
     function configure_ui() {
-      var disable = $( 'input:radio[value="accept"]:checked' ).length !=
-                    ( $( 'input:radio[value="accept"]' ).length / 2 ) ? true : false;
+
+      var disable = $( table_selector + ' input:radio[value="accept"]:checked' ).length !=
+                    $( table_selector + ' input:radio[value="accept"]' ).length / 2;
                     
-      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );        
+      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );
     }
 
     $( function () {
@@ -28,91 +31,98 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
-        columns['participant_id']={{ participant_id }};
-        columns['test_id']={{ test_id }};
-        columns['completed']=1;
-        columns['id_1']= {{ id_1 }};
-        columns['id_2']= {{ id_2 }};
+        columns["participant_id"] = {{ participant_id }};
+        columns["test_id"] = {{ test_id }};
+        columns["completed"] = 1;
+        columns["id_1"] = {{ id_1 }};
+        columns["id_2"] = {{ id_2 }};
 
-        $( 'input:text[id$="adjudicate"]' ).each( function() {
-          var id = $(this).attr( "id" ).split( "__" )[2];
-          data[id] = { 'word_id' : $(this).attr( "name" ), 'word_candidate' : $(this).val() };
+        $( table_selector + ' input:text[id$="adjudicate"]' ).each( function() {
+          var id = $(this).prop( "id" ).split( "__" )[2];
+          data[id] = { 'word_id' : $(this).prop( "name" ), 'word_candidate' : $(this).val() };
         } );
  
-        columns['data'] = data;
+        columns["data"] = data;
         args.columns = columns;
         if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
           $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
           $( "#{{ parent.full }}_Next" ).trigger( "click" );
         }
-      } );
+      } );// end Submit button click
 
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:radio[value="accept"]' ).change(
+      $( table_selector + ' input:radio[value="accept"]' ).change(
         function() {
-        var entry_id = $(this).attr( "id" ).split( "__" )[0];
-        var target_text_id = '#' + $(this).attr( "name" ) + "__adjudicate";
+        var entry_id = $(this).prop( "id" ).split( "__" )[0];
+        var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
         var source_text_id = '#' + entry_id + "__candidate";
-        $( target_text_id ).val( $( source_text_id ).val() );
-        $( target_text_id ).attr( "name", $( source_text_id ).attr( "name" ) );
-        $( target_text_id ).removeAttr( "disabled" );
+        var source_value = $( source_text_id ).val();
+        $( target_text_id ).val( source_value );
+        $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
+        $( target_text_id ).removeProp( "disabled" );
 
         configure_ui();
-      } ).click( function () {
-        $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
+        } )
+      .click( function () {
+
+        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
+
       } );// end radio input change and click
 
-      $( "#{{ widget.full }}__entry_table" ).find( 'input:text[id$="adjudicate"]' ).change( function() {
-        var id_1 = '#' + $(this).attr( "id" ).split( "__" )[0] + "__accept";
-        var id_2 = '#' + $(this).attr( "id" ).split( "__" )[1] + "__accept";
+      $( table_selector + ' input:text[id$="adjudicate"]' ).change( function() {
+        var id_1 = '#' + $(this).prop( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = '#' + $(this).prop( "id" ).split( "__" )[1] + "__accept";
         var text_id_1 = id_1.replace( "accept", "candidate" );
         var text_id_2 = id_2.replace( "accept", "candidate" );
 
-        if( $(this).val().length == 0 ) {
-          error_dialog( "Error", "Blank entry not permitted." );
+        if( 0 == $(this).val().length ) {
+
+          alert( "Blank entry not permitted." );
 
           // refill with the corresponding accepted text entry
-          if( $( id_1 ).attr( "checked" ) ) {
+          if( $( id_1 ).prop( "checked" ) ) {
             $(this).val( $( text_id_1 ).val() );
-            $(this).attr( "name", $( text_id_1 ).attr( "name" ) );
-          } else if ( $( id_2 ).attr("checked") ) {
+            $(this).prop( "name", $( text_id_1 ).prop( "name" ) );
+          } else if ( $( id_2 ).prop( "checked" ) ) {
             $(this).val( $( text_id_2 ).val() );
-             $(this).attr( "name", $( text_id_2 ).attr( "name" ) );
+            $(this).prop( "name", $( text_id_2 ).prop( "name" ) );
           } else {
             // disable this text input and uncheck the accept radio inputs
-            $(this).attr( "disabled", "disabled" );
-            $(this).attr( "name", "candidate" );
-            $( id_1 ).removeAttr( "checked" );
-            $( id_2 ).removeAttr( "checked" );
+            $(this).prop( "disabled", true );
+            $(this).prop( "name", "candidate" );
+            $( id_1 ).removeProp( "checked" );
+            $( id_2 ).removeProp( "checked" );
           }
         } else {
           // uncheck the accept radio and checkbox inputs
-          $( id_1 ).removeAttr( "checked" );
-          $( id_2 ).removeAttr( "checked" );
-          $( 'input:checkbox[value="all"]' ).removeAttr( "checked" );
-          $(this).attr( "name", "candidate" );
+          $( id_1 ).removeProp( "checked" );
+          $( id_2 ).removeProp( "checked" );
+          $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
+          $(this).prop( "name", "candidate" );
         }
 
         configure_ui();
-      } );// end text input change
+      } );// end adjudication text input change
 
-      $( 'input:checkbox[value="all"]' ).click( function() {
-        $( 'input:checkbox[value="all"]' ).not($(this)).removeAttr( "checked" );
-        $(this).attr( "checked", $(this).attr( "checked" ) );
-        var is_checked = $(this).attr( "checked" );
-        var id = $(this).attr( "id" ).split("__")[3];
-         var radio_class = "div.radio__accept__" + id + " :radio";
-        if( is_checked ){
-         $( radio_class ).attr( "checked", "checked" ).trigger( "change" );
+      $( table_selector + ' input:checkbox[value="all"]' ).click( function() {
+        // toggle check state of companion All checkbox
+        $( table_selector + ' input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
+        $(this).prop( "checked", $(this).prop( "checked" ) );
+        if( $(this).prop( "checked" ) ) {
+          var id = $(this).prop( "id" ).split("__")[3];
+          $radio_selector = $( table_selector + " div.radio__accept__" + id + " :radio" );
+          $radio_selector.prop( "checked", true ).trigger( "change" );
         } else {
-         $( 'input:radio[value="accept"]' ).removeAttr( "checked" );
-         $text_adjudicate = $( 'div.adjudicate :text' ); 
-         $text_adjudicate.attr( "disabled", "disabled" );  
-         $text_adjudicate.val( "" );  
-         $text_adjudicate.attr( "name", "candidate" );
+          $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
+          $text_selector = $( table_selector + ' div.selector :text' ); 
+          $text_selector.prop( "disabled", true );  
+          // update previous and present state of value
+          $text_selector.val( "" );  
+          $text_selector.attr( "value", "" );  
+          $text_selector.prop( "name", "candidate" );
         }
 
         configure_ui();
-      } );// end checkbox click
+      } );// end All checkbox click
 
     } );
   </script>
@@ -137,8 +147,8 @@
       <thead>
         <tr style="height:40px">
           <th>Entry #</th>
-          <th colspan="2">{{ user_1 }}</th>
-          <th colspan="2">{{ user_2 }}</th>
+          <th colspan="2">"{{ user_1 }}"</th>
+          <th colspan="2">"{{ user_2 }}"</th>
           <th>Adjudication</th>
         </tr>
       </thead>
@@ -167,8 +177,8 @@
               style="width:10%; text-align:center"
               id="{{ entry.id_1 }}__candidate"
               readonly
-              name={{ name_1 }}
-              value={{ value_1 }}>
+              name="{{ name_1 }}"
+              value="{{ value_1 }}">
           </td>
 
           {% if entry.adjudicate is defined %}
@@ -190,8 +200,8 @@
               style="width:10%; text-align:center"
               id="{{ entry.id_2 }}__candidate"
               readonly
-              name={{ name_2 }}
-              value={{ value_2 }}>
+              name="{{ name_2 }}"
+              value="{{ value_2 }}">
           </td>
 
           {% if entry.adjudicate is defined %}

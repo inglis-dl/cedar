@@ -52,6 +52,16 @@ VALUES( "push", "dictionary_import", "process", true, "Adds unique words to a di
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "dictionary_import", "process", true, "Processes words from a CSV file." );
 
+-- notes
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "note", "delete", true, "Removes a note from the system." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "note", "edit", true, "Edits the details of a note." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "note", "list", false, "Displays a list of notes." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "note", "new", false, "Creates a new note." );
+
 -- ranked_word_set
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
@@ -83,6 +93,9 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test", "add_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test", "delete_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, primary, 
+intrusion or variant." );
 
 -- test_entry
 
@@ -149,7 +162,7 @@ VALUES( "push", "test_entry_ranked_word", "edit", true, "Edits an entry for an r
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_ranked_word", "new", true, "Creates a new entry for an ranked word test type." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
-VALUES( "push", "test_entry_ranked_word", "deletes", true, "Deletes an entry for an ranked word test type." );
+VALUES( "push", "test_entry_ranked_word", "delete", true, "Deletes an entry for an ranked word test type." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_ranked_word", "transcribe", true, "Transcribe an entry for an ranked word test type." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
@@ -178,5 +191,7 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "word", "new", true, "Creates a new dictionary word." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "word", "view", true, "View the details of a dictionary's words." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "word", "list", true, "Retrieves a list of words from a dictionary." );
 
 COMMIT;

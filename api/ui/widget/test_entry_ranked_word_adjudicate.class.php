@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * widget test_entry_ranked_word adjudicate
  */
-class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
+class test_entry_ranked_word_adjudicate extends base_adjudicate
 {
   /** 
    * Constructor.
@@ -22,34 +22,7 @@ class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_ranked_word', 'adjudicate', $args );
-  }
-
-  /**
-   * Processes arguments, preparing them for the operation.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
-   * @access protected
-   */
-  protected function prepare()
-  {
-    parent::prepare();
-
-    // parent must be a test_entry_adjudicate widget
-    if( is_null( $this->parent ) )
-      throw lib::create( 'exception\runtime', 'This class must have a parent', __METHOD__ );
-   
-    $db_test_entry = $this->parent->get_record();
-
-    $db_test = $db_test_entry->get_test();
-    $heading = $db_test->name . ' test adjudicate form';
-
-    //TODO put this somewhere else
-    if( $db_test_entry->deferred )
-      $heading = $heading . ' NOTE: this test is currently deferred';
-
-    $this->set_heading( $heading );
+    parent::__construct( 'test_entry_ranked_word', $args );
   }
 
   /** 
@@ -101,17 +74,36 @@ class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
         $db_word_1 = lib::create( 'database\word', $a_obj->word_id );
         $db_word_2 = lib::create( 'database\word', $b_obj->word_id );
 
+        $word_candidate_1 = is_null( $a_obj->word_candidate ) ? '' : $a_obj->word_candidate;
+        $word_candidate_2 = is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate;
+        $selection_1 = is_null( $a_obj->selection ) ? '' : $a_obj->selection;
+        $selection_2 = is_null( $b_obj->selection ) ? '' : $b_obj->selection;
+        $classification_1 = '';
+        $classification_2 = '';
+        if( !empty( $word_candidate_1 ) && $selection_1 == 'variant' )
+        {
+          $data = $db_test->get_word_classification( $word_candidate_1, $language );
+          $classification_1 = $data['classification'];
+        }
+        if( !empty( $word_candidate_2 ) && $selection_2 == 'variant' )
+        {
+          $data = $db_test->get_word_classification( $word_candidate_2, $language );
+          $classification_2 = $data['classification'];
+        }
+
         $entry_data[] = array(
            'id_1' => $a_obj->id,
            'id_2' => $b_obj->id,
-           'selection_1' => $a_obj->selection,
-           'selection_2' => $b_obj->selection,                  
+           'selection_1' => $selection_1,
+           'selection_2' => $selection_2,                  
            'word_id_1' => $db_word_1->id,
            'word_1' => $db_word_1->word,
            'word_id_2' => $db_word_2->id,
            'word_2' => $db_word_2->word,
-           'word_candidate_1' => is_null( $a_obj->word_candidate ) ? '' : $a_obj->word_candidate,
-           'word_candidate_2' => is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate );
+           'word_candidate_1' => $word_candidate_1,
+           'word_candidate_2' => $word_candidate_2,
+           'classification_1' => $classification_1,
+           'classification_2' => $classification_2 );
       }   
       next( $a );
       next( $b );
@@ -130,6 +122,20 @@ class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
       $b_obj = current( $b );
       if( $a_obj->word_candidate != $b_obj->word_candidate )
       {        
+        $word_candidate_1 = is_null( $a_obj->word_candidate ) ? '' : $a_obj->word_candidate;
+        $word_candidate_2 = is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate;
+        $classification_1 = '';
+        $classification_2 = '';
+        if( !empty( $word_candidate_1 ) )
+        {
+          $data = $db_test->get_word_classification( $word_candidate_1, $language );
+          $classification_1 = $data['classification'];
+        }
+        if( !empty( $word_candidate_2 ) )
+        {
+          $data = $db_test->get_word_classification( $word_candidate_2, $language );
+          $classification_2 = $data['classification'];
+        }
         $entry_data[] = array(
            'id_1' => $a_obj->id,
            'id_2' => $b_obj->id,
@@ -139,8 +145,10 @@ class test_entry_ranked_word_adjudicate extends \cenozo\ui\widget
            'word_1' => '',
            'word_id_2' => '',
            'word_2' => '',
-           'word_candidate_1' => $a_obj->word_candidate,
-           'word_candidate_2' => $b_obj->word_candidate );
+           'word_candidate_1' => $word_candidate_1,
+           'word_candidate_2' => $word_candidate_2,
+           'classification_1' => $classification_1,
+           'classification_2' => $classification_2 );
       }   
       next( $a );
       next( $b );
