@@ -133,7 +133,9 @@
         configure_ui();
       } )
       .click( function () {
-        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
+
+        $( table_selector + ' input:checkbox' ).removeProp( "checked" );
+
       } );// end radio input change and click
 
       $( table_selector + ' input:radio[name$="adjudicate"]' ).change( function() {

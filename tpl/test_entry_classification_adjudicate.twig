@@ -70,16 +70,18 @@
           $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
           $( "#{{ parent.full }}_Next" ).trigger( "click" );
         }
-      } );
+      } );// end Submit button click
 
+
+      // find and handle radio input change events:
+      // copy the progenitor to the adjudicate entry
       $( table_selector + ' input:radio[value="accept"]' ).change(
         function() {
           var entry_id = $(this).prop( "id" ).split( "__" )[0];
           var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
           var source_text_id = '#' + entry_id + "__candidate";
           var source_value = $( source_text_id ).val();
-          $( target_text_id ).val( source_value );
-          }
+          $( target_text_id ).val( source_value );          
           $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
           $( target_text_id ).prop( "disabled", false );
 
@@ -87,7 +89,7 @@
         } )
       .click( function () {
 
-        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
+        $( table_selector + ' input:checkbox' ).removeProp( "checked" );
 
       } );// end radio input change and click
 
