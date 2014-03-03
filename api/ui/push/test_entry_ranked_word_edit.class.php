@@ -114,7 +114,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     $modifier->where( 'word_candidate', '=', '' );
     $num_empty_variant = $test_entry_ranked_word_class_name::count( $modifier );
    
-    $completed = $num_empty_selected == 0 && $num_empty_variant == 0 ? 1 : 0;
+    $completed = 0 == $num_empty_selected && 0 == $num_empty_variant ? 1 : 0;
     $db_test_entry->update_status_fields( $completed );
   }
 }

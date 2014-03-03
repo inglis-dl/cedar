@@ -91,7 +91,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
 
-        if( $count > 0 )
+        if( 0 < $count )
         {
           $args = array();
           $args['columns']['test_entry_id'] = $record->id;
@@ -203,7 +203,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         // ensure the adjudication record can hold the maximum required entries
         $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
-        if( $count > 0 )
+        if( 0 < $count )
         {
           $args = array();
           $args['columns']['test_entry_id'] = $record->id;
@@ -303,7 +303,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
 
-        if( $count > 0 )
+        if( 0 < $count )
         {
           $args = array();
           $args['columns']['test_entry_id'] = $record->id;

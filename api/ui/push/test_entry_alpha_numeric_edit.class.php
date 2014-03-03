@@ -125,7 +125,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $modifier->where( 'word_id', '!=', '' );
     $test_entry_alpha_numeric_class_name = 
       lib::get_class_name('database\test_entry_alpha_numeric');
-    $completed = $test_entry_alpha_numeric_class_name::count( $modifier ) > 0 ? 1 : 0;
+    $completed = 0 < $test_entry_alpha_numeric_class_name::count( $modifier ) ? 1 : 0;
     $db_test_entry->update_status_fields( $completed );
   }
 }

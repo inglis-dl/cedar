@@ -179,7 +179,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
       $participant_list = $participant_class_name::select( $mod_limit );
 
       $participant_count = count( $participant_list );
-      if( $participant_count > 0 )
+      if( 0 < $participant_count )
       {
         foreach( $participant_list as $db_participant )
         { 
@@ -187,7 +187,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
           $assignment_mod = clone $assignment_mod_base;
           $assignment_mod->where( 'participant_id', '=', $db_participant->id );
 
-          if( $assignment_class_name::count( $assignment_mod ) == 0 )
+          if( 0 == $assignment_class_name::count( $assignment_mod ) )
           {
             if( $db_cohort->name == 'tracking' && $has_tracking )
             {
@@ -195,8 +195,8 @@ class assignment_add extends \cenozo\ui\widget\base_view
               $args['participant_id'] = $db_participant->id;
               $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
 
-              if( !is_null( $recording_list ) && $recording_list->success == 1 && 
-                   is_array( $recording_list->data ) && count( $recording_list->data ) > 0  )
+              if( !is_null( $recording_list ) && 1 == $recording_list->success && 
+                   is_array( $recording_list->data ) && 0 < count( $recording_list->data ) )
               { 
                  foreach( $recording_list->data as $data )
                  {
@@ -204,8 +204,8 @@ class assignment_add extends \cenozo\ui\widget\base_view
                                         SABRETOOTH_URL . '/' . $data->url );
                    $response = array();
                    http_head( $url, $auth, $response );
-                   if( array_key_exists( 'response_code', $response ) )             
-                     $found |= $response['response_code'] == 200 ? true : false; 
+                   if( array_key_exists( 'response_code', $response ) )
+                     $found |= 200 == $response['response_code'] ? true : false; 
                  }
               }
             }

@@ -75,7 +75,7 @@ class test_entry extends \cenozo\database\has_note
    */
   public function get_adjudicate_entry()
   {
-    if( is_null( $this->completed ) || $this->completed == 0 || $this->deferred == 1 )
+    if( is_null( $this->completed ) || 0 == $this->completed || 1 == $this->deferred )
       return NULL;
     
     // find a matching assignment based on participant id and user id uniqueness
