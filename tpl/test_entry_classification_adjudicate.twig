@@ -81,6 +81,8 @@
           var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
           var source_text_id = '#' + entry_id + "__candidate";
           var source_value = $( source_text_id ).val();
+          $( target_text_id ).removeClass( "candidate intrusion variant" );
+          $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
           $( target_text_id ).val( source_value );          
           $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
           $( target_text_id ).prop( "disabled", false );

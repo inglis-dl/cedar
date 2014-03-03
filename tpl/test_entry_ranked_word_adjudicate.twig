@@ -112,10 +112,12 @@
             $( table_selector + ' input:radio[id^="' + entry_id + '__"]:checked').prop( "id" );
           var target_text_id = '#' + 
             $( table_selector + ' input:text[id*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
+          $( target_text_id ).removeClass( "candidate intrusion variant" );
           if( -1 != radio_id.indexOf( "variant" ) ) {
             var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
             $( target_text_id ).val( $( source_text_id ).val() );
             $( target_text_id ).prop( "disabled", false );
+            $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
           } else {
             $( target_text_id ).val( "" );
             $( target_text_id ).attr( "value", "" );
@@ -141,6 +143,7 @@
       $( table_selector + ' input:radio[name$="adjudicate"]' ).change( function() {
         var disable = -1 == $(this).prop( "id" ).indexOf( "variant" ); 
         var target_text_id = '#' +  $(this).prop( "name" );
+        $( target_text_id ).removeClass( "candidate intrusion variant" );
         if( disable ) {
           $( target_text_id ).prop( "disabled", true );
           $( target_text_id ).val( "" );
