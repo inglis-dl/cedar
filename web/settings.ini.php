@@ -25,7 +25,7 @@ $SETTINGS['general']['machine_password'] = NULL;
 $SETTINGS['general']['cohort'] = 'default';
 
 // the default number of classification test entry inputs
-$SETTINGS['interface']['classification_max_rank'] = 5;
+$SETTINGS['interface']['classification_max_rank'] = 40;
 
 // the url of sabretooth (set to NULL to disable sabretooth support)
 $SETTINGS['url']['SABRETOOTH'] = NULL;
