@@ -16,9 +16,9 @@
     var table_selector = "#{{ widget.full }}__entry_table";
 
     function configure_ui() {
-      var disable = $( table_selector + ' input:text[id$="adjudicate"]:not([value=""])' ).length !=
-                    $( table_selector + ' input:radio[value="accept"]' ).length / 2;
-      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );        
+      var numFilled = $( table_selector + ' input:text[id$="adjudicate"][value!=""]' ).length;
+      var numInput = $( table_selector + ' input:text[id$="adjudicate"]' ).length;
+      $( "#{{ parent.full }}_Submit" ).button( { disabled : numFilled != numInput } );        
     }
 
     // overrides the default autocomplete filter function to search only from the beginning
@@ -83,7 +83,8 @@
           var source_value = $( source_text_id ).val();
           $( target_text_id ).removeClass( "candidate intrusion variant" );
           $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
-          $( target_text_id ).val( source_value );          
+          $( target_text_id ).val( source_value );
+          $( target_text_id ).attr( "value", source_value );
           $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
           $( target_text_id ).prop( "disabled", false );
 
@@ -280,7 +281,7 @@
               <div class="adjudicate">
                 <input type="text"
                   id="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}__adjudicate"
-                  disabled="disabled"
+                  disabled
                   name="candidate"
                   value="">
               </div>
