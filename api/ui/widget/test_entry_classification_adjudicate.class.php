@@ -45,6 +45,9 @@ class test_entry_classification_adjudicate extends base_adjudicate
               'Widget requires test type to be classification, not ' .
               $test_type_name, __METHOD__ );
 
+    $language = $db_test_entry->get_assignment()->get_participant()->language;
+    $language = is_null( $language ) ? 'en' : $language;
+
     $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_entry();          
 
     $modifier = lib::create( 'database\modifier' );
