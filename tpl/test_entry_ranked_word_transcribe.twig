@@ -99,7 +99,9 @@
         var candidate = $(this).val().trim().toLowerCase();
         $(this).val( candidate );
         $(this).attr( "value", candidate );
-        if( 0 == candidate.length ) { 
+        $(this).removeClass( "candidate intrusion variant" );
+        if( 0 == candidate.length ) {
+          alert( "Blank entries are not permitted" );
           configure_ui();
           return false;
         }  
@@ -123,7 +125,6 @@
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
           {
-             $(this).removeClass( "candidate intrusion variant" );
              $(this).addClass( classification );
           }           
           
@@ -137,9 +138,14 @@
               }  
             }
           } );
-
-          configure_ui(); 
+        }  else {
+          alert( "Entry was not accepted, try again." );
+          $(this).val( "" );
+          $(this).attr( "value", "" );
+          $(this).focus();
         }
+
+        configure_ui();
       } );// end text input change  
     }
 

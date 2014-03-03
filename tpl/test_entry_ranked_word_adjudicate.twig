@@ -176,7 +176,12 @@
         } )
       .change( function() {
 
-        if( 0 == $(this).val().length ) {
+        var candidate = $(this).val().trim().toLowerCase();
+        $(this).val( candidate );
+        $(this).attr( "value", candidate );
+        $(this).removeClass( "candidate intrusion variant" );
+
+        if( 0 == candidate.length ) {
 
           alert( "Blank entry not permitted." );
 
@@ -206,9 +211,11 @@
           if( $( id_1 ).prop( "checked" ) ) {
             $(this).val( $( text_id_1 ).val() );
             $(this).attr( "value", $(this).val() ); 
+            $(this).addClass( $( text_id_1 ).prop( "class" ) );
           } else if ( $( id_2 ).prop( "checked" ) ) {
             $(this).val( $( text_id_2 ).val() );
             $(this).attr( "value", $(this).val() ); 
+            $(this).addClass( $( text_id_2 ).prop( "class" ) );
           } else {
             // uncheck the accept radio inputs
             $( id_1 ).removeProp( "checked" );
@@ -222,7 +229,6 @@
             }
           }
         } else {
-          var candidate = $(this).val().trim().toLowerCase();
           var args = new Object();
           args.id = {{ test_id }};
           args["language"] = "{{ language }}";
@@ -230,11 +236,8 @@
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification )
           {
-            $(this).removeClass( "candidate intrusion variant" );
             $(this).addClass( classification );
           }
-          $(this).val( candidate );
-          $(this).attr( "value", candidate );
         }
 
         configure_ui();

@@ -32,18 +32,21 @@
         var numFilled = 0;
         var numInput = 0;
         var lastEmpty = null;
+        var numEmptyAdded = 0;
 
         $( table_selector + " input:text" ).each( function() {
           if( 0 < $(this).val().length ) {
             numFilled++;
           } else {
             if( !$(this).prop( "disabled" ) ) lastEmpty = $(this);
+            if( $(this).parent().hasClass( "added" ) ) numEmptyAdded++;
           }            
           numInput++;
         } );
 
         // only enable the next button when there is at least one entry filled
-        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled } );
+        // additionally, disable if there are any empty added fields
+        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled || 0 < numEmptyAdded } );
 
         // disable the Reset button if there is nothing to reset
         $( "#{{ parent.full }}_Reset" ).button( { disabled : 0 == numFilled } );
@@ -62,6 +65,17 @@
     function update_input_list() {
 
       $( table_selector + ' input:text' ).change( function() {
+
+        var candidate = $(this).val().trim().toLowerCase();
+        // we've trimmed and lower-cased the candidate, so update the UI
+        $(this).val( candidate );
+        // update the value to present state
+        $(this).attr( "value", candidate );
+        if( 0 == candidate.length ) {
+          alert( "Blank entries are not permitted" );
+          configure_ui();
+          return false;
+        }  
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop("id").split("__")[0];
@@ -73,28 +87,18 @@
         columns["rank"] = rank;
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = $(this).prop( "name" ) === "undefined" ? "" : $(this).prop( "name" );
-        var candidate = $(this).val().trim().toLowerCase();
-        if( 0 == candidate.length ) {
-          alert( "Blank entries are not permitted" );
-          return false;
-        }  
         columns["word_value"] = candidate;
         args.columns = columns;
 
         // push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          // we've trimmed and lower-cased the candidate, so update the UI
-          $(this).val( candidate );
-          // update the value to present state
-          $(this).attr( "value", candidate );
 
-          // refresh with updated information
+          // enable the next empty input
           var next_rank_id = "__" + ( rank + 1 );
           $( table_selector + ' input:text[id$="' + next_rank_id + '"]' ).prop( "disabled", false );
 
           configure_ui();
-        }
-        else {
+        } else {
           alert( "Entry was not accepted, try again." );
           // clear the text entry and re-focus
           $(this).val( "" );

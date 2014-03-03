@@ -31,18 +31,21 @@
         var numFilled = 0;
         var numInput = 0;
         var lastEmpty = null;
+        var numEmptyAdded = 0;
 
         $( table_selector + " input:text" ).each( function() {
           if( 0 < $(this).val().length ) {
             numFilled++;
           } else {
             if( !$(this).prop( "disabled" ) ) lastEmpty = $(this);
+            if( $(this).parent().hasClass( "added" ) ) numEmptyAdded++; 
           }            
           numInput++;
         } );
 
         // only enable the next button when there is at least one entry filled
-        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled } );
+        // additionally, disable if there are any empty added fields
+        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled || 0 < numEmptyAdded } );
 
         // disable the Reset button if there is nothing to reset
         $( "#{{ parent.full }}_Reset" ).button( { disabled : 0 == numFilled } );
@@ -95,6 +98,18 @@
 
       // callback for when text inputs are changed
       $input_list.change( function() {
+
+        var candidate = $(this).val().trim().toLowerCase();
+        // we've trimmed and lower-cased the candidate, so update the UI
+        $(this).val( candidate );
+        // update the value to present state
+        $(this).attr( "value", candidate );
+        $(this).removeClass( "candidate intrusion variant primary" );
+        if( 0 == candidate.length ) {
+          alert( "Blank entries are not permitted" );
+          configure_ui();
+          return false;
+        }
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split( "__" )[0];
@@ -106,20 +121,11 @@
         columns["rank"] = rank;
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = "";
-        var candidate = $(this).val().trim().toLowerCase();
-        if( 0 == candidate.length ) {
-          alert( "Blank entries are not permitted" );
-          return false;
-        }
         columns["word_candidate"] = candidate;
         args.columns = columns;
 
         //push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          // we've trimmed and lower-cased the candidate, so update the UI
-          $(this).val( candidate );
-          // update the value to present state
-          $(this).attr( "value", candidate );
 
           // determine what type of word this is
           args.id = {{ test_id }};
@@ -127,7 +133,6 @@
           args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification ) {
-            $(this).removeClass( "candidate intrusion variant primary" );
             $(this).addClass( classification );
           }
 
@@ -138,6 +143,7 @@
 
           configure_ui();
         } else {
+          // clear the text entry and re-focus
           alert( "Entry was not accepted, try again." );
           $(this).val( "" );
           $(this).attr( "value", "" );
