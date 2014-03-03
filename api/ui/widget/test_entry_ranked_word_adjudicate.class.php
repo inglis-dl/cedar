@@ -76,14 +76,16 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
 
         $word_candidate_1 = is_null( $a_obj->word_candidate ) ? '' : $a_obj->word_candidate;
         $word_candidate_2 = is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate;
+        $selection_1 = is_null( $a_obj->selection ) ? '' : $a_obj->selection;
+        $selection_2 = is_null( $b_obj->selection ) ? '' : $b_obj->selection;
         $classification_1 = '';
         $classification_2 = '';
-        if( !empty( $word_candidate_1 ) && $selection == 'variant' )
+        if( !empty( $word_candidate_1 ) && $selection_1 == 'variant' )
         {
           $data = $db_test->get_word_classification( $word_candidate_1, $language );
           $classification_1 = $data['classification'];
         }
-        if( !empty( $word_candidate_2 ) && $selection == 'variant' )
+        if( !empty( $word_candidate_2 ) && $selection_2 == 'variant' )
         {
           $data = $db_test->get_word_classification( $word_candidate_2, $language );
           $classification_2 = $data['classification'];
@@ -92,8 +94,8 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
         $entry_data[] = array(
            'id_1' => $a_obj->id,
            'id_2' => $b_obj->id,
-           'selection_1' => $a_obj->selection,
-           'selection_2' => $b_obj->selection,                  
+           'selection_1' => $selection_1,
+           'selection_2' => $selection_2,                  
            'word_id_1' => $db_word_1->id,
            'word_1' => $db_word_1->word,
            'word_id_2' => $db_word_2->id,
@@ -124,12 +126,12 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
         $word_candidate_2 = is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate;
         $classification_1 = '';
         $classification_2 = '';
-        if( !empty( $word_candidate_1 ) && $selection == 'variant' )
+        if( !empty( $word_candidate_1 ) )
         {
           $data = $db_test->get_word_classification( $word_candidate_1, $language );
           $classification_1 = $data['classification'];
         }
-        if( !empty( $word_candidate_2 ) && $selection == 'variant' )
+        if( !empty( $word_candidate_2 ) )
         {
           $data = $db_test->get_word_classification( $word_candidate_2, $language );
           $classification_2 = $data['classification'];
