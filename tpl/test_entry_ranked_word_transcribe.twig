@@ -310,6 +310,7 @@
         {% endif %}
     {% endfor %}  
 
+      {% if editable == true %}
       <tr>
         <td colspan=5 class="button">
             <button class="{{ widget.full }}__add_entry"
@@ -318,6 +319,7 @@
               id="{{ widget.full }}_Add">Add</button>
          </td>      
       </tr>
+      {% endif %}
 
     </tbody>   
   </table>

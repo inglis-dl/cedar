@@ -5,7 +5,7 @@ SET AUTOCOMMIT=0;
 SOURCE test_entry_note.sql;
 SOURCE operation.sql;
 SOURCE role_has_operation.sql;
-SORUCE test_entry_alpha_numeric.sql;
-SORUCE test_entry_classification.sql;
+SOURCE test_entry_alpha_numeric.sql;
+SOURCE test_entry_classification.sql;
 
 COMMIT;

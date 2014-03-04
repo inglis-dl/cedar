@@ -284,6 +284,7 @@
 
     {% endfor %}
 
+      {% if editable == true %}
       <tr>
         <td colspan="{{ numcell }}" class="button">
           <button class="{{ widget.full }}__add_entry"
@@ -291,6 +292,7 @@
             id="{{ widget.full }}_Add">Add</button>
         </td>     
       </tr>
+      {% endif %}
 
     </tbody>
   </table>
