@@ -66,7 +66,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             'The word "' . $record->word_candidate . '" is one of the '.
             'primary words and cannot be added as a variant.',
              __METHOD__ );
-         }    
+        }    
       }
       else if( '' === $record->selection )
       {
