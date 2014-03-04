@@ -12,6 +12,9 @@ VALUES( 2, "alpha_numeric", "alpha numeric response words for the MAT (alternati
 INSERT IGNORE INTO dictionary( id, name, description ) 
 VALUES( 3, "REY_words", "predefined words for the REY test" );
 
+INSERT IGNORE INTO dictionary( id, name, description ) 
+VALUES( 4, "REY_intrusions", "REY test intrusions" );
+
 LOAD DATA LOCAL INFILE 'confirmation_dictionary.csv' IGNORE 
 INTO TABLE word 
 CHARACTER SET latin1
