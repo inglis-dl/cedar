@@ -170,7 +170,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
 
     $assignment_mod_base = lib::create( 'database\modifier' );
     $assignment_mod_base->where( 'user_id', '=', $db_user->id );
-    $max_try = 10;
+    $max_try = 500;
     $try = 0;
     do
     {
