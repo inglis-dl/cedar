@@ -170,7 +170,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
 
     $assignment_mod_base = lib::create( 'database\modifier' );
     $assignment_mod_base->where( 'user_id', '=', $db_user->id );
-    $max_try = 10;
+    $max_try = 50;
     $try = 0;
     do
     {
@@ -205,7 +205,12 @@ class assignment_add extends \cenozo\ui\widget\base_view
                    $response = array();
                    http_head( $url, $auth, $response );
                    if( array_key_exists( 'response_code', $response ) )
-                     $found |= 200 == $response['response_code'] ? true : false; 
+                   {
+                     if( 200 == $response['response_code'] )
+                     { 
+                       $found = true;
+                     }  
+                   }
                  }
               }
             }
