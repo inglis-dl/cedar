@@ -16,8 +16,9 @@
     var table_selector = "#{{ widget.full }}__entry_table";
   
     function configure_ui() {
+
       // disable elements based on deferred status
-      if( {{ deferred }} ) {
+      if( {{ deferred }} || !{{ editable }} ) {
         $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", true );
         $( "#{{ parent.full }}_Defer" ).button( { "disabled": true } );
         $( "#{{ parent.full }}_Reset" ).button( { "disabled": true } );
@@ -228,7 +229,7 @@
     <tbody>
 
     {% set numcell = 4 %}
-    {% set kprev= 'true' %}
+    {% set kprev = 'true' %}
     {% set imax = entry_data|length-1 %}
     {% if numcell > imax %}
       {% set numcell = imax %}
@@ -260,7 +261,7 @@
              class="{{ entry_data[k].classification }}"
            {% endif %}  
            
-           {% if editable == false %}
+           {% if editable == 0 %}
              { readonly }
            {% endif %}
 
@@ -284,7 +285,7 @@
 
     {% endfor %}
 
-      {% if editable == true %}
+      {% if editable == 1 %}
       <tr>
         <td colspan="{{ numcell }}" class="button">
           <button class="{{ widget.full }}__add_entry"

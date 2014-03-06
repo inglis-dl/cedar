@@ -38,7 +38,8 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     parent::execute();
 
     $db_test_entry = $this->get_record();
-    $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
+    $db_test = $db_test_entry->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
     if( $test_type_name == 'ranked_word' )
     {
       $intrusion_list = array();
@@ -106,6 +107,8 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     }
     else if( $test_type_name == 'alpha_numeric' )
     {
+      $language = $db_test_entry->get_assignment()->get_participant()->language;
+      $language = is_null( $language ) ? 'en' : $language;
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'language', '=', $language );
       $max_rank = $db_test->get_dictionary()->get_word_count( $modifier );
