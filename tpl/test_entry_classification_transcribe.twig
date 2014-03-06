@@ -16,8 +16,9 @@
     var table_selector = "#{{ widget.full }}__entry_table";
   
     function configure_ui() {
+
       // disable elements based on deferred status
-      if( {{ deferred }} ) {
+      if( {{ deferred }} || !{{ editable }} ) {
         $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", true );
         $( "#{{ parent.full }}_Defer" ).button( { "disabled": true } );
         $( "#{{ parent.full }}_Reset" ).button( { "disabled": true } );
