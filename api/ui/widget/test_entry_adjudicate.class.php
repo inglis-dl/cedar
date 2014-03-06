@@ -132,7 +132,8 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       $args['participant_id'] = $db_participant->id;
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
       $recording_data = array();
-      if( 1 == $recording_list->success && 0 < count( $recording_list->data ) ) 
+      if( !is_null( $recording_list ) &&
+          1 == $recording_list->success && 0 < count( $recording_list->data ) ) 
       {   
         foreach( $recording_list->data as $data )
         {   
