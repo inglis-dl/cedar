@@ -28,7 +28,9 @@ class test_entry_classification_new extends \cenozo\ui\push\base_new
     {
       $test_entry_classification_class_name = 
         lib::get_class_name( 'database\test_entry_classification' );
-      $args['columns']['rank'] = $test_entry_classification_class_name::count() + 1;
+      $modifier = lib::create('database\modifier');
+      $modifier->where( 'test_entry_id', '=', $args['columns']['test_entry_id'] );
+      $args['columns']['rank'] = $test_entry_classification_class_name::count( $modifier ) + 1;
     }
 
     parent::__construct( 'test_entry_classification', $args );
