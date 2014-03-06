@@ -182,13 +182,18 @@
   <table id="{{ widget.full }}__entry_table">
 
     <tbody>
-    {% set numcell =  10 %}
-    {% set kprev = true %}
-    {% for i in range(0, entry_data|length-1, numcell) %}
+    {% set numcell = 10 %}
+    {% set kprev = 'true' %}
+    {% set imax = entry_data|length-1 %}
+    {% if numcell > imax %}
+      {% set numcell = imax %}
+    {% endif %}
+
+    {% for i in range(0, imax, numcell) %}
       <tr>
       {% set kmax = i+numcell-1 %}
-      {% if kmax > entry_data|length-1 %}
-        {% set kmax = entry_data|length-1 %}
+      {% if kmax > imax %}
+        {% set kmax = imax %}
       {% endif %}  
       {% for k in i..kmax %}
 
@@ -207,16 +212,16 @@
              id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
              name="{{ name }}"
 
-             {% if editable == false %}
+             {% if editable == 0  %}
                { readonly }
              {% endif %}
              {% if status == 'empty'  %} 
-               {% if kprev == false %}
+               {% if kprev == 'false' %}
                  { disabled }
                {% endif %}
-               {% set kprev = false %}
+               {% set kprev = 'false' %}
              {% elseif status == 'word' %}
-               {% set kprev = true %}
+               {% set kprev = 'true' %}
              {% endif %}
                
              value="{{ value }}">
@@ -228,7 +233,7 @@
 
     {% endfor %}
 
-      {% if editable == true %}
+      {% if editable == 1 %}
       <tr>
         <td colspan="{{ numcell }}" class="button">
           <button class="{{ widget.full }}__add_entry"

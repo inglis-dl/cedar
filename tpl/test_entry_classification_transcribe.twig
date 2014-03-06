@@ -229,7 +229,7 @@
     <tbody>
 
     {% set numcell = 4 %}
-    {% set kprev= 'true' %}
+    {% set kprev = 'true' %}
     {% set imax = entry_data|length-1 %}
     {% if numcell > imax %}
       {% set numcell = imax %}
@@ -261,7 +261,7 @@
              class="{{ entry_data[k].classification }}"
            {% endif %}  
            
-           {% if editable == false %}
+           {% if editable == 0 %}
              { readonly }
            {% endif %}
 
@@ -285,7 +285,7 @@
 
     {% endfor %}
 
-      {% if editable == true %}
+      {% if editable == 1 %}
       <tr>
         <td colspan="{{ numcell }}" class="button">
           <button class="{{ widget.full }}__add_entry"

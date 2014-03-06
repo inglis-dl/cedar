@@ -127,7 +127,7 @@
       </table>
     {% endif %}
     <input type="checkbox"
-      {% if editable == false %}
+      {% if editable == 0 %}
         { readonly }  
       {% endif %}
       id="{{ widget.full }}__audio_fault"
@@ -138,13 +138,13 @@
   <div class="spacer">
   
   <div>
-    {% if actionable == true %}
-    {% from 'macros.twig' import confirm_buttons %}
-      {{ confirm_buttons( slot, widget.full, 
-        ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-   
-    {% from 'macros.twig' import note_widget %}    
-    {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
+    {% if actionable == 1 %}
+      {% from 'macros.twig' import confirm_buttons %}
+        {{ confirm_buttons( slot, widget.full, 
+          ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
+     
+      {% from 'macros.twig' import note_widget %}    
+      {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
     {% endif %}    
   </div>
 

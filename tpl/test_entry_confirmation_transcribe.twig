@@ -90,7 +90,7 @@
             id="{{ entry_data.id }}__yes"
             name="confirmation"
             value="yes"
-            {% if editable == false %}
+            {% if editable == 0 %}
               { readonly }
             {% endif %}
             {{ entry_data.confirmation == '1' ? "checked" : "" }}>
@@ -100,7 +100,7 @@
             id="{{ entry_data.id }}__no"
             name="confirmation"
             value="no"
-            {% if editable == false %}
+            {% if editable == 0 %}
               { readonly }
             {% endif %}
             {{ entry_data.confirmation == '0' ? "checked" : "" }}>
