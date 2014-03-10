@@ -53,6 +53,7 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "dictionary_import", "process", true, "Processes words from a CSV file." );
 
 -- notes
+
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "note", "delete", true, "Removes a note from the system." );
 INSERT INTO operation( type, subject, name, restricted, description )
