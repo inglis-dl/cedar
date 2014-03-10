@@ -2,6 +2,7 @@
 
 SET AUTOCOMMIT=0;
 
+SOURCE assignment.sql;
 SOURCE role_has_operation.sql;
 
 COMMIT;
