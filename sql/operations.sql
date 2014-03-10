@@ -63,6 +63,13 @@ VALUES( "widget", "note", "list", false, "Displays a list of notes." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "note", "new", false, "Creates a new note." );
 
+-- productivity
+
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "productivity", "report", true, "Download a productivity report." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "productivity", "report", true, "Set up a productivity report." );
+
 -- ranked_word_set
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
