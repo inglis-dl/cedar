@@ -88,7 +88,6 @@ class assignment_add extends \cenozo\ui\widget\base_view
       $cohort_list = $cohort_class_name::select();
     }
 
-
     foreach( $cohort_list as $db_cohort )
     {
       $cohort_ids[] = $db_cohort->id;
@@ -184,10 +183,15 @@ class assignment_add extends \cenozo\ui\widget\base_view
         foreach( $participant_list as $db_participant )
         { 
           $db_cohort = $db_participant->get_cohort();
-          $assignment_mod = clone $assignment_mod_base;
-          $assignment_mod->where( 'participant_id', '=', $db_participant->id );
+          $assignment_user_mod = clone $assignment_mod_base;
+          $assignment_user_mod->where( 'participant_id', '=', $db_participant->id );
+          $assignment_user_count = $assignment_class_name::count( $assignment_user_mod );
 
-          if( 0 == $assignment_class_name::count( $assignment_mod ) )
+          $assignment_total_mod = lib::create( 'database\modifier' );
+          $assignment_total_mod->where( 'participant_id', '=', $db_participant->id );
+          $assignment_total_count = $assignment_class_name::count( $assignment_total_mod );
+
+          if( 0 == $assignment_user_count && $assignment_total_count < 2 )
           {
             if( $db_cohort->name == 'tracking' && $has_tracking )
             {
