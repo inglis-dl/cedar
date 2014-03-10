@@ -42,6 +42,9 @@ class test_entry_new extends \cenozo\ui\push\base_new
     $record = $this->get_record();
 
     $db_participant = NULL;
+    $db_test_entry_1 = NULL;
+    $db_test_entry_2 = NULL;
+
     $adjudicate = ( is_null( $record->assignment_id ) && !is_null( $record->test_id ) );
     if( $adjudicate )
     {
@@ -134,12 +137,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
             $db_entry->save();
           }
         }
-        $db_test_entry_1->adjudicate = 0;
-        $db_test_entry_2->adjudicate = 0;
-        $db_test_entry_1->save();
-        $db_test_entry_2->save();
-        $record->completed = 1;
-        $record->save();
       }
     }
     else if( $test_type_name == 'confirmation' )
@@ -164,12 +161,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
       {
         $db_test_entry_1 = lib::create( 'database\test_entry', $columns['id_1'] );
         $db_test_entry_2 = lib::create( 'database\test_entry', $columns['id_2'] );
-        $db_test_entry_1->adjudicate = 0;
-        $db_test_entry_2->adjudicate = 0;
-        $db_test_entry_1->save();
-        $db_test_entry_2->save();
-        $record->completed = 1;
-        $record->save();
       }
     }
     else if( $test_type_name == 'classification' )
@@ -265,12 +256,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
             $db_entry->save();
           }
         }
-        $db_test_entry_1->adjudicate = 0;
-        $db_test_entry_2->adjudicate = 0;
-        $db_test_entry_1->save();
-        $db_test_entry_2->save();
-        $record->completed = 1;
-        $record->save();
       }
     }
     else if( $test_type_name == 'alpha_numeric' )
@@ -359,12 +344,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
             $db_entry->save();
           }     
         }
-        $db_test_entry_1->adjudicate = 0;
-        $db_test_entry_2->adjudicate = 0;
-        $db_test_entry_1->save();
-        $db_test_entry_2->save();
-        $record->completed = 1;
-        $record->save();
       }
     }
     else
@@ -372,6 +351,16 @@ class test_entry_new extends \cenozo\ui\push\base_new
       throw lib::create( 'exception\runtime',
         'Test entry requires a valid test type, not ' .
         $test_type_name, __METHOD__ );
+    }
+
+    if( $adjudicate )
+    {
+      $db_test_entry_1->adjudicate = 0;
+      $db_test_entry_2->adjudicate = 0;
+      $db_test_entry_1->save();
+      $db_test_entry_2->save();
+      $record->completed = 1;
+      $record->save();
     }
   }
 }
