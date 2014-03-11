@@ -117,9 +117,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
         $assignment_mod = lib::create( 'database\modifier' );
         $assignment_mod->where( 'user_id', '=', $db_user->id );
-        // select non-adjudicate submissions
-        $assignment_mod->where( 'assignment_id', '!=', '' );
-        // select completed assignments
         $assignment_mod->where( 'end_datetime', '!=', '' );
         
         if( $restrict_start_date && $restrict_end_date )
