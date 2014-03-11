@@ -26,4 +26,17 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
   {
     parent::__construct( 'test_entry', $args );
   }
+
+  /** 
+   * Finishes the operation with any post-execution instructions that may be necessary.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected function finish() 
+  {
+     parent::finish();
+     $record = $this->get_record();
+     $record->update_status_fields( $record->completed );
+  }
 }
