@@ -23,23 +23,24 @@ class assignment extends \cenozo\database\record
    */
   public function is_complete( $role = 'typist' )
   {
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'assignment_id', '=', $this->id );
-
+    $base_mod = lib::create( 'database\modifier' );
+    $base_mod->where( 'assignment_id', '=', $this->id );
+    $modifier = clone $base_mod;
+    $modifier->where( 'deferred', '=', 0 );
+    $modifier->where( 'completed', '=', 1 );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-
+    $num_test = $test_entry_class_name::count( $base_mod );
+    
     if( $role == 'typist' )
     {
-      $modifier->where( 'deferred', '=', 1 );
-      $modifier->where( 'completed', '=', 0, true, true );
-      $num_completed = $test_entry_class_name::count( $modifier );
-      return 0 == $num_completed;
+      $num_complete = $test_entry_class_name::count( $modifier );
+      return $num_test == $num_complete;
     }
     else
     {
-      $modifier->where( 'adjudicate', '=', 1 );
-      $num_adjudicate  = $test_entry_class_name::count( $modifier );
-      return 0 == $num_adjudicate && !empty( $this->end_datetime );
+      $modifier->where( 'adjudicate', '=', 0 );
+      $num_complete  = $test_entry_class_name::count( $modifier );
+      return $num_test == $num_complete && !empty( $this->end_datetime );
     }
   }
 }

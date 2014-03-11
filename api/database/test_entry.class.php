@@ -204,10 +204,17 @@ class test_entry extends \cenozo\database\has_note
     $this->save();
 
     $db_assignment = $this->get_assignment();
-    if( !is_null( $db_assignment ) && $db_assignment->is_complete() )
+    if( !is_null( $db_assignment ) )
     {
-      $db_assignment->end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
+      if( $db_assignment->is_complete() )
+      {
+        $db_assignment->end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
+      }
+      else
+      {
+        $db_assignment->end_datetime = NULL;
+      }
       $db_assignment->save();
-    }
+    }  
   }
 }

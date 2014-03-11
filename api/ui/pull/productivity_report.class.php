@@ -10,9 +10,9 @@ namespace cedar\ui\pull;
 use cenozo\lib, cenozo\log, cedar\util;
 
 /**
- * Productivity report data.
+ * pull: productivity report
  * 
- * @abstract
+ * Generate a report file containing typist productivity info
  */
 class productivity_report extends \cenozo\ui\pull\base_report
 {
@@ -44,8 +44,10 @@ class productivity_report extends \cenozo\ui\pull\base_report
     $user_class_name = lib::get_class_name( 'database\user' );
     $activity_class_name = lib::get_class_name( 'database\activity' );
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    $db_role = $role_class_name::get_unique_record( 'name', 'interviewer' );
+    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
+
     $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
     $site_mod = lib::create( 'database\modifier' );
     if( $restrict_site_id ) 
@@ -84,28 +86,29 @@ class productivity_report extends \cenozo\ui\pull\base_report
                      $start_datetime_obj == $now_datetime_obj );
     if( $single_date ) $single_datetime_obj = clone $start_datetime_obj;
 
-    $db_qnaire = lib::create( 'database\qnaire', $this->get_argument( 'restrict_qnaire_id' ) );
-    
-    $this->add_title( 
-      sprintf( 'Interviewer productivity for '.
-               'the %s interview', $db_qnaire->name ) ) ;
-    
     // we define the min and max datetime objects here, they get set in the next foreach loop, then
     // used in the for loop below
     $min_datetime_obj = NULL;
     $max_datetime_obj = NULL;
-          
+
     // now create a table for every site included in the report
+
     foreach( $site_class_name::select( $site_mod ) as $db_site )
     {
       $contents = array();
       // start by determining the table contents
       $grand_total_time = 0;
-      $grand_total_completes = 0;
-      $grand_total_calls = 0;
-      foreach( $user_class_name::select() as $db_user )
+      $grand_total_complete = 0;
+      $grand_total_adjudicate = 0;
+      $grand_total_defer = 0;
+
+      $user_mod = lib::create( 'database\modifier' );
+      $user_mod->where( 'access.site_id', '=', $db_site->id );
+      $user_mod->where( 'access.role_id', '=', $db_role->id );
+
+      foreach( $user_class_name::select( $user_mod ) as $db_user )
       {
-        // make sure the interviewer has min/max time for this date range
+        // make sure the typist has min/max time for this date range
         $activity_mod = lib::create( 'database\modifier' );
         $activity_mod->where( 'activity.user_id', '=', $db_user->id );
         $activity_mod->where( 'activity.site_id', '=', $db_site->id );
@@ -113,6 +116,12 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $activity_mod->where( 'operation.subject', '!=', 'self' );
 
         $assignment_mod = lib::create( 'database\modifier' );
+        $assignment_mod->where( 'user_id', '=', $db_user->id );
+        // select non-adjudicate submissions
+        $assignment_mod->where( 'assignment_id', '!=', '' );
+        // select completed assignments
+        $assignment_mod->where( 'end_datetime', '!=', '' );
+        
         if( $restrict_start_date && $restrict_end_date )
         {
           $activity_mod->where( 'datetime', '>=',
@@ -146,38 +155,54 @@ class productivity_report extends \cenozo\ui\pull\base_report
         if( is_null( $min_activity_datetime_obj ) || 
             is_null( $max_activity_datetime_obj ) ) continue;
         
-        // Determine the number of completed interviews and their average length.
-        // This is done by looping through all of this user's assignments.  Any assignment
-        // with an interview that is completed is tested to see if that interview's last 
-        // assignment is the originating assignment.
+        // Determine the number of completed assignments and their average length.
         ///////////////////////////////////////////////////////////////////////////////////////////
         
-        $completes = 0;
-        $interview_time = 0;
-        $calls = 0;
+        $num_complete = 0;
+        $num_adjudicate = 0;
+        $num_defer = 0;
+        $assignment_time = 0;
         foreach( $db_user->get_assignment_list( $assignment_mod ) as $db_assignment )
         {
-          $db_interview = $db_assignment->get_interview();
-          $calls += $db_assignment->get_phone_call_count();
-          if( $db_interview->completed )
-          {
-            $last_assignment_mod = lib::create( 'database\modifier' );
-            $last_assignment_mod->where( 'interview_id', '=', $db_interview->id );
-            $last_assignment_mod->order_desc( 'start_datetime' );
-            $last_assignment_mod->limit( 1 );
-            $db_last_assignment = current( $assignment_class_name::select( $last_assignment_mod ) );
-            if( $db_assignment->id == $db_last_assignment->id )
-            {
-              $completes++;
+          $test_entry_mod = lib::create( 'database\modifier' );
+          $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
+          $test_entry_mod->where( 'test_entry_note.user_id', '=', $db_user->id );
+          if( 0 < $test_entry_class_name::count( $test_entry_mod ) )
+            $num_defer++; 
 
-              foreach( $db_interview->get_qnaire()->get_phase_list() as $db_phase )
-              {
-                // only count the time in non-repeating phases
-                if( !$db_phase->repeated )
-                  $interview_time += $db_interview->get_interview_time( $db_phase );
-              }
-            }
-          }
+          // count the adjudicate submissions
+          $db_participant = $db_assignment->get_participant();
+          $test_entry_mod = lib::create( 'database\modifier' );
+          $test_entry_mod->where( 'assignment_id', '=', '' );
+          $test_entry_mod->where( 'participant_id', '=', $db_participant->id ); 
+          foreach( $test_entry_class_name::select( $test_entry_mod ) as $db_adjudicate )
+          {
+            // this is the adjudicated test entry submitted by an administrator
+            // get the test entries from the test transcribed by the current user
+            // and compare them
+
+            $test_entry_mod = lib::create( 'database\modifier' );
+            $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
+            $test_entry_mod->where( 'test_id', '=', $db_adjudicate->test_id );
+            $db_test_entry = $test_entry_class_name::select( $test_entry_mod );
+            if( !empty( $db_test_entry ) )
+            {
+              // get the name of the test and the method used to compare entries
+              $entry_name = 'test_entry_' .  $db_adjudicate->get_test()->get_test_type()->name;
+              $get_list_method = 'get_' . $entry_name . '_list';
+              $entry_list = $is->$get_list_method();
+              $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
+              $adjudicate = $entry_class_name::adjudicate_compare( 
+                $db_adjudicate->$get_list_method() , $db_test_entry[0]->$get_list_method() );
+              // if they match, then this user sourced the entries meaning the companion
+              // user was in error
+              if( 0 < $adjudicate )
+                $num_adjudicate++;
+            }              
+          } // end loop on test entries
+
+          $num_complete++;
+
         } // end loop on assignments
 
         // Determine the total working time.
@@ -221,74 +246,79 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
           $contents[] = array(
             $db_user->name,
-            $completes,
+            $num_defer,
+            $num_adjudicate,
+            $num_complete,
             is_null( $min_datetime_obj ) ? '??' : $min_datetime_obj->format( "H:i" ),
             is_null( $max_datetime_obj ) ? '??' : $max_datetime_obj->format( "H:i" ),
             sprintf( '%0.2f', $total_time ),
-            $total_time > 0 ? sprintf( '%0.2f', $completes / $total_time ) : '',
-            $completes > 0 ? sprintf( '%0.2f', $interview_time / $completes / 60 ) : '',
-            $total_time > 0 ? sprintf( '%0.2f', $calls / $total_time ) : '' );
+            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '',
+            $num_complete > 0 ? sprintf( '%0.2f', $assignment_time / $num_complete / 60 ) : '' );
         }
         else
         {
           $contents[] = array(
             $db_user->name,
-            $completes,
+            $num_defer,
+            $num_adjudicate,
+            $num_complete,
             sprintf( '%0.2f', $total_time ),
-            $total_time > 0 ? sprintf( '%0.2f', $completes / $total_time ) : '',
-            $completes > 0 ? sprintf( '%0.2f', $interview_time / $completes / 60 ) : '',
-            $total_time > 0 ? sprintf( '%0.2f', $calls / $total_time ) : '' );
+            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '',
+            $num_complete > 0 ? sprintf( '%0.2f', $assignment_time / $num_complete / 60 ) : '' );
         }
 
-        $grand_total_completes += $completes;
+        $grand_total_defer += $num_defer;
+        $grand_total_adjudicate += $num_adjudicate;
+        $grand_total_complete += $num_complete;
         $grand_total_time += $total_time;
-        $grand_total_calls += $calls;
       }
 
-      $average_callPH = $grand_total_time > 0 ? 
-        sprintf( '%0.2f', $grand_total_calls / $grand_total_time ) : 'N/A';
-      $average_compPH = $grand_total_time > 0 ? 
-        sprintf( '%0.2f', $grand_total_completes / $grand_total_time ) : 'N/A';
+      $average_complete_PH = $grand_total_time > 0 ? 
+        sprintf( '%0.2f', $grand_total_complete / $grand_total_time ) : 'N/A';
 
       if( $single_date )
       {
         $header = array(
-          "Interviewer",
+          "Typist",
+          "Deferrals",
+          "Adjudications",
           "Completes",
           "Start Time",
           "End Time",
           "Total Time",
           "CompPH",
-          "Avg. Length",
-          "CallPH" );
+          "Avg. Length" );
 
         $footer = array(
           "Total",
           "sum()",
+          "sum()",
+          "sum()",
           "--",
           "--",
           "sum()",
-          $average_compPH,
-          "average()",
-          $average_callPH );
+          $average_complete_PH,
+          "average()" );
       }
       else
       {
         $header = array(
-          "Interviewer",
+          "Typist",
+          "Deferrals",
+          "Adjudications",
           "Completes",
           "Total Time",
           "CompPH",
-          "Avg. Length",
-          "CallPH" );
+          "Avg. Length" );
 
         $footer = array(
           "Total",
           "sum()",
           "sum()",
-          $average_compPH,
-          "average()",
-          $average_callPH );
+          "sum()",
+          "sum()",
+          $average_complete_PH,
+          "average()" );
       }
 
       $title = 0 == $restrict_site_id ? $db_site->name : NULL;

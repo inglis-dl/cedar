@@ -141,7 +141,6 @@ class test_entry_reset extends \cenozo\ui\push\base_record
         'Assignment requires a valid test type, not ' . 
         $test_type_name, __METHOD__ );
     }
-    $db_test_entry->completed = 0;
-    $db_test_entry->save();
+    $db_test_entry->update_status_fields( 0 );
   }
 }
