@@ -53,6 +53,7 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "dictionary_import", "process", true, "Processes words from a CSV file." );
 
 -- notes
+
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "note", "delete", true, "Removes a note from the system." );
 INSERT INTO operation( type, subject, name, restricted, description )
@@ -61,6 +62,13 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "note", "list", false, "Displays a list of notes." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "note", "new", false, "Creates a new note." );
+
+-- productivity
+
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "productivity", "report", true, "Download a productivity report." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "productivity", "report", true, "Set up a productivity report." );
 
 -- ranked_word_set
 

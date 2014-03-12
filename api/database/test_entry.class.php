@@ -18,9 +18,10 @@ class test_entry extends \cenozo\database\has_note
    * Get the previous record according to test rank.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param boolean defines whether to get the next entry when adjudicating
    * @access public
    */
-  public function get_previous( $adjudicate = false)
+  public function get_previous( $adjudicate = false )
   {
     $db_prev_test_entry = NULL;
     if( is_null( $this->id ) )
@@ -69,6 +70,7 @@ class test_entry extends \cenozo\database\has_note
    * Get the next record according to test rank.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param boolean defines whether to get the next entry when adjudicating
    * @access public
    */
   public function get_next( $adjudicate = false )
@@ -125,7 +127,7 @@ class test_entry extends \cenozo\database\has_note
    */
   public function get_adjudicate_entry()
   {
-    if( is_null( $this->completed ) || 0 == $this->completed || 1 == $this->deferred )
+    if( 0 == $this->completed || 1 == $this->deferred )
       return NULL;
     
     // find a matching assignment based on participant id and user id uniqueness
@@ -192,6 +194,7 @@ class test_entry extends \cenozo\database\has_note
    * pass to this method in their edit operation.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param boolean sets the completed status
    * @access public
    */
   public function update_status_fields( $completed )
@@ -199,5 +202,19 @@ class test_entry extends \cenozo\database\has_note
     $this->completed = $completed;
     $this->adjudicate();
     $this->save();
+
+    $db_assignment = $this->get_assignment();
+    if( !is_null( $db_assignment ) )
+    {
+      if( $db_assignment->is_complete() )
+      {
+        $db_assignment->end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
+      }
+      else
+      {
+        $db_assignment->end_datetime = NULL;
+      }
+      $db_assignment->save();
+    }  
   }
 }

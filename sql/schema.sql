@@ -315,6 +315,8 @@ CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
   `create_timestamp` TIMESTAMP NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
   `participant_id` INT UNSIGNED NOT NULL,
+  `start_datetime` DATETIME NOT NULL,
+  `end_datetime` DATETIME NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_participant_id` (`participant_id` ASC),
   INDEX `fk_user_id` (`user_id` ASC),

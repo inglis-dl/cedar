@@ -243,6 +243,18 @@ SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "participant" AND operation.name = "view"
 AND role.name IN ( "administrator" );
 
+-- productivity
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "pull" AND subject = "productivity" AND operation.name = "report"
+AND role.name IN( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "productivity" AND operation.name = "report"
+AND role.name IN( "administrator" );
+
 -- ranked_word_set
 
 INSERT INTO role_has_operation( role_id, operation_id )
