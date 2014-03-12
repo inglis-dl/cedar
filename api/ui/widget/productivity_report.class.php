@@ -46,9 +46,8 @@ class productivity_report extends \cenozo\ui\widget\base_report
     $this->set_variable( 'description',
       'This report lists typist productivity.  The report can either be generated for a '.
       'particular day (which will include start and end times), or overall.  The report '.
-      'includes by user the number of completed assignments, number of '.
-      'adjudications, total working time, time per assignment and '.
-      'average assignment length.' );
+      'includes by user the number of deferred, adjudicated and completed assignments, '.
+      'the total working time, and the number of completed assignments per hour.' );
   }
 
   /**

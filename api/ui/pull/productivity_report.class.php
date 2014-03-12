@@ -86,12 +86,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
                      $start_datetime_obj == $now_datetime_obj );
     if( $single_date ) $single_datetime_obj = clone $start_datetime_obj;
 
-    // we define the min and max datetime objects here, they get set in the next foreach loop, then
-    // used in the for loop below
-    $min_datetime_obj = NULL;
-    $max_datetime_obj = NULL;
-
-    // now create a table for every site included in the report
+    // create a table for every site included in the report
 
     foreach( $site_class_name::select( $site_mod ) as $db_site )
     {
@@ -108,7 +103,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
       foreach( $user_class_name::select( $user_mod ) as $db_user )
       {
-        // make sure the typist has min/max time for this date range
+        // ensure the typist has min/max time for this date range
         $activity_mod = lib::create( 'database\modifier' );
         $activity_mod->where( 'activity.user_id', '=', $db_user->id );
         $activity_mod->where( 'activity.site_id', '=', $db_site->id );
@@ -167,6 +162,16 @@ class productivity_report extends \cenozo\ui\pull\base_report
           if( 0 < $test_entry_class_name::count( $test_entry_mod ) )
             $num_defer++; 
 
+          // NOTE: currently the assignment time includes all time until the assignment is
+          // completed by the typist even if there was a delay to complete due to a deferral.
+          // Therefore, code remains commented out until required.
+          /*
+          $interval = util::get_interval( 
+            $db_assignment->start_datetime, $db_assignment->end_datetime );
+          $assignment_time = 
+            $interval->d * 24.0 + $interval->h + $interval->i / 60.0 + $interval->s / 3600.0;
+          */  
+
           // count the adjudicate submissions
           $db_participant = $db_assignment->get_participant();
           $test_entry_mod = lib::create( 'database\modifier' );
@@ -187,10 +192,10 @@ class productivity_report extends \cenozo\ui\pull\base_report
               // get the name of the test and the method used to compare entries
               $entry_name = 'test_entry_' .  $db_adjudicate->get_test()->get_test_type()->name;
               $get_list_method = 'get_' . $entry_name . '_list';
-              $entry_list = $is->$get_list_method();
               $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
               $adjudicate = $entry_class_name::adjudicate_compare( 
                 $db_adjudicate->$get_list_method() , $db_test_entry[0]->$get_list_method() );
+
               // if they match, then this user sourced the entries meaning the companion
               // user was in error
               if( 0 < $adjudicate )
@@ -202,12 +207,16 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
         } // end loop on assignments
 
+        // if there were no completed assignments then ignore this user
+        if( 0 == $num_complete ) continue;
+        
         // Determine the total working time.
         // This is done by finding the minimum and maximum activity time for every day included in
         // the report and calculating the difference between the two times.
         ///////////////////////////////////////////////////////////////////////////////////////////
         $time = 0;
         $total_time = 0;
+        // the date components were set earlier, here we set the time to 0
         $min_activity_datetime_obj->setTime( 0, 0 );
         $max_activity_datetime_obj->setTime( 0, 0 );
         $interval = new \DateInterval( 'P1D' );
@@ -223,6 +232,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $db_user, $db_site, $db_role, $datetime_obj->format( 'Y-m-d' ) );
           $total_time = $round_times ? floor( 4 * $time ) / 4 : $time;
         }
+
+        // if there was no time spent then ignore this user
+        if( 0 == $total_time ) continue;
 
         // Now we can use all the information gathered above to fill in the contents of the table.
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -249,8 +261,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
             is_null( $min_datetime_obj ) ? '??' : $min_datetime_obj->format( "H:i" ),
             is_null( $max_datetime_obj ) ? '??' : $max_datetime_obj->format( "H:i" ),
             sprintf( '%0.2f', $total_time ),
-            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '',
-            $num_complete > 0 ? sprintf( '%0.2f', $assignment_time / $num_complete / 60 ) : '' );
+            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
         }
         else
         {
@@ -260,8 +271,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $num_adjudicate,
             $num_complete,
             sprintf( '%0.2f', $total_time ),
-            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '',
-            $num_complete > 0 ? sprintf( '%0.2f', $assignment_time / $num_complete / 60 ) : '' );
+            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
         }
 
         $grand_total_defer += $num_defer;
@@ -277,14 +287,13 @@ class productivity_report extends \cenozo\ui\pull\base_report
       {
         $header = array(
           "Typist",
-          "Deferrals",
-          "Adjudications",
-          "Completes",
+          "Defer",
+          "Adjudicate",
+          "Complete",
           "Start Time",
           "End Time",
           "Total Time",
-          "CompPH",
-          "Avg. Length" );
+          "Complete PH" );
 
         $footer = array(
           "Total",
@@ -294,19 +303,17 @@ class productivity_report extends \cenozo\ui\pull\base_report
           "--",
           "--",
           "sum()",
-          $average_complete_PH,
-          "average()" );
+          $average_complete_PH );
       }
       else
       {
         $header = array(
           "Typist",
-          "Deferrals",
-          "Adjudications",
-          "Completes",
+          "Defer",
+          "Adjudicate",
+          "Complete",
           "Total Time",
-          "CompPH",
-          "Avg. Length" );
+          "Complete PH" );
 
         $footer = array(
           "Total",
@@ -314,8 +321,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
           "sum()",
           "sum()",
           "sum()",
-          $average_complete_PH,
-          "average()" );
+          $average_complete_PH );
       }
 
       $title = 0 == $restrict_site_id ? $db_site->name : NULL;
