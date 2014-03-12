@@ -40,6 +40,7 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     $db_test_entry = $this->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
+
     if( $test_type_name == 'ranked_word' )
     {
       $intrusion_list = array();
@@ -141,6 +142,7 @@ class test_entry_reset extends \cenozo\ui\push\base_record
         'Assignment requires a valid test type, not ' . 
         $test_type_name, __METHOD__ );
     }
-    $db_test_entry->update_status_fields( 0 );
+
+    $db_test_entry->update_status_fields();
   }
 }

@@ -15,6 +15,27 @@ use cenozo\lib, cenozo\log, cedar\util;
 class assignment extends \cenozo\database\record
 {
   /** 
+   * Get sibling record to this assignment.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return record (NULL if no sibling)
+   * @access public
+   */
+  public function get_sibling_record()
+  {
+    // find a ing assignment based on participant id and user id uniqueness
+    $assign_mod = lib::create( 'database\modifier' );
+    $assign_mod->where( 'participant_id', '=', $this->participant_id );
+    $assign_mod->where( 'user_id', '!=', $this->user_id );
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $db_assignment = $assignment_class_name::select( $assign_mod );
+    if( empty( $db_assignment ) )
+      return NULL;
+          
+    return $db_assignment[0];
+  }
+
+  /** 
    * Returns the role dependent complete status of the assignment.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string the role for which completeness is to be determined

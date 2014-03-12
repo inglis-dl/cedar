@@ -56,7 +56,7 @@ class test_entry_confirmation_adjudicate extends base_adjudicate
         "count from 1 to 20, from 1, 2, 3, 4 and so on?";
     }
 
-    $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_entry(); 
+    $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_record(); 
 
     // Get the db entries
     $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );

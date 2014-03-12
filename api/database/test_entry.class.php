@@ -19,6 +19,7 @@ class test_entry extends \cenozo\database\has_note
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean defines whether to get the next entry when adjudicating
+   * @return record (NULL if unsuccessful)
    * @access public
    */
   public function get_previous( $adjudicate = false )
@@ -71,6 +72,7 @@ class test_entry extends \cenozo\database\has_note
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean defines whether to get the next entry when adjudicating
+   * @return record (NULL if unsuccessful)
    * @access public
    */
   public function get_next( $adjudicate = false )
@@ -118,43 +120,35 @@ class test_entry extends \cenozo\database\has_note
     return $db_next_test_entry;
   }
 
-
   /** 
-   * Get the entry record from the sibling assignment for adjudication.
+   * Get the test entry from the sibling assignment for adjudication.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return record (NULL if unsuccessful)
    * @access public
    */
-  public function get_adjudicate_entry()
+  public function get_adjudicate_record()
   {
-    if( 0 == $this->completed || 1 == $this->deferred )
-      return NULL;
-    
-    // find a matching assignment based on participant id and user id uniqueness
     $db_assignment = $this->get_assignment();
-    $assign_mod = lib::create( 'database\modifier' );
-    $assign_mod->where( 'participant_id', '=', $db_assignment->participant_id );
-    $assign_mod->where( 'user_id', '!=', $db_assignment->user_id );
-    $assignment_class_name = lib::get_class_name( 'database\assignment' );
-    $db_assignment_match = $assignment_class_name::select( $assign_mod );
-    if( empty( $db_assignment_match ) )   
+    // this entry could belong to an adjudicate entry submission
+    if( empty( $db_assignment ) ) 
       return NULL;
-    
-    $db_assignment_match = $db_assignment_match[0];
-    // TODO check that the user_id in the assignment table should be unique
+    $db_assignment_sibling = $db_assignment->get_sibling_record();
+    if( $db_assignment_sibling == NULL )
+      return NULL;
     
     // get the matching test entry to compare with
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );    
     $entry_mod = lib::create( 'database\modifier' );
-    $entry_mod->where( 'assignment_id', '=', $db_assignment_match->id );
+    $entry_mod->where( 'assignment_id', '=', $db_assignment_sibling->id );
     $entry_mod->where( 'test_id', '=', $this->test_id );
     $entry_mod->where( 'completed', '=', 1 );
     $entry_mod->where( 'deferred', '=', 0 );
-    $db_test_entry_match = $test_entry_class_name::select( $entry_mod );
-    if( empty( $db_test_entry_match ) )    
+    $db_test_entry = $test_entry_class_name::select( $entry_mod );
+    if( empty( $db_test_entry ) )    
       return NULL;
  
-    return $db_test_entry_match[0];
+    return $db_test_entry[0];
   }
 
   /** 
@@ -164,27 +158,28 @@ class test_entry extends \cenozo\database\has_note
    * @access public
    * @throws exception\notice
    */
-  public function adjudicate()
+  public function update_adjudicate_status()
   {
-    $db_test_entry_match = $this->get_adjudicate_entry();
-    if( $db_test_entry_match == NULL ) return;
+    $this->adjudicate = 0;
+    $db_test_entry = $this->get_adjudicate_record();
+    if( $db_test_entry == NULL ) return;
 
-    // get all the sub entries for each entry
-    $entry_type_name = $this->get_test()->get_test_type()->name;
-    $entry_name = 'test_entry_' . $entry_type_name;
-    $get_list_method = 'get_' . $entry_name . '_list';
-    $entry_list = $this->$get_list_method();
-    $match_entry_list = $db_test_entry_match->$get_list_method();
- 
-    $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
-    $adjudicate = $entry_class_name::adjudicate_compare( $entry_list , $match_entry_list );
-    
-    $this->adjudicate = $adjudicate;
-     
-    if( $db_test_entry_match->adjudicate != $adjudicate )
+    if( 1 == $this->completed && 0 == $this->deferred )
     {
-      $db_test_entry_match->adjudicate = $adjudicate;
-      $db_test_entry_match->save();
+      // get all the sub entries for each test entry and compare
+      $entry_name = 'test_entry_' . $this->get_test()->get_test_type()->name;
+      $get_list_method = 'get_' . $entry_name . '_list';
+      $entry_list = $this->$get_list_method();
+      $match_entry_list = $db_test_entry->$get_list_method();
+   
+      $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
+      $this->adjudicate = $entry_class_name::adjudicate_compare( $entry_list , $match_entry_list );
+    }
+     
+    if( $db_test_entry->adjudicate != $this->adjudicate )
+    {
+      $db_test_entry->adjudicate = $this->adjudicate;
+      $db_test_entry->save();
     }
   }
 
@@ -194,17 +189,17 @@ class test_entry extends \cenozo\database\has_note
    * pass to this method in their edit operation.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param boolean sets the completed status
+   * @param boolean the completed status
    * @access public
    */
-  public function update_status_fields( $completed )
+  public function update_status_fields( $completed = 0 )
   {
     $this->completed = $completed;
-    $this->adjudicate();
+    $this->update_adjudicate_status();
     $this->save();
 
     $db_assignment = $this->get_assignment();
-    if( !is_null( $db_assignment ) )
+    if( !empty( $db_assignment ) )
     {
       if( $db_assignment->is_complete() )
       {

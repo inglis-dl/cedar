@@ -45,7 +45,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $db_test = $record->get_test();
     $db_participant = $db_assignment->get_participant();
-    $this->adjudicate_entry = $record->get_adjudicate_entry();
+    $this->adjudicate_entry = $record->get_adjudicate_record();
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_adjudicate
@@ -192,7 +192,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
    * @var test_entry_adjudicate_widget
    * @access protected
    */
-  public function get_adjudicate_entry() 
+  public function get_adjudicate_record() 
   {
     return $this->adjudicate_entry;
   }

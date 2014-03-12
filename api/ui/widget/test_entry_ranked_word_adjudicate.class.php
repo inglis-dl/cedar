@@ -48,7 +48,7 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
     $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
 
-    $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_entry();
+    $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_record();
 
     $word_mod = lib::create( 'database\modifier' );
     $word_mod->where( 'word_id', '!=', '' );

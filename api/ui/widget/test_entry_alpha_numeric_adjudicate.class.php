@@ -45,7 +45,7 @@ class test_entry_alpha_numeric_adjudicate extends base_adjudicate
               'Widget requires test type to be alpha numeric, not ' .
               $test_type_name, __METHOD__ );
 
-    $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_entry();
+    $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_record();
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );

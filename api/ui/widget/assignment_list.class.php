@@ -121,7 +121,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $adjudicate_assignment_id = NULL;
           foreach( $test_entry_class_name::select( $mod_test_entry ) as $db_test_entry )
           {
-            $db_adjudicate_entry = $db_test_entry->get_adjudicate_entry();
+            $db_adjudicate_entry = $db_test_entry->get_adjudicate_record();
             if( $db_adjudicate_entry == NULL )
             {
               $allow_adjudicate = false;
