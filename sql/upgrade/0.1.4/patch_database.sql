@@ -5,5 +5,6 @@ SET AUTOCOMMIT=0;
 SOURCE assignment.sql;
 SOURCE operation.sql;
 SOURCE role_has_operation.sql;
+SOURCE test_entry.sql;
 
 COMMIT;

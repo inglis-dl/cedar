@@ -349,7 +349,6 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
   `adjudicate` TINYINT(1) NOT NULL DEFAULT 0,
-  `note` TEXT NULL DEFAULT NULL COMMENT 'id required to track adjudicate progenitors',
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
   INDEX `fk_assignment_id` (`assignment_id` ASC),

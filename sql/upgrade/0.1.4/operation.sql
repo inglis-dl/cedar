@@ -1,3 +1,5 @@
+SELECT "Adding productivity report to operation table" AS "";
+
 -- productivity
 
 INSERT INTO operation( type, subject, name, restricted, description )
