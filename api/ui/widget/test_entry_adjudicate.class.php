@@ -125,8 +125,13 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     if( $db_participant->get_cohort()->name == 'tracking' )
     {   
+      $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
-      $sabretooth_manager->use_machine_credentials( true );
+      $sabretooth_manager->set_user( $setting_manager->get_setting( 'sabretooth', 'user' ) );
+      $sabretooth_manager->set_password( $setting_manager->get_setting( 'sabretooth', 'password' ) );
+      $sabretooth_manager->set_site( $setting_manager->get_setting( 'sabretooth', 'site' ) );
+      $sabretooth_manager->set_role( $setting_manager->get_setting( 'sabretooth', 'role' ) );
+
       $args = array();
       $args['qnaire_rank'] = 1;
       $args['participant_id'] = $db_participant->id;

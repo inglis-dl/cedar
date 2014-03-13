@@ -11,9 +11,10 @@ global $SETTINGS;
 // whether or not to run the application in development mode
 $SETTINGS['general']['development_mode'] = true;
 
-// defines the username and password used by cedar when communicating as a machine
-$SETTINGS['general']['machine_user'] = 'put machine user name here';
-$SETTINGS['general']['machine_password'] = 'put machine password here';
+// defines the details used by cedar when communicating with sabretooth
+$SETTINGS['sabretooth']['user'] = 'put sabretooth cedar instance name here';
+$SETTINGS['sabretooth']['password'] = 'put sabretooth cedar instance password here';
+$SETTINGS['sabretooth']['site'] = 'put sabretooth site name here';
 
 // the file path to the framework and application
 $SETTINGS['path']['CENOZO'] = '/path/to/cenozo';
