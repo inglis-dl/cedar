@@ -33,7 +33,7 @@ listed db's
 sed -e "s/\`\(myapp\|cenozo\)\`/\`name_\1\`/g" schema.sql | mysql name_app
 
 - import the cenozo operations from cenozo/sql/operations.sql
-mysql name_myapp < path_to_cedar_sql/operations.sql
+mysql name_myapp < path_to_cenozo_sql/operations.sql
 
 - import the customized cenozo/sql/operations.sql from myapp/sql into name_app db:
 mysql name_myapp < operations.sql
@@ -50,7 +50,8 @@ sed -e "s/\(myapp\|cenozo\)/name_\1/g" roles.sql | mysql name_myapp
 - log into mastodon, add a service with name="myapp", title="MyApp"
 Version="0.1.0" or whatever version is in myapp/web/settings.ini.php
 
-- view details about service "myapp" , add Cohort list (tracking, comprehensive)
+- view details about service "myapp" , add cohorts to Cohort list (tracking, comprehensive) use regional,
+set Release Based  to false (no),
 and Role List entries (administrator, typist)
 
 - create a site in Mastodon: eg., McMaster (myapp)
@@ -61,6 +62,10 @@ and Role List entries (administrator, typist)
 
 - create base classes for all tables in myapp db that have a primary id column
 (use cenozo/api/database/event.class.php as a stub)
+
+- when updating php files that are cached on the live cati server, run the following:
+ sudo apache2ctl -k graceful
+ so that updates are accounted for safely
 
 - create a symbolic link public_html in your root user directory
 - create symbolic links to cenozo and your app's repository web folders
