@@ -42,6 +42,8 @@ mysql name_myapp < operations.sql
 
 - setup myapp/web/settings.local.ini.php from a copy of settings.local.ini.php.sample
 
+- in cenozo/app create the settings.local.ini.php
+
 - create roles for myapp db using a customized copy of cenozo/sql/roles.sql
 
 - use sed to change the default name of myapp and cenozo db's as required:
@@ -57,6 +59,15 @@ and Role List entries (administrator, typist)
 - create a site in Mastodon: eg., McMaster (myapp)
 
 - add an administrator level user (and other roles as required) to User List in Mastodon
+
+- it may be required to first create the admin user in cenozo:
+insert into access( user_id, role_id, site_id )
+select user.id, role.id, site.id
+from user, role, site
+here user.name = "dean" ********* or user user.name IN (list of names)
+and role.name = "administrator"
+and site.name = "mcmaster"
+and site.service_id = ( select id from service where name = "sabretooth" )
 
 - in the site list view, choose users to grant access to the new site along with roles
 
