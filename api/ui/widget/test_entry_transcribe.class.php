@@ -84,9 +84,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'test_type', $test_type_name );
     $this->set_variable( 'test_id', $db_test->id );
 
-    $dictionary_id = '';
-    $variant_dictionary_id = '';
-    $intrusion_dictionary_id = '';
+    $dictionary_id = 0;
+    $variant_dictionary_id = 0;
+    $intrusion_dictionary_id = 0;
 
     $db_dictionary = $db_test->get_dictionary();
     if( !is_null( $db_dictionary ) )
@@ -118,8 +118,13 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     
     if( $db_participant->get_cohort()->name == 'tracking' )
     {   
+      $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
-      $sabretooth_manager->use_machine_credentials( true );
+      $sabretooth_manager->set_user( $setting_manager->get_setting( 'sabretooth', 'user' ) );
+      $sabretooth_manager->set_password( $setting_manager->get_setting( 'sabretooth', 'password' ) );
+      $sabretooth_manager->set_site( $setting_manager->get_setting( 'sabretooth', 'site' ) );
+      $sabretooth_manager->set_role( $setting_manager->get_setting( 'sabretooth', 'role' ) );
+
       $args = array();
       $args['qnaire_rank'] = 1;
       $args['participant_id'] = $db_participant->id;
