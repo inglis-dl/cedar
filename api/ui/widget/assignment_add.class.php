@@ -154,7 +154,6 @@ class assignment_add extends \cenozo\ui\widget\base_view
     $participant_count = 0;
 
     $sabretooth_manager = NULL;
-    $args = array();
     if( $has_tracking )
     {
       $setting_manager = lib::create( 'business\setting_manager' );
@@ -163,7 +162,6 @@ class assignment_add extends \cenozo\ui\widget\base_view
       $sabretooth_manager->set_password( $setting_manager->get_setting( 'sabretooth', 'password' ) );
       $sabretooth_manager->set_site( $setting_manager->get_setting( 'sabretooth', 'site' ) );
       $sabretooth_manager->set_role( $setting_manager->get_setting( 'sabretooth', 'role' ) );
-      $args['qnaire_rank'] = 1;
     }  
 
     $max_try = 500;
@@ -191,20 +189,27 @@ class assignment_add extends \cenozo\ui\widget\base_view
           if( is_null( $db_assignment ) && 2 > $assignment_total_count )
           {
             // now see if this participant has any recordings
-            $args = array(
-              'qnaire_rank' => 1,
-              'participant_id' => $db_participant->id );
-            if( 0 < count( $sabretooth_manager->pull( 'recording', 'list', $args ) ) )
+            if( $has_tracking )
             {
-              $uid = $db_participant->uid;
-              $language = $db_participant->language;
-              $language = is_null( $language ) ? 'en' : $language;
-              $participant_id = $db_participant->id;
-              $cohort = $db_cohort->name;
-              $cohort_id = $db_cohort->id;              
-              $found = true;
-              break;
+              $args = array(
+                'qnaire_rank' => 1,
+                'participant_id' => $db_participant->id );
+              if( 0 < count( $sabretooth_manager->pull( 'recording', 'list', $args ) ) )
+              {
+                $uid = $db_participant->uid;
+                $language = $db_participant->language;
+                $language = is_null( $language ) ? 'en' : $language;
+                $participant_id = $db_participant->id;
+                $cohort = $db_cohort->name;
+                $cohort_id = $db_cohort->id;              
+                $found = true;
+                break;
+              }
             }
+            else if( $has_comprehensive )
+              throw lib::create( 'exception\notice',
+                'There are currently no participants with comprehensive recordings '. 
+                'available for processing.', __METHOD__ );
           }
         }
         $offset += $limit;

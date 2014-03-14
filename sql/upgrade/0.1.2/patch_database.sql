@@ -7,5 +7,6 @@ SOURCE operation.sql;
 SOURCE role_has_operation.sql;
 SOURCE test_entry_alpha_numeric.sql;
 SOURCE test_entry_classification.sql;
+SOURCE assignment.sql;
 
 COMMIT;

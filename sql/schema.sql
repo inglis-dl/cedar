@@ -320,6 +320,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
   PRIMARY KEY (`id`),
   INDEX `fk_participant_id` (`participant_id` ASC),
   INDEX `fk_user_id` (`user_id` ASC),
+  UNIQUE INDEX `uq_user_id_participant_id` (`user_id` ASC, `participant_id` ASC),
   CONSTRAINT `fk_assignment_participant_id`
     FOREIGN KEY (`participant_id`)
     REFERENCES `cenozo`.`participant` (`id`)
