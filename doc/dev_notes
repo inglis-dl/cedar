@@ -74,6 +74,9 @@ and site.service_id = ( select id from service where name = "sabretooth" )
 - create base classes for all tables in myapp db that have a primary id column
 (use cenozo/api/database/event.class.php as a stub)
 
+- when updating twig files that are cached on the live cati server:
+sudo rm -rf /tmp/cenozo/usr/local/lib/cedar-*/template/*
+
 - when updating php files that are cached on the live cati server, run the following:
  sudo apache2ctl -k graceful
  so that updates are accounted for safely
