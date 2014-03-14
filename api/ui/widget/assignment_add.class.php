@@ -98,6 +98,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
     }
 
     $base_mod = lib::create( 'database\modifier' );
+    $base_mod->where( 'active', '=', true );
     $base_mod->where( 'cohort_id', 'IN', $cohort_ids );
 
     // filter on participants who have the same language as the user
@@ -154,21 +155,17 @@ class assignment_add extends \cenozo\ui\widget\base_view
 
     $sabretooth_manager = NULL;
     $args = array();
-    $auth = array();
     if( $has_tracking )
     {
-      $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
-      $sabretooth_manager->use_machine_credentials( true );
-      $args['qnaire_rank'] = 1;
-      
       $setting_manager = lib::create( 'business\setting_manager' );
-      $user = $setting_manager->get_setting( 'general', 'machine_user' );
-      $pass = $setting_manager->get_setting( 'general', 'machine_password' );
-      $auth['httpauth'] = $user.':'.$pass;
+      $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
+      $sabretooth_manager->set_user( $setting_manager->get_setting( 'sabretooth', 'user' ) );
+      $sabretooth_manager->set_password( $setting_manager->get_setting( 'sabretooth', 'password' ) );
+      $sabretooth_manager->set_site( $setting_manager->get_setting( 'sabretooth', 'site' ) );
+      $sabretooth_manager->set_role( $setting_manager->get_setting( 'sabretooth', 'role' ) );
+      $args['qnaire_rank'] = 1;
     }  
 
-    $assignment_mod_base = lib::create( 'database\modifier' );
-    $assignment_mod_base->where( 'user_id', '=', $db_user->id );
     $max_try = 500;
     $try = 0;
     do
@@ -183,41 +180,21 @@ class assignment_add extends \cenozo\ui\widget\base_view
         foreach( $participant_list as $db_participant )
         { 
           $db_cohort = $db_participant->get_cohort();
-          $assignment_user_mod = clone $assignment_mod_base;
-          $assignment_user_mod->where( 'participant_id', '=', $db_participant->id );
-          $assignment_user_count = $assignment_class_name::count( $assignment_user_mod );
+          $db_assignment = $assignment_class_name::get_unique_record(
+            array( 'user_id', 'participant_id' ),
+            array( $db_user->id, $db_participant->id ) );
 
           $assignment_total_mod = lib::create( 'database\modifier' );
           $assignment_total_mod->where( 'participant_id', '=', $db_participant->id );
           $assignment_total_count = $assignment_class_name::count( $assignment_total_mod );
 
-          if( 0 == $assignment_user_count && $assignment_total_count < 2 )
+          if( is_null( $db_assignment ) && 2 > $assignment_total_count )
           {
-            if( $db_cohort->name == 'tracking' && $has_tracking )
-            {
-              // are there any valid recordings?
-              $args['participant_id'] = $db_participant->id;
-              $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
-
-              if( !is_null( $recording_list ) && 1 == $recording_list->success && 
-                   is_array( $recording_list->data ) && 0 < count( $recording_list->data ) )
-              { 
-                 foreach( $recording_list->data as $data )
-                 {
-                   $url = str_replace( 'localhost', $_SERVER['SERVER_NAME'],
-                                        SABRETOOTH_URL . '/' . $data->url );
-                   $response = array();
-                   http_head( $url, $auth, $response );
-                   if( array_key_exists( 'response_code', $response ) )
-                     $found |= 200 == $response['response_code'] ? true : false;
-                 }
-              }
-            }
-            else
-            {
-              $found = true;
-            }  
-            if( $found )
+            // now see if this participant has any recordings
+            $args = array(
+              'qnaire_rank' => 1,
+              'participant_id' => $db_participant->id );
+            if( 0 < count( $sabretooth_manager->pull( 'recording', 'list', $args ) ) )
             {
               $uid = $db_participant->uid;
               $language = $db_participant->language;
@@ -225,6 +202,7 @@ class assignment_add extends \cenozo\ui\widget\base_view
               $participant_id = $db_participant->id;
               $cohort = $db_cohort->name;
               $cohort_id = $db_cohort->id;              
+              $found = true;
               break;
             }
           }
