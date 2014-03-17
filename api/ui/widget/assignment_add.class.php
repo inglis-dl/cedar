@@ -194,7 +194,10 @@ class assignment_add extends \cenozo\ui\widget\base_view
               $args = array(
                 'qnaire_rank' => 1,
                 'participant_id' => $db_participant->id );
-              if( 0 < count( $sabretooth_manager->pull( 'recording', 'list', $args ) ) )
+              $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
+              $recording_data = array();
+              if( !is_null( $recording_list) &&
+                  1 == $recording_list->success && 0 < count( $recording_list->data ) )
               {
                 $uid = $db_participant->uid;
                 $language = $db_participant->language;
