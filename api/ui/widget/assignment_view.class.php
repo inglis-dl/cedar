@@ -39,7 +39,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
     parent::prepare();
     
     // add items to the view
-    $this->add_item( 'uid', 'constant', 'UId' );
+    $this->add_item( 'uid', 'constant', 'UID' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
     $this->add_item( 'user', 'constant', 'User' );
 
