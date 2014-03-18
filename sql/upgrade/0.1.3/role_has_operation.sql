@@ -29,6 +29,78 @@ CREATE PROCEDURE patch_role_has_operation()
       EXECUTE statement;
       DEALLOCATE PREPARE statement;
 
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'push' AND subject = 'away_time' AND operation.name = 'report' ",
+        "AND role.name IN ( 'administrator' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'push' AND subject = 'away_time' AND operation.name = 'delete' ",
+        "AND role.name IN ( 'administrator' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'push' AND subject = 'away_time' AND operation.name = 'new' ",
+        "AND role.name IN ( 'administrator' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'widget' AND subject = 'away_time' AND operation.name = 'add' ",
+        "AND role.name IN ( 'administrator' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'widget' AND subject = 'away_time' AND operation.name = 'list' ",
+        "AND role.name IN ( 'administrator' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'widget' AND subject = 'away_time' AND operation.name = 'view' ",
+        "AND role.name IN ( 'administrator' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'push' AND subject = 'typist' AND operation.name = 'begin_break' ",
+        "AND role.name IN ( 'typist' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SET @sql = CONCAT(
+        "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+        "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+        "WHERE type = 'push' AND subject = 'typist' AND operation.name = 'end_break' ",
+        "AND role.name IN ( 'typist' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
   END //
 DELIMITER ;
 CALL patch_role_has_operation();

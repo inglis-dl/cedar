@@ -320,6 +320,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
   PRIMARY KEY (`id`),
   INDEX `fk_participant_id` (`participant_id` ASC),
   INDEX `fk_user_id` (`user_id` ASC),
+  UNIQUE INDEX `uq_user_id_participant_id` (`user_id` ASC, `participant_id` ASC),
   CONSTRAINT `fk_assignment_participant_id`
     FOREIGN KEY (`participant_id`)
     REFERENCES `cenozo`.`participant` (`id`)
@@ -597,6 +598,44 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_note` (
     FOREIGN KEY (`user_id`)
     REFERENCES `cenozo`.`user` (`id`)
     ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`away_time`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`away_time` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`away_time` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `site_id` INT UNSIGNED NOT NULL,
+  `role_id` INT UNSIGNED NOT NULL,
+  `start_datetime` DATETIME NOT NULL,
+  `end_datetime` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_user_id` (`user_id` ASC),
+  INDEX `fk_site_id` (`site_id` ASC),
+  INDEX `fk_role_id` (`role_id` ASC),
+  INDEX `dk_start_datetime` (`start_datetime` ASC),
+  INDEX `dk_end_datetime` (`end_datetime` ASC),
+  CONSTRAINT `fk_away_time_user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_away_time_site_id`
+    FOREIGN KEY (`site_id`)
+    REFERENCES `cenozo`.`site` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_away_time_role_id`
+    FOREIGN KEY (`role_id`)
+    REFERENCES `cenozo`.`role` (`id`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
