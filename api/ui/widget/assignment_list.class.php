@@ -38,7 +38,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
-    $this->add_column( 'participant.uid', 'string', 'UId', true );
+    $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort', 'string', 'Cohort', false );
     $this->add_column( 'user.name', 'string', 'User', true );
     $this->add_column( 'defer', 'string', 'Defer', false );
