@@ -640,6 +640,44 @@ CREATE TABLE IF NOT EXISTS `cedar`.`away_time` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `cedar`.`user_time`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`user_time` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`user_time` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `site_id` INT UNSIGNED NOT NULL,
+  `role_id` INT UNSIGNED NOT NULL,
+  `date` DATE NOT NULL,
+  `total` FLOAT NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_user_id` (`user_id` ASC),
+  INDEX `fk_site_id` (`site_id` ASC),
+  INDEX `fk_role_id` (`role_id` ASC),
+  UNIQUE INDEX `uq_user_id_site_id_role_id_date` (`user_id` ASC, `site_id` ASC, `role_id` ASC, `date` ASC),
+  INDEX `dk_date` (`date` ASC),
+  CONSTRAINT `fk_user_time_user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_user_time_site_id`
+    FOREIGN KEY (`site_id`)
+    REFERENCES `cenozo`.`site` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_user_time_role_id`
+    FOREIGN KEY (`role_id`)
+    REFERENCES `cenozo`.`role` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

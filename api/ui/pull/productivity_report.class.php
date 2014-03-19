@@ -45,9 +45,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
     $activity_class_name = lib::get_class_name( 'database\activity' );
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+    $user_time_class_name = lib::get_class_name( 'database\user_time' );
 
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
-
     $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
     $site_mod = lib::create( 'database\modifier' );
     if( $restrict_site_id ) 
@@ -87,7 +87,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
     if( $single_date ) $single_datetime_obj = clone $start_datetime_obj;
 
     // create a table for every site included in the report
-
     foreach( $site_class_name::select( $site_mod ) as $db_site )
     {
       $contents = array();
@@ -100,7 +99,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
       $user_mod = lib::create( 'database\modifier' );
       $user_mod->where( 'access.site_id', '=', $db_site->id );
       $user_mod->where( 'access.role_id', '=', $db_role->id );
-
       foreach( $user_class_name::select( $user_mod ) as $db_user )
       {
         // ensure the typist has min/max time for this date range
@@ -140,16 +138,18 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
         }
 
-        $min_activity_datetime_obj = $activity_class_name::get_min_datetime( $activity_mod );
-        $max_activity_datetime_obj = $activity_class_name::get_max_datetime( $activity_mod );
-        
         // if there is no activity then skip this user
-        if( is_null( $min_activity_datetime_obj ) || 
-            is_null( $max_activity_datetime_obj ) ) continue;
+        if( 0 == $activity_class_name::count( $activity_mod ) ) continue;
+
+        // Determine the total time spent as a typist over the desired period
+        $total_time = $user_time_class_name::get_sum(
+          $db_user, $db_site, $db_role, $start_datetime_obj, $end_datetime_obj, $round_times );
+
+        // if there was no time spent then ignore this user
+        if( 0 == $total_time ) continue;
         
         // Determine the number of completed assignments and their average length.
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        
+        //////////////////////////////////////////////////////////////////////////
         $num_complete = 0;
         $num_adjudicate = 0;
         $num_defer = 0;
@@ -210,32 +210,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
         // if there were no completed assignments then ignore this user
         if( 0 == $num_complete ) continue;
         
-        // Determine the total working time.
-        // This is done by finding the minimum and maximum activity time for every day included in
-        // the report and calculating the difference between the two times.
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        $time = 0;
-        $total_time = 0;
-        // the date components were set earlier, here we set the time to 0
-        $min_activity_datetime_obj->setTime( 0, 0 );
-        $max_activity_datetime_obj->setTime( 0, 0 );
-        $interval = new \DateInterval( 'P1D' );
-        for( $datetime_obj = clone $min_activity_datetime_obj;
-             $datetime_obj <= $max_activity_datetime_obj;
-             $datetime_obj->add( $interval ) )
-        {
-          // if reporting a single date restrict the count to that day only
-          if( $single_date && $single_datetime_obj != $datetime_obj ) continue;
-
-          // get the elapsed time and round to 15 minute increments (if necessary)
-          $time += $activity_class_name::get_elapsed_time(
-            $db_user, $db_site, $db_role, $datetime_obj->format( 'Y-m-d' ) );
-          $total_time = $round_times ? floor( 4 * $time ) / 4 : $time;
-        }
-
-        // if there was no time spent then ignore this user
-        if( 0 == $total_time ) continue;
-
         // Now we can use all the information gathered above to fill in the contents of the table.
         ///////////////////////////////////////////////////////////////////////////////////////////
         if( $single_date )
@@ -246,9 +220,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
           $day_activity_mod->where( 'activity.role_id', '=', $db_role->id );
           $day_activity_mod->where( 'operation.subject', '!=', 'self' );
           $day_activity_mod->where( 'datetime', '>=',
-            $min_activity_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
+            $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
           $day_activity_mod->where( 'datetime', '<=',
-            $min_activity_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
+            $start_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
           
           $min_datetime_obj = $activity_class_name::get_min_datetime( $day_activity_mod );
           $max_datetime_obj = $activity_class_name::get_max_datetime( $day_activity_mod );
