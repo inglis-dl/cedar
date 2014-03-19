@@ -43,7 +43,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'user.name', 'string', 'User', true );
     $this->add_column( 'defer', 'string', 'Defer', false );
     $this->add_column( 'adjudicate', 'string', 'Adjudicate', false );
-    $this->add_column( 'complete', 'string', 'Complete', false );    
+    $this->add_column( 'complete', 'string', 'Complete', false );
+
+    $session = lib::create( 'business\session' )
+    $this->set_addable( $session->get_role()->name == 'typist' );
   }
   
   /**
