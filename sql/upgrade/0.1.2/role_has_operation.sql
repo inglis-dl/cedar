@@ -1,3 +1,9 @@
+SELECT "Removing defunct operations from roles" AS "";
+
+DELETE FROM role_has_operation
+WHERE operation_id IN (
+  SELECT id FROM operation WHERE subject = "assignment" AND name = "add" );
+
 DROP PROCEDURE IF EXISTS patch_role_has_operation;
 DELIMITER //
 CREATE PROCEDURE patch_role_has_operation()

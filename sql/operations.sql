@@ -6,8 +6,6 @@ SET AUTOCOMMIT=0;
 -- assignment
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
-VALUES( "widget", "assignment", "add", true, "View a form for creating a new assignment." );
-INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "assignment", "edit", true, "Edits an assignment's details." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "assignment", "list", true, "Lists assignments." );
