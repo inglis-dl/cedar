@@ -1,6 +1,6 @@
 <?php
 /**
- * typist_begin_break.class.php
+ * typist_end_break.class.php
  * 
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
@@ -10,11 +10,11 @@ namespace cedar\ui\push;
 use cenozo\lib, cenozo\log, cedar\util;
 
 /**
- * push: typist begin_break
+ * push: typist end_break
  *
  * Start the current user on a break (away_time)
  */
-class typist_begin_break extends \cenozo\ui\push
+class typist_end_break extends \cenozo\ui\push
 {
   /**
    * Constructor.
@@ -24,7 +24,7 @@ class typist_begin_break extends \cenozo\ui\push
    */
   public function __construct( $args )
   {
-    parent::__construct( 'typist', 'begin_break', $args );
+    parent::__construct( 'typist', 'end_break', $args );
   }
   
   /**
@@ -38,10 +38,29 @@ class typist_begin_break extends \cenozo\ui\push
     parent::execute();
 
     $session = lib::create( 'business\session' );
-    $db_away_time = lib::create( 'database\away_time' );
-    $db_away_time->user_id = $session->get_user()->id;
-    $db_away_time->site_id = $session->get_site()->id;
-    $db_away_time->role_id = $session->get_role()->id;
-    $db_away_time->save();
+    $db_user = $session->get_user();
+    $db_site = $session->get_site();
+    $db_role = $session->get_role();
+
+    // find this user's open break and record the end time
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'site_id', '=', $db_site->id );
+    $modifier->where( 'role_id', '=', $db_role->id );
+    $modifier->where( 'end_datetime', '=', NULL );
+    $away_time_list = $db_user->get_away_time_list( $modifier );
+    
+    // report an error of there isn't exactly 1 one open away time
+    if( 1 != count( $away_time_list ) )
+      log::alert( sprintf(
+        'When attempting to close away time, user "%s" has %d instead of 1 open away times!',
+        $db_user->name,
+        count( $away_time_list ) ) );
+    
+    foreach( $away_time_list as $db_away_time )
+    {
+      $date_obj = util::get_datetime_object();
+      $db_away_time->end_datetime = $date_obj->format( 'Y-m-d H:i:s' );
+      $db_away_time->save();
+    }
   }
 }

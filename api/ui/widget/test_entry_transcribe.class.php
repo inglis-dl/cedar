@@ -73,7 +73,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   {
     parent::setup();
 
-    /$session = lib::create( 'business\session' );
+    $session = lib::create( 'business\session' );
 
     // determine whether the typist is on a break
     $away_time_mod = lib::create( 'database\modifier' );
