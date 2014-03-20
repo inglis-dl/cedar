@@ -73,6 +73,14 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   {
     parent::setup();
 
+    $session = lib::create( 'business\session' );
+
+    // determine whether the typist is on a break
+    $away_time_mod = lib::create( 'database\modifier' );
+    $away_time_mod->where( 'end_datetime', '=', NULL );
+    $this->set_variable( 'on_break',
+    0 < $session->get_user()->get_away_time_count( $away_time_mod ) );
+
     $record = $this->get_record();
     $db_test = $record->get_test();
     $test_type_name = $db_test->get_test_type()->name;

@@ -11,8 +11,27 @@
   {{ parent() }}
 
   <script type="text/javascript">
+
+    function break_dialog() {
+      confirm_dialog(
+        "On a break",
+        "<p>Close this window when you wish to end your break.</p>",
+        function() {
+          ajax_push( "typist", "end_break" );
+        },
+        false
+      );
+    }
   
     $( function () {
+
+      // go on break button
+      $( "#{{ widget.full }}__break" ).click( function() {
+        if( ajax_push( "typist", "begin_break" ) ) break_dialog();
+      } );
+
+      {# show the break dialog if the operator is on break #}
+      {% if on_break %}break_dialog();{% endif %}
 
       $( "#{{ widget.full }}__audio_fault" ).click( function() {
         var args = new Object();
@@ -145,6 +164,9 @@
      
       {% from 'macros.twig' import note_widget %}    
       {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
+
+      <button id="{{ widget.full }}__break"
+        style="width: 200px;">Go on break</button>
     {% endif %}    
   </div>
 
