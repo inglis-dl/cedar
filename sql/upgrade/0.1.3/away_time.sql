@@ -32,7 +32,7 @@ CREATE PROCEDURE patch_away_time()
           "site_id INT UNSIGNED NOT NULL, ",
           "role_id INT UNSIGNED NOT NULL, ",
           "start_datetime DATETIME NOT NULL, ",
-          "end_datetime DATETIME NOT NULL DEFAULT NULL, ",
+          "end_datetime DATETIME NULL DEFAULT NULL, ",
           "PRIMARY KEY (id), ",
           "INDEX fk_user_id (user_id ASC), ",
           "INDEX fk_site_id (site_id ASC), ",
