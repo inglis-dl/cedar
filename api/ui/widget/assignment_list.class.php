@@ -38,12 +38,15 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
-    $this->add_column( 'participant.uid', 'string', 'UId', true );
+    $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort', 'string', 'Cohort', false );
     $this->add_column( 'user.name', 'string', 'User', true );
     $this->add_column( 'defer', 'string', 'Defer', false );
     $this->add_column( 'adjudicate', 'string', 'Adjudicate', false );
-    $this->add_column( 'complete', 'string', 'Complete', false );    
+    $this->add_column( 'complete', 'string', 'Complete', false );
+
+    $session = lib::create( 'business\session' );
+    $this->set_addable( $session->get_role()->name == 'typist' );
   }
   
   /**
@@ -68,9 +71,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     foreach( $assignment_list as $db_assignment )
     {
-      if( $db_role->name == 'typist' && $db_assignment->get_user()->name != $db_user->name )
-        continue;
-
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
       $test_count = $test_entry_class_name::count( clone $base_mod );
@@ -79,9 +79,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $mod_complete->where( 'completed', '=', true );
       $complete_count = $test_entry_class_name::count( $mod_complete );
 
-      if( $complete_count == $test_count && $db_role->name == 'typist' )
-        continue;
-      
       $db_participant = $db_assignment->get_participant();
       $language = $db_participant->language;
 
@@ -183,5 +180,52 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $this->set_variable( 'allow_adjudicate',
       ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
         $allow_adjudicate_operation ) );
+  }
+
+
+  /** 
+   * Overrides the parent class method to restrict by user_id and test_entry
+   * completed status, if necessary
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param database\modifier $modifier Modifications to the list.
+   * @return int
+   * @access protected
+   */
+  public function determine_record_count( $modifier = NULL )
+  {
+    // for typist role, restrict to their incomplete assignments
+    $session = lib::create( 'business\session' );
+    if( $session->get_role()->name == 'typist' )
+    {
+      if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'user_id', '=', $session->get_user()->id );
+      $modifier->where( 'test_entry.completed', '!=', 1 );      
+    }
+
+    return parent::determine_record_count( $modifier );
+  }
+
+  /** 
+   * Overrides the parent class method to restrict by user_id and test_entry
+   * completed status, if necessary
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param database\modifier $modifier Modifications to the list.
+   * @return array( record )
+   * @access protected
+   */
+  public function determine_record_list( $modifier = NULL )
+  {
+    // for typist role, restrict to their incomplete assignments
+    $session = lib::create( 'business\session' );
+    if( $session->get_role()->name == 'typist' )
+    {
+      if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'user_id', '=', $session->get_user()->id );
+      $modifier->where( 'test_entry.completed', '!=', 1 );      
+    }
+
+    return parent::determine_record_list( $modifier );
   }
 }
