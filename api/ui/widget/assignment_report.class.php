@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * widget call attempts report
  */
-class assignment_report extends base_report
+class assignment_report extends \cenozo\ui\widget\base_report
 {
   /**
    * Constructor
@@ -38,7 +38,6 @@ class assignment_report extends base_report
   {
     parent::prepare();
 
-    $this->add_restriction( 'site' );
     $this->add_restriction( 'dates' );
 
     $this->set_variable( 'description',

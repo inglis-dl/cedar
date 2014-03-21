@@ -13,6 +13,10 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "assignment", "new", true, "Creates a new assignment." );
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "assignment", "view", true, "View the details of an assignment." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "assignment", "report", true, "Download an assignment report." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "assignment", "report", true, "View a form to select an assignment report." );
 
 -- away_time
 

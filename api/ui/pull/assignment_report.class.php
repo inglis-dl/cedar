@@ -36,7 +36,6 @@ class assignment_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
-    $site_class_name = lib::create( 'database\site' );
     $event_class_name = lib::create( 'database\event' );
 
     $restrict_start_date = $this->get_argument( 'restrict_start_date' );
@@ -63,30 +62,31 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $base_cati_mod = clone $cati_mod;
     $base_comp_mod = clone $comp_mod;
 
-    $assign_cati_mod = clone $cati_mod;
-    $assign_comp_mod = clone $comp_mod;
+    $assign_cati_complete_mod = clone $cati_mod;
+    $assign_comp_complete_mod = clone $comp_mod;
 
-    $assign_cati_mod_in_progress = clone $cati_mod;
-    $assign_comp_mod_in_progress = clone $comp_mod;
+    $assign_cati_in_progress_mod = clone $cati_mod;
+    $assign_comp_in_progress_mod = clone $comp_mod;
 
     $total_cati_available = $participant_class_name::count( $cati_mod );
     $total_comp_available = $participant_class_name::count( $comp_mod );
 
     // get number of completed assignments
-    $assign_cati_mod->where( 'assignment.end_datetime', '!=', '' );
-    $assign_comp_mod->where( 'assignment.end_datetime', '!=', '' );
+    $assign_cati_complete_mod->where( 'assignment.end_datetime', '!=', NULL );
+    $total_cati_complete = $participant_class_name::count( $assign_cati_complete_mod );
 
-    $total_cati_complete = $participant_class_name::count( $assign_cati_mod );
-    $total_comp_complete = $participant_class_name::count( $assign_comp_mod );
+    $assign_comp_complete_mod->where( 'assignment.end_datetime', '!=', NULL );
+    $total_comp_complete = $participant_class_name::count( $assign_comp_complete_mod );
    
     // get number of in-progress assignments
-    $assign_cati_mod_in_progress->where( 'assignment.end_datetime', '=', '' );
-    $assign_comp_mod_in_progress->where( 'assignment.end_datetime', '=', '' );
+    $assign_cati_in_progress_mod->where( 'assignment.start_datetime', '!=', NULL );
+    $assign_cati_in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+    $total_cati_in_progress = $participant_class_name::count( $assign_cati_in_progress_mod );
 
-    $total_cati_complete = $participant_class_name::count( $assign_cati_mod_in_progress );
-    $total_comp_complete = $participant_class_name::count( $assign_comp_mod_in_progress );
-
-
+    $assign_comp_in_progress_mod->where( 'assignment.start_datetime', '!=', NULL );
+    $assign_comp_in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+    $total_comp_in_progress = $participant_class_name::count( $assign_comp_in_progress_mod );
+    
     // validate the dates
     if( $restrict_start_date )
     {
@@ -111,13 +111,13 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj = clone $temp_datetime_obj;
     }
 
-    // if there is no start date then start with the earliest started assignment
+    // if there is no start date then start with the earliest created assignment
     if( is_null( $start_datetime_obj ) )
     {
       $assign_mod = lib::create( 'database\modifier' );
       $assign_mod->order( 'start_datetime' );
       $assign_mod->limit( 1 );        
-      $assign_list = $assignment_class_name->select( $assign_mod );
+      $assign_list = $assignment_class_name::select( $assign_mod );
       $db_assign = current( $assign_list );
       $start_datetime_obj = util::get_datetime_object( $db_assign->start_datetime );
     }
@@ -145,25 +145,38 @@ class assignment_report extends \cenozo\ui\pull\base_report
 
       $cati_content =
         array( $from_datetime_obj->format( 'Y' ), $from_datetime_obj->format( 'F' ) );
-      $site_content =
+      $comp_content =
         array( $from_datetime_obj->format( 'Y' ), $from_datetime_obj->format( 'F' ) );
 
-      $cati_event_mod = clone $base_cati_mod;
-      $cati_event_mod->where( 'assignment.end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
-      $cati_event_mod->where( 'assignment.end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-      $cati_content[] = $participant_class_name::count( $cati_event_mod );
+      $cati_complete_mod = clone $base_cati_mod;
+      $cati_complete_mod->where( 'assignment.end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
+      $cati_complete_mod->where( 'assignment.end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+      $cati_content[] = $participant_class_name::count( $cati_complete_mod );
 
-      $comp_event_mod = clone $base_comp_mod;
-      $comp_event_mod->where( 'assignment.end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
-      $comp_event_mod->where( 'assignment.end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-      $comp_content[] = $participant_class_name::count( $comp_event_mod );
+      $comp_complete_mod = clone $base_comp_mod;
+      $comp_complete_mod->where( 'assignment.end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
+      $comp_complete_mod->where( 'assignment.end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+      $comp_content[] = $participant_class_name::count( $comp_complete_mod );
+
+      $cati_in_progress_mod = clone $base_cati_mod;
+      $cati_in_progress_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+      $cati_in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+      $cati_content[] = $participant_class_name::count( $cati_in_progress_mod );
+
+      $comp_in_progress_mod = clone $base_comp_mod;
+      $comp_in_progress_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+      $comp_in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+      $comp_content[] = $participant_class_name::count( $comp_in_progress_mod );
+
+      $cati_content[] = $total_cati_available;
+      $comp_content[] = $total_comp_available;
 
       $cati_contents[] = $cati_content;
-      $comp_contents[] = $site_content;
+      $comp_contents[] = $comp_content;
     }
 
-    $header = array( 'Year', 'Month' );
-    $footer = array( 'sum()', 'sum()' );
+    $header = array( 'Year', 'Month', 'Done', 'Open', 'Available' );
+    $footer = array( '', '', 'sum()', 'sum()', '' );
 
     $this->add_table( 'Completed CATI Interviews', $header, $cati_contents, $footer );
     $this->add_table( 'Completed COMP Interviews', $header, $comp_contents, $footer );
