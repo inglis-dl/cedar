@@ -59,7 +59,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     if( $db_participant->get_cohort()->name == 'tracking' )
     {
       $modifier = lib::create('database\modifier');
-      $modifier->where( 'name', 'not like', 'FAS%' );
+      $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
     }     
     
     $test_class_name = lib::get_class_name('database\test');

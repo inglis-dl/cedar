@@ -51,8 +51,8 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
     $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_record();
 
     $word_mod = lib::create( 'database\modifier' );
-    $word_mod->where( 'word_id', '!=', '' );
-    $word_mod->where( 'selection', '!=', '' );
+    $word_mod->where( 'word_id', '!=', NULL );
+    $word_mod->where( 'selection', '!=', NULL );
     $word_mod->order( 'id' );
     $a = $db_test_entry->get_test_entry_ranked_word_list( clone $word_mod ); 
     $b = $db_test_entry_adjudicate->get_test_entry_ranked_word_list( clone $word_mod );
@@ -110,8 +110,8 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
     }
 
     $intrusion_mod = lib::create( 'database\modifier' );
-    $intrusion_mod->where( 'selection', '=', '' );
-    $intrusion_mod->where( 'word_candidate', '!=', '' );
+    $intrusion_mod->where( 'selection', '=', NULL );
+    $intrusion_mod->where( 'word_candidate', '!=', NULL );
     $intrusion_mod->order( 'id' );
     $a = $db_test_entry->get_test_entry_ranked_word_list( clone $intrusion_mod );
     $b = $db_test_entry_adjudicate->get_test_entry_ranked_word_list( clone $intrusion_mod );

@@ -155,8 +155,8 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     }
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'word_id', '!=', '' );
-    $modifier->where( 'word_candidate', '!=', '', true, true );
+    $modifier->where( 'word_id', '!=', NULL );
+    $modifier->where( 'word_candidate', '!=', NULL, true, true );
     $test_entry_classification_class_name = 
       lib::get_class_name('database\test_entry_classification');
     $completed = $test_entry_classification_class_name::count( $modifier ) > 0 ? true : false;

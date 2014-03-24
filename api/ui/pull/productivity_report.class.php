@@ -110,7 +110,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
         $assignment_mod = lib::create( 'database\modifier' );
         $assignment_mod->where( 'user_id', '=', $db_user->id );
-        $assignment_mod->where( 'end_datetime', '!=', '' );
+        $assignment_mod->where( 'end_datetime', '!=', NULL );
         
         if( $restrict_start_date && $restrict_end_date )
         {
@@ -175,7 +175,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
           // count the adjudicate submissions
           $db_participant = $db_assignment->get_participant();
           $test_entry_mod = lib::create( 'database\modifier' );
-          $test_entry_mod->where( 'assignment_id', '=', '' );
+          $test_entry_mod->where( 'assignment_id', '=', NULL );
           $test_entry_mod->where( 'participant_id', '=', $db_participant->id ); 
           foreach( $test_entry_class_name::select( $test_entry_mod ) as $db_adjudicate )
           {
