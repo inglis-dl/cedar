@@ -42,7 +42,8 @@ class assignment_report extends \cenozo\ui\widget\base_report
    $this->add_restriction( 'dates' );
 
     $this->set_variable( 'description',
-      'This report lists the number of completed and remaining assignment pairs by site '. 
-      'on a monthly basis.' );
+      'This report lists the number of completed (closed), in progress (open) and remaining ' .
+      'assignment pairs (ie., two typist\'s assignments per participant) by cohort and '.
+      'site on a monthly basis.' );
   }
 }

@@ -56,22 +56,28 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $event_type_class_name = lib::get_class_name( 'database\event_type' );
 
-    $base_comp_mod = lib::create( 'database\modifier' );
-    $base_comp_mod->where( 'event.event_type_id', '=',
-       $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' )->id );
-
     $base_cati_mod = lib::create( 'database\modifier' );
     $base_cati_mod->where( 'event.event_type_id', '=',
       $event_type_class_name::get_unique_record( 'name', 'completed (Baseline)' )->id );
 
-    $total_cati_available = $participant_class_name::count( $base_cati_mod );
-    $total_comp_available = $participant_class_name::count( $base_comp_mod );
+    $base_comp_mod = lib::create( 'database\modifier' );
+    $base_comp_mod->where( 'event.event_type_id', '=',
+       $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' )->id );
 
-    $header = array( 'Year', 'Month', 'CATI Done', 'CATIT Open', 'COMP Done', 'COMP Open' );
+    $cohort_mod_list['cati'] = $base_cati_mod;
+    $cohort_mod_list['comp'] = $base_comp_mod;  
+
+    $total_available['cati'] = $participant_class_name::count( $base_cati_mod );
+    $total_available['comp'] = $participant_class_name::count( $base_comp_mod );
+
+    $header = array( 'Year', 'Month', 
+       'CATI Closed', 'CATI Open', 'COMP Closed', 'COMP Open' );
     $footer = array( '--', '--', 'sum()', 'sum()', 'sum()', 'sum()' );
 
-    $grand_total_complete = 0;
-    $grand_total_in_progress = 0;
+    $total_complete['cati'] = 0;
+    $total_complete['comp'] = 0;
+    $total_open['cati'] = 0;
+    $total_open['comp'] = 0;
 
     // validate the dates
     if( $restrict_start_date )
@@ -122,14 +128,17 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $role_class_name = lib::get_class_name( 'database\role' );
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
     $site_class_name = lib::get_class_name( 'database\site' );   
-    $user_class_name = lib::get_class_name( 'database\user' );   
-    $cohort_class_name = lib::get_class_name( 'database\cohort' );
-    $cohort_id_list['cati'] = $cohort_class_name::get_unique_record( 'name', 'tracking' )->id;
-    $cohort_id_list['comp'] = $cohort_class_name::get_unique_record( 'name', 'comprehensive' )->id;
+    $user_class_name = lib::get_class_name( 'database\user' );
+
+    $site_list = $site_class_name::select( $site_mod );
+    $do_summary_table = count( $site_list ) > 1;
+    $summary_content = array();
 
     // now create a table for every site included in the report
-    foreach( $site_class_name::select( $site_mod ) as $db_site )
+    foreach( $site_list as $db_site )
     {
+      $title = $db_site->name . ' Assignments';
+
       // get all the typists from this site
       $id_list = array();
       $user_mod = lib::create( 'database\modifier' );
@@ -142,12 +151,13 @@ class assignment_report extends \cenozo\ui\pull\base_report
       }
 
       // skip if no users at this site
-      if( empty( $id_list ) ) continue;
+      if( empty( $id_list ) )
+      {
+        $this->add_table( $title, $header, array( '--','--', 0, 0, 0, 0 ), $footer );        
+        continue;
+      }
 
-      $assignment_mod = lib::create( 'database\modifier' );
-      $assignment_mod->where( 'user_id', 'IN', $id_list );
-
-      $contents = array();
+      $content = array();
       $interval = new \DateInterval( 'P1M' );
       for( $from_datetime_obj = clone $start_datetime_obj;
            $from_datetime_obj < $end_datetime_obj;
@@ -159,49 +169,90 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $row =
           array( $from_datetime_obj->format( 'Y' ), $from_datetime_obj->format( 'F' ) );
 
-        $cati_complete_mod = clone $assignment_mod;
-        //$cati_complete_mod->where( 'participant.cohort_id', '=', $cohort_id_list['cati'] ); 
-        $cati_complete_mod->where( 'end_datetime', '>=', 
-          $from_datetime_obj->format( 'Y-m-d' ) );
-        $cati_complete_mod->where( 'end_datetime', '<', 
-          $to_datetime_obj->format( 'Y-m-d' ) );
-        $sql = sprintf( '%s %s %s',
-          'SELECT COUNT(*) FROM ( SELECT participant_id FROM assignment',
-          $cati_complete_mod->get_sql(),
-          'GROUP BY participant_id HAVING COUNT(*)=2 ) AS tmp' );
-        $row[] = intval( $assignment_class_name::db()->get_one( $sql ) );
+        foreach( $cohort_mod_list as $cohort_key => $cohort_mod )
+        {
+          $complete_mod = clone $cohort_mod;
+          $complete_mod->where( 'assignment.user_id', 'IN', $id_list );
+          $complete_mod->where( 'assignment.end_datetime', '>=', 
+            $from_datetime_obj->format( 'Y-m-d' ) );
+          $complete_mod->where( 'assignment.end_datetime', '<', 
+            $to_datetime_obj->format( 'Y-m-d' ) );
+          $complete_list = array();
+          foreach( $participant_class_name::select( $complete_mod ) as $db_participant )
+          {
+            if( array_key_exists( $db_participant->id, $complete_list ) )
+            {
+              $complete_list[$db_participant->id]++;
+            }  
+            else
+            {
+              $complete_list[$db_participant->id] = 1;
+            }
+          }
 
-        $cati_in_progress_mod = clone $assignment_mod;
-        //$cati_in_progress->where( 'participant.cohort_id', '=', $cohort_id_list['cati'] ); 
-        $cati_in_progress_mod->where( 'start_datetime', '<', 
-          $to_datetime_obj->format( 'Y-m-d' ) );
-        $cati_in_progress_mod->where( 'end_datetime', '=', NULL );
-        $row[] = $assignment_class_name::count( $cati_in_progress_mod );
+          $complete_values = array_count_values( array_values( $complete_list ) );
 
-        $comp_complete_mod = clone $assignment_mod;
-        //$comp_complete_mod->where( 'participant.cohort_id', '=', $cohort_id_list['comp'] ); 
-        $comp_complete_mod->where( 'end_datetime', '>=', 
-          $from_datetime_obj->format( 'Y-m-d' ) );
-        $comp_complete_mod->where( 'end_datetime', '<', 
-          $to_datetime_obj->format( 'Y-m-d' ) );
-        $sql = sprintf( '%s %s %s',
-          'SELECT COUNT(*) FROM ( SELECT participant_id FROM assignment',
-          $comp_complete_mod->get_sql(),
-          'GROUP BY participant_id HAVING COUNT(*)=2 ) AS tmp' );
-        $row[] = intval( $assignment_class_name::db()->get_one( $sql ) );
+          // number completed by two typists
+          $num_complete = array_key_exists( '2', $complete_values ) ? $complete_values['2'] : 0;
+          // number completed by one typist
+          $num_partial = array_key_exists( '1', $complete_values ) ? $complete_values['1'] : 0;
 
-        $comp_in_progress_mod = clone $assignment_mod;
-        //$comp_in_progress_mod->where( 'participant.cohort_id', '=', $cohort_id_list['comp'] ); 
-        $comp_in_progress_mod->where( 'start_datetime', '<', 
-          $to_datetime_obj->format( 'Y-m-d' ) );
-        $comp_in_progress_mod->where( 'end_datetime', '=', NULL );
-        $row[] = $assignment_class_name::count( $cati_in_progress_mod );
+          $id_exclude = array_keys( $complete_list, 1 );
 
-        $contents[] = $row;
+          $in_progress_mod = clone $cohort_mod;
+          if( count( $id_exclude ) )
+            $in_progress_mod->where( 'participant.id', 'NOT IN', $id_exclude );
+          $in_progress_mod->where( 'assignment.user_id', 'IN', $id_list );
+          $in_progress_mod->where( 'assignment.start_datetime', '<', 
+            $to_datetime_obj->format( 'Y-m-d' ) );
+          $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+
+          // number started but not finished
+          $num_started = $participant_class_name::count( $in_progress_mod );
+
+          $row[] = $num_complete;
+          $row[] = $num_partial + $num_started;
+          $total_complete[ $cohort_key ] += $num_complete;
+          $total_open[ $cohort_key ] = $num_partial + $num_started;
+        }            
+
+        $content[] = $row;
+
+        if( $do_summary_table )
+        {
+          $key = implode( array_slice( $row, 0, 2 ) );         
+          if( !array_key_exists( $key, $summary_content ) )
+          {
+            $summary_content[ $key ] = $row;
+          }  
+          else
+          {
+            for( $i = 2; $i < 6; $i++ )
+              $summary_content[ $key ][ $i ] += $row[ $i ];
+          }
+        }
       }
 
-      $title = $db_site->name . ' Assignments';
-      $this->add_table( $title, $header, $contents, $cati_footer );      
+      $this->add_table( $title, $header, $content, $footer );      
     }
+
+    if( $do_summary_table )
+    {      
+      $this->add_table( 'Summary (All Sites)', 
+        $header, array_values( $summary_content ), $footer );       
+    }
+
+    $this->add_table( 'Status (All Sites)', 
+      array( 'Cohort', 'Closed', 'Remaining', 'Open' ),
+      array( 
+        array( 'CATI', 
+                $total_complete['cati'], 
+                $total_available['cati'] - $total_complete['cati'], 
+                $total_open['cati'] ),
+        array( 'COMP', 
+                $total_complete['comp'], 
+                $total_available['comp'] - $total_complete['comp'], 
+                $total_open['comp'] ) ),
+      array( '--', 'sum()', 'sum()', 'sum()' ) );          
   }
 }
