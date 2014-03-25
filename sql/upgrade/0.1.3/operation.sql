@@ -1,5 +1,12 @@
 SELECT "Adding new operations" AS "";
 
+-- assignment
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "assignment", "report", true, "Download an assignment report." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "assignment", "report", true, "Set up an assignment report." );
+
 -- away_time
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )

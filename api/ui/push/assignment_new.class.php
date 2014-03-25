@@ -79,35 +79,34 @@ class assignment_new extends \cenozo\ui\push\base_new
       // the participant must have completed their interview
       $event_type_class_name = lib::get_class_name( 'database\event_type' );
 
-      $db_tracking_event_type =
-        $event_type_class_name::get_unique_record( 'name', 'completed (Baseline)' );
-
-      $db_comprehensive_event_type =
-        $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' );
-
       if( $has_tracking && $has_comprehensive )
       {
         $base_mod->where_bracket( true );
 
         // tracking
         $base_mod->where_bracket( true );
-        $base_mod->where( 'event.event_type_id', '=', $db_tracking_event_type->id );
+        $base_mod->where( 'event.event_type_id', '=', 
+           $event_type_class_name::get_unique_record( 'name', 'completed (Baseline)' )->id );
+         
         $base_mod->where_bracket( false );
 
         // comprehensive
         $base_mod->where_bracket( true, true );
-        $base_mod->where( 'event.event_type_id', '=', $db_comprehensive_event_type->id );
-        $base_mod->where_bracket( false );
+        $base_mod->where( 'event.event_type_id', '=', 
+          $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' )->id );
 
+        $base_mod->where_bracket( false );
         $base_mod->where_bracket( false );
       }
       else if( $has_tracking )
       {
-        $base_mod->where( 'event.event_type_id', '=', $db_tracking_event_type->id );
+        $base_mod->where( 'event.event_type_id', '=', 
+           $event_type_class_name::get_unique_record( 'name', 'completed (Baseline)' )->id );
       }
       else if( $has_comprehensive )
       {
-        $base_mod->where( 'event.event_type_id', '=', $db_comprehensive_event_type->id );
+        $base_mod->where( 'event.event_type_id', '=', 
+          $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' )->id );
       }
 
       $participant_class_name = lib::get_class_name( 'database\participant' );
