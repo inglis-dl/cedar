@@ -36,6 +36,8 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
   {
     parent::prepare();
 
+    $test_class_name = lib::get_class_name('database\test');
+
     $record = $this->get_record();
     $db_assignment = $record->get_assignment();
 
@@ -62,7 +64,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
     }     
     
-    $test_class_name = lib::get_class_name('database\test');
     $test_count = $test_class_name::count( $modifier );
 
     $heading = sprintf( 'test %d / %d for %s',
@@ -84,7 +85,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $db_test = $record->get_test();
 
     $db_assignment = $record->get_assignment();
-    if( empty( $db_assignment ) || is_null( $db_assignment ) )
+    if( is_null( $db_assignment ) )
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid assignment', __METHOD__ );
 
@@ -116,7 +117,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $language = 'any';
     $db_participant = $record->get_assignment()->get_participant();
-    if( empty( $db_participant ) || is_null( $db_participant ) )
+    if( is_null( $db_participant ) )
       throw lib::create( 'exception\runtime',
         'The participant id must be set', __METHOD__ );
 

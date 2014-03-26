@@ -36,12 +36,13 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
   protected function prepare()
   {
     parent::prepare();
+
+    $word_class_name = lib::get_class_name( 'database\word' );
     
     // add items to the view
     $this->add_item( 'test_id', 'hidden' );
     $this->add_item( 'rank', 'enum', 'Rank' );
 
-    $word_class_name = lib::get_class_name( 'database\word' );
     $this->languages = $word_class_name::get_enum_values( 'language' );
     foreach( $this->languages as $language )
     {
@@ -67,6 +68,9 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
   {
     parent::setup();
     
+    $word_class_name = lib::get_class_name( 'database\word' );
+    $ranked_word_set_class_name = lib::get_class_name( 'database\ranked_word_set' );
+
     // this widget must have a parent, and it's subject must be a test
     if( is_null( $this->parent ) || 'test' != $this->parent->get_subject() )
       throw lib::create( 'exception\runtime',
@@ -79,12 +83,10 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
       throw lib::create( 'exception\notice',
       'The primary dictionary selection cannot be left blank.', __METHOD__ );
     
-    $word_class_name = lib::get_class_name( 'database\word' );
-    $ranked_word_set_class_name = lib::get_class_name( 'database\ranked_word_set' );
     $words = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
-    if( $dictionary_word_count > 0 && 
-        ( $dictionary_word_count % count( $this->languages ) ) == 0  )
+    if( 0 < $dictionary_word_count && 
+        0 == ( $dictionary_word_count % count( $this->languages ) ) )
     {
       foreach( $this->languages as $language )
       {

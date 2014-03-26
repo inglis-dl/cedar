@@ -49,12 +49,13 @@ class dictionary_import extends \cenozo\ui\widget\base_record
   {
     parent::setup();
 
+    $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
+
     $md5 = $this->get_argument( 'md5', false );
     $this->set_variable( 'md5', $md5 );
     if( $md5 )
     {
       // get the import file matching the md5 hash
-      $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
       $db_dictionary_import = $dictionary_import_class_name::get_unique_record( 'md5', $md5 );
       if( is_null( $db_dictionary_import ) )
         throw lib::create( 'exception\argument', 'md5', $md5, __METHOD__ );

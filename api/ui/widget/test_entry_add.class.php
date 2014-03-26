@@ -53,14 +53,13 @@ class test_entry_add extends \cenozo\ui\widget\base_view
   {
     parent::setup();
     
+    $test_class_name = lib::get_class_name( 'database\test' );
+
     // this widget must have a parent, and it's subject must be an assignment
     if( is_null( $this->parent ) || 'assignment' != $this->parent->get_subject() )
       throw lib::create( 'exception\runtime',
         'Test entry widget must have a parent with assignment as the subject.', __METHOD__ );
     
-    $record = $this->get_record();
-
-    $test_class_name = lib::get_class_name( 'database\test' );
     $test_list = array();
     foreach( $test_class_name::select() as $db_test )
       $test_list[$db_test->id] = $db_test->name;

@@ -36,18 +36,20 @@ class dictionary_import_process extends \cenozo\ui\pull
   protected function execute()
   {
     parent::execute();
+
+    $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
+    $word_class_name = lib::get_class_name( 'database\word' );
     
     $md5 = $this->get_argument( 'md5' );
     $dictionary_id = $this->get_argument( 'dictionary_id' );
 
-    $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
     $db_dictionary_import = $dictionary_import_class_name::get_unique_record( 'md5', $md5 );    
 
     if( !is_null( $db_dictionary_import ) )
     {   
       if( $db_dictionary_import->processed )
-       throw lib::create( 'exception\notice',
-         'This file has already been imported.', __METHOD__ );
+        throw lib::create( 'exception\notice',
+          'This file has already been imported.', __METHOD__ );
     }
 
     $file_data = $db_dictionary_import->data;
@@ -55,7 +57,7 @@ class dictionary_import_process extends \cenozo\ui\pull
     if( is_null( $file_data ) )
     {
       throw lib::create( 'exception\notice',
-       'There is no file data in the import record.', __METHOD__ );
+        'There is no file data in the import record.', __METHOD__ );
     }
 
     $db_dictionary_import->dictionary_id = $dictionary_id;
@@ -66,7 +68,6 @@ class dictionary_import_process extends \cenozo\ui\pull
     $dictionary_word_count = 0;
     $error_count = 0;
 
-    $word_class_name = lib::get_class_name( 'database\word' );
     $languages = $word_class_name::get_enum_values( 'language' );
     $word_array = array();
     $this->data = array();
@@ -85,7 +86,7 @@ class dictionary_import_process extends \cenozo\ui\pull
 
       if( 2 == $row_entry_count ) 
       {   
-        $word = explode( " ", strtolower( trim( $row_entry[0] ) ) );
+        $word = explode( ' ', strtolower( trim( $row_entry[0] ) ) );
         $error = false;
 
         foreach( $word as $value )
@@ -99,7 +100,7 @@ class dictionary_import_process extends \cenozo\ui\pull
             $error = true;
           }
         }
-        if( is_array( $word ) ) $word = implode( " ", $word );
+        if( is_array( $word ) ) $word = implode( ' ', $word );
 
         $language = strtolower( trim( $row_entry[1] ) );
         if( !in_array( $language, $languages ) )

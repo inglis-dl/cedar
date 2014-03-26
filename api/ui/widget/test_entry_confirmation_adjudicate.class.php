@@ -35,6 +35,8 @@ class test_entry_confirmation_adjudicate extends base_adjudicate
   {
     parent::setup();
 
+    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
+
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
@@ -59,7 +61,6 @@ class test_entry_confirmation_adjudicate extends base_adjudicate
     $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_record(); 
 
     // Get the db entries
-    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
     $a = $test_entry_confirmation_class_name::get_unique_record(
       'test_entry_id', $db_test_entry->id );
     $b = $test_entry_confirmation_class_name::get_unique_record(

@@ -37,7 +37,6 @@ class user_new_cohort extends \cenozo\ui\push\base_record
   {
     parent::execute();
 
-    $this->get_record()->add_cohort(
-      $this->get_argument( 'id_list' ));
+    $this->get_record()->add_cohort( $this->get_argument( 'id_list' ) );
   }
 }

@@ -36,6 +36,8 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   {
     parent::prepare();
 
+    $test_class_name = lib::get_class_name('database\test');
+
     $record = $this->get_record();
     $db_test = $record->get_test();
     $db_participant = $record->get_assignment()->get_participant();
@@ -55,7 +57,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
     }     
     
-    $test_class_name = lib::get_class_name('database\test');
     $test_count = $test_class_name::count( $modifier );
 
     $heading = sprintf( 'test %d / %d for %s',

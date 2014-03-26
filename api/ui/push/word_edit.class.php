@@ -43,7 +43,7 @@ class word_edit extends \cenozo\ui\push\base_edit
     // if there is a word, validate it
     if( array_key_exists( 'word', $columns ) ) 
     {   
-      $word = explode( " ", strtolower( trim( $columns['word'] ) ) );
+      $word = explode( ' ', strtolower( trim( $columns['word'] ) ) );
 
       if( empty( $word ) || 0 == count( $word ) ) 
       { 

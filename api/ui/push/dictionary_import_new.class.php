@@ -54,10 +54,11 @@ class dictionary_import_new extends \cenozo\ui\push
   {
     parent::execute();
 
+    $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
+
     $data = file_get_contents( 'php://input' );
     $md5 = md5( utf8_encode( $data ) );  
 
-    $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
     $db_dictionary_import = $dictionary_import_class_name::get_unique_record( 'md5', $md5 );
     if( !is_null( $db_dictionary_import ) )
     {

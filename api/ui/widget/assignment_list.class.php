@@ -59,9 +59,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
 
-    $assignment_list = $this->get_record_list();
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     $test_class_name = lib::get_class_name( 'database\test' );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
@@ -69,7 +68,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $allow_transcribe_operation = false;
     $allow_adjudicate_operation = false;
 
-    foreach( $assignment_list as $db_assignment )
+    foreach( $this->get_record_list() as $db_assignment )
     {
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
@@ -145,10 +144,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
             $mod_test_entry->where( 'adjudicate', '=', true );
             $mod_test_entry->order( 'test.rank' );
             $mod_test_entry->limit( 1 );
-            $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
-            if( !empty( $db_test_entry ) )
+            $db_test_entry = current( $test_entry_class_name::select( $mod_test_entry ) );
+            if( !is_null( $db_test_entry ) )
             {
-              $test_entry_id = $db_test_entry[0]->id;
+              $test_entry_id = $db_test_entry->id;
               $allow_adjudicate_operation = $allow_adjudicate;
             }
           }

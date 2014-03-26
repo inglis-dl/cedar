@@ -38,6 +38,8 @@ class test_entry_new extends \cenozo\ui\push\base_new
   {
     parent::finish();
 
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     $columns = $this->get_argument( 'columns', array() );
     $record = $this->get_record();
 
@@ -228,7 +230,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
         // during the submit
         $data = $columns['data'];
         $db_dictionary = $db_test->get_dictionary();
-        $word_class_name = lib::get_class_name( 'database\word' );
         $base_mod = lib::create( 'database\modifier' );
         $base_mod->where( 'dictionary_id', '=', $db_dictionary->id );
         $base_mod->where( 'language', '=', $language );
@@ -317,7 +318,6 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         $data = $columns['data'];
         $db_dictionary = $db_test->get_dictionary();
-        $word_class_name = lib::get_class_name( 'database\word' );
         $base_mod = lib::create( 'database\modifier' );
         $base_mod->where( 'dictionary_id', '=', $db_dictionary->id );
         $base_mod->where( 'language', '=', $language );

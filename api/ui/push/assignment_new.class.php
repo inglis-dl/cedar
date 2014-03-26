@@ -35,6 +35,10 @@ class assignment_new extends \cenozo\ui\push\base_new
    */
   protected function prepare()
   {
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $event_type_class_name = lib::get_class_name( 'database\event_type' );
+    $participant_class_name = lib::get_class_name( 'database\participant' );
+
     $columns = $this->get_argument( 'columns', array() );
     if( empty( $columns ) )
     {  
@@ -54,7 +58,7 @@ class assignment_new extends \cenozo\ui\push\base_new
       $has_tracking = false;
       $has_comprehensive = false;
       $cohort_list = $db_user->get_cohort_list();
-      if( is_null( $cohort_list ) || empty( $cohort_list ) )
+      if( is_null( $cohort_list ) )
         throw lib::create( 'exception\notice',
           'There must be one or more cohorts assigned to user: '. $db_user->name,
             __METHOD__ );
@@ -77,8 +81,6 @@ class assignment_new extends \cenozo\ui\push\base_new
       }
 
       // the participant must have completed their interview
-      $event_type_class_name = lib::get_class_name( 'database\event_type' );
-
       if( $has_tracking && $has_comprehensive )
       {
         $base_mod->where_bracket( true );
@@ -109,14 +111,6 @@ class assignment_new extends \cenozo\ui\push\base_new
           $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' )->id );
       }
 
-      $participant_class_name = lib::get_class_name( 'database\participant' );
-      $assignment_class_name = lib::get_class_name( 'database\assignment' );
-
-      $found = false;
-      $limit = 10;
-      $offset = 0;
-      $participant_count = 0;
-
       $sabretooth_manager = NULL;
       if( $has_tracking )
       {
@@ -132,6 +126,10 @@ class assignment_new extends \cenozo\ui\push\base_new
       $try = 0;
       $participant_id = NULL;
       $cohort_name = '';
+      $found = false;
+      $limit = 10;
+      $offset = 0;
+      $participant_count = 0;
 
       // block with a semaphore
       $session->acquire_semaphore();
@@ -165,7 +163,7 @@ class assignment_new extends \cenozo\ui\push\base_new
                   'participant_id' => $db_participant->id );
                 $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
                 $recording_data = array();
-                if( !is_null( $recording_list) &&
+                if( !is_null( $recording_list ) &&
                     1 == $recording_list->success && 0 < count( $recording_list->data ) )
                 {
                   $participant_id = $db_participant->id;
@@ -211,10 +209,11 @@ class assignment_new extends \cenozo\ui\push\base_new
   {
     parent::finish();
 
+    $test_class_name = lib::get_class_name( 'database\test' );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
     $db_assignment = $this->get_record();
     $columns = $this->get_argument( 'columns' );
-    $test_class_name = lib::get_class_name( 'database\test' );
-
     $modifier = NULL; 
     if( $columns['cohort_name'] == 'tracking' )
     {
@@ -224,7 +223,6 @@ class assignment_new extends \cenozo\ui\push\base_new
 
     $language = $db_assignment->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     //create a test entry for each test
     foreach( $test_class_name::select( $modifier ) as $db_test )

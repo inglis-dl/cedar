@@ -35,19 +35,19 @@ class word_list extends \cenozo\ui\pull
   protected function execute()
   {
     parent::execute();
+
+    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
     
     $this->data = array();
     $dictionary = array();
     $dictionary['dictionary_id'] = $this->get_argument( 'dictionary_id', NULL );
     $dictionary['variant_dictionary_id'] = $this->get_argument( 'variant_dictionary_id', NULL );
     $dictionary['intrusion_dictionary_id'] = $this->get_argument( 'intrusion_dictionary_id', NULL );
-    
     $dictionary = array_filter( $dictionary );
 
     $language = $this->get_argument( 'language', 'any' );
     $words_only = $this->get_argument( 'words_only', false );
 
-    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
     $modifier = lib::create( 'database\modifier' );
 
     $first = true;

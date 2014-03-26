@@ -35,6 +35,8 @@ class test_entry_confirmation_transcribe extends base_transcribe
   {
     parent::setup();
 
+    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
+
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
@@ -57,7 +59,6 @@ class test_entry_confirmation_transcribe extends base_transcribe
     }
 
     // Get the db entries
-    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
     $db_test_entry_confirmation = $test_entry_confirmation_class_name::get_unique_record(
       'test_entry_id', $db_test_entry->id );
 

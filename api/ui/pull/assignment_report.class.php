@@ -36,7 +36,12 @@ class assignment_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
-    $event_class_name = lib::create( 'database\event' );
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $event_type_class_name = lib::get_class_name( 'database\event_type' );
+    $participant_class_name = lib::get_class_name( 'database\participant' ); 
+    $role_class_name = lib::get_class_name( 'database\role' );
+    $site_class_name = lib::get_class_name( 'database\site' );   
+    $user_class_name = lib::get_class_name( 'database\user' );
 
     $restrict_start_date = $this->get_argument( 'restrict_start_date' );
     $restrict_end_date = $this->get_argument( 'restrict_end_date' );
@@ -49,13 +54,8 @@ class assignment_report extends \cenozo\ui\pull\base_report
     if( $restrict_site_id )
       $site_mod->where( 'id', '=', $restrict_site_id );
 
-    // the total number of possible participants in each cohort 
+    // get the total number of possible participants in each cohort 
     // with completed baseline interviews
-
-    $participant_class_name = lib::get_class_name( 'database\participant' ); 
-    $assignment_class_name = lib::get_class_name( 'database\assignment' );
-    $event_type_class_name = lib::get_class_name( 'database\event_type' );
-
     $base_cati_mod = lib::create( 'database\modifier' );
     $base_cati_mod->where( 'event.event_type_id', '=',
       $event_type_class_name::get_unique_record( 'name', 'completed (Baseline)' )->id );
@@ -125,10 +125,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj->format( 'n' ),
       2 );
     
-    $role_class_name = lib::get_class_name( 'database\role' );
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
-    $site_class_name = lib::get_class_name( 'database\site' );   
-    $user_class_name = lib::get_class_name( 'database\user' );
 
     $site_list = $site_class_name::select( $site_mod );
     $do_summary_table = count( $site_list ) > 1;
@@ -144,7 +141,6 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $user_mod = lib::create( 'database\modifier' );
       $user_mod->where( 'access.role_id', '=', $db_role->id );
       $user_mod->where( 'access.site_id', '=', $db_site->id );
-      $db_user_list = $user_class_name::select( $user_mod );
       foreach( $user_class_name::select( $user_mod ) as $db_user )
       {
         $id_list[] = $db_user->id;

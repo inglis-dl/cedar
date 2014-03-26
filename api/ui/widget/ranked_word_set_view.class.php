@@ -37,10 +37,11 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
     
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     // view items to the view
     $this->add_item( 'rank', 'enum', 'Rank' );
 
-    $word_class_name = lib::get_class_name( 'database\word' );
     $this->languages = $word_class_name::get_enum_values( 'language' );
     foreach( $this->languages as $language )
     {
@@ -65,14 +66,15 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
   {
     parent::setup();
 
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     $record = $this->get_record();
     $db_test = $record->get_test();
     $db_dictionary = $db_test->get_dictionary();
-    $word_class_name = lib::get_class_name( 'database\word' );
     $words = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
-    if( $dictionary_word_count > 0 &&
-        ( $dictionary_word_count % count( $this->languages ) ) == 0  )
+    if( 0 < $dictionary_word_count &&
+        0 == ( $dictionary_word_count % count( $this->languages ) )  )
     {
       foreach( $this->languages as $language )
       {

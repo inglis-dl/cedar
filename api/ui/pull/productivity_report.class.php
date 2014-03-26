@@ -36,9 +36,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
-    // determine whether or not to round time to 15 minute increments
-    $round_times = $this->get_argument( 'round_times', true );
-
     $role_class_name = lib::get_class_name( 'database\role' );
     $site_class_name = lib::get_class_name( 'database\site' );
     $user_class_name = lib::get_class_name( 'database\user' );
@@ -46,6 +43,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     $user_time_class_name = lib::get_class_name( 'database\user_time' );
+
+    // determine whether or not to round time to 15 minute increments
+    $round_times = $this->get_argument( 'round_times', true );
 
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
     $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
