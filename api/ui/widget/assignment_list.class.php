@@ -59,96 +59,90 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
 
+    $operation_class_name = lib::get_class_name( 'database\operation' );
     $test_class_name = lib::get_class_name( 'database\test' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
-    $db_user = $session->get_user();
+
+    // allow test_entry transcribe via a transcribe button on assigment rows
     $allow_transcribe_operation = false;
+    // allow test_entry adjudicate via a adjudicate button on assignment rows
     $allow_adjudicate_operation = false;
 
     foreach( $this->get_record_list() as $db_assignment )
     {
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
+
+      // the number of tests is cohort and therefore assigment dependent
       $test_count = $test_entry_class_name::count( clone $base_mod );
 
-      $mod_complete = clone $base_mod;
-      $mod_complete->where( 'completed', '=', true );
-      $complete_count = $test_entry_class_name::count( $mod_complete );
+      $completed_mod = clone $base_mod;
+      $completed_mod->where( 'completed', '=', true );
+      $complete_count = $test_entry_class_name::count( $completed_mod );
 
       $db_participant = $db_assignment->get_participant();
       $language = $db_participant->language;
 
-      $mod_defer = clone $base_mod;
-      $mod_defer->where( 'deferred', '=', true );
-      $defer_count = $test_entry_class_name::count( $mod_defer );
+      $deferred_mod = clone $base_mod;
+      $deferred_mod->where( 'deferred', '=', true );
+      $defer_count = $test_entry_class_name::count( $deferred_mod );
 
-      $mod_adjudicate = clone $base_mod;
-      $mod_adjudicate->where( 'adjudicate', '=', true );
-      $adjudicate_count = $test_entry_class_name::count( $mod_adjudicate );
+      $adjudicate_mod = clone $base_mod;
+      $adjudicate_mod->where( 'adjudicate', '=', true );
+      $adjudicate_count = $test_entry_class_name::count( $adjudicate_mod );
 
       $allow_transcribe = false;
       $allow_adjudicate = false;
-      $test_entry_id = null;
+
+      // select the first test_entry for which we either want to transcribe
+      // or adjudicate depending on user role
+      $test_entry_id = NULL;
 
       if( $db_role->name == 'typist' )
       {
-        $mod_test_entry = clone $base_mod;
-        $mod_test_entry->where( 'completed', '=', false );
-        $mod_test_entry->order( 'test.rank' );
-        $mod_test_entry->limit( 1 );
-        $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
-        if( !is_null( $db_test_entry[0] ) ) 
+        $test_entry_mod = clone $base_mod;
+        $test_entry_mod->where( 'completed', '=', false );
+        $test_entry_mod->order( 'test.rank' );
+        $test_entry_mod->limit( 1 );
+        $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
+        if( !is_null( $db_test_entry ) ) 
         {  
-          $test_entry_id = $db_test_entry[0]->id;
+          $test_entry_id = $db_test_entry->id;
           $allow_transcribe = true;
           $allow_transcribe_operation |= $allow_transcribe;
         }
       }
-      else if( $db_role->name == 'administrator' )
+      else if( $db_role->name == 'administrator' && 
+               $complete_count == $test_count && 0 < $adjudicate_count)
       {
-        if( $complete_count == $test_count && $adjudicate_count > 0 )
+        $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+        if( $db_sibling_assignment != NULL && $db_sibling_assignment->all_tests_complete() )
         {
-          $allow_adjudicate = true;
-          $mod_test_entry = clone $base_mod;
-          $mod_test_entry->where( 'adjudicate', '=', true );
-          $adjudicate_assignment_id = NULL;
-          foreach( $test_entry_class_name::select( $mod_test_entry ) as $db_test_entry )
+          $allow_adjudicate = false;
+
+          // get the first test entry of current db_assignment that requires adjudication
+          $test_entry_mod = clone $base_mod;
+          $test_entry_mod->where( 'adjudicate', '=', true );
+          $test_entry_mod->order( 'test.rank' );
+          $test_entry_mod->limit( 1 );
+
+          $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
+          if( !is_null( $db_test_entry ) )
           {
-            $db_adjudicate_entry = $db_test_entry->get_adjudicate_record();
-            if( $db_adjudicate_entry == NULL )
-            {
-              $allow_adjudicate = false;
-              break;
-             }
-             
-             if( $adjudicate_assignment_id == NULL )
-             {
-               $adjudicate_assignment_id = $db_adjudicate_entry->get_assignment()->id;
-               $mod_complete = lib::create( 'database\modifier' );
-               $mod_complete->where( 'assignment_id', '=', $adjudicate_assignment_id );
-               $mod_complete->where( 'completed', '=', false );
-               $adjudicate_complete_count = $test_entry_class_name::count( $mod_complete );
-               if( $adjudicate_complete_count > 0 )
-               {
-                 $allow_adjudicate = false;
-                 break;
-               }
-             }
-          }
-          if( $allow_adjudicate )
-          {
-            $mod_test_entry = clone $base_mod;
-            $mod_test_entry->where( 'adjudicate', '=', true );
-            $mod_test_entry->order( 'test.rank' );
-            $mod_test_entry->limit( 1 );
-            $db_test_entry = current( $test_entry_class_name::select( $mod_test_entry ) );
-            if( !is_null( $db_test_entry ) )
+            // see if the sibling test_entry exists
+            $sibling_mod = lib::create( 'database\modifier' );
+            $sibling_mod->where( 'adjudicate', '=', true );
+            $sibling_mod->where( 'assignment_id', '=', $db_sibling_assignment->id );
+            $sibling_mod->where( 'test_id', '=', $db_test_entry->test_id );
+            $db_sibling_test_entry = current( $test_entry_class_name::select( $sibling_mod ) );
+            if( !is_null( $db_sibling_test_entry ) ) 
             {
               $test_entry_id = $db_test_entry->id;
-              $allow_adjudicate_operation = $allow_adjudicate;
+              $allow_adjudicate = true;
+              $allow_adjudicate_operation |= $allow_adjudicate;
             }
           }
         }
@@ -170,11 +164,11 @@ class assignment_list extends \cenozo\ui\widget\base_list
     }
 
     // define whether or not test_entry transcribing or adjudicating is allowed
-    $operation_class_name = lib::get_class_name( 'database\operation' );
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'transcribe' );
     $this->set_variable( 'allow_transcribe',
       ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
-        $allow_transcribe_operation ) );   
+        $allow_transcribe_operation ) );
+
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );
     $this->set_variable( 'allow_adjudicate',
       ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
@@ -199,7 +193,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
-      $modifier->where( 'test_entry.completed', '!=', 1 );      
+      $modifier->where( 'test_entry.completed', '=', false );
     }
 
     return parent::determine_record_count( $modifier );
@@ -222,7 +216,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
-      $modifier->where( 'test_entry.completed', '!=', 1 );      
+      $modifier->where( 'test_entry.completed', '=', false );      
     }
 
     return parent::determine_record_list( $modifier );

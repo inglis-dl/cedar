@@ -65,6 +65,10 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
+    $test_entry_classification_class_name = 
+      lib::get_class_name('database\test_entry_classification');
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     $record = $this->get_record();
     $db_test_entry = $record->get_test_entry();
     $db_test = $db_test_entry->get_test();
@@ -93,7 +97,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     {
       $record->word_id = $db_word->id;
       $record->word_candidate = NULL;
-      $record->save();      
     }
     else
     {
@@ -143,7 +146,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
             $db_test->name . ' test.', __METHOD__ );
       }
 
-      $word_class_name = lib::get_class_name( 'database\word' );
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
       $db_new_word->word = $record->word_candidate;
@@ -151,16 +153,11 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       $db_new_word->save();
       $record->word_id = $word_class_name::db()->insert_id();
       $record->word_candidate = NULL;
-      $record->save();
     }
 
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'word_id', '!=', NULL );
-    $modifier->where( 'word_candidate', '!=', NULL, true, true );
-    $test_entry_classification_class_name = 
-      lib::get_class_name('database\test_entry_classification');
-    $completed = $test_entry_classification_class_name::count( $modifier ) > 0 ? true : false;
+    $record->save();
 
-    $db_test_entry->update_status_fields( $completed );
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_test_entry( $db_test_entry );
   }
 }

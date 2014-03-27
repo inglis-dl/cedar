@@ -209,29 +209,7 @@ class assignment_new extends \cenozo\ui\push\base_new
   {
     parent::finish();
 
-    $test_class_name = lib::get_class_name( 'database\test' );
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-
-    $db_assignment = $this->get_record();
-    $columns = $this->get_argument( 'columns' );
-    $modifier = NULL; 
-    if( $columns['cohort_name'] == 'tracking' )
-    {
-      $modifier = lib::create('database\modifier');
-      $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
-    }  
-
-    $language = $db_assignment->get_participant()->language;
-    $language = is_null( $language ) ? 'en' : $language;
-
-    //create a test entry for each test
-    foreach( $test_class_name::select( $modifier ) as $db_test )
-    {
-      $args = array();
-      $args['columns']['test_id'] = $db_test->id;
-      $args['columns']['assignment_id'] = $db_assignment->id;
-      $operation = lib::create( 'ui\push\test_entry_new', $args );
-      $operation->process();
-    }
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::initialize( $this->get_record() );
   }
 }

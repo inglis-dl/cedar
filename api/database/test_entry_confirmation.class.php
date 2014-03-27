@@ -15,24 +15,24 @@ use cenozo\lib, cenozo\log, cedar\util;
 class test_entry_confirmation extends \cenozo\database\record 
 {
   /** 
-   * Compare test entry lists for adjudication.  Returns true
-   * for a difference in entry fields.
+   * Compare test_entry_confirmation lists.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
+   * @return bool true if identical
    */
-  public static function adjudicate_compare( $a, $b )
+  public static function compare( $lhs_list, $rhs_list )
   {
-    reset( $a );
-    reset( $b );
-    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
+    reset( $rhs_list );
+    reset( $lhs_list );
+    while( !is_null( key( $rhs_list ) ) && !is_null( key ( $lhs_list ) ) ) 
     {   
-      $a_obj = current( $a );  
-      $b_obj = current( $b );  
-      if( $a_obj->confirmation != $b_obj->confirmation ) return 1;
-      next( $a );
-      next( $b );
+      $rhs_list_obj = current( $rhs_list );  
+      $lhs_list_obj = current( $lhs_list );  
+      if( $rhs_list_obj->confirmation != $lhs_list_obj->confirmation ) return false;
+      next( $rhs_list );
+      next( $lhs_list );
     }   
-    return 0;
+    return true;
   }    
 }

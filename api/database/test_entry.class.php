@@ -19,7 +19,7 @@ class test_entry extends \cenozo\database\has_note
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean defines whether to get the next entry when adjudicating
-   * @return record (NULL if unsuccessful)
+   * @return database\test_entry (NULL if unsuccessful)
    * @access public
    */
   public function get_previous( $adjudicate = false )
@@ -72,7 +72,7 @@ class test_entry extends \cenozo\database\has_note
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean defines whether to get the next entry when adjudicating
-   * @return record (NULL if unsuccessful)
+   * @return database\test_entry (NULL if unsuccessful)
    * @access public
    */
   public function get_next( $adjudicate = false )
@@ -121,95 +121,96 @@ class test_entry extends \cenozo\database\has_note
   }
 
   /** 
-   * Get the test entry from the sibling assignment for adjudication.
+   * Determine the completed status of this test entry.
+   * NOTE: completeness test must be implemented for each test type. 
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @return record (NULL if unsuccessful)
-   * @access public
+   * @access protected
+   * @throws exception\runtime
+   * @return bool completed status
    */
-  public function get_adjudicate_record()
+  public function is_completed()
   {
-    $db_assignment = $this->get_assignment();
-    // this entry could belong to an adjudicate entry submission
-    if( empty( $db_assignment ) ) 
-      return NULL;
-    $db_assignment_sibling = $db_assignment->get_sibling_record();
-    if( $db_assignment_sibling == NULL )
-      return NULL;
-    
-    // get the matching test entry to compare with
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );    
-    $entry_mod = lib::create( 'database\modifier' );
-    $entry_mod->where( 'assignment_id', '=', $db_assignment_sibling->id );
-    $entry_mod->where( 'test_id', '=', $this->test_id );
-    $entry_mod->where( 'completed', '=', 1 );
-    $entry_mod->where( 'deferred', '=', 0 );
-    $db_test_entry = $test_entry_class_name::select( $entry_mod );
-    if( empty( $db_test_entry ) )    
-      return NULL;
- 
-    return $db_test_entry[0];
+    bool $completed = false;
+
+    // what type of test is this ?
+    $db_test = $this->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
+
+    // the test is different depending on type:
+    // - confirmation: confirmation column is not null
+    // - classification: one word_id or word_candidate column not null
+    // - alpha_numeric: one word_id column not null
+    // - ranked_word: all primary dictionary words have valid selection responses with 
+    // variant responses having a not null word_candidate
+
+    $base_mod = lib::create( 'database\modifier' );
+    $base_mod->where( 'test_entry_id', '=', $this->id );
+    if( $test_type_name == 'confirmation' )
+    {
+      $base_mod->where( 'confirmation', '!=', NULL );
+      $completed = 0 < $entry_class_name::count( $base_mod );
+    }
+    else if( $test_type_name == 'classification' )
+    {
+      $base_mod->where( 'word_id', '!=', NULL );
+      $base_mod->where( 'word_candidate', '!=', NULL, true, true );
+      $completed = 0 < $entry_class_name::count( $base_mod );
+    }
+    else if( $test_type_name == 'alpha_numeric' )
+    {
+      $base_mod->where( 'word_id', '!=', NULL );
+      $completed = 0 < $entry_class_name::count( $base_mod );
+    }
+    else if( $test_type_name == 'ranked_word' )
+    {
+      // custom query for ranked_word test type
+      $sql = sprintf( 
+        'SELECT '
+        '( '.
+          '( SELECT MAX(rank) FROM ranked_word_set ) - '.
+          '( '.
+            'SELECT COUNT(*) FROM test_entry_ranked_word '.
+            'WHERE test_entry_id = %s '.
+            'AND '.
+            '( '.
+              'selection IS NOT NULL OR '.
+              'selection="variant" AND word_candidate IS NOT NULL '.
+            ') '.
+          ') '. 
+        ')',
+        $database_class_name::format_string( $this->id ) );
+      
+      $completed = 0 == static::db()->get_one( $sql );
+    }
+    else
+      throw lib::create( 'exception\runtime',
+        'Unrecognized test type: ' . $test_type_name, __METHOD__ );
+
+    return $completed;
   }
 
   /** 
-   * Determine and set the adjudicate status.
+   * Compare this test_entry with another.
+   * The other test_entry should be from the sibling assignment.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
-   * @throws exception\notice
+   * @param database\test_entry $db_test_entry
+   * @return bool completed status
    */
-  public function update_adjudicate_status()
+  public function compare( $db_test_entry )
   {
-    $this->adjudicate = 0;
-    $db_test_entry = $this->get_adjudicate_record();
-    if( $db_test_entry == NULL ) return;
+    // get the daughter table entries as lists
+    $entry_name = 'test_entry_' . $this->get_test()->get_test_type()->name;
+    $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
+    $get_list_method = 'get_' . $entry_name . '_list';
 
-    if( 1 == $this->completed && 0 == $this->deferred )
-    {
-      // get all the sub entries for each test entry and compare
-      $entry_name = 'test_entry_' . $this->get_test()->get_test_type()->name;
-      $get_list_method = 'get_' . $entry_name . '_list';
-      $entry_list = $this->$get_list_method();
-      $match_entry_list = $db_test_entry->$get_list_method();
+    $lhs_list = $this->$get_list_method();
+    $rhs_list = $db_test_entry->$get_list_method();
    
-      $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
-      $this->adjudicate = $entry_class_name::adjudicate_compare( $entry_list , $match_entry_list );
-    }
-     
-    if( $db_test_entry->adjudicate != $this->adjudicate )
-    {
-      $db_test_entry->adjudicate = $this->adjudicate;
-      $db_test_entry->save();
-    }
-  }
-
-  /** 
-   * Update the complete and adjudicate status fields.
-   * Test entry sub table entries determine completion status to
-   * pass to this method in their edit operation.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param boolean the completed status
-   * @access public
-   */
-  public function update_status_fields( $completed = 0 )
-  {
-    $this->completed = $completed;
-    $this->update_adjudicate_status();
-    $this->save();
-
-    $db_assignment = $this->get_assignment();
-    if( !empty( $db_assignment ) )
-    {
-      if( $db_assignment->is_complete() )
-      {
-        $db_assignment->end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
-      }
-      else
-      {
-        $db_assignment->end_datetime = NULL;
-      }
-      $db_assignment->save();
-    }  
+    return $entry_class_name::compare( $lhs_list, $rhs_list );
   }
 }

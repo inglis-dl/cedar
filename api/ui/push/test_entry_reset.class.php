@@ -37,6 +37,13 @@ class test_entry_reset extends \cenozo\ui\push\base_record
   {
     parent::execute();
 
+    // TODO consider using assigmnet manager
+    //$assignment_manager = lib::create( 'business\assignment_manager' );
+    //$assignment_manager::initialize( $this->get_assignment() );
+
+    $test_entry_confirmation_class_name = lib::get_class_name(
+      'database\test_entry_confirmation' );      
+
     $db_test_entry = $this->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
@@ -61,16 +68,11 @@ class test_entry_reset extends \cenozo\ui\push\base_record
       }  
       foreach( $intrusion_list as $db_test_entry_ranked_word )
       {
-        $args = array();
-        $args['id'] = $db_test_entry_ranked_word->id;
-        $operation = lib::create( 'ui\push\test_entry_ranked_word_delete', $args );
-        $operation->process();
+        $db_test_entry_ranked_word->delete();
       }
     }
     else if( $test_type_name == 'confirmation' )
     {  
-      $test_entry_confirmation_class_name = lib::get_class_name(
-        'database\test_entry_confirmation' );      
       $db_test_entry_confirmation = 
         $test_entry_confirmation_class_name::get_unique_record(
           'test_entry_id', $db_test_entry->id );
@@ -100,10 +102,7 @@ class test_entry_reset extends \cenozo\ui\push\base_record
       }
       foreach( $intrusion_list as $db_test_entry_classification )
       {
-        $args = array();
-        $args['id'] = $db_test_entry_classification->id;
-        $operation = lib::create( 'ui\push\test_entry_classification_delete', $args );
-        $operation->process();
+        $db_test_entry_classification->delete();
       }
     }
     else if( $test_type_name == 'alpha_numeric' )
@@ -130,10 +129,7 @@ class test_entry_reset extends \cenozo\ui\push\base_record
       }  
       foreach( $intrusion_list as $db_test_entry_alpha_numeric )
       {
-        $args = array();
-        $args['id'] = $db_test_entry_alpha_numeric->id;
-        $operation = lib::create( 'ui\push\test_entry_alpha_numeric_delete', $args );
-        $operation->process();
+        $db_test_entry_alpha_numeric->delete();
       }
     }
     else
@@ -144,5 +140,5 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     }
 
     $db_test_entry->update_status_fields();
-  }
+  }  
 }
