@@ -12,4 +12,7 @@ SOURCE test_entry.sql;
 SOURCE away_time.sql;
 SOURCE user_time.sql;
 
+-- after all SOURCES, update service version
+SOURCE update_version_number.sql;
+
 COMMIT;
