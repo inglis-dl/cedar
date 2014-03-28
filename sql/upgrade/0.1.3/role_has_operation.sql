@@ -4,4 +4,4 @@ DELETE FROM role_has_operation
 WHERE operation_id = (
   SELECT id FROM operation
   AND subject LIKE "test_entry%"
-  AND name IN ( "delete", "list" ) );
+  AND name = "delete" );

@@ -125,6 +125,9 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "transcribe", true, "View a form for transcribing recordings into test entries." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "adjudicate", true, "View and edit paired test_entry details." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "test_entry", "list", true, "Lists an assignment's test_entries." );
+
 
 -- test_entry_alpha_numeric
 

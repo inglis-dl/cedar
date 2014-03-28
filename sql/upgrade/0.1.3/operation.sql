@@ -1,6 +1,6 @@
 SELECT "Removing defunct operations" AS "";
 
-DELETE FROM operation WHERE subject LIKE "test_entry%" AND name IN ( "delete", "list" );
+DELETE FROM operation WHERE subject LIKE "test_entry%" AND name = "delete";
 
 SELECT "Adding new operations" AS "";
 
