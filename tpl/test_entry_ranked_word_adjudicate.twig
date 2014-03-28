@@ -67,7 +67,6 @@
         var data = new Object();
         columns["participant_id"] = {{ participant_id }};
         columns["test_id"] = {{ test_id }};
-        columns["completed"] = 1;
         columns["id_1"] = {{ id_1 }};
         columns["id_2"] = {{ id_2 }};
 
@@ -91,7 +90,8 @@
         columns["data"] = data;
         args.columns = columns;
 
-        if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
+        // submit the adjudication
+        if( ajax_push( "{{ parent.subject }}", "submit", args ) ) {
           $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
           $( "#{{ parent.full }}_Next" ).trigger( "click" );
         }

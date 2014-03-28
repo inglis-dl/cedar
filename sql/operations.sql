@@ -118,7 +118,7 @@ VALUES( "push", "test_entry", "edit", true, "Edits a test_entry's details." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry", "reset", true, "Resets the sub entries in a test_entry." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "push", "test_entry", "new", true, "Creates a new assignment test_entry." );
+VALUES( "push", "test_entry", "submit", true, "Submit a test_entry as an adjudicatoin." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "view", true, "View the details of an assignment's test_entries." );
 INSERT INTO operation( type, subject, name, restricted, description )

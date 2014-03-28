@@ -210,6 +210,6 @@ class assignment_new extends \cenozo\ui\push\base_new
     parent::finish();
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
-    $assignment_manager::initialize( $this->get_record() );
+    $assignment_manager::initialize_assignment( $this->get_record() );
   }
 }

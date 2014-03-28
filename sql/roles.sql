@@ -505,8 +505,8 @@ AND role.name IN ( "typist" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
-WHERE type = "push" AND subject = "test_entry" AND operation.name = "new"
-AND role.name IN ( "administrator", "typist" );
+WHERE type = "push" AND subject = "test_entry" AND operation.name = "submit"
+AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation

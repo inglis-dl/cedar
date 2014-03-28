@@ -33,6 +33,10 @@ VALUES( "pull", "productivity", "report", true, "Download a productivity report.
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "productivity", "report", true, "Set up a productivity report." );
 
+-- test_entry
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry", "submit", true, "Submits a test_entry as an adjudication." );
+
 -- typist
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )

@@ -131,7 +131,7 @@ class test_entry extends \cenozo\database\has_note
    */
   public function is_completed()
   {
-    bool $completed = false;
+    $completed = false;
 
     // what type of test is this ?
     $db_test = $this->get_test();
@@ -168,7 +168,7 @@ class test_entry extends \cenozo\database\has_note
     {
       // custom query for ranked_word test type
       $sql = sprintf( 
-        'SELECT '
+        'SELECT '.
         '( '.
           '( SELECT MAX(rank) FROM ranked_word_set ) - '.
           '( '.
