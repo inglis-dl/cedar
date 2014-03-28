@@ -1,6 +1,6 @@
 <?php
 /**
- * assignment.class.php
+ * assignment_report.class.php
  * 
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
