@@ -177,7 +177,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
           $test_entry_mod = lib::create( 'database\modifier' );
           $test_entry_mod->where( 'assignment_id', '=', NULL );
           $test_entry_mod->where( 'participant_id', '=', $db_participant->id ); 
-          foreach( $test_entry_class_name::select( $test_entry_mod ) as $db_adjudicate )
+          foreach( $test_entry_class_name::select( $test_entry_mod ) as $db_test_entry_sibling )
           {
             // this is the adjudicated test entry submitted by an administrator
             // get the test entries from the test transcribed by the current user
@@ -185,21 +185,13 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
             $test_entry_mod = lib::create( 'database\modifier' );
             $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
-            $test_entry_mod->where( 'test_id', '=', $db_adjudicate->test_id );
-            $db_test_entry = $test_entry_class_name::select( $test_entry_mod );
-            if( !empty( $db_test_entry ) )
+            $test_entry_mod->where( 'test_id', '=', $db_test_entry_sibling->test_id );
+            $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
+            if( !is_null( $db_test_entry ) )
             {
-              // get the name of the test and the method used to compare entries
-              $entry_name = 'test_entry_' .  $db_adjudicate->get_test()->get_test_type()->name;
-              $get_list_method = 'get_' . $entry_name . '_list';
-              $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
-              $adjudicate = $entry_class_name::adjudicate_compare( 
-                $db_adjudicate->$get_list_method() , $db_test_entry[0]->$get_list_method() );
-
               // if they match, then this user sourced the entries meaning the companion
               // user was in error
-              if( 0 < $adjudicate )
-                $num_adjudicate++;
+              if( $db_test_entry->compare( $db_sibling_test_entry ) ) $num_adjudicate++;
             }              
           } // end loop on test entries
 

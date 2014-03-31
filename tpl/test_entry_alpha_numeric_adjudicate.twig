@@ -37,8 +37,13 @@
         columns["id_2"] = {{ id_2 }};
 
         $( table_selector + ' input:text[id$="adjudicate"]' ).each( function() {
-          var id = $(this).prop( "id" ).split( "__" )[2];
-          data[id] = { 'word_id' : $(this).prop( "name" ), 'word_candidate' : $(this).val() };
+          var rank = $(this).prop( "id" ).split( "__" )[2];
+          var candidate = $(this).val().trim().toLowerCase();
+          if( 0 == candidate.length ) {
+            data[rank] = { 'word_id' : $(this).prop( "name" ) };
+          } else {
+            data[rank] = { 'word_id' : $(this).prop( "name" ), 'word_candidate' : candidate };
+          }
         } );
  
         columns["data"] = data;

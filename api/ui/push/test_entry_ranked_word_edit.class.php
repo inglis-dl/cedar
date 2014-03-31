@@ -31,16 +31,16 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
    * This method executes the operation's purpose.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
+   * @throws exception\runtime
    * @access protected
    */
   protected function execute()
   {
     parent::execute();
 
-    $test_entry_ranked_word_class_name = lib::get_class_name( 'database\test_entry_ranked_word' );
-    
-    $record = $this->get_record();
-    $db_test_entry = $record->get_test_entry();
+    $db_test_entry_ranked_word = $this->get_record();
+    $db_test_entry = $db_test_entry_ranked_word->get_test_entry();
     $db_test = $db_test_entry->get_test();
 
     // note that for adjudication entries, there is no assignment and such
@@ -53,30 +53,31 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     $language = $db_assignment->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
 
-    if( !is_null( $record->word_candidate ) )
+    if( !is_null( $db_test_entry_ranked_word->word_candidate ) )
     {
       $data = $db_test->get_word_classification( 
-        $record->word_candidate, $language );
+        $db_test_entry_ranked_word->word_candidate, $language );
 
       $classification = $data['classification'];  
 
-      if( $record->selection == 'variant' )
+      if( $db_test_entry_ranked_word->selection == 'variant' )
       {
         if( $classification == 'primary' )
         {
           throw lib::create( 'exception\notice',
-            'The word "' . $record->word_candidate . '" is one of the '.
-            'primary words and cannot be added as a variant.',
+            'The word "' . $db_test_entry_ranked_word->word_candidate . '" is one of the '.
+            'primary words and cannot be added as a variant:  add as an intrusion.',
              __METHOD__ );
         }    
       }
-      else if( '' === $record->selection )
+      // NULL selection implies test_entry was created for an intrusion
+      else if( is_null( $db_test_entry_ranked_word->selection ) )
       {
         if( $classification == 'primary' ||
             $classification == 'variant' )
         {    
           throw lib::create( 'exception\notice',
-            'The word "' . $record->word_candidate . '" is one of the '.
+            'The word "' . $db_test_entry_ranked_word->word_candidate . '" is one of the '.
             $classification . ' words and cannot be entered as an intrusion.',
             __METHOD__ );
         }
@@ -87,21 +88,21 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
           if( is_null( $db_dictionary ) )
           {
             throw lib::create( 'exception\notice',
-              'Trying to add the word "'.  $record->word_candidate . '" to a non-existant ' .
-              ' intrusion dictionary.  Assign an intrusion dictionary for the ' . 
+              'Trying to add the word "'.  $db_test_entry_ranked_word->word_candidate .
+              '" to a non-existant intrusion dictionary.  Assign an intrusion dictionary for the '.
               $db_test->name . ' test.', __METHOD__ );
           }
           else
           {
             $db_new_word = lib::create( 'database\word' );
             $db_new_word->dictionary_id = $db_dictionary->id;
-            $db_new_word->word = $record->word_candidate;
+            $db_new_word->word = $db_test_entry_ranked_word->word_candidate;
             $db_new_word->language = $language;
             $db_new_word->save();
           }
-        }           
+        }
       }
-    } 
+    }
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_test_entry( $db_test_entry );

@@ -192,7 +192,7 @@ class assignment_manager extends \cenozo\singleton
     if( $db_test_entry->completed && !$db_test_entry->deferred )
     {   
       $db_assignment = $db_test_entry->get_assignment();
-      // does the sibling assignment exist ?
+      // does the sibling assignment exist?
       $db_sibling_assignment = $db_assignment->get_sibling_assignment();
       if( !is_null( $db_sibling_assignment ) ) 
       {   
@@ -218,7 +218,7 @@ class assignment_manager extends \cenozo\singleton
 
             if( 0 == $test_entry_class_name::count( $modifier ) ) 
             {   
-              // both assignments are now complete so set the end datetime
+              // both assignments are now complete so set their end datetimes
               $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
               $db_assignment->end_datetime = $end_datetime;
               $db_sibling_assignment->end_datetime = $end_datetime;

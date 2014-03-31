@@ -21,7 +21,7 @@ class test extends \cenozo\database\has_rank
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
-   * @return record()
+   * @return record() db_dictionary or NULL
    */
   public function get_variant_dictionary()
   {
@@ -36,7 +36,7 @@ class test extends \cenozo\database\has_rank
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
-   * @return record()
+   * @return record() db_dictionary or NULL
    */
   public function get_intrusion_dictionary()
   {

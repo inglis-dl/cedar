@@ -38,9 +38,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     $test_class_name = lib::get_class_name('database\test');
 
-    $record = $this->get_record();
-    $db_test = $record->get_test();
-    $db_participant = $record->get_assignment()->get_participant();
+    $db_test_entry = $this->get_record();
+    $db_test = $db_test_entry->get_test();
+    $db_participant = $db_test_entry->get_assignment()->get_participant();
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_transcribe
@@ -80,22 +80,22 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $away_time_mod = lib::create( 'database\modifier' );
     $away_time_mod->where( 'end_datetime', '=', NULL );
     $this->set_variable( 'on_break',
-    0 < $session->get_user()->get_away_time_count( $away_time_mod ) );
+      0 < $session->get_user()->get_away_time_count( $away_time_mod ) );
 
-    $record = $this->get_record();
-    $db_test = $record->get_test();
+    $db_test_entry = $this->get_record();
+    $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
 
-    $this->set_variable( 'audio_fault', $record->audio_fault );
-    $this->set_variable( 'deferred', $record->deferred );
-    $this->set_variable( 'completed', $record->completed );
+    $this->set_variable( 'audio_fault', $db_test_entry->audio_fault );
+    $this->set_variable( 'deferred', $db_test_entry->deferred );
+    $this->set_variable( 'completed', $db_test_entry->completed );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $test_type_name );
     $this->set_variable( 'test_id', $db_test->id );
 
-    $dictionary_id = 0;
-    $variant_dictionary_id = 0;
-    $intrusion_dictionary_id = 0;
+    $dictionary_id = '';
+    $variant_dictionary_id = '';
+    $intrusion_dictionary_id = '';
 
     $db_dictionary = $db_test->get_dictionary();
     if( !is_null( $db_dictionary ) )
@@ -117,7 +117,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'intrusion_dictionary_id', $intrusion_dictionary_id );
 
     $language = 'any';
-    $db_participant = $record->get_assignment()->get_participant();
+    $db_participant = $db_test_entry->get_assignment()->get_participant();
     if( is_null( $db_participant ) )
       throw lib::create( 'exception\runtime', 
         'The participant id must be set', __METHOD__ );
@@ -125,6 +125,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
     $this->set_variable( 'language', $language );    
     
+    // get the audio files from sabretooth
     if( $db_participant->get_cohort()->name == 'tracking' )
     {   
       $setting_manager = lib::create( 'business\setting_manager' );
@@ -139,7 +140,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $args['participant_id'] = $db_participant->id;
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
       $recording_data = array();
-      if( !is_null( $recording_list) && 
+      if( !is_null( $recording_list ) && 
           1 == $recording_list->success && 0 < count( $recording_list->data ) )
       {
         foreach( $recording_list->data as $data )
@@ -153,14 +154,14 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     }
  
     // find the ids of the prev and next test_entrys
-    $db_prev_test_entry = $record->get_previous();
-    $db_next_test_entry = $record->get_next();
+    $db_prev_test_entry = $db_test_entry->get_previous();
+    $db_next_test_entry = $db_test_entry->get_next();
 
     $this->set_variable( 'prev_test_entry_id', 
-      is_null($db_prev_test_entry) ? 0 : $db_prev_test_entry->id );
+      is_null( $db_prev_test_entry ) ? 0 : $db_prev_test_entry->id );
 
     $this->set_variable( 'next_test_entry_id', 
-      is_null($db_next_test_entry) ? 0 : $db_next_test_entry->id );
+      is_null( $db_next_test_entry ) ? 0 : $db_next_test_entry->id );
 
     $this->set_variable( 'editable', $this->editable ? 1 : 0 );
     $this->set_variable( 'actionable', $this->actionable ? 1 : 0 );

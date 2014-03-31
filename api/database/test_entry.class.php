@@ -100,7 +100,7 @@ class test_entry extends \cenozo\database\has_note
             $db_test_entry = static::get_unique_record(
               array( 'test_id', 'assignment_id' ),
               array( $db_next_test->id, $this->assignment_id ) );
-            if( !is_null( $db_test_entry ) &&  1 == $db_test_entry->adjudicate )
+            if( !is_null( $db_test_entry ) &&  true == $db_test_entry->adjudicate )
             {
               $db_next_test_entry = $db_test_entry;
               $found = true;

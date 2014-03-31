@@ -39,12 +39,6 @@ class test_entry_alpha_numeric_adjudicate extends base_adjudicate
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
-
-    if( $test_type_name != 'alpha_numeric' )
-      throw lib::create( 'exception\runtime',
-              'Widget requires test type to be alpha numeric, not ' .
-              $test_type_name, __METHOD__ );
-
     $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_record();
 
     $modifier = lib::create( 'database\modifier' );
@@ -57,9 +51,9 @@ class test_entry_alpha_numeric_adjudicate extends base_adjudicate
     {
       $a_obj = current( $a );
       $b_obj = current( $b );
-      if( !(is_null( $a_obj->word_id ) && is_null( $b_obj->word_id )) )
+      if( is_null( $a_obj->word_id ) || is_null( $b_obj->word_id ) )
       {
-        $adjudicate = $a_obj->word_id != $b_obj->word_id ? true : false;
+        $adjudicate = $a_obj->word_id != $b_obj->word_id;
               
         $db_word_1 = lib::create( 'database\word', $a_obj->word_id );
         $db_word_2 = lib::create( 'database\word', $b_obj->word_id );

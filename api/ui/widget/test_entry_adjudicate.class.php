@@ -163,7 +163,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $this->set_variable( 'completed_2', $this->adjudicate_entry->completed );
 
     $db_adjudicate_assignment = $this->adjudicate_entry->get_assignment();
-    if( empty( $db_adjudicate_assignment ) || is_null( $db_adjudicate_assignment ) )
+    if( is_null( $db_adjudicate_assignment ) )
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid assignment', __METHOD__ );
 

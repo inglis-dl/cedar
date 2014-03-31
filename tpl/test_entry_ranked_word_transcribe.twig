@@ -112,7 +112,7 @@
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = $(this).prop( "name" );
         columns["word_candidate"] = candidate;
-        columns["selection"] = is_intrusion ? "" : "variant";
+        if( !is_intrusion ) columns["selection"] = "variant";
         args.columns = columns;
         
         // push edits
@@ -154,6 +154,7 @@
       update_input_list();
       configure_ui();
 
+      // note that only non-strict tests can have new entries added for intrusions
       $( "#{{ widget.full }}_Add" ).button( {
         text: false,
         icons: { primary: "ui-icon-plusthick" }
@@ -167,7 +168,6 @@
           slot_refresh( {{ slot }} );      
         }
       } ); // end Add button click
-
        
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
@@ -179,9 +179,6 @@
         columns["test_entry_id"] = {{ parent.id }};
         columns["word_id"] = $(this).prop( "name" );
         columns["selection"] = $(this).val();
-        if( columns["selection"] !== "variant" ) {
-          columns["word_candidate"] = "";
-        }
         args.columns = columns;
         var do_text = true;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) )

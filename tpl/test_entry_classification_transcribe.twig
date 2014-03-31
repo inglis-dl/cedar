@@ -121,7 +121,6 @@
         var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
         columns["rank"] = rank;
         columns["test_entry_id"] = {{ parent.id }};
-        columns["word_id"] = "";
         columns["word_candidate"] = candidate;
         args.columns = columns;
 

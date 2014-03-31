@@ -105,7 +105,7 @@ class test_entry_submit extends \cenozo\ui\push\base_new
         if( array_key_exists( $db_entry->word_id, $data ) )
         {
           $db_entry->selection = $data[$db_entry->word_id]['selection'];
-          if( !is_null( $db_entry->selection ) && $db_entry->selection == 'variant' )
+          if( $db_entry->selection == 'variant' )
             $db_entry->word_candidate = $data[$db_entry->word_id]['word_candidate'];
           $db_entry->save();
         }

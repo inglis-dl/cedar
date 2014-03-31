@@ -45,7 +45,7 @@ class word_edit extends \cenozo\ui\push\base_edit
     {   
       $word = explode( ' ', strtolower( trim( $columns['word'] ) ) );
 
-      if( empty( $word ) || 0 == count( $word ) ) 
+      if( empty( $word ) ) 
       { 
         throw lib::create( 'exception\notice',
           'Empty word entries are not allowed.', __METHOD__ );

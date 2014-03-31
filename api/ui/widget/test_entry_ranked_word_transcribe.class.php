@@ -29,7 +29,6 @@ class test_entry_ranked_word_transcribe extends base_transcribe
    * Sets up the operation with any pre-execution instructions that may be necessary.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
    * @access protected
    */
   protected function setup()
@@ -39,11 +38,6 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
-
-    if( $test_type_name != 'ranked_word' )
-      throw lib::create( 'exception\runtime',
-              'Widget requires test type to be ranked word, not ' . 
-              $test_type_name, __METHOD__ );
 
     $db_participant = $db_test_entry->get_assignment()->get_participant();
     $language = $db_participant->language;
@@ -57,36 +51,33 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as 
              $db_test_entry_ranked_word )
     {
-      $selection = is_null( $db_test_entry_ranked_word->selection ) ? '' :
-                            $db_test_entry_ranked_word->selection;                            
-      $word_candidate = is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
-                                 $db_test_entry_ranked_word->word_candidate;
-      $word_id = is_null( $db_test_entry_ranked_word->word_id ) ? '' : 
-                          $db_test_entry_ranked_word->word_id;
-      $word = '';                    
-      $classification = '';                    
+      $selection = $db_test_entry_ranked_word->selection;                            
+      $word_candidate = $db_test_entry_ranked_word->word_candidate;
+      $word_id = $db_test_entry_ranked_word->word_id;
+      $word = '';
+      $classification = '';
 
-      if( !empty( $word_id ) )
+      if( isset( $word_id ) && $word_id !== '' )
       {
         $word = $db_test_entry_ranked_word->get_word()->word;
-        if( !empty( $word_candidate ) && $selection == 'variant' )
+        if( isset( $word_candidate ) &&  $word_candidate !== '' && $selection == 'variant' )
         {
           $data = $db_test_entry->get_test()->get_word_classification(
-                  $word_candidate, $language );
-          $classification = $data['classification'];        
+                    $word_candidate, $language );
+          $classification = $data['classification'];
         }
       }
       else
-      { 
-        $classification = 'intrusion';  
+      {
+        $classification = 'intrusion';
       }
 
-      $entry_data[] = 
+      $entry_data[] =
           array(
             'id' => $db_test_entry_ranked_word->id,
             'word_id' => $word_id,
             'word' => $word,
-            'selection' => $selection,  
+            'selection' => $selection,
             'word_candidate' => $word_candidate,
             'classification' => $classification );
     }

@@ -128,7 +128,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
 
     $site_list = $site_class_name::select( $site_mod );
-    $do_summary_table = count( $site_list ) > 1;
+    $do_summary_table = 1 < count( $site_list );
     $summary_content = array();
 
     // now create a table for every site included in the report

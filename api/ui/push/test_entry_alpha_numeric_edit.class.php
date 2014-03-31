@@ -35,17 +35,22 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
    */
   protected function prepare()
   {
+    // if the id argument is absent, create a new entry for the data
     $id = $this->get_argument( 'id' );
-    if( is_null( $id ) || $id == '' )
+    if( !isset( $id ) || $id === '' )
     {   
       // skip the parent method
       $grand_parent = get_parent_class( get_parent_class( get_class() ) );
       $grand_parent::prepare(); 
       $columns = $this->get_argument( 'columns' );    
       $class_name = lib::get_class_name( 'database\test_entry_alpha_numeric' );
-      $this->set_record( $class_name::get_unique_record( 
+      $db_test_entry_alpha_numeric = $class_name::get_unique_record( 
         array( 'test_entry_id', 'rank' ),  
-        array( $columns['test_entry_id'], $columns['rank'] ) ) );
+        array( $columns['test_entry_id'], $columns['rank'] ) );
+      if( isset( $columns['word_candidate'] ) &&  $columns['word_candidate'] !== '' )  
+        $db_test_entry_alpha_numeric->word_candidate = $columns['word_candidate'];
+
+      $this->set_record( $db_test_entry_alpha_numeric );
     }     
     else
     {   
@@ -90,8 +95,8 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $test_entry_alpha_numeric_class_name = 
       lib::get_class_name('database\test_entry_alpha_numeric');
 
-    $record = $this->get_record();
-    $db_test_entry = $record->get_test_entry();    
+    $db_test_entry_alpha_numeric = $this->get_record();
+    $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();    
     $db_dictionary = $db_test_entry->get_test()->get_dictionary();
 
     $language = $db_test_entry->get_assignment()->get_participant()->language;
@@ -109,7 +114,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $db_word = current( $word_class_name::select( $modifier ) );
     if( !is_null( $db_word ) )
     {
-      $record->word_id = $db_word->id;
+      $db_test_entry_alpha_numeric->word_id = $db_word->id;
     }
     else
     {
@@ -118,10 +123,10 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $db_new_word->word = $word_value;
       $db_new_word->language = $language;
       $db_new_word->save();
-      $record->word_id = $word_class_name::db()->insert_id();
+      $db_test_entry_alpha_numeric->word_id = $word_class_name::db()->insert_id();
     }
 
-    $record->save();
+    $db_test_entry_alpha_numeric->save();
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_test_entry( $db_test_entry );

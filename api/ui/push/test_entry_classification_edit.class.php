@@ -35,18 +35,23 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
    */
   protected function prepare()
   {
+    // if the id argument is absent, create a new entry for the data
     $id = $this->get_argument( 'id' );
-    if( is_null( $id ) || '' === $id )
+    if( !isset( $id ) || $id === '' )
     {
       // skip the parent method
       $grand_parent = get_parent_class( get_parent_class( get_class() ) );
       $grand_parent::prepare(); 
       $columns = $this->get_argument( 'columns' );      
       $class_name = lib::get_class_name( 'database\test_entry_classification' );
-      $record = $class_name::get_unique_record(
+      $db_test_entry_classification = $class_name::get_unique_record(
         array( 'test_entry_id', 'rank' ), 
         array( $columns['test_entry_id'], $columns['rank'] ) );
-      $this->set_record( $record );
+      
+      if( isset( $columns['word_candidate'] ) &&  $columns['word_candidate'] !== '' )
+        $db_test_entry_classification->word_candidate = $columns['word_candidate'];
+
+      $this->set_record( $db_test_entry_classification );
     }      
     else
     {
@@ -69,8 +74,8 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       lib::get_class_name('database\test_entry_classification');
     $word_class_name = lib::get_class_name( 'database\word' );
 
-    $record = $this->get_record();
-    $db_test_entry = $record->get_test_entry();
+    $db_test_entry_classification = $this->get_record();
+    $db_test_entry = $db_test_entry_classification->get_test_entry();
     $db_test = $db_test_entry->get_test();
 
     // note that for adjudication entries, there is no assignment and such
@@ -89,14 +94,15 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       $language = is_null( $language ) ? 'en' : $language;
     }  
     
-    $data = $db_test->get_word_classification( $record->word_candidate, $language );
+    $data = $db_test->get_word_classification( 
+      $db_test_entry_classification->word_candidate, $language );
     $classification = $data['classification'];
     $db_word = $data['word'];
 
-    if( $db_word !== NULL )
+    if( !is_null( $db_word ) )
     {
-      $record->word_id = $db_word->id;
-      $record->word_candidate = NULL;
+      $db_test_entry_classification->word_id = $db_word->id;
+      $db_test_entry_classification->word_candidate = NULL;
     }
     else
     {
@@ -106,20 +112,23 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       if( $is_FAS )
       {
         $is_intrusion = false;
+        // any words that begin with 'f' or 'ph' are intrusions
         if( preg_match( '/FAS (f words)/', $db_test->name ) &&
-            !( 0 == strpos( 'f', $record->word_candidate ) || 
-               0 == strpos( 'ph', $record->word_candidate ) ) )
+            !( false === strpos( 'f', $db_test_entry_classification->word_candidate ) || 
+               false === strpos( 'ph', $db_test_entry_classification->word_candidate ) ) )
         {
           $is_intrusion = true;
         }
+        // any words that begin with 'a' are intrusions
         else if( preg_match( '/FAS (a words)/', $db_test->name ) &&
-                 !( 0 == strpos( 'a', $record->word_candidate ) ) )
+                 !( false === strpos( 'a', $db_test_entry_classification->word_candidate ) ) )
         {
           $is_intrusion = true;
         }
+        // any words begin with 's' or 'c' are intrusions
         else if( preg_match( '/FAS (s words)/', $db_test->name ) &&
-                 !( 0 == strpos( 's', $record->word_candidate ) || 
-                    0 == strpos( 'c', $record->word_candidate ) ) )
+                 !( false === strpos( 's', $db_test_entry_classification->word_candidate ) || 
+                    false === strpos( 'c', $db_test_entry_classification->word_candidate ) ) )
         {
           $is_intrusion = true;
         }          
@@ -129,8 +138,9 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           $db_dictionary = $db_test->get_intrusion_dictionary();
           if( is_null( $db_dictionary ) ) 
             throw lib::create( 'exception\notice',
-              'Trying to add the word "'.  $record->word_candidate . '" to a non-existant ' .
-              ' intrusion dictionary.  Assign an intrusion dictionary for the ' . 
+              'Trying to add the word "'.  
+              $db_test_entry_classification->word_candidate . 
+              '" to a non-existant intrusion dictionary.  Assign an intrusion dictionary for the '.
               $db_test->name . ' test.', __METHOD__ );
         }  
       }
@@ -141,21 +151,22 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         $db_dictionary = $db_test->get_variant_dictionary();
         if( is_null( $db_dictionary ) ) 
           throw lib::create( 'exception\notice',
-            'Trying to add the word "'.  $record->word_candidate . '" to a non-existant ' .
-            ' variant dictionary.  Assign a variant dictionary for the ' . 
+            'Trying to add the word "'.
+            $db_test_entry_classification->word_candidate .
+            '" to a non-existant variant dictionary.  Assign a variant dictionary for the '.
             $db_test->name . ' test.', __METHOD__ );
       }
 
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
-      $db_new_word->word = $record->word_candidate;
+      $db_new_word->word = $db_test_entry_classification->word_candidate;
       $db_new_word->language = $language;
       $db_new_word->save();
-      $record->word_id = $word_class_name::db()->insert_id();
-      $record->word_candidate = NULL;
+      $db_test_entry_classification->word_id = $word_class_name::db()->insert_id();
+      $db_test_entry_classification->word_candidate = NULL;
     }
 
-    $record->save();
+    $db_test_entry_classification->save();
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_test_entry( $db_test_entry );
