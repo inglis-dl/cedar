@@ -47,9 +47,6 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $db_test_entry_alpha_numeric = $class_name::get_unique_record( 
         array( 'test_entry_id', 'rank' ),  
         array( $columns['test_entry_id'], $columns['rank'] ) );
-      if( isset( $columns['word_candidate'] ) &&  $columns['word_candidate'] !== '' )  
-        $db_test_entry_alpha_numeric->word_candidate = $columns['word_candidate'];
-
       $this->set_record( $db_test_entry_alpha_numeric );
     }     
     else
@@ -91,9 +88,6 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     parent::execute();
 
     $word_class_name = lib::get_class_name( 'database\word' );
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-    $test_entry_alpha_numeric_class_name = 
-      lib::get_class_name('database\test_entry_alpha_numeric');
 
     $db_test_entry_alpha_numeric = $this->get_record();
     $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();    

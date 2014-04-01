@@ -38,14 +38,8 @@ class test_entry_classification_transcribe extends base_transcribe
 
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
-
-    if( $test_type_name != 'classification' )
-      throw lib::create( 'exception\runtime',
-              'Widget requires test type to be classification, not ' .
-              $test_type_name, __METHOD__ );
-
     $db_participant = $db_test_entry->get_assignment()->get_participant();
+
     $language = $db_participant->language;
     $language = is_null( $language ) ? 'en' : $language;
 

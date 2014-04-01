@@ -29,28 +29,25 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
   /** 
    * This method executes the operation's purpose.
+   * This type of test has two possible sources of edits from the UI layer:
+   * 1) when a text entry field for a variant or intrusion changes
+   * 2) when a selection changes
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
-   * @throws exception\runtime
    * @access protected
    */
   protected function execute()
   {
     parent::execute();
 
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     $db_test_entry_ranked_word = $this->get_record();
     $db_test_entry = $db_test_entry_ranked_word->get_test_entry();
     $db_test = $db_test_entry->get_test();
 
-    // note that for adjudication entries, there is no assignment and such
-    // entries cannot be edited
-    $db_assignment = $db_test_entry->get_assignment();
-    if( is_null( $db_assignment ) ) 
-      throw lib::create( 'exception\runtime',
-        'Tried to edit an adjudication entry', __METHOD__ );
-
-    $language = $db_assignment->get_participant()->language;
+    $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
 
     if( !is_null( $db_test_entry_ranked_word->word_candidate ) )
@@ -73,6 +70,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
       // NULL selection implies test_entry was created for an intrusion
       else if( is_null( $db_test_entry_ranked_word->selection ) )
       {
+        // reject words that are already in the primary or variant dictionaries
         if( $classification == 'primary' ||
             $classification == 'variant' )
         {    
@@ -81,6 +79,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             $classification . ' words and cannot be entered as an intrusion.',
             __METHOD__ );
         }
+        // not a primary, variant, or intrusion
         else if( $classification == 'candidate' )
         {
           //get the test's intrusion dictionary and add it as an intrusion
@@ -99,6 +98,9 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             $db_new_word->word = $db_test_entry_ranked_word->word_candidate;
             $db_new_word->language = $language;
             $db_new_word->save();
+            $db_test_entry_ranked_word->word_id = $word_class_name::db()->insert_id();
+            $db_test_entry_ranked_word->word_candidate = NULL;
+            $db_test_entry_ranked_word->save();
           }
         }
       }

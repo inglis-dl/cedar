@@ -97,7 +97,9 @@
       .change( function() {
 
         var candidate = $(this).val().trim().toLowerCase();
+        // we've trimmed and lower-cased the candidate, so update the UI
         $(this).val( candidate );
+        // update the value to present state
         $(this).attr( "value", candidate );
         $(this).removeClass( "candidate intrusion variant" );
         if( 0 == candidate.length ) {
@@ -110,21 +112,22 @@
         args.id = $(this).prop( "id" ).split("__")[0];
         var is_intrusion = $(this).prop( "id" ).split("__")[1] === "intrusion";
         columns["test_entry_id"] = {{ parent.id }};
-        columns["word_id"] = $(this).prop( "name" );
         columns["word_candidate"] = candidate;
-        if( !is_intrusion ) columns["selection"] = "variant";
+        if( !is_intrusion ) {
+          columns["selection"] = "variant";
+          columns["word_id"] = $(this).prop( "name" );
+        }  
         args.columns = columns;
         
         // push edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
 
-          // get the classification of the word for coloring
+          // determine what type of word this is
           args.id = {{ test_id }};
           args["language"] = "{{ language }}";
           args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
-          if( undefined != classification )
-          {
+          if( undefined != classification ) {
              $(this).addClass( classification );
           }           
           
@@ -248,7 +251,7 @@
     <tbody>
     {% for entry in entry_data %}
       
-        {% if entry.word is defined %}
+        {% if entry.selection is defined %}
         <tr class="ranked_word">  
           <td class="heading">{{ entry.word }}</td>
           <td><input type="radio" 
@@ -278,7 +281,7 @@
           <td><input type="text"
                id="{{ entry.id }}__candidate"
                name="{{ entry.word_id }}"
-               {% if entry.classificatioin is defined %}
+               {% if entry.classification is defined %}
                  class="{{ entry.classification }}"
                {% endif %}  
                {% if editable == 0 %}
@@ -302,7 +305,12 @@
                  class="{{ entry.classification }}"
                {% endif %}
                name=""
-               value="{{ entry.word_candidate }}"></td>
+               value=""
+               {% if entry.word_candidate is defined %} 
+                 value="{{ entry.word_candidate }}"
+               {% elseif entry.word is defined %}
+                 value="{{ entry.word }}"
+               {% endif %}></td>
          </tr>      
         {% endif %}
     {% endfor %}  

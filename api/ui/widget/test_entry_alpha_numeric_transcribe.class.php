@@ -37,15 +37,12 @@ class test_entry_alpha_numeric_transcribe extends base_transcribe
     parent::setup();
 
     $db_test_entry = $this->parent->get_record();
-    $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
     $entry_data = array();
-    //TODO add variable for dictionary lookup text completion
     foreach( $db_test_entry->get_test_entry_alpha_numeric_list( $modifier ) as 
-      $db_test_entry_alpha_numeric )
+             $db_test_entry_alpha_numeric )
     {
       $db_word = lib::create( 'database\word', $db_test_entry_alpha_numeric->word_id );
       $row = array(

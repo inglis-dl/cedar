@@ -70,27 +70,18 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
-    $test_entry_classification_class_name = 
-      lib::get_class_name('database\test_entry_classification');
     $word_class_name = lib::get_class_name( 'database\word' );
 
     $db_test_entry_classification = $this->get_record();
     $db_test_entry = $db_test_entry_classification->get_test_entry();
     $db_test = $db_test_entry->get_test();
 
-    // note that for adjudication entries, there is no assignment and such
-    // entries cannot be edited
-    $db_assignment = $db_test_entry->get_assignment();
-    if( is_null( $db_assignment ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to edit an adjudication entry', __METHOD__ );
-
     // allow bilingual responses for FAS classification tests
     $language = 'any';
     $is_FAS = preg_match( '/FAS/', $db_test->name );
     if( !$is_FAS )
     {
-      $language = $db_assignment->get_participant()->language;
+      $language = $db_test_entry->get_assignment()->get_participant()->language;
       $language = is_null( $language ) ? 'en' : $language;
     }  
     

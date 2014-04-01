@@ -37,14 +37,11 @@ class test_entry_ranked_word_transcribe extends base_transcribe
 
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
 
     $db_participant = $db_test_entry->get_assignment()->get_participant();
     $language = $db_participant->language;
     $language = is_null( $language ) ? 'en' : $language;
     
-    $word_list = array();
-    $intrusion_list = array();
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'id' );
     $entry_data = array();
@@ -54,31 +51,31 @@ class test_entry_ranked_word_transcribe extends base_transcribe
       $selection = $db_test_entry_ranked_word->selection;                            
       $word_candidate = $db_test_entry_ranked_word->word_candidate;
       $word_id = $db_test_entry_ranked_word->word_id;
-      $word = '';
+      $word = is_null( $word_id ) ? '' :  $db_test_entry_ranked_word->get_word()->word;
       $classification = '';
 
-      if( isset( $word_id ) && $word_id !== '' )
+      // intrusion case
+      if( is_null( $selection ) )
       {
-        $word = $db_test_entry_ranked_word->get_word()->word;
-        if( isset( $word_candidate ) &&  $word_candidate !== '' && $selection == 'variant' )
+        $classification = 'intrusion';
+      }
+      else
+      {
+        if( !is_null( $word_candidate ) && $selection == 'variant' )
         {
           $data = $db_test_entry->get_test()->get_word_classification(
                     $word_candidate, $language );
           $classification = $data['classification'];
         }
       }
-      else
-      {
-        $classification = 'intrusion';
-      }
 
       $entry_data[] =
           array(
             'id' => $db_test_entry_ranked_word->id,
-            'word_id' => $word_id,
+            'word_id' => is_null( $word_id ) ? '' : $word_id,
             'word' => $word,
-            'selection' => $selection,
-            'word_candidate' => $word_candidate,
+            'selection' => is_null( $selection ) ? '' : $selection,
+            'word_candidate' => is_null( $word_candidate ) ? '' : $word_candidate,
             'classification' => $classification );
     }
 

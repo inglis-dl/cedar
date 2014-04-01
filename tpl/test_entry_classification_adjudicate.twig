@@ -199,7 +199,7 @@
 
   <div class="spacer">
 
-  {% if entry_data is empty %}
+  {% if adjudicate_data is empty %}
 
     <caption style="text-align: left;">
       <strong>No adjudication required. Please press Prev, Next or Quit</strong>
@@ -220,7 +220,7 @@
       </thead>
 
       <tbody>
-      {% for entry in entry_data %}
+      {% for entry in adjudicate_data %}
         <tr>
           <td class="heading" style="text-align:center">{{ entry.rank }}</td>
 

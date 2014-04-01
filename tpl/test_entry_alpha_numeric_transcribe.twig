@@ -82,11 +82,13 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
-        if( 0 == args.id ) args.id = '';
+        if( 0 == args.id ) args.id = "";
         var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
         columns["rank"] = rank;
         columns["test_entry_id"] = {{ parent.id }};
-        columns["word_id"] = $(this).prop( "name" ) === "undefined" ? "" : $(this).prop( "name" );
+
+        // NOTE: there is no word_value column in test_entry_alpha_numeric
+        // so we send the candidate entry as word_value for validation
         columns["word_value"] = candidate;
         args.columns = columns;
 
