@@ -493,12 +493,13 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_ranked_word` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_entry_id` INT UNSIGNED NOT NULL,
-  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
-  `word_candidate` VARCHAR(45) NULL DEFAULT NULL,
-  `selection` ENUM('yes','no','variant') NULL DEFAULT NULL,
+  `ranked_word_set_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL this is an intrusion',
+  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NOT NULL then a variant or intrusion',
+  `selection` ENUM('yes','no','variant') NULL DEFAULT NULL COMMENT 'if NULL an intrusion or not filled in',
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_word_id` (`word_id` ASC),
+  INDEX `fk_ranked_word_set_id` (`ranked_word_set_id` ASC),
   CONSTRAINT `fk_test_entry_ranked_word_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
@@ -507,6 +508,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_ranked_word` (
   CONSTRAINT `fk_test_entry_ranked_word_word_id`
     FOREIGN KEY (`word_id`)
     REFERENCES `cedar`.`word` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_ranked_word_ranked_word_set_id`
+    FOREIGN KEY (`ranked_word_set_id`)
+    REFERENCES `cedar`.`ranked_word_set` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -522,8 +528,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_classification` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_entry_id` INT UNSIGNED NOT NULL,
-  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
-  `word_candidate` VARCHAR(45) NULL DEFAULT NULL,
+  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'NULL if not set yet',
   `rank` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
