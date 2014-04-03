@@ -187,7 +187,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
             $test_entry_mod->where( 'test_id', '=', $db_test_entry_sibling->test_id );
             $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
-            if( !is_null( $db_test_entry ) )
+            if( false !== $db_test_entry )
             {
               // if they match, then this user sourced the entries meaning the companion
               // user was in error

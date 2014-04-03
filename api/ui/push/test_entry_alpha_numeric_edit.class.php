@@ -106,7 +106,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $modifier->limit( 1 );
 
     $db_word = current( $word_class_name::select( $modifier ) );
-    if( !is_null( $db_word ) )
+    if( false !== $db_word )
     {
       $db_test_entry_alpha_numeric->word_id = $db_word->id;
     }

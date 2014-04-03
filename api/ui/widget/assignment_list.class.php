@@ -108,7 +108,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         $test_entry_mod->order( 'test.rank' );
         $test_entry_mod->limit( 1 );
         $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
-        if( !is_null( $db_test_entry ) ) 
+        if( false !== $db_test_entry )
         {  
           $test_entry_id = $db_test_entry->id;
           $allow_transcribe = true;
@@ -130,7 +130,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $test_entry_mod->limit( 1 );
 
           $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
-          if( !is_null( $db_test_entry ) )
+          if( false !== $db_test_entry )
           {
             // see if the sibling test_entry exists
             $sibling_mod = lib::create( 'database\modifier' );
@@ -138,7 +138,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
             $sibling_mod->where( 'assignment_id', '=', $db_sibling_assignment->id );
             $sibling_mod->where( 'test_id', '=', $db_test_entry->test_id );
             $db_sibling_test_entry = current( $test_entry_class_name::select( $sibling_mod ) );
-            if( !is_null( $db_sibling_test_entry ) ) 
+            if( false !== $db_sibling_test_entry )
             {
               $test_entry_id = $db_test_entry->id;
               $allow_adjudicate = true;

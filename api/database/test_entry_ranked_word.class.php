@@ -30,8 +30,7 @@ class test_entry_ranked_word extends \cenozo\database\record
       $rhs_list_obj = current( $rhs_list );  
       $lhs_list_obj = current( $lhs_list );  
       if( $rhs_list_obj->selection != $lhs_list_obj->selection ||
-          $rhs_list_obj->word_id != $lhs_list_obj->word_id ||
-          $rhs_list_obj->word_candidate != $lhs_list_obj->word_candidate ) return false;
+          $rhs_list_obj->word_id != $lhs_list_obj->word_id ) return false;
       next( $rhs_list );
       next( $lhs_list );
     }   

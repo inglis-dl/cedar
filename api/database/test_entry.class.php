@@ -141,10 +141,10 @@ class test_entry extends \cenozo\database\has_note
 
     // the test is different depending on type:
     // - confirmation: confirmation column is not null
-    // - classification: one word_id or word_candidate column not null
+    // - classification: one word_id column not null
     // - alpha_numeric: one word_id column not null
     // - ranked_word: all primary dictionary words have valid selection responses with 
-    // variant responses having a not null word_candidate
+    // variant and intrusion responses having a not null word_id
 
     $base_mod = lib::create( 'database\modifier' );
     $base_mod->where( 'test_entry_id', '=', $this->id );
@@ -153,13 +153,7 @@ class test_entry extends \cenozo\database\has_note
       $base_mod->where( 'confirmation', '!=', NULL );
       $completed = 0 < $entry_class_name::count( $base_mod );
     }
-    else if( $test_type_name == 'classification' )
-    {
-      $base_mod->where( 'word_id', '!=', NULL );
-      $base_mod->where( 'word_candidate', '!=', NULL, true, true );
-      $completed = 0 < $entry_class_name::count( $base_mod );
-    }
-    else if( $test_type_name == 'alpha_numeric' )
+    else if( $test_type_name == 'classification' || $test_type_name == 'alpha_numeric' )
     {
       $base_mod->where( 'word_id', '!=', NULL );
       $completed = 0 < $entry_class_name::count( $base_mod );
@@ -174,11 +168,7 @@ class test_entry extends \cenozo\database\has_note
           '( '.
             'SELECT COUNT(*) FROM test_entry_ranked_word '.
             'WHERE test_entry_id = %s '.
-            'AND '.
-            '( '.
-              'selection IS NOT NULL OR '.
-              'selection="variant" AND word_candidate IS NOT NULL '.
-            ') '.
+            'AND selection IS NOT NULL '. 
           ') '. 
         ')',
         $database_class_name::format_string( $this->id ) );
@@ -206,10 +196,10 @@ class test_entry extends \cenozo\database\has_note
     // get the daughter table entries as lists
     $entry_name = 'test_entry_' . $this->get_test()->get_test_type()->name;
     $entry_class_name = lib::get_class_name( 'database\\' . $entry_name );
-    $get_list_method = 'get_' . $entry_name . '_list';
+    $get_list_function = 'get_' . $entry_name . '_list';
 
-    $lhs_list = $this->$get_list_method();
-    $rhs_list = $db_test_entry->$get_list_method();
+    $lhs_list = $this->$get_list_function();
+    $rhs_list = $db_test_entry->$get_list_function();
    
     return $entry_class_name::compare( $lhs_list, $rhs_list );
   }

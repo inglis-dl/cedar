@@ -28,7 +28,7 @@ class assignment extends \cenozo\database\record
     $sibling_mod->where( 'participant_id', '=', $this->participant_id );
     $sibling_mod->where( 'user_id', '!=', $this->user_id );
     $db_assignment = current( static::select( $sibling_mod ) );
-    return $db_assignment ? $db_assignment : NULL;
+    return false === $db_assignment ? NULL : $db_assignment;
   }
 
   /** 

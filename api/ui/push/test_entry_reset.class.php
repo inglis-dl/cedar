@@ -38,8 +38,9 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     parent::execute();
 
     $db_test_entry = $this->get_record();
+
     $assignment_manager = lib::create( 'business\assignment_manager' );
-    $assignment_manager::initialize_assignment( 
+    $assignment_manager::initialize_assignment(
       $db_test_entry->get_assignment(),
       $db_test_entry->get_test()->id );
   }  

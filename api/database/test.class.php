@@ -45,15 +45,21 @@ class test extends \cenozo\database\has_rank
   }
 
   /** 
-   * Classify a word candidate based on dictionary membership.
+   * Classify a word based on test's dictionary membership.
+   * All tests must have a primary dictionary assigned. Non-strict tests 
+   * must also have variant and intrusion dictionaries assigned.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @throws exception\runtime
-   * @return array()  classification={candidate, primary, intrusion, variant}, record
+   * @param string $word A non-empty word.
+   * @param string $language The language of the word.
+   * @return array()  classification={candidate, primary, intrusion, variant}, db_word
    */
-  public function get_word_classification( $word_candidate, $language = 'any' )
+  public function get_word_classification( $word, $language = 'any' )
   {
+    // all tests must have a primary dictionary assigned
+    // non-strict tests must also have variant and intrusion dictionaries assigned
     if( ( !$this->strict && is_null( $this->dictionary_id ) ) ||
          ( is_null( $this->dictionary_id ) || 
            is_null( $this->intrusion_dictionary_id ) ||
@@ -70,27 +76,26 @@ class test extends \cenozo\database\has_rank
 
     $base_mod = lib::create( 'database\modifier' );
     if( 'any' != $language ) $base_mod->where( 'language', '=', $language );
-    $base_mod->where( 'word', '=', $word_candidate );
+    $base_mod->where( 'word', '=', $word );
     $base_mod->limit( 1 );
 
     $modifier = clone $base_mod;
     $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
 
     $db_word = current( $word_class_name::select( $modifier ) );
-    if( !is_null( $db_word ) ) 
+    if( false !== $db_word )
     {   
       $data['classification'] = 'primary';
       $data['word'] = $db_word;
     }    
     else
     {   
-      // non-strict tests must have their variant and intrusion dictionaries assigned
       if( !$this->strict ) 
       {   
         $modifier = clone $base_mod;
         $modifier->where( 'dictionary_id', '=', $this->intrusion_dictionary_id );
         $db_word = current( $word_class_name::select( $modifier ) );
-        if( !is_null( $db_word ) ) 
+        if( false !== $db_word )
         {   
           $data['classification'] = 'intrusion';
           $data['word'] = $db_word;
@@ -100,7 +105,7 @@ class test extends \cenozo\database\has_rank
           $modifier = clone $base_mod;
           $modifier->where( 'dictionary_id', '=', $this->variant_dictionary_id );
           $db_word = current( $word_class_name::select( $modifier ) );
-          if( !is_null( $db_word ) ) 
+          if( false !== $db_word ) 
           {   
             $data['classification'] = 'variant';
             $data['word'] = $db_word;

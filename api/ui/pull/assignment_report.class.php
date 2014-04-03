@@ -111,7 +111,8 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $assignment_mod->limit( 1 );        
       $assignment_list = $assignment_class_name::select( $assignment_mod );
       $db_assignment = current( $assignment_list );
-      $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
+      if( false !== $db_assignment )
+        $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
     }
 
     // we only care about what months have been selected, set days of month appropriately

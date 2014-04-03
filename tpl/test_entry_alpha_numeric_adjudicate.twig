@@ -39,11 +39,9 @@
         $( table_selector + ' input:text[id$="adjudicate"]' ).each( function() {
           var rank = $(this).prop( "id" ).split( "__" )[2];
           var candidate = $(this).val().trim().toLowerCase();
-          if( 0 == candidate.length ) {
+          if( 0 < candidate.length ) {
             data[rank] = { 'word_id' : $(this).prop( "name" ) };
-          } else {
-            data[rank] = { 'word_id' : $(this).prop( "name" ), 'word_candidate' : candidate };
-          }
+          }  
         } );
  
         columns["data"] = data;

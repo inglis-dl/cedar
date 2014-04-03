@@ -49,30 +49,22 @@ class test_entry_classification_transcribe extends base_transcribe
     foreach( $db_test_entry->get_test_entry_classification_list( $modifier ) as 
              $db_test_entry_classification )
     {
-      $word_id = $db_test_entry_classification->word_id;
-      $word_candidate = $db_test_entry_classification->word_candidate;
+      $db_word = $db_test_entry_classification->get_word();
       $word = '';
       $classification = '';
 
-      if( !is_null( $word_id ) )
+      if( !is_null( $db_word ) )
       {
-        $db_word = lib::create( 'database\word', $word_id );
         $data = $db_test->get_word_classification( $db_word->word, $db_word->language );
         $word = $db_word->word;
-        $classification = $data['classification'];
-      }
-      else if( !is_null( $word_candidate ) )
-      {
-        $data = $db_test->get_word_classification( $word_candidate, $language );
         $classification = $data['classification'];
       }
       
       $row = array(
                'id' => $db_test_entry_classification->id,
                'rank' => $db_test_entry_classification->rank,
-               'word_id' => $word_id,
+               'word_id' => is_null( $db_word ) ? '' : $db_word->id,
                'word' => $word,
-               'word_candidate' => $word_candidate,
                'classification' => $classification  );
 
       $entry_data[] = $row;              

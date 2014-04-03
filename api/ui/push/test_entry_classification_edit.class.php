@@ -48,9 +48,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         array( 'test_entry_id', 'rank' ), 
         array( $columns['test_entry_id'], $columns['rank'] ) );
       
-      if( isset( $columns['word_candidate'] ) &&  $columns['word_candidate'] !== '' )
-        $db_test_entry_classification->word_candidate = $columns['word_candidate'];
-
       $this->set_record( $db_test_entry_classification );
     }      
     else
@@ -83,17 +80,19 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     {
       $language = $db_test_entry->get_assignment()->get_participant()->language;
       $language = is_null( $language ) ? 'en' : $language;
-    }  
+    }
+
+    $columns = $this->get_argument( 'columns' );
+    $word_candidate = array_key_exists( 'word_candidate', $columns ) ?
+      $columns['word_candidate'] : NULL;
     
-    $data = $db_test->get_word_classification( 
-      $db_test_entry_classification->word_candidate, $language );
+    $data = $db_test->get_word_classification( $word_candidate, $language );
     $classification = $data['classification'];
     $db_word = $data['word'];
 
     if( !is_null( $db_word ) )
     {
       $db_test_entry_classification->word_id = $db_word->id;
-      $db_test_entry_classification->word_candidate = NULL;
     }
     else
     {
@@ -105,21 +104,21 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         $is_intrusion = false;
         // any words that begin with 'f' or 'ph' are intrusions
         if( preg_match( '/FAS (f words)/', $db_test->name ) &&
-            !( false === strpos( 'f', $db_test_entry_classification->word_candidate ) || 
-               false === strpos( 'ph', $db_test_entry_classification->word_candidate ) ) )
+            !( false === strpos( 'f', $word_candidate ) || 
+               false === strpos( 'ph', $word_candidate ) ) )
         {
           $is_intrusion = true;
         }
         // any words that begin with 'a' are intrusions
         else if( preg_match( '/FAS (a words)/', $db_test->name ) &&
-                 !( false === strpos( 'a', $db_test_entry_classification->word_candidate ) ) )
+                 !( false === strpos( 'a', $word_candidate ) ) )
         {
           $is_intrusion = true;
         }
         // any words begin with 's' or 'c' are intrusions
         else if( preg_match( '/FAS (s words)/', $db_test->name ) &&
-                 !( false === strpos( 's', $db_test_entry_classification->word_candidate ) || 
-                    false === strpos( 'c', $db_test_entry_classification->word_candidate ) ) )
+                 !( false === strpos( 's', $word_candidate ) || 
+                    false === strpos( 'c', $word_candidate ) ) )
         {
           $is_intrusion = true;
         }          
@@ -129,8 +128,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           $db_dictionary = $db_test->get_intrusion_dictionary();
           if( is_null( $db_dictionary ) ) 
             throw lib::create( 'exception\notice',
-              'Trying to add the word "'.  
-              $db_test_entry_classification->word_candidate . 
+              'Trying to add the word "'. $word_candidate .
               '" to a non-existant intrusion dictionary.  Assign an intrusion dictionary for the '.
               $db_test->name . ' test.', __METHOD__ );
         }  
@@ -142,19 +140,16 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         $db_dictionary = $db_test->get_variant_dictionary();
         if( is_null( $db_dictionary ) ) 
           throw lib::create( 'exception\notice',
-            'Trying to add the word "'.
-            $db_test_entry_classification->word_candidate .
+            'Trying to add the word "'. $word_candidate .
             '" to a non-existant variant dictionary.  Assign a variant dictionary for the '.
             $db_test->name . ' test.', __METHOD__ );
       }
-
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
-      $db_new_word->word = $db_test_entry_classification->word_candidate;
+      $db_new_word->word = $word_candidate;
       $db_new_word->language = $language;
       $db_new_word->save();
       $db_test_entry_classification->word_id = $word_class_name::db()->insert_id();
-      $db_test_entry_classification->word_candidate = NULL;
     }
 
     $db_test_entry_classification->save();
