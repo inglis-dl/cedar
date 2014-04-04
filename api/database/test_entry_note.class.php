@@ -12,4 +12,4 @@ use cenozo\lib, cenozo\log;
 /**
  * test_entry_note: record
  */
-class test_entry_note extends \cenozo\database\record{}
+class test_entry_note extends \cenozo\database\base_note{}
