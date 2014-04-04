@@ -48,7 +48,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
     $round_times = $this->get_argument( 'round_times', true );
 
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
-    $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
+    $restrict_site_id = $this->get_argument( 'restrict_site_id', false );
     $site_mod = lib::create( 'database\modifier' );
     if( $restrict_site_id ) 
       $site_mod->where( 'id', '=', $restrict_site_id );
@@ -101,6 +101,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
       $user_mod->where( 'access.role_id', '=', $db_role->id );
       foreach( $user_class_name::select( $user_mod ) as $db_user )
       {
+        log::debug( $db_user->name );
         // ensure the typist has min/max time for this date range
         $activity_mod = lib::create( 'database\modifier' );
         $activity_mod->where( 'activity.user_id', '=', $db_user->id );
@@ -110,6 +111,11 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
         $assignment_mod = lib::create( 'database\modifier' );
         $assignment_mod->where( 'user_id', '=', $db_user->id );
+        //TODO: the db must be updated to estimate the last activity
+        // performed on the assignment as either when
+        // the adjudication was completed
+        // or the time when the the last test_entry was edited:wq
+
         $assignment_mod->where( 'end_datetime', '!=', NULL );
         
         if( $restrict_start_date && $restrict_end_date )
@@ -139,7 +145,11 @@ class productivity_report extends \cenozo\ui\pull\base_report
         }
 
         // if there is no activity then skip this user
-        if( 0 == $activity_class_name::count( $activity_mod ) ) continue;
+        if( 0 == $activity_class_name::count( $activity_mod ) )
+        {
+        log::debug('no activity for user');
+        continue;
+        }
 
         // Determine the total time spent as a typist over the desired period
         $total_time = $user_time_class_name::get_sum(
@@ -156,6 +166,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $assignment_time = 0;
         foreach( $db_user->get_assignment_list( $assignment_mod ) as $db_assignment )
         {
+          // each test_entry deferral must have a note created by the user
           $test_entry_mod = lib::create( 'database\modifier' );
           $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
           $test_entry_mod->where( 'test_entry_note.user_id', '=', $db_user->id );
@@ -200,7 +211,11 @@ class productivity_report extends \cenozo\ui\pull\base_report
         } // end loop on assignments
 
         // if there were no completed assignments then ignore this user
-        if( 0 == $num_complete ) continue;
+        if( 0 == $num_complete ) 
+        {
+        log::debug( 'no completed assignments for user' );
+        continue;
+        }
         
         // Now we can use all the information gathered above to fill in the contents of the table.
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +234,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
           $min_datetime_obj = $activity_class_name::get_min_datetime( $day_activity_mod );
           $max_datetime_obj = $activity_class_name::get_max_datetime( $day_activity_mod );
 
-          $contents[] = array(
+          $row = array(
             $db_user->name,
             $num_defer,
             $num_adjudicate,
@@ -231,7 +246,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         }
         else
         {
-          $contents[] = array(
+          $row = array(
             $db_user->name,
             $num_defer,
             $num_adjudicate,
@@ -239,6 +254,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
             sprintf( '%0.2f', $total_time ),
             $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
         }
+ 
+        log::debug( $row );
+        $contents[] = $row;
 
         $grand_total_defer += $num_defer;
         $grand_total_adjudicate += $num_adjudicate;

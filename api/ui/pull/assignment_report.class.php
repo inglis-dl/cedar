@@ -109,8 +109,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $assignment_mod = lib::create( 'database\modifier' );
       $assignment_mod->order( 'start_datetime' );
       $assignment_mod->limit( 1 );        
-      $assignment_list = $assignment_class_name::select( $assignment_mod );
-      $db_assignment = current( $assignment_list );
+      $db_assignment = current( $assignment_class_name::select( $assignment_mod ) );
       if( false !== $db_assignment )
         $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
     }
@@ -148,7 +147,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       }
 
       // skip if no users at this site
-      if( empty( $id_list ) )
+      if( 0 == count( $id_list ) )
       {
         $this->add_table( $title, $header, array( '--','--', 0, 0, 0, 0 ), $footer );        
         continue;

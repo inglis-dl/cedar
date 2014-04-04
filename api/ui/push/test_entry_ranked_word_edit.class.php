@@ -108,7 +108,6 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
       $db_test_entry_ranked_word->save();
     }
-
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_test_entry( $db_test_entry );
   }

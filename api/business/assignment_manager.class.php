@@ -46,62 +46,62 @@ class assignment_manager extends \cenozo\singleton
 
     $test_class_name = lib::get_class_name( 'database\test' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+    $test_entry_note_class_name = lib::get_class_name( 'database\test_entry_note' );
 
-    // delete test_entry record(s)
-    $base_mod = NULL;
+    $db_participant = $db_assignment->get_participant();
+    $language = $db_participant->language;
+    $language = is_null( $language ) ? 'en' : $language;
+
+    // delete test_entry daughter record(s)
     if( !is_null( $test_id ) )
     {
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'test_id', '=', $test_id );
-    }
-    $entry_mod = is_null( $base_mod ) ? NULL : clone $base_mod;
-    // we want to delete all the daughter entries
-    foreach( $db_assignment->get_test_entry_list( $entry_mod ) as $db_test_entry )
-    {
-      $get_list_function = 'get_test_entry_' . $db_test_entry->get_test_type()->name . '_list';
-      foreach( $db_test_entry->$get_list_function() as $db_entry )
-        $db_entry->delete();
-    }  
-
-    // get sibling assignment, reset test_entry adjudicate value from 1 to NULL
-    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-    if( !is_null( $db_sibling_assignment ) )
-    {
-      $adjudicate_mod = is_null( $base_mod ) ? lib::create( 'database\modifier' ) : clone $base_mod;
-      $adjudicate_mod->where( 'adjudicate', '=', true );
-      foreach( $db_sibling_assignment->get_test_entry_list( $adjudicate_mod ) as $db_test_entry )
+    
+      foreach( $db_assignment->get_test_entry_list( clone $base_mod ) as $db_test_entry )
       {
-        $db_test_entry->adjudicate = NULL;
-        $db_test_entry->save();
+        $get_list_function = 'get_test_entry_'.
+          $db_test_entry->get_test()->get_test_type()->name . '_list';
+        // delete the daughter table entries
+        foreach( $db_test_entry->$get_list_function() as $db_entry )
+          $db_entry->delete();
+
+        // initialize new daughter entries 
+        static::initialize_test_entry( $db_test_entry );
+      }
+
+      // get sibling assignment, reset test_entry adjudicate value from 1 to NULL
+      $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+      if( !is_null( $db_sibling_assignment ) )
+      {
+        $adjudicate_mod = clone $base_mod;
+        $adjudicate_mod->where( 'adjudicate', '=', true );
+        foreach( $db_sibling_assignment->get_test_entry_list( $adjudicate_mod ) as $db_test_entry )
+        {
+          $db_test_entry->adjudicate = NULL;
+          $db_test_entry->save();
+        }
       }
     }
-
-    // test battery depends on cohort
-    $test_mod = NULL;
-    if( !is_null( $test_id ) )
+    else
     {
-      $test_mod = lib::create( 'database\modifier' );
-      $test_mod->where( 'id', '=', $test_id );
-    }
-    $db_participant = $db_assignment->get_participant();
-    if( $db_participant->get_cohort()->name == 'tracking' )
-    {
-      if( is_null( $test_mod ) ) $test_mod = lib::create( 'database\modifier' );
-      $test_mod->where( 'name', 'NOT LIKE', 'FAS%' );
-    }
+      $test_mod = NULL;
+      if( $db_participant->get_cohort()->name == 'tracking' )
+      {
+        $test_mod = lib::create( 'database\modifier' );
+        $test_mod->where( 'name', 'NOT LIKE', 'FAS%' );
+      }
 
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
-
-    // create test_entry record(s)
-    foreach( $test_class_name::select( $test_mod ) as $db_test )
-    { 
-      $db_test_entry = lib::create( 'database\test_entry' );
-      $db_test_entry->test_id = $db_test->id;
-      $db_test_entry->assignment_id = $db_assignment->id;
-      $db_test_entry->save();
-      // create daughter entry record(s)
-      static::initialize_test_entry( $db_test_entry );
+      // create test_entry record(s)
+      foreach( $test_class_name::select( $test_mod ) as $db_test )
+      { 
+        $db_test_entry = lib::create( 'database\test_entry' );
+        $db_test_entry->test_id = $db_test->id;
+        $db_test_entry->assignment_id = $db_assignment->id;
+        $db_test_entry->save();
+        // create daughter entry record(s)
+        static::initialize_test_entry( $db_test_entry );
+      }
     }
   }
 
