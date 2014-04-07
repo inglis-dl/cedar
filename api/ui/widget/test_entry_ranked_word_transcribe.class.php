@@ -37,8 +37,8 @@ class test_entry_ranked_word_transcribe extends base_transcribe
 
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
-
     $db_participant = $db_test_entry->get_assignment()->get_participant();
+
     $language = $db_participant->language;
     $language = is_null( $language ) ? 'en' : $language;
     $word_id = 'word_' . $language . '_id';
@@ -50,7 +50,6 @@ class test_entry_ranked_word_transcribe extends base_transcribe
              $db_test_entry_ranked_word )
     {
       $db_ranked_word_set = $db_test_entry_ranked_word->get_ranked_word_set();
-      if( !is_null( $db_ranked_word_set ) )
       $db_ranked_word_set_word = is_null( $db_ranked_word_set ) ? NULL : 
         lib::create( 'database\word', $db_ranked_word_set->$word_id );
 
@@ -62,7 +61,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
       {
         $classification = 'intrusion';
       }
-      else if( !is_null( $db_word ) && $selection == 'variant' )
+      if( !is_null( $db_word ) && $selection == 'variant' )
       {
         $classification = 'variant';
       }      
@@ -77,6 +76,26 @@ class test_entry_ranked_word_transcribe extends base_transcribe
           'word' => is_null( $db_word ) ? '' : $db_word->word,
           'selection' => is_null( $selection ) ? '' : $selection,
           'classification' => $classification );
+    }
+    // now get the intrusions
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'ranked_word_set_id', '=', NULL );
+    $modifier->where( 'selection' , '=', NULL );
+    foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as 
+             $db_test_entry_ranked_word )
+    {
+      $db_word = is_null( $db_test_entry_ranked_word->word_id ) ? NULL :
+        lib::create( 'database\word', $db_test_entry_ranked_word->word_id );
+
+      $entry_data[] =
+        array(
+          'id' => $db_test_entry_ranked_word->id,
+          'ranked_word_set_id' => '',
+          'ranked_word_set_word' => '',
+          'word_id' => is_null( $db_word ) ? '' : $db_word->id,
+          'word' => is_null( $db_word ) ? '' : $db_word->word,
+          'selection' => '',
+          'classification' => is_null( $db_word ) ? '' : 'intrusion' );
     }
 
     $this->set_variable( 'entry_data', $entry_data );

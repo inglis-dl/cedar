@@ -228,11 +228,8 @@
         {% set value = '' %}
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
-        {% elseif entry_data[k].word_candidate is defined %}  
-            {% set value = entry_data[k].word_candidate %}
         {% endif %}
-        {% set status = entry_data[k].word_id ? "word" : 
-                        entry_data[k].word_candidate ? "candidate" : "empty" %} 
+        {% set status = entry_data[k].word_id ? "word" : "empty" %}
 
         <td>
           <input type="text"
@@ -250,8 +247,6 @@
                { disabled }
              {% endif %}
              {% set kprev = 'false' %}
-           {% elseif status == 'candidate' %}
-               {% set kprev = 'true' %}
            {% elseif status == 'word' %}
                {% set kprev = 'true' %}
            {% endif %}
