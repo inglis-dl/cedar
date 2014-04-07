@@ -114,6 +114,13 @@
         {% endif %}
       } ); // end Next click
 
+      $( "#{{ widget.full }}_Reset" ).click( function() {
+        if( ajax_push( "{{ widget.subject }}", "reset", { "id": {{ id }} } ) ) {
+          slot_refresh( {{ slot }} );
+        }
+      } ); // end Reset click  
+
+
     } );
   </script>
 

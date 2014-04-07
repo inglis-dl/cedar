@@ -56,7 +56,7 @@
                 disable = true;
               }
               else {
-                if( $(this).prop( "id" ).split( "__" )[1] === "candidate" ) {
+                if( $(this).prop( "id" ).split( "__" )[1] === "variant" ) {
                   var id = "#" + $(this).prop( "id" ).split( "__" )[0] + "__variant";
                   disable = !$( id ).prop( "checked" );              
                 }
@@ -194,7 +194,6 @@
         var columns = new Object();
         args.id = $(this).prop( "id" ).split("__")[0];
         columns["test_entry_id"] = {{ parent.id }};
-        columns["ranked_word_set_id"] = $(this).prop( "name" );
         columns["selection"] = $(this).val();
         args.columns = columns;
         var do_text = true;
@@ -218,28 +217,6 @@
 
         configure_ui( do_text );
       } );// end radio input change
-
-      $( "#{{ parent.full }}_Reset" ).click( function() {
-        // push reset
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          // clear all text entries
-          $( table_selector + ' input:text' ).each( function() {
-            $(this).removeClass( "intrusion variant" );
-            $(this).val( "" );
-            // update the value to present state
-            $(this).attr( "value", "" );
-            $(this).prop( "disabled", true );
-          } );
-          // remove table rows added for intrusions
-          $( table_selector + ' tr.intrusion' ).remove();
-          // clear all radio inputs
-          $( table_selector + ' input:radio' ).each( function() {
-            $(this).prop( "checked", false );
-          } );
-
-          configure_ui();
-        }
-      } );// end Reset button click
 
     } );
   </script>

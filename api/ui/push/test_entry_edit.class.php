@@ -36,7 +36,8 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
   protected function finish() 
   {
      parent::finish();
-     $record = $this->get_record();
-     $record->update_status_fields( $record->completed );
+
+     $assignment_manager = lib::create( 'business\assignment_manager' );
+     $assignment_manager->complete_test_entry( $this->get_record() );
   }
 }

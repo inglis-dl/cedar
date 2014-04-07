@@ -195,25 +195,6 @@
         }                          
       } );// end Add button click
 
-      $( "#{{ parent.full }}_Reset" ).click( function() {
-        // push reset
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          // remove any cells and rows created with the Add button
-          $( table_selector + " td.added" ).remove();
-          $( table_selector + " tr.added" ).remove();
-          // clear all text fields and set focus to the first
-          $( table_selector + " input:text" ).each( function() {
-            $(this).removeClass( "candidate intrusion variant primary" );
-            $(this).val( "" );
-            // update the value to present state
-            $(this).attr( "value", "" );
-            var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-            $(this).prop( "disabled", 1 != rank );
-          } );
-
-          configure_ui();
-        }
-      } );// end Reset button click
     } );
   </script>
 
