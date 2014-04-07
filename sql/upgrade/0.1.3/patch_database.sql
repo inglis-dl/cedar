@@ -2,9 +2,6 @@
 
 SET AUTOCOMMIT=0;
 
-SOURCE dictionary.sql;
--- call after dictionary.sql
-SOURCE test.sql;
 SOURCE assignment.sql;
 SOURCE role_has_operation.sql;
 SOURCE operation.sql;
