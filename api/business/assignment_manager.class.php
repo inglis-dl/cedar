@@ -186,6 +186,10 @@ class assignment_manager extends \cenozo\singleton
     $db_test = $db_test_entry->get_test();
 
     $db_test_entry->completed = $db_test_entry->is_completed();
+
+    // TODO: handle cases that are independent of any sibling assignment
+    // check if all the test entrys associated with this assigment
+    // are done and if so set the assignment end_datetime
           
     // check if we need to adjudicate
     if( $db_test_entry->completed && !$db_test_entry->deferred )
@@ -258,7 +262,7 @@ class assignment_manager extends \cenozo\singleton
 
     $adjudicate_data = NULL;
    
-    if( $db_test_entry->adjudicate == true )
+    if( $db_test_entry->adjudicate )
     {
       // get the sibling entry
       $db_sibling_assignment = $db_test_entry->get_assignment()->get_sibling_assignment();
@@ -268,15 +272,19 @@ class assignment_manager extends \cenozo\singleton
           array( 'test_id', 'assignment_id' ),
           array( $db_test->id, $db_sibling_assignment->id ) );
 
-        if( $db_sibling_test_entry->adjudicate == true )
+        if( is_null( $db_sibling_test_entry ) )
+        throw lib::create( 'exception\runtime',
+         'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
+
+        if( $db_sibling_test_entry->adjudicate )
         {
           $adjudicate_data = array();
           if( $test_type_name == 'confirmation' )
           {
             $adjudicate_data[ 'id_1' ] = $db_test_entry->id;
-            $adjudicate_data[ 'id_2' ] = $db_test_entry_sibling->id;
+            $adjudicate_data[ 'id_2' ] = $db_sibling_test_entry->id;
             $adjudicate_data[ 'confirmation_1' ] = $db_test_entry->confirmation;
-            $adjudicate_data[ 'confirmation_2' ] = $db_test_entry_sibling->confirmation;
+            $adjudicate_data[ 'confirmation_2' ] = $db_sibling_test_entry->confirmation;
           }
           else
           {
@@ -295,7 +303,7 @@ class assignment_manager extends \cenozo\singleton
               $modifier = lib::create( 'database\modifier' );
               $modifier->order( 'rank' );
               $a = $db_test_entry->$get_list_function( clone $modifier );
-              $b = $db_test_entry_sibling->$get_list_function( clone $modifier );
+              $b = $db_sibling_test_entry->$get_list_function( clone $modifier );
 
               while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) )
               {
@@ -406,7 +414,7 @@ class assignment_manager extends \cenozo\singleton
               $modifier = lib::create( 'database\modifier' );
               $modifier->order( 'ranked_word_set.rank' );
               $a = $db_test_entry->$get_list_function( clone $modifier );
-              $b = $db_test_entry_sibling->$get_list_function( clone $modifier );
+              $b = $db_sibling_test_entry->$get_list_function( clone $modifier );
 
               while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) )
               {

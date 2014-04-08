@@ -93,27 +93,26 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'test_id', $db_test->id );
 
     // set the dictionary id's needed for text autocomplete
-    $db_dictionary = $db_test->get_dictionary();
-    if( !is_null( $db_dictionary ) )
-      $this->set_variable( 'dictionary_id', $db_dictionary->id );
-
-    if( !preg_match( '/FAS/', $db_test->name ) )
+    if( $test_type_name == 'classification' || $test_type_name == 'ranked_word' )
     {
-      $db_variant_dictionary = $db_test->get_variant_dictionary();
-      if( !is_null( $db_variant_dictionary ) )
-        $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
-    }
-    
-    $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
-    if( !is_null( $db_intrusion_dictionary ) )
-      $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
+      $db_dictionary = $db_test->get_dictionary();
+      if( !is_null( $db_dictionary ) )
+        $this->set_variable( 'dictionary_id', $db_dictionary->id );
+
+      if( !preg_match( '/FAS/', $db_test->name ) )
+      {
+        $db_variant_dictionary = $db_test->get_variant_dictionary();
+        if( !is_null( $db_variant_dictionary ) )
+          $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
+      }
+      
+      $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
+      if( !is_null( $db_intrusion_dictionary ) )
+        $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
+    }  
 
     $language = 'any';
     $db_participant = $db_test_entry->get_assignment()->get_participant();
-    if( is_null( $db_participant ) )
-      throw lib::create( 'exception\runtime', 
-        'The participant id must be set', __METHOD__ );
-    
     $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
     $this->set_variable( 'language', $language );    
     
