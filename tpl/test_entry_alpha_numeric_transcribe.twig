@@ -86,10 +86,7 @@
         var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
         columns["rank"] = rank;
         columns["test_entry_id"] = {{ parent.id }};
-
-        // NOTE: there is no word_value column in test_entry_alpha_numeric
-        // so we send the candidate entry as word_value for validation
-        columns["word_value"] = candidate;
+        columns["word_candidate"] = candidate;
         args.columns = columns;
 
         // push the edits
@@ -97,7 +94,8 @@
 
           // enable the next empty input
           var next_rank_id = "__" + ( rank + 1 );
-          $( table_selector + ' input:text[id$="' + next_rank_id + '"]' ).prop( "disabled", false );
+          $( table_selector + ' input:text[id$="' +
+            next_rank_id + '"]' ).prop( "disabled", false );
 
           configure_ui();
         } else {
@@ -128,10 +126,10 @@
         var html = '<td class="added"><input type="text" style="width:20%" id="0__' + 
           rank + '"></td>';
         // the number of entries in a typical row
-        var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
+        var maxTd = $( table_selector + " tr:first td" ).length;
 
         // the number of entries in the target row
-        var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
+        var targetRow = $( table_selector + " tr" ).length - 1;
         var numTd = $( table_selector + " tr:nth-child(" + targetRow + ") td" ).length;
 
         // add a new table row if required
@@ -165,6 +163,7 @@
   <table id="{{ widget.full }}__entry_table">
 
     <tbody>
+
     {% set numcell = 10 %}
     {% set kprev = 'true' %}
     {% set imax = entry_data|length-1 %}
@@ -173,7 +172,9 @@
     {% endif %}
 
     {% for i in range(0, imax, numcell) %}
+
       <tr>
+
       {% set kmax = i+numcell-1 %}
       {% if kmax > imax %}
         {% set kmax = imax %}
@@ -183,9 +184,6 @@
         {% set value = '' %}
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
-          {% set name = entry_data[k].word_id %}
-        {% else %}
-          {% set name = 'undefined' %}          
         {% endif %}
         {% set status = entry_data[k].word_id ? "word" : "empty" %} 
 
@@ -193,11 +191,11 @@
             <input type="text"
              style="width:20%"
              id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-             name="{{ name }}"
 
              {% if editable == 0  %}
                { readonly }
              {% endif %}
+
              {% if status == 'empty'  %} 
                {% if kprev == 'false' %}
                  { disabled }

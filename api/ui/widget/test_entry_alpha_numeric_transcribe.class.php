@@ -44,7 +44,8 @@ class test_entry_alpha_numeric_transcribe extends base_transcribe
     foreach( $db_test_entry->get_test_entry_alpha_numeric_list( $modifier ) as 
              $db_test_entry_alpha_numeric )
     {
-      $db_word = lib::create( 'database\word', $db_test_entry_alpha_numeric->word_id );
+      $db_word = $db_test_entry_alpha_numeric->get_word();
+
       $row = array(
                'id' => $db_test_entry_alpha_numeric->id,
                'rank' => $db_test_entry_alpha_numeric->rank,
@@ -53,6 +54,7 @@ class test_entry_alpha_numeric_transcribe extends base_transcribe
 
       $entry_data[] = $row;              
     }
+
     $this->set_variable( 'entry_data', $entry_data );
   }
 }

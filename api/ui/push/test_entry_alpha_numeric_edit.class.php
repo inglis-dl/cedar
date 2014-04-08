@@ -47,6 +47,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $db_test_entry_alpha_numeric = $class_name::get_unique_record( 
         array( 'test_entry_id', 'rank' ),  
         array( $columns['test_entry_id'], $columns['rank'] ) );
+
       $this->set_record( $db_test_entry_alpha_numeric );
     }     
     else
@@ -68,12 +69,13 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
 
     $columns = $this->get_argument( 'columns' );
 
-    if( array_key_exists( 'word_value', $columns ) ) 
-    {   
-      if( !preg_match( '/^[1-9][0-9]*$/', $columns['word_value'] ) &&
-          !preg_match( '/^\pL$/', $columns['word_value'] ) )
+    if( array_key_exists( 'word_candidate', $columns ) )
+    {
+      if( !preg_match( '/^[1-9][0-9]*$/', $columns['word_candidate'] ) &&
+          !preg_match( '/^\pL$/', $columns['word_candidate'] ) )
         throw lib::create( 'exception\notice',
-          'The word must be a letter or a number.', __METHOD__ );     
+          'The word "'. $columns['word_candidate'] . '" must be a letter or a number.',
+          __METHOD__ );
     }
   }
 
@@ -95,14 +97,16 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
 
     $language = $db_test_entry->get_assignment()->get_participant()->language;
     $language = is_null( $language ) ? 'en' : $language;
+
     $columns = $this->get_argument( 'columns' );
-    $word_value = $columns['word_value'];
+    $word_candidate = array_key_exists( 'word_candidate', $columns ) ?
+      $columns['word_candidate'] : NULL;
 
     // does the word candidate exist in the primary dictionary?
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
     $modifier->where( 'language', '=', $language );
-    $modifier->where( 'word', '=', $word_value );
+    $modifier->where( 'word', '=', $word_candidate );
     $modifier->limit( 1 );
 
     $db_word = current( $word_class_name::select( $modifier ) );
@@ -114,7 +118,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     {
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
-      $db_new_word->word = $word_value;
+      $db_new_word->word = $word_candidate;
       $db_new_word->language = $language;
       $db_new_word->save();
       $db_test_entry_alpha_numeric->word_id = $word_class_name::db()->insert_id();
