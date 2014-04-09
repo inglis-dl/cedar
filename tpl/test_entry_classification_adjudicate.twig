@@ -34,7 +34,7 @@
       return $.grep( array, function ( value ) {
         return matcher.test( value.label || value.value || value );
       } );
-    };
+    }
 
     function get_text_complete() {
       var args = new Object();
@@ -68,6 +68,7 @@
             data[rank] = { 'word_id' : $(this).prop( "name" ) };
           } else {
             data[rank] = { 'word_id' : $(this).prop( "name" ), 'word_candidate' : candidate };
+          }  
         } );
  
         columns["data"] = data;
@@ -109,8 +110,6 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
-          // TODO see if latest version of jquery has double enter key bug fixed
-          //$(this).trigger( 'change' );
         }
       } )
       .change( function() {
