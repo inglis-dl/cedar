@@ -184,7 +184,7 @@ class test_entry extends \cenozo\database\has_note
           'WHERE test_entry_id = %s '.
           'AND selection IS NULL '.
           'AND word_id IS NULL '.
-          'AND ranked_word_set_id IS NULL ',
+          'AND ranked_word_set_id IS NULL',
           $id_string );
 
         $completed = 0 == static::db()->get_one( $sql ); 

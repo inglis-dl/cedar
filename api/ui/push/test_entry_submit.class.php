@@ -38,11 +38,11 @@ class test_entry_submit extends \cenozo\ui\push\base_new
   {
     parent::finish();
 
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     $db_test_entry = $this->get_record();
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::initialize_test_entry( $db_test_entry );
-
-    $word_class_name = lib::get_class_name( 'database\word' );
 
     $columns = $this->get_argument( 'columns', array() );
 
@@ -67,14 +67,29 @@ class test_entry_submit extends \cenozo\ui\push\base_new
     
     if( $test_type_name == 'ranked_word' )
     {
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->order( 'ranked_word_set.rank' );
-      $a = $db_test_entry_1->$get_list_function( clone $modifier );
-      $b = $db_test_entry_2->$get_list_function( clone $modifier );
-      $c = $db_test_entry->$get_list_function( clone $modifier );
+      $rank_modifier = lib::create( 'database\modifier' );
+      $rank_modifier->order( 'ranked_word_set.rank' );
+      $a = $db_test_entry_1->$get_list_function( clone $rank_modifier );
+      $b = $db_test_entry_2->$get_list_function( clone $rank_modifier );
+      
+      // now get the intrusions and append them to the primary word entries
+      $intrusion_modifier = lib::create( 'database\modifier' );
+      $intrusion_modifier->where( 'selection', '=', NULL );
+      $intrusion_modifier->where( 'word_id', '!=', NULL );
+      $intrusion_modifier->where( 'ranked_word_set_id', '=', NULL );
+
+      $a_intrusion = $db_test_entry_1->$get_list_function( clone $intrusion_modifier );
+      $b_intrusion = $db_test_entry_2->$get_list_function( clone $intrusion_modifier );
+
+      if( 0 < count( $a_intrusion ) ) 
+        $a = array_merge( $a, $a_intrusion );
+      if( 0 < count( $b_intrusion ) )
+        $b = array_merge( $b, $b_intrusion ); 
 
       // create additional entries as needed
-      $count = max( array( count( $a ), count( $b ) ) ) - count( $c );
+      $count = max( array( count( $a ), count( $b ) ) ) - 
+                 count( $db_test_entry->$get_list_function() );
+
       for( $i = 0; $i < $count; $i++ )
       {
         $db_test_entry_ranked_word = lib::create( 'database\\' . $entry_class_name );
@@ -82,21 +97,28 @@ class test_entry_submit extends \cenozo\ui\push\base_new
         $db_test_entry_ranked_word->save();
       }
 
-      $c = $db_test_entry->$get_list_function( clone $modifier );
+      $c = $db_test_entry->$get_list_function( clone $rank_modifier );
+      $c_intrusion = $db_test_entry->$get_list_function( clone $intrusion_modifier );
+      if( 0 < count( $c_intrusion ) ) 
+        $c = array_merge( $c, $c_intrusion );
+
       // copy identical records
-      while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) && !is_null( ( key ( $c ) ) ) )
+      while( !is_null( ( key ( $c ) ) ) )
       {
         $a_obj = current( $a );
         $b_obj = current( $b );
         $c_obj = current( $c );
-        if( $a_obj->ranked_word_set_id == $b_obj->ranked_word_set_id &&
-            $a_obj->selection == $b_obj->selection &&
-            $a_obj->word_id == $b_obj->word_id )
-        {
-          $c_obj->ranked_word_set_id = $a_obj->ranked_word_set_id;
-          $c_obj->selection = $a_obj->selection;
-          $c_obj->word_id = $a_obj->word_id;
-          $c_obj->save();
+        if( !( false === $a_obj || false === $b_obj ) )
+        { 
+          if( $a_obj->ranked_word_set_id == $b_obj->ranked_word_set_id &&
+              $a_obj->selection == $b_obj->selection &&
+              $a_obj->word_id == $b_obj->word_id )
+          {
+            $c_obj->ranked_word_set_id = $a_obj->ranked_word_set_id;
+            $c_obj->selection = $a_obj->selection;
+            $c_obj->word_id = $a_obj->word_id;
+            $c_obj->save();
+          }
         }
         next( $a );
         next( $b );
@@ -106,14 +128,14 @@ class test_entry_submit extends \cenozo\ui\push\base_new
       reset( $c );
       foreach( $c as $db_entry )
       {
-        //TODO: the data may need to be broken into two sets: one for
-        // the ranked_word_set words, and one for intrusions
         if( array_key_exists( $db_entry->ranked_word_set_id, $data['ranked_words'] ) )
         {
           $db_entry->word_id = $data['ranked_words'][$db_entry->ranked_word_set_id]['word_id'];
           $db_entry->selection = $data['ranked_words'][$db_entry->ranked_word_set_id]['selection'];
           $db_entry->save();
         }
+        // TODO: must handle the case when the word id is unknown
+        // this will happen when the admin chooses a word different from both typists
         else if( array_key_exists( $db_entry->word_id, $data['intrusions'] ) )
         {
           $db_entry->word_id = $data['intrusions'][$db_entry->word_id];
@@ -186,13 +208,9 @@ class test_entry_submit extends \cenozo\ui\push\base_new
     $db_test_entry_2->adjudicate = false;
     $db_test_entry_1->save();
     $db_test_entry_2->save();
-    $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
-    $db_assignment_1 = $db_test_entry_1->get_assignment();
-    $db_assignment_2 = $db_test_entry_2->get_assignment();
-    $db_assignment_1->end_datetime = $end_datetime;
-    $db_assignment_2->end_datetime = $end_datetime;
-    $db_assignment_1->save();
-    $db_assignment_2->save();
+    
+    $assignment_manager::complete_assignment( $db_test_entry_1->get_assignment() );
+
     $db_test_entry->completed = true;
     $db_test_entry->save();
   }

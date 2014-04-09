@@ -44,5 +44,27 @@ class assignment extends \cenozo\database\record
     $complete_mod->where( 'deferred', '=', false );
     $complete_mod->where( 'completed', '=', true );
     return $this->get_test_entry_count() == $this->get_test_entry_count( $complete_mod );
+
+/*
+   TODO: check for performance improvements
+    $sql = sprintf( 
+      'SELECT '.
+      '( '.
+        '( '.
+          'SELECT COUNT(*) FROM test_entry '.
+          'JOIN assignment ON assignment.id=test_entry.assigment_id '.
+          'WHERE assignment.id = %s '.
+        ') - '.
+        '( '.
+          'SELECT COUNT(*) FROM test_entry '.
+          'JOIN assignment ON assignment.id=test_entry.assigment_id '.
+          'WHERE assignment.id = %s '.
+          'AND deferred = 0 '.
+          'AND completed = 1 '.
+        ') '.
+      ')', $this->id );
+
+    return 0 == static::db()->get_one( $sql );
+*/    
   }
 }

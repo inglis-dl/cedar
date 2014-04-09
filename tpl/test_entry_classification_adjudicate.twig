@@ -34,14 +34,12 @@
       return $.grep( array, function ( value ) {
         return matcher.test( value.label || value.value || value );
       } );
-    }
+    };
 
     function get_text_complete() {
       var args = new Object();
       args["dictionary_id"] = {{ dictionary_id }};
-      if( undefined != "{{ intrusion_dictionary_id }}" ) {
-        args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-      }
+      args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["language"] = "{{ language }}";
       args["words_only"] = 1;  
       return ajax_pull( "word", "list", args );
