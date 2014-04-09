@@ -192,9 +192,11 @@ class assignment_manager extends \cenozo\singleton
     // are done and if so set the assignment end_datetime
           
     // check if we need to adjudicate
-    if( $db_test_entry->completed && !$db_test_entry->deferred )
+    if( $db_test_entry->completed && !$db_test_entry->deferred && 
+        $db_test_entry->adjudicate != true  )
     {   
       $db_assignment = $db_test_entry->get_assignment();
+
       // does the sibling assignment exist?
       $db_sibling_assignment = $db_assignment->get_sibling_assignment();
       if( !is_null( $db_sibling_assignment ) ) 
@@ -205,7 +207,8 @@ class assignment_manager extends \cenozo\singleton
           array( $db_test->id, $db_sibling_assignment->id ) );
 
         // only check for adjudication if both tests are complete and not deferred
-        if( $db_sibling_test_entry->completed && !$db_sibling_test_entry->deferred ) 
+        if( $db_sibling_test_entry->completed && !$db_sibling_test_entry->deferred && 
+            $db_sibling_test_entry->adjudicate != true ) 
         {   
           // compare the daughter table entries, true if identical
           if( $db_test_entry->compare( $db_sibling_test_entry ) ) 
@@ -238,7 +241,11 @@ class assignment_manager extends \cenozo\singleton
 
           $db_sibling_test_entry->save();
         }   
-      }   
+      }
+      else  // a sibling assignment has not been completed yet, so the adjudications will
+            // be set during the completion of the sibling assignment
+      {
+      }
     }   
 
     $db_test_entry->save();
@@ -399,8 +406,8 @@ class assignment_manager extends \cenozo\singleton
                       $classification[ $dictionary_id ] : '';
                   }    
 
-                  $row['classification_1'] = $classfication_1;
-                  $row['classification_2'] = $classfication_2;
+                  $row['classification_1'] = $classification_1;
+                  $row['classification_2'] = $classification_2;
                 }
 
                 $adjudicate_data[] = $row;

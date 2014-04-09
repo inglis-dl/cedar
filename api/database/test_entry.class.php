@@ -161,6 +161,7 @@ class test_entry extends \cenozo\database\has_note
     else if( $test_type_name == 'ranked_word' )
     {
       // custom query for ranked_word test type
+      $id_string = $database_class_name::format_string( $this->id );
       $sql = sprintf( 
         'SELECT '.
         '( '.
@@ -171,9 +172,23 @@ class test_entry extends \cenozo\database\has_note
             'AND selection IS NOT NULL '. 
           ') '. 
         ')',
-        $database_class_name::format_string( $this->id ) );
+        $id_string );
       
       $completed = 0 == static::db()->get_one( $sql );
+
+      if( $completed )
+      {
+        // check that intrusions are filled in
+        $sql = sprintf( 
+          'SELECT COUNT(*) FROM test_entry_ranked_word '.
+          'WHERE test_entry_id = %s '.
+          'AND selection IS NULL '.
+          'AND word_id IS NULL '.
+          'AND ranked_word_set_id IS NULL ',
+          $id_string );
+
+        $completed = 0 == static::db()->get_one( $sql ); 
+      }
     }
     else
       throw lib::create( 'exception\runtime',
