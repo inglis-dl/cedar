@@ -319,12 +319,21 @@ class assignment_manager extends \cenozo\singleton
       {
         $adjudicate_data = array();
 
-        // create a new test entry to hold the data
-        $db_adjudicate_test_entry = lib::create( 'database\test_entry' );
-        $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
-        $db_adjudicate_test_entry->test_id = $db_test->id;
-        $db_adjudicate_test_entry->save();
-        static::initialize_test_entry( $db_adjudicate_test_entry );
+        // if we havent created the adjudicate entry, do so now
+        $is_new_adjudicate = false;
+        $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
+          array( 'test_id', 'participant_id' ),
+          array( $db_test->id, $db_assignment->get_participant()->id ) );
+        if( false === $db_adjudicate_test_entry )
+        {
+          // create a new test entry to hold the data
+          $db_adjudicate_test_entry = lib::create( 'database\test_entry' );
+          $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
+          $db_adjudicate_test_entry->test_id = $db_test->id;
+          $db_adjudicate_test_entry->save();
+          static::initialize_test_entry( $db_adjudicate_test_entry );
+          $is_new_adjudicate = true;
+        }
 
         if( $test_type_name == 'confirmation' )
         {
@@ -369,15 +378,18 @@ class assignment_manager extends \cenozo\singleton
                'Invalid max ranked test entry', __METHOD__ );
 
             $max_rank = $db_max_rank_entry->rank;
-
+            
             //create additional entries if necessary
-            $count = abs( count( $a ) - count( $b ) );
-            for( $i = 0; $i < $count; $i++ )
+            if( $is_new_adjudicate )
             {
-              $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
-              $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
-              $db_entry->save();
-            }              
+              $count = abs( count( $a ) - count( $b ) );
+              for( $i = 0; $i < $count; $i++ )
+              {
+                $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
+                $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
+                $db_entry->save();
+              }
+            }
 
             $rank = 0;
             $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
@@ -512,13 +524,16 @@ class assignment_manager extends \cenozo\singleton
               $b = array_merge( $b, $b_intrusion );
 
             //create additional entries if necessary
-            $count = abs( count( $a ) - count( $b ) );
-            for( $i = 0; $i < $count; $i++ )
+            if( $is_new_adjudicate )
             {
-              $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
-              $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
-              $db_entry->save();
-            }              
+              $count = abs( count( $a ) - count( $b ) );
+              for( $i = 0; $i < $count; $i++ )
+              {
+                $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
+                $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
+                $db_entry->save();
+              }
+            }
 
             while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) || !is_null( key( $c ) ) )
             {
