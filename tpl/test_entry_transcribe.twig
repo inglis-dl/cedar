@@ -70,6 +70,7 @@
           dialogClass: "alert",
           width: 450,
           buttons: buttons,
+          beforeClose: function( event, ui ) { $(this).html( "" ); },
           open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
         } );
 
@@ -102,13 +103,13 @@
 
 {% block record %}
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <div>
     {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
   </div>  
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <div id="audio_control">
     {% if recording_data is defined %}
@@ -135,7 +136,7 @@
     <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
   </div>  
 
-  <div class="spacer">
+  <div class="spacer"></div>
   
   <div>
     {% if actionable == 1 %}
