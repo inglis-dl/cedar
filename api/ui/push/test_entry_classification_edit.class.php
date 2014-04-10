@@ -78,7 +78,11 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $is_FAS = preg_match( '/FAS/', $db_test->name );
     if( !$is_FAS )
     {
-      $language = $db_test_entry->get_assignment()->get_participant()->language;
+      $db_assignment = $db_test_entry->get_assignment();
+      if( is_null( $db_assignment ) )
+        $language = $db_test_entry->get_participant()->language;
+      else
+        $language = $db_assignment->get_participant()->language;      
       $language = is_null( $language ) ? 'en' : $language;
     }
 

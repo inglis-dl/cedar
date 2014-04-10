@@ -187,6 +187,13 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       $this->set_variable( 'test_entry_args', $this->test_entry_widget->get_variables() );
     }   
     catch( \cenozo\exception\permission $e ) {}
+
+    // assignment_manager creates the adjudicate entry in test_entry_widget setup()
+    $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
+      array( 'test_id', 'participant_id' ),
+      array( $db_test_entry->get_test()->id,
+             $db_test_entry->get_assignment()->get_participant()->id ) );
+    $this->set_variable( 'id_3', $db_adjudicate_test_entry->id );         
   }
 
   /**

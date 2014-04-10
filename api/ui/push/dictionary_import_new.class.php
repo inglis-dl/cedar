@@ -30,7 +30,7 @@ class dictionary_import_new extends \cenozo\ui\push
   /** 
    * Validate the operation.
    * 
-   * @author Patrick Emond <emondpd@mcmaster.ca>
+   * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
    */
@@ -40,8 +40,7 @@ class dictionary_import_new extends \cenozo\ui\push
 
     if( 0 == $_SERVER['CONTENT_LENGTH'] )
       throw lib::create( 'exception\notice',
-        'Tried to import dictionary data without a valid CSV file.',
-        __METHOD__ );
+        'Tried to import dictionary data without a valid CSV file.', __METHOD__ );
   }
 
   /**

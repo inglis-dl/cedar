@@ -113,10 +113,12 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
-        if( 0 == args.id ) args.id = "";
-        var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
-        columns["rank"] = rank;
-        columns["test_entry_id"] = {{ parent.id }};
+        if( 0 == args.id ) {
+          args.id = "";
+          var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
+          columns["rank"] = rank;
+          columns["test_entry_id"] = {{ parent.id }};
+        }  
         columns["word_candidate"] = candidate;
         args.columns = columns;
 

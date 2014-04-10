@@ -51,9 +51,5 @@ class test_entry_confirmation_adjudicate extends base_adjudicate
     }
 
     $this->set_variable( 'instruction', $instruction );
-
-    $assignment_manager = lib::create( 'business\assignment_manager' );
-    $this->set_variable( 
-      'adjudicate_data', $assignment_manager::get_adjudicate_data( $db_test_entry ) );
   }
 }

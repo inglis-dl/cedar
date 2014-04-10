@@ -14,6 +14,15 @@
 
     $( function () {
 
+      $( "#{{ widget.full }}_Submit" ).click( function() {
+        // submit the adjudication
+        if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ id_3 }} } ) ) {
+          $( "#{{ widget.full }}_Submit" ).button( { disabled : true } );
+          $( "#{{ widget.full }}_Next" ).trigger( "click" );
+        }
+      } );// end Submit button click
+
+
       $( "#{{ widget.full }}_Quit" ).click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click

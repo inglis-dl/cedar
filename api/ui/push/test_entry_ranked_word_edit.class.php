@@ -47,7 +47,12 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     $db_test_entry = $db_test_entry_ranked_word->get_test_entry();
     $db_test = $db_test_entry->get_test();
 
-    $language = $db_test_entry->get_assignment()->get_participant()->language;
+    $language = NULL;
+    $db_assignment = $db_test_entry->get_assignment();
+    if( is_null( $db_assignment ) )
+      $language = $db_test_entry->get_participant()->language;
+    else
+      $language = $db_assignment->get_participant()->language;      
     $language = is_null( $language ) ? 'en' : $language;
 
     $columns = $this->get_argument( 'columns' );

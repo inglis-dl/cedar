@@ -198,8 +198,7 @@
         columns["selection"] = $(this).val();
         args.columns = columns;
         var do_text = true;
-        if( ajax_push( "{{ widget.subject }}", "edit", args ) )
-        {
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           var text_id = table_selector + " input:text[name=" + $(this).prop( "name" ) + "]";
           $(text_id).removeClass( "intrusion variant" );
           if( $(this).val() === "variant" ) {
