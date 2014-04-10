@@ -264,7 +264,7 @@
 
 {% block widget %}
   
-  <div class="spacer">
+  <div class="spacer"></div>
 
   {% if entry_data is empty %}
 
@@ -404,16 +404,16 @@
             </div>
             </td>
             <td style="white-space: nowrap">
-            <div class="adjudicate">
-              <input type="radio"
-                id="{{ entry.id_1 }}__{{ entry.id_2 }}__variant"
-                name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                value="variant">
-              <input type="text"
-                id="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                disabled
-                value="">
-            </div>
+              <div class="adjudicate">
+                <input type="radio"
+                  id="{{ entry.id_1 }}__{{ entry.id_2 }}__variant"
+                  name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+                  value="variant">
+                <input type="text"
+                  id="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+                  disabled
+                  value="">
+              </div>
             </td>
           {% else %}
 

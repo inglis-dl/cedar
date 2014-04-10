@@ -69,9 +69,9 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
 
     $columns = $this->get_argument( 'columns' );
 
-    if( array_key_exists( 'word_candidate', $columns ) )
-    {
-      if( !preg_match( '/^[1-9][0-9]*$/', $columns['word_candidate'] ) &&
+    if( array_key_exists( 'word_candidate', $columns ) ) 
+    {   
+      if( !preg_match( '/^(0|[1-9][0-9]*)$/', $columns['word_candidate'] ) &&
           !preg_match( '/^\pL$/', $columns['word_candidate'] ) )
         throw lib::create( 'exception\notice',
           'The word "'. $columns['word_candidate'] . '" must be a letter or a number.',

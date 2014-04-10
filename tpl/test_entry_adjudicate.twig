@@ -54,13 +54,13 @@
 
 {% block record %}
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <div>
     {% include [ 'test_entry_', test_type, '_adjudicate.twig']|join with test_entry_args %}      
-  </div>  
+  </div>
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <div id="audio_control">
     {% if recording_data is defined %}
@@ -83,7 +83,7 @@
     <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
   </div>  
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <div>
     {% from 'macros.twig' import confirm_buttons %}
