@@ -24,10 +24,10 @@ class assignment extends \cenozo\database\record
   public function get_sibling_assignment()
   {
     // find a sibling assignment based on participant id and user id uniqueness
-    $sibling_mod = lib::create( 'database\modifier' );
-    $sibling_mod->where( 'participant_id', '=', $this->participant_id );
-    $sibling_mod->where( 'user_id', '!=', $this->user_id );
-    $db_assignment = current( static::select( $sibling_mod ) );
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'participant_id', '=', $this->participant_id );
+    $modifier->where( 'user_id', '!=', $this->user_id );
+    $db_assignment = current( static::select( $modifier ) );
     return false === $db_assignment ? NULL : $db_assignment;
   }
 

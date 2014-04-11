@@ -156,6 +156,9 @@
               }  
             }
           } );
+
+          configure_ui();
+
         }  else {
           alert( "Entry was not accepted, try again." );
           $(this).val( "" );
@@ -163,7 +166,6 @@
           $(this).focus();
         }
 
-        configure_ui();
       } );// end text input change  
     }
 

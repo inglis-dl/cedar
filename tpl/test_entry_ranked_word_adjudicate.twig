@@ -56,46 +56,10 @@
       //a non-greyed out appearance can be maintained instead
       //of assigning the disabled attribute
       $( table_selector + 
-        ' input:radio[value!="accept"]:not([name$="adjudicate"])' ).click(function(e) {
+        ' input:radio[value!="accept"]:not([name$="adjudicate"])' ).click( function( e ) {
         e.preventDefault();
         return false;
       });
-
-      $( "#{{ parent.full }}_Submit" ).click( function() {
-        var args = new Object();
-        var columns = new Object();
-        var data = new Object();
-        columns["participant_id"] = {{ participant_id }};
-        columns["test_id"] = {{ test_id }};
-        columns["id_1"] = {{ id_1 }};
-        columns["id_2"] = {{ id_2 }};
-
-        $( table_selector + ' input:radio[name$="adjudicate"]:checked' ).each( function() {
-          var id = $(this).prop( "id" ).split( "__" )[0] + "__" + $(this).val();
-          var word_id = 
-            $( table_selector + ' input:radio[id="' + id + '"]' ).prop( "name" ).split( "__" )[0];
-          var candidate = "";
-          if( $(this).val() === "variant" ) {
-            candidate = 
-              $( table_selector + ' input:text[id="' + $(this).prop( "name" ) + '"]' ).val();
-          } 
-          data[word_id] = { 'selection' : $(this).val(), 'word_candidate' : candidate };
-        } );
-        
-        $( table_selector + ' input:text[id$="intrusion"]' ).each( function() {
-          var intrusion_id = $(this).prop( "id" ).replace( "__intrusion", "" );
-          data[intrusion_id] = { 'selection' : "" , 'word_candidate' : $(this).val() };
-        } );
- 
-        columns["data"] = data;
-        args.columns = columns;
-
-        // submit the adjudication
-        if( ajax_push( "{{ parent.subject }}", "submit", args ) ) {
-          $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
-          $( "#{{ parent.full }}_Next" ).trigger( "click" );
-        }
-      } );// end Submit button click
 
       // find and handle radio input change events:
       // copy the progenitor to the adjudicate entry
@@ -266,7 +230,7 @@
   
   <div class="spacer"></div>
 
-  {% if entry_data is empty %}
+  {% if adjudicate_data is empty %}
 
     <caption style="text-align: left;">
       <strong>No adjudication required. Please press Prev, Next or Quit</strong>
@@ -301,30 +265,30 @@
       </thead>
 
       <tbody>
-      {% for entry in entry_data %}
+      {% for entry in adjudicate_data %}
         <tr>
-          {% if entry.word_1 is defined %}
+          {% if entry.ranked_word_set_word is defined %}
 
             <td class="heading" style="text-align:center">{{ entry.word_1 }}</td>
 
             <td>
               <input type="radio"
                 id="{{ entry.id_1 }}__yes"
-                name="{{ entry.word_id_1 }}__1"
+                name="{{ entry.ranked_word_set_id }}__1"
                 value="yes"
                 {{ entry.selection_1 == 'yes' ? "checked" : "" }}>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry.id_1 }}__no"
-                name="{{ entry.word_id_1 }}__1"
+                name="{{ entry.ranked_word_set_id }}__1"
                 value="no"
                 {{ entry.selection_1 == 'no' ? "checked" : "" }}>
             </td>
             <td style="white-space: nowrap">
               <input type="radio"
                 id="{{ entry.id_1 }}__variant"
-                name="{{ entry.word_id_1 }}__1"
+                name="{{ entry.ranked_word_set_id }}__1"
                 value="variant"
                 {{ entry.selection_1 == 'variant' ? "checked" : "" }}>
               <input type="text"
@@ -341,7 +305,7 @@
               <div class="radio__accept__1">
                 <input type="radio"
                   id="{{ entry.id_1 }}__accept"
-                  name="{{ entry.word_id_1 }}__accept"
+                  name="{{ entry.ranked_word_set_id }}__accept"
                   value="accept">
                 <label for="{{ entry.id_1 }}__accept">Accept</label>
               </div>
@@ -350,21 +314,21 @@
             <td>
               <input type="radio"
                 id="{{ entry.id_2 }}__yes"
-                name="{{ entry.word_id_2 }}__2"
+                name="{{ entry.ranked_word_set_id }}__2"
                 value="yes"
                 {{ entry.selection_2 == 'yes' ? "checked" : "" }}>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry.id_2 }}__no"
-                name="{{ entry.word_id_2 }}__2"
+                name="{{ entry.ranked_word_set_id }}__2"
                 value="no"
                 {{ entry.selection_2 == 'no' ? "checked" : "" }}>
             </td>
             <td style="white-space: nowrap">
               <input type="radio"
                 id="{{ entry.id_2 }}__variant"
-                name="{{ entry.word_id_2 }}__2"
+                name="{{ entry.ranked_word_set_id }}__2"
                 value="variant"
                 {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
               <input type="text"
@@ -381,7 +345,7 @@
               <div class="radio__accept__2">
                 <input type="radio"
                   id="{{ entry.id_2 }}__accept"
-                  name="{{ entry.word_id_2 }}__accept"
+                  name="{{ entry.ranked_word_set_id }}__accept"
                   value="accept">
                 <label for="{{ entry.id_2 }}__accept">Accept</label>
               </div>   
@@ -390,16 +354,16 @@
             <td>
               <div class="adjudicate">
                 <input type="radio"
-                  id="{{ entry.id_1 }}__{{ entry.id_2 }}__yes"
-                  name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+                  id="{{ entry.id_3 }}__yes"
+                  name="{{ entry.id_3 }}__adjudicate"
                   value="yes">
               </div>
             </td>
             <td>
             <div class="adjudicate">
               <input type="radio"
-                id="{{ entry.id_1 }}__{{ entry.id_2 }}__no"
-                name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+                id="{{ entry.id_3 }}__no"
+                name="{{ entry.id_3 }}__adjudicate"
                 value="no">
             </div>
             </td>

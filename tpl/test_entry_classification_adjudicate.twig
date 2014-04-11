@@ -22,7 +22,7 @@
       // it is possible that some fields can be blank
       var disable = false;
       if( numFilled != numInput ) {
-        disable = numChecked == numInput ? false : true;
+        disable = numChecked != numInput;
       }
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );  
     }
@@ -54,14 +54,13 @@
       $( table_selector + ' input:radio[value="accept"]' ).change(
         function() {
           var entry_id = $(this).prop( "id" ).split( "__" )[0];
-          var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
           var source_text_id = '#' + entry_id + "__candidate";
           var candidate = $( source_text_id ).val();
-          $( target_text_id ).removeClass( "candidate intrusion variant" );
+          var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
+          $( target_text_id ).removeClass( "intrusion variant" );
           $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
           $( target_text_id ).val( candidate );
           $( target_text_id ).attr( "value", candidate );
-          $( target_text_id ).prop( "name", $( source_text_id ).prop( "name" ) );
           $( target_text_id ).removeProp( "disabled" );
 
           // push the edit
@@ -112,12 +111,11 @@
         }
       } )
       .change( function() {
-        // note that there is no ajax_push call to edit an entry:
-        // a new entry is created when the submit button is clicked
-        var id_1 = '#' + $(this).prop( "id" ).split( "__" )[0] + "__accept";
-        var id_2 = '#' + $(this).prop( "id" ).split( "__" )[1] + "__accept";
-        var text_id_1 = id_1.replace( "accept", "candidate" );
-        var text_id_2 = id_2.replace( "accept", "candidate" );
+        // uncheck the progenitor radio items
+        $( table_selctor +
+          ' input:radio[name="' + $(this).prop( "id" ) + '"]' ).removeProp( "checked" );
+        // uncheck the all checkboxes
+        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
 
         var candidate = $(this).val().trim().toLowerCase();
         // we've trimmed and lower-cased the candidate, so update the UI
@@ -126,45 +124,36 @@
         $(this).attr( "value", candidate );
         $(this).removeClass( "intrusion variant" );
 
+        var args = new Object();
+        var columns = new Object();
+        args.id = $(this).prop( "id" ).split( "__" )[0];
         if( 0 == candidate.length ) {
-
-          alert( "Blank entry not permitted." );
-
-          // refill with the corresponding accepted text entry
-          if( $( id_1 ).prop( "checked" ) ) {
-            $(this).val( $( text_id_1 ).val() );
-            $(this).attr( "value", $(this).val() );
-            $(this).addClass( $( text_id_1 ).prop( "class" ) );
-            $(this).prop( "name", $( text_id_1 ).prop( "name" ) );
-          } else if ( $( id_2 ).prop("checked") ) {
-            $(this).val( $( text_id_2 ).val() );
-            $(this).attr( "value", $(this).val() );
-            $(this).addClass( $( text_id_2 ).prop( "class" ) );
-            $(this).prop( "name", $( text_id_2 ).prop( "name" ) );
-          } else {
-            // disable this text input and uncheck the accept radio inputs
-            $(this).prop( "disabled", "disabled" );
-            $(this).prop( "name", "candidate" );
-            $( id_1 ).removeProp( "checked" );
-            $( id_2 ).removeProp( "checked" );
-          }        
+          columns["word_id"] = '';
         } else {
-          // uncheck the accept radio and checkbox inputs
-          $( id_1 ).removeProp( "checked" );
-          $( id_2 ).removeProp( "checked" );
-          $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
-          $(this).prop( "name", "candidate" );
-          var args = new Object();
-          args.id = {{ test_id }};
-          args["language"] = "{{ language }}";
-          args["word_candidate"] = candidate;
-          var classification = ajax_pull( "test", "classify_word", args );
-          if( undefined != classification ) {
-            $(this).addClass( classification );
-          }
+          columns["word_candidate"] = candidate;
         }
+        args.columns = columns;
 
-        configure_ui();
+        // push the edits
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          // get the word
+          if( 0 != candidate.length ) {
+            var args = new Object();
+            args.id = {{ test_id }};
+            args["language"] = "{{ language }}";
+            args["word_candidate"] = candidate;
+            var classification = ajax_pull( "test", "classify_word", args );
+            if( undefined != classification ) {
+              $(this).addClass( classification );
+            }
+          }
+          configure_ui();
+        } else {
+          // clear the text entry and re-focus
+          $(this).val( "" );
+          $(this).attr( "value", "" );
+          $(this).focus();
+        }
       } );// end text input change
 
       $( table_selector + ' input:checkbox[value="all"]' ).click( function() {
@@ -172,18 +161,19 @@
         $( table_selector + ' input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
         $(this).prop( "checked", $(this).prop( "checked" ) );
         if( $(this).prop( "checked" ) ) {
+          // check all the radio items corresponding to the progenitor column (1 or 2)?
           var id = $(this).prop( "id" ).split("__")[3];
           var radio_selector = table_selector + " div.radio__accept__" + id + " :radio";
           $( radio_selector ).prop( "checked", true ).trigger( "change" );
         } else {
-         $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
-         $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' ); 
-         $text_selector.prop( "disabled", true );  
-         // update previous and present state of value
-         $text_selector.removeClass( "intrusion variant" );
-         $text_selector.val( "" );  
-         $text_selector.attr( "value", "" );  
-         $text_selector.prop( "name", "candidate" );  
+          // uncheck all the radio items and clear the adjudicate text inputs
+          $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
+          $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' ); 
+          $text_selector.prop( "disabled", true );  
+          $text_selector.removeClass( "intrusion variant" );
+          // update previous and present state of value
+          $text_selector.val( "" );  
+          $text_selector.attr( "value", "" );  
         }
 
         configure_ui();
@@ -288,7 +278,6 @@
                 <input type="text"
                   id="{{ entry.id_3 }}__adjudicate"
                   disabled
-                  name="candidate"
                   value="">
               </div>
             </td>

@@ -218,4 +218,25 @@ class test_entry extends \cenozo\database\has_note
    
     return $entry_class_name::compare( $lhs_list, $rhs_list );
   }
+
+  /** 
+   * Get the sibling of this test_entry
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return record (NULL if no sibling)
+   * @access public
+   */
+  public function get_sibling_test_entry()
+  {
+    $db_test_entry = false;
+    if( !is_null( $this->assignment_id ) )
+    {
+      // find a sibling test_entry based on assignment id and test id uniqueness
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'assignment_id', '=', $this->assignment_id );
+      $modifier->where( 'test_id', '!=', $this->test_id );
+      $db_test_entry = current( static::select( $modifier ) );
+    } 
+    return false === $db_test_entry ? NULL : $db_test_entry;
+  }
 }
