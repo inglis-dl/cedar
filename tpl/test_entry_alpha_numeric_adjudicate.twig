@@ -16,10 +16,17 @@
     var table_selector = "#{{ widget.full }}__entry_table";
 
     function configure_ui() {
+      var disable = false;
+      $( table_selector + ' input:text[id$="adjudicate"]').each( function() {
+        var id_1 = "#" + $(this).prop( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = "#" + $(this).prop( "id" ).split( "__" )[1] + "__accept";
+        if( ! ( $( id_1 ).prop( "checked" ) || $( id_2 ).prop( "checked" ) ) &&
+            0 == $(this).val().length ) { 
+          disable = true;
+          return false;
+        }
+      } );
 
-      var disable = $( table_selector + ' input:radio[value="accept"]:checked' ).length !=
-                    $( table_selector + ' input:radio[value="accept"]' ).length / 2;
-                    
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );
     }
 

@@ -16,8 +16,10 @@
     var table_selector = "#{{ widget.full }}__entry_table";
 
     function configure_ui() {
+      // check the non-intrusion entries
       var numTotal = 
-        $( table_selector + ' input:radio[name$="adjudicate"]' ).length / 3;
+        $( table_selector + ' input:radio[name$="adjudicate"]' ).not(
+         '[name*="intrusion"]' ).length / 2;
       var numYes = 
         $( table_selector + ' input:radio[value="yes"][name$="adjudicate"]:checked' ).length;
       var numNo = 
@@ -26,6 +28,22 @@
         $( table_selector + ' input:radio[value="variant"][name$="adjudicate"]:checked' ).length;
 
       var disable = ( numYes + numNo + numVariant ) != numTotal;
+
+      // check the intrusion entries
+      if( !disable ) {
+        $( table_selector + ' input:text[id$="intrusion"]').each( function() {
+          var id_1 = '#{{ widget.full }}__' + $(this).prop( "id" ).split( "__" )[1] + 
+            "__intrusion__accept";
+          var id_2 = '#{{ widget.full }}__' + $(this).prop( "id" ).split( "__" )[2] +
+            "__intrusion__accept";
+          if( ! ( $( id_1 ).prop( "checked" ) || $( id_2 ).prop( "checked" ) ) &&
+              0 == $(this).val().length ) { 
+            disable = true;
+            return false;
+          }
+        } );      
+      }
+
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );
     }
 
@@ -335,15 +353,19 @@
 
             </td>
 
-            <td bgcolor=#B1F3B1>
-              <div class="radio__accept__1">
-                <input type="radio"
-                  id="{{ widget.full }}__{{ entry.id_1 }}__accept"
-                  name="{{ entry.word_id_1 }}__accept"
-                  value="accept">
-                <label for="{{ entry.id_1 }}__accept">Accept</label>
-              </div>
-            </td>
+            {% if entry.adjudicate is defined %}
+              <td bgcolor=#B1F3B1>
+                <div class="radio__accept__1">
+                  <input type="radio"
+                    id="{{ widget.full }}__{{ entry.id_1 }}__accept"
+                    name="{{ entry.word_id_1 }}__accept"
+                    value="accept">
+                  <label for="{{ entry.id_1 }}__accept">Accept</label>
+                </div>
+              </td>
+            {% else %}
+              <td></td>
+            {% endif %}
 
             <td>
               <input type="radio"

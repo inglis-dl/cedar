@@ -16,14 +16,17 @@
     var table_selector = "#{{ widget.full }}__entry_table";
 
     function configure_ui() {
-      var numFilled = $( table_selector + ' input:text[id$="adjudicate"][value!=""]' ).length;
-      var numInput = $( table_selector + ' input:text[id$="adjudicate"]' ).length;
-      var numChecked = $( table_selector + ' input:radio[value="accept"]:checked' ).length;
-      // it is possible that some fields can be blank
       var disable = false;
-      if( numFilled != numInput ) {
-        disable = numChecked == numInput ? false : true;
-      }
+      $( table_selector + ' input:text[id$="adjudicate"]').each( function() {
+        var id_1 = "#" + $(this).prop( "id" ).split( "__" )[0] + "__accept";
+        var id_2 = "#" + $(this).prop( "id" ).split( "__" )[1] + "__accept";
+        if( ! ( $( id_1 ).prop( "checked" ) || $( id_2 ).prop( "checked" ) ) &&
+            0 == $(this).val().length ) { 
+          disable = true;
+          return false;
+        }
+      } );
+      
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );  
     }
 
