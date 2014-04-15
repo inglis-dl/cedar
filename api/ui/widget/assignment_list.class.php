@@ -39,7 +39,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     parent::prepare();
     
     $this->add_column( 'participant.uid', 'string', 'UID', true );
-    $this->add_column( 'cohort', 'string', 'Cohort', false );
+    $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
     $this->add_column( 'defer', 'string', 'Defer', false );
     $this->add_column( 'adjudicate', 'string', 'Adjudicate', false );
@@ -150,7 +150,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
       $this->add_row( $db_assignment->id,
         array( 'participant.uid' => $db_participant->uid,
-               'cohort' => $db_participant->get_cohort()->name,
+               'cohort.name' => $db_participant->get_cohort()->name,
                'user.name' => $db_assignment->get_user()->name,
                'defer' => 
                  $defer_count > 0 ? $defer_count . '/' . $test_count : 'none',
