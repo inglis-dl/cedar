@@ -39,9 +39,7 @@
     function get_text_complete() {
       var args = new Object();
       args["dictionary_id"] = {{ dictionary_id }};
-      if( undefined != "{{ intrusion_dictionary_id }}" ) {
-        args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-      }
+      args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["language"] = "{{ language }}";
       args["words_only"] = 1;  
       return ajax_pull( "word", "list", args );
@@ -87,7 +85,7 @@
           var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
           var source_text_id = '#' + entry_id + "__candidate";
           var source_value = $( source_text_id ).val();
-          $( target_text_id ).removeClass( "candidate intrusion variant" );
+          $( target_text_id ).removeClass( "candidate primary intrusion variant" );
           $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
           $( target_text_id ).val( source_value );
           $( target_text_id ).attr( "value", source_value );
@@ -107,8 +105,6 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
-          // TODO see if latest version of jquery has double enter key bug fixed
-          //$(this).trigger( 'change' );
         }
       } )
       .change( function() {
@@ -122,7 +118,7 @@
         var candidate = $(this).val().trim().toLowerCase();
         $(this).val( candidate );
         $(this).attr( "value", candidate );
-        $(this).removeClass( "candidate intrusion variant" );
+        $(this).removeClass( "candidate primary intrusion variant" );
 
         if( 0 == candidate.length ) {
 
@@ -157,10 +153,7 @@
           args["language"] = "{{ language }}";
           args["word_candidate"] = candidate;
           var classification = ajax_pull( "test", "classify_word", args );
-          if( undefined != classification )
-          {
-            $(this).addClass( classification );
-          }
+          $(this).addClass( classification );
         }
 
         configure_ui();
@@ -175,14 +168,14 @@
           var radio_selector = table_selector + " div.radio__accept__" + id + " :radio";
           $( radio_selector ).prop( "checked", true ).trigger( "change" );
         } else {
-         $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
-         $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' ); 
-         $text_selector.prop( "disabled", true );  
-         // update previous and present state of value
-         $text_selector.removeClass( "candidate intrusion variant" );
-         $text_selector.val( "" );  
-         $text_selector.attr( "value", "" );  
-         $text_selector.prop( "name", "candidate" );  
+          $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
+          $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' ); 
+          $text_selector.prop( "disabled", true );  
+          // update previous and present state of value
+          $text_selector.removeClass( "candidate primary intrusion variant" );
+          $text_selector.val( "" );  
+          $text_selector.attr( "value", "" );  
+          $text_selector.prop( "name", "candidate" );  
         }
 
         configure_ui();

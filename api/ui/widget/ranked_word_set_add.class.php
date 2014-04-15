@@ -83,8 +83,8 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     $ranked_word_set_class_name = lib::get_class_name( 'database\ranked_word_set' );
     $words = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
-    if( $dictionary_word_count > 0 && 
-        ( $dictionary_word_count % count( $this->languages ) ) == 0  )
+    if( 0 < $dictionary_word_count &&
+        0 == ( $dictionary_word_count % count( $this->languages ) ) )
     {
       foreach( $this->languages as $language )
       {

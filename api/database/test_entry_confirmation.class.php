@@ -25,14 +25,14 @@ class test_entry_confirmation extends \cenozo\database\record
   {
     reset( $a );
     reset( $b );
-    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
-    {   
-      $a_obj = current( $a );  
-      $b_obj = current( $b );  
-      if( $a_obj->confirmation != $b_obj->confirmation ) return 1;
+    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) )
+    {
+      $a_obj = current( $a );
+      $b_obj = current( $b );
+      if( $a_obj->confirmation != $b_obj->confirmation ) return true;
       next( $a );
       next( $b );
-    }   
-    return 0;
+    }
+    return false;
   }    
 }

@@ -26,16 +26,16 @@ class test_entry_ranked_word extends \cenozo\database\record
   {
     reset( $a );
     reset( $b );
-    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
-    {   
-      $a_obj = current( $a );  
-      $b_obj = current( $b );  
+    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) )
+    {
+      $a_obj = current( $a );
+      $b_obj = current( $b );
       if( $a_obj->selection != $b_obj->selection ||
           $a_obj->word_id != $b_obj->word_id ||
-          $a_obj->word_candidate != $b_obj->word_candidate ) return 1;
+          $a_obj->word_candidate != $b_obj->word_candidate ) return true;
       next( $a );
       next( $b );
-    }   
+    }
     return count( $a ) != count( $b );
   }
 }

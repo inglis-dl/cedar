@@ -31,7 +31,7 @@ class test_entry_classification extends \cenozo\database\has_rank
       $b_obj = current( $b );  
       if( $a_obj->rank != $b_obj->rank ||
           $a_obj->word_id != $b_obj->word_id ||
-          $a_obj->word_candidate != $b_obj->word_candidate ) return 1;
+          $a_obj->word_candidate != $b_obj->word_candidate ) return true;
       next( $a );
       next( $b );
     }   

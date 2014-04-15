@@ -51,9 +51,9 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
     $db_test_entry_adjudicate = $db_test_entry->get_adjudicate_entry();
 
     $word_mod = lib::create( 'database\modifier' );
-    $word_mod->where( 'word_id', '!=', '' );
-    $word_mod->where( 'selection', '!=', '' );
-    $word_mod->order( 'id' );
+    $word_mod->where( 'word_id', '!=', NULL );
+    $word_mod->where( 'selection', '!=', NULL );
+    $word_mod->order( 'word.id' );
     $a = $db_test_entry->get_test_entry_ranked_word_list( clone $word_mod ); 
     $b = $db_test_entry_adjudicate->get_test_entry_ranked_word_list( clone $word_mod );
 
@@ -103,29 +103,64 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
            'word_candidate_1' => $word_candidate_1,
            'word_candidate_2' => $word_candidate_2,
            'classification_1' => $classification_1,
-           'classification_2' => $classification_2 );
+           'classification_2' => $classification_2,
+           'adjudicate' => true );
       }   
       next( $a );
       next( $b );
     }
 
     $intrusion_mod = lib::create( 'database\modifier' );
-    $intrusion_mod->where( 'selection', '=', '' );
-    $intrusion_mod->where( 'word_candidate', '!=', '' );
-    $intrusion_mod->order( 'id' );
+    $intrusion_mod->where( 'selection', '=', NULL );
     $a = $db_test_entry->get_test_entry_ranked_word_list( clone $intrusion_mod );
     $b = $db_test_entry_adjudicate->get_test_entry_ranked_word_list( clone $intrusion_mod );
-    
-    while( !is_null( key( $a ) ) && !is_null( key ( $b ) ) ) 
+    $rank = 1;
+    while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) ) 
     {   
       $a_obj = current( $a );
       $b_obj = current( $b );
-      if( $a_obj->word_candidate != $b_obj->word_candidate )
-      {        
+
+      $id_1 = '';
+      $id_2 = '';
+      $selection_1 = '';
+      $selection_2 = '';                  
+      $word_id_1 = '';
+      $word_1 = '';
+      $word_id_2 = '';
+      $word_2 = '';
+      $word_candidate_1 = '';
+      $word_candidate_2 = '';
+      $classification_1 = '';
+      $classification_2 = '';
+      $adjudicate = false;
+
+      if( false === $a_obj )
+      {
+        $adjudicate = true;
+        $id_2 = $b_obj->id;        
+        $word_candidate_2 = is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate;
+        if( !empty( $word_candidate_2 ) )
+        {
+          $data = $db_test->get_word_classification( $word_candidate_2, $language );
+          $classification_2 = $data['classification'];
+        }
+      }
+      else if( false === $b_obj )
+      {
+        $adjudicate = true;
+        $id_1 = $a_obj->id;
+        $word_candidate_1 = is_null( $a_obj->word_candidate ) ? '' : $a_obj->word_candidate;
+        if( !empty( $word_candidate_1 ) )
+        {
+          $data = $db_test->get_word_classification( $word_candidate_1, $language );
+          $classification_1 = $data['classification'];
+        }
+      }
+      else
+      {
+        $adjudicate = $a_obj->word_candidate != $b_obj->word_candidate;
         $word_candidate_1 = is_null( $a_obj->word_candidate ) ? '' : $a_obj->word_candidate;
         $word_candidate_2 = is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate;
-        $classification_1 = '';
-        $classification_2 = '';
         if( !empty( $word_candidate_1 ) )
         {
           $data = $db_test->get_word_classification( $word_candidate_1, $language );
@@ -136,23 +171,30 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
           $data = $db_test->get_word_classification( $word_candidate_2, $language );
           $classification_2 = $data['classification'];
         }
-        $entry_data[] = array(
-           'id_1' => $a_obj->id,
-           'id_2' => $b_obj->id,
-           'selection_1' => '',
-           'selection_2' => '',                  
-           'word_id_1' => '',
-           'word_1' => '',
-           'word_id_2' => '',
-           'word_2' => '',
-           'word_candidate_1' => $word_candidate_1,
-           'word_candidate_2' => $word_candidate_2,
-           'classification_1' => $classification_1,
-           'classification_2' => $classification_2 );
-      }   
+      }
+
+      $entry_data[] = array(
+        'id_1' => $id_1,
+        'id_2' => $id_2,
+        'selection_1' => $selection_1,
+        'selection_2' => $selection_2,
+        'word_id_1' => $word_id_1,
+        'word_1' => $word_1,
+        'word_id_2' => $word_id_2,
+        'word_2' => $word_2,
+        'word_candidate_1' => $word_candidate_1,
+        'word_candidate_2' => $word_candidate_2,
+        'classification_1' => $classification_1,
+        'classification_2' => $classification_2,
+        'rank' => $rank,
+        'adjudicate' => $adjudicate );
+        
+      $rank = $rank + 1;  
+
       next( $a );
       next( $b );
     }
+
     $this->set_variable( 'entry_data', $entry_data );
   }
 }

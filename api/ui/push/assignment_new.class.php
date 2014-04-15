@@ -183,7 +183,7 @@ class assignment_new extends \cenozo\ui\push\base_new
           }
           $offset += $limit;
         }
-      } while( !$found && $participant_count > 0 && $max_try > $try++ );
+      } while( !$found && 0 < $participant_count && $max_try > $try++ );
 
       $session->release_semaphore();
 

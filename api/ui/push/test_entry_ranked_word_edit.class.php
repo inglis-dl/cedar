@@ -113,12 +113,12 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     $num_no = $test_entry_ranked_word_class_name::count( $modifier );
     $modifier = clone $base_mod;
     $modifier->where( 'selection', '=', 'variant' );
-    $modifier->where( 'word_candidate', '!=', '' );
+    $modifier->where( 'word_candidate', '!=', NULL );
     $num_variant = $test_entry_ranked_word_class_name::count( $modifier );
 
     $num_selection = $db_test->get_ranked_word_set_count();
    
-    $completed = ( $num_yes + $num_no + $num_variant ) == $num_selection ? 1 : 0;
+    $completed = ( $num_yes + $num_no + $num_variant ) == $num_selection;
 
     $db_test_entry->update_status_fields( $completed );
   }

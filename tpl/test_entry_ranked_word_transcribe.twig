@@ -99,7 +99,7 @@
         var candidate = $(this).val().trim().toLowerCase();
         $(this).val( candidate );
         $(this).attr( "value", candidate );
-        $(this).removeClass( "candidate intrusion variant" );
+        $(this).removeClass( "candidate primary intrusion variant" );
         if( 0 == candidate.length ) {
           alert( "Blank entries are not permitted" );
           configure_ui();
@@ -187,7 +187,7 @@
         if( ajax_push( "{{ widget.subject }}", "edit", args ) )
         {
           var text_id = table_selector + " input:text[name=" + $(this).prop( "name" ) + "]";
-          $(text_id).removeClass( "candidate intrusion variant" );
+          $(text_id).removeClass( "candidate primary intrusion variant" );
           if( $(this).val() === "variant" ) {
             // disable inputs until the variant is entered
             $( table_selector + " input" ).prop( "disabled", true );
@@ -210,7 +210,7 @@
         if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
           // clear all text entries
           $( table_selector + ' input:text' ).each( function() {
-            $(this).removeClass( "candidate intrusion variant" );
+            $(this).removeClass( "candidate primary intrusion variant" );
             $(this).val( "" );
             // update the value to present state
             $(this).attr( "value", "" );

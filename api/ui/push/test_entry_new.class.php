@@ -254,10 +254,10 @@ class test_entry_new extends \cenozo\ui\push\base_new
               // does the word candidate exist in the primary dictionary ?
               $modifier = clone $base_mod;
               $modifier->where( 'word', '=', $db_entry->word_candidate );
-              $db_word = $word_class_name::select( $modifier );
-              if( !empty( $db_word ) ) 
+              $db_word = current( $word_class_name::select( $modifier ) );
+              if( false !== $db_word ) 
               {   
-                $db_entry->word_id = $db_word[0]->id;
+                $db_entry->word_id = $db_word->id;
                 $db_entry->word_candidate = NULL;
               }
               else $db_entry->word_id = NULL;
@@ -349,10 +349,10 @@ class test_entry_new extends \cenozo\ui\push\base_new
               // does the word candidate exist in the primary dictionary ?
               $modifier = clone $base_mod;
               $modifier->where( 'word', '=', $word_candidate );
-              $db_word = $word_class_name::select( $modifier );
-              if( !empty( $db_word ) ) 
+              $db_word = current( $word_class_name::select( $modifier ) );
+              if( false !== $db_word ) 
               {   
-                $db_entry->word_id = $db_word[0]->id;
+                $db_entry->word_id = $db_word->id;
               }     
               else $db_entry->word_id = NULL;
             }     

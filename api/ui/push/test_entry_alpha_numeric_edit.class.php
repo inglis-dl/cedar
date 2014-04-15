@@ -101,10 +101,10 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $modifier->where( 'word', '=', $word_value );
     $modifier->limit( 1 );
     $word_class_name = lib::get_class_name( 'database\word' );
-    $db_word = $word_class_name::select( $modifier );
-    if( !empty( $db_word ) )
+    $db_word = current( $word_class_name::select( $modifier ) );
+    if( false !== $db_word )
     {
-      $record->word_id = $db_word[0]->id;
+      $record->word_id = $db_word->id;
     }
     else
     {
@@ -122,10 +122,10 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     // the entry is not deferred
     // if none exist, the typist must defer to the admin to set completed status
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'word_id', '!=', '' );
+    $modifier->where( 'word_id', '!=', NULL );
     $test_entry_alpha_numeric_class_name = 
       lib::get_class_name('database\test_entry_alpha_numeric');
-    $completed = 0 < $test_entry_alpha_numeric_class_name::count( $modifier ) ? 1 : 0;
+    $completed = 0 < $test_entry_alpha_numeric_class_name::count( $modifier );
     $db_test_entry->update_status_fields( $completed );
   }
 }

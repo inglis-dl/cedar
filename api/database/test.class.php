@@ -79,11 +79,11 @@ class test extends \cenozo\database\has_rank
     $modifier->where( 'dictionary_id', '=', $this->get_dictionary()->id );
 
     $word_class_name = lib::get_class_name( 'database\word' );
-    $db_word = $word_class_name::select( $modifier );
-    if( !empty( $db_word ) ) 
+    $db_word = current( $word_class_name::select( $modifier ) );
+    if( false !== $db_word ) 
     {   
       $data['classification'] = 'primary';
-      $data['word'] = $db_word[0];
+      $data['word'] = $db_word;
     }    
     else
     {   
@@ -91,24 +91,24 @@ class test extends \cenozo\database\has_rank
       {   
         $modifier = clone $base_mod;
         $modifier->where( 'dictionary_id', '=', $this->get_intrusion_dictionary()->id );
-        $db_word = $word_class_name::select( $modifier );
-        if( !empty( $db_word ) ) 
+        $db_word = current( $word_class_name::select( $modifier ) );
+        if( false !== $db_word )
         {   
           $data['classification'] = 'intrusion';
-          $data['word'] = $db_word[0];
+          $data['word'] = $db_word;
         }   
         else
         {   
           $modifier = clone $base_mod;
           $modifier->where( 'dictionary_id', '=', $this->get_variant_dictionary()->id );
-          $db_word = $word_class_name::select( $modifier );
-          if( !empty( $db_word ) ) 
+          $db_word = current( $word_class_name::select( $modifier ) );
+          if( false !== $db_word )
           {   
             $data['classification'] = 'variant';
-            $data['word'] = $db_word[0];
-          }   
-        }   
-      }     
+            $data['word'] = $db_word;
+          }
+        } 
+      }   
     }
 
     return $data;

@@ -150,12 +150,12 @@ class dictionary_import_process extends \cenozo\ui\pull
     $this->data[ 'dictionary_word_count' ] = 0;
     $word_array_final = $word_array;
 
-    if( $unique_word_count > 0 ) 
+    if( 0 < $unique_word_count )
     {      
       $db_dictionary = lib::create( 'database\dictionary', $dictionary_id );
       $dictionary_word_count = $db_dictionary->get_word_count();
       $this->data[ 'dictionary_word_count' ] = $dictionary_word_count;
-      if( $dictionary_word_count > 0 )
+      if( 0 < $dictionary_word_count )
       {
         $unique_word_count = 0;
         $word_array_final = array();
@@ -168,7 +168,7 @@ class dictionary_import_process extends \cenozo\ui\pull
               $candidate_words[] = $value[0];
           }
           $candidate_word_count = count( $candidate_words ); 
-          if( $candidate_word_count > 0 )
+          if( 0 < $candidate_word_count )
           {
             $dictionary_words = array();
             $modifier = lib::create( 'database\modifier' );
@@ -179,7 +179,7 @@ class dictionary_import_process extends \cenozo\ui\pull
               $dictionary_words[] = $db_word->word;
             }
             $unique_words = array();
-            if( count( $dictionary_words ) > 0 )
+            if( 0 < count( $dictionary_words ) )
             {
               $unique_words = array_diff( $candidate_words, $dictionary_words );
             }
@@ -188,7 +188,7 @@ class dictionary_import_process extends \cenozo\ui\pull
               $unique_words = $candidate_words;
             }
             $unique_count = count( $unique_words );
-            if( $unique_count > 0 )
+            if( 0 < $unique_count )
             {
               foreach( $unique_words as $word )
                 $word_array_final[] = array( $word, $language );
@@ -203,7 +203,7 @@ class dictionary_import_process extends \cenozo\ui\pull
 
     $this->data[ 'duplicate_word_count' ] = $duplicate_word_count;
     $this->data[ 'unique_word_count' ] = $unique_word_count;
-    if( $unique_word_count > 0 )
+    if( 0 < $unique_word_count )
     {
       $db_dictionary_import->serialization = util::json_encode( $word_array_final );
     }

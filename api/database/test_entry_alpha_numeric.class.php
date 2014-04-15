@@ -30,11 +30,11 @@ class test_entry_alpha_numeric extends \cenozo\database\has_rank
       $a_obj = current( $a ); 
       $b_obj = current( $b ); 
       if( $a_obj->rank != $b_obj->rank ||
-          $a_obj->word_id != $b_obj->word_id ) return 1;
+          $a_obj->word_id != $b_obj->word_id ) return true;
       next( $a );
       next( $b );
     }
-    return 0;
+    return false;
   }
 
   /** 

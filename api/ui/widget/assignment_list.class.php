@@ -92,7 +92,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
       $allow_transcribe = false;
       $allow_adjudicate = false;
-      $test_entry_id = null;
+      $test_entry_id = NULL;
 
       if( $db_role->name == 'typist' )
       {
@@ -100,17 +100,17 @@ class assignment_list extends \cenozo\ui\widget\base_list
         $mod_test_entry->where( 'completed', '=', false );
         $mod_test_entry->order( 'test.rank' );
         $mod_test_entry->limit( 1 );
-        $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
-        if( !is_null( $db_test_entry[0] ) ) 
+        $db_test_entry = current( $test_entry_class_name::select( $mod_test_entry ) );
+        if( false !== $db_test_entry )
         {  
-          $test_entry_id = $db_test_entry[0]->id;
+          $test_entry_id = $db_test_entry->id;
           $allow_transcribe = true;
           $allow_transcribe_operation |= $allow_transcribe;
         }
       }
       else if( $db_role->name == 'administrator' )
       {
-        if( $complete_count == $test_count && $adjudicate_count > 0 )
+        if( $complete_count == $test_count && 0 < $adjudicate_count )
         {
           $allow_adjudicate = true;
           $mod_test_entry = clone $base_mod;
@@ -119,20 +119,20 @@ class assignment_list extends \cenozo\ui\widget\base_list
           foreach( $test_entry_class_name::select( $mod_test_entry ) as $db_test_entry )
           {
             $db_adjudicate_entry = $db_test_entry->get_adjudicate_entry();
-            if( $db_adjudicate_entry == NULL )
+            if( is_null( $db_adjudicate_entry ) )
             {
               $allow_adjudicate = false;
               break;
              }
              
-             if( $adjudicate_assignment_id == NULL )
+             if( is_null( $adjudicate_assignment_id ) )
              {
                $adjudicate_assignment_id = $db_adjudicate_entry->get_assignment()->id;
                $mod_complete = lib::create( 'database\modifier' );
                $mod_complete->where( 'assignment_id', '=', $adjudicate_assignment_id );
                $mod_complete->where( 'completed', '=', false );
                $adjudicate_complete_count = $test_entry_class_name::count( $mod_complete );
-               if( $adjudicate_complete_count > 0 )
+               if( 0 < $adjudicate_complete_count )
                {
                  $allow_adjudicate = false;
                  break;
@@ -145,10 +145,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
             $mod_test_entry->where( 'adjudicate', '=', true );
             $mod_test_entry->order( 'test.rank' );
             $mod_test_entry->limit( 1 );
-            $db_test_entry = $test_entry_class_name::select( $mod_test_entry );
-            if( !empty( $db_test_entry ) )
+            $db_test_entry = current( $test_entry_class_name::select( $mod_test_entry ) );
+            if( false !== $db_test_entry )
             {
-              $test_entry_id = $db_test_entry[0]->id;
+              $test_entry_id = $db_test_entry->id;
               $allow_adjudicate_operation = $allow_adjudicate;
             }
           }
@@ -160,11 +160,11 @@ class assignment_list extends \cenozo\ui\widget\base_list
                'cohort' => $db_participant->get_cohort()->name,
                'user.name' => $db_assignment->get_user()->name,
                'defer' => 
-                 $defer_count > 0 ? $defer_count . '/' . $test_count : 'none',
+                 0 < $defer_count ? $defer_count . '/' . $test_count : 'none',
                'adjudicate' => 
-                 $adjudicate_count > 0 ? $adjudicate_count . '/' . $test_count : 'none',
+                 0 < $adjudicate_count ? $adjudicate_count . '/' . $test_count : 'none',
                'complete' =>  
-                 $complete_count > 0 ? $complete_count . '/' . $test_count : 'none',
+                 0 < $complete_count ? $complete_count . '/' . $test_count : 'none',
                'allow_transcribe' => $allow_transcribe,
                'allow_adjudicate' => $allow_adjudicate,
                'test_entry_id' => $test_entry_id ) );
@@ -200,7 +200,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
-      $modifier->where( 'test_entry.completed', '!=', 1 );      
+      $modifier->where( 'test_entry.completed', '!=', true );
     }
 
     return parent::determine_record_count( $modifier );
@@ -223,7 +223,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
-      $modifier->where( 'test_entry.completed', '!=', 1 );      
+      $modifier->where( 'test_entry.completed', '!=', true );      
     }
 
     return parent::determine_record_list( $modifier );

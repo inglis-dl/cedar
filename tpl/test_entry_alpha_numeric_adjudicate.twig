@@ -113,7 +113,7 @@
           $radio_selector.prop( "checked", true ).trigger( "change" );
         } else {
           $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
-          $text_selector = $( table_selector + ' div.selector :text' ); 
+          $text_selector = $( table_selector + ' div.adjudicate :text' ); 
           $text_selector.prop( "disabled", true );  
           // update previous and present state of value
           $text_selector.val( "" );  
