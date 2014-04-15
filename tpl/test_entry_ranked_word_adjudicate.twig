@@ -105,12 +105,12 @@
         var args = new Object();
         var columns = new Object();
         var data = new Object();
+        var intrusion_data = new Object();
         columns["participant_id"] = {{ participant_id }};
         columns["test_id"] = {{ test_id }};
         columns["completed"] = 1;
         columns["id_1"] = {{ id_1 }};
         columns["id_2"] = {{ id_2 }};
-
         $( table_selector + ' input:radio[name$="adjudicate"]:checked' ).each( function() {
           var id = $(this).prop( "id" ).split( "__" )[0] + "__" + $(this).val();
           var word_id = 
@@ -123,12 +123,18 @@
           data[word_id] = { 'selection' : $(this).val(), 'word_candidate' : candidate };
         } );
         
+        var rank = 1;
         $( table_selector + ' input:text[id$="intrusion"]' ).each( function() {
-          var intrusion_id = $(this).prop( "id" ).replace( "__intrusion", "" );
-          data[intrusion_id] = { 'selection' : "" , 'word_candidate' : $(this).val() };
+          var candidate = $(this).val();
+          // if the entry is empty ignore it
+          if( 0 < candidate.length ) {            
+            intrusion_data[rank] = candidate;
+          }
+          rank = rank + 1;
         } );
  
         columns["data"] = data;
+        columns["intrusion_data"] = intrusion_data;
         args.columns = columns;
 
         if( ajax_push( "{{ parent.subject }}", "new", args ) ) {

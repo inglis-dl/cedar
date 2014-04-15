@@ -134,6 +134,28 @@ class test_entry_new extends \cenozo\ui\push\base_new
             $db_entry->save();
           }
         }
+
+        // do the intrusions now
+        $intrusion_data = $columns['intrusion_data'];
+        if( 0 < count( $intrusion_data ) )
+        {
+          $rank = 1;
+          $intrusion_modifier = lib::create( 'database\modifier' );
+          $intrusion_modifier->where( 'selection', '=', NULL );
+          $c = $record->get_test_entry_ranked_word_list( $intrusion_modifier );
+          foreach( $c as $db_entry )
+          {
+            if( is_null( $db_entry->word_id ) && is_null( $db_entry->word_candidate ) &&
+                array_key_exists( $rank, $intrusion_data ) )
+            {
+              $word_candidate = $intrusion_data[ $rank ];
+              $db_entry->word_candidate = $word_candidate;
+              $db_entry->save();              
+            }
+            $rank = $rank + 1;
+          }
+        }
+
         $db_test_entry_1->adjudicate = 0;
         $db_test_entry_2->adjudicate = 0;
         $db_test_entry_1->save();
