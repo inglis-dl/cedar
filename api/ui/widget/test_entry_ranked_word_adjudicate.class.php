@@ -158,6 +158,8 @@ class test_entry_ranked_word_adjudicate extends base_adjudicate
       }
       else
       {
+        $id_1 = $a_obj->id;
+        $id_2 = $b_obj->id;
         $adjudicate = $a_obj->word_candidate != $b_obj->word_candidate;
         $word_candidate_1 = is_null( $a_obj->word_candidate ) ? '' : $a_obj->word_candidate;
         $word_candidate_2 = is_null( $b_obj->word_candidate ) ? '' : $b_obj->word_candidate;
