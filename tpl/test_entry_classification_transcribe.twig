@@ -74,9 +74,7 @@
     function get_text_complete() {
       var args = new Object();
       args["dictionary_id"] = {{ dictionary_id }};
-      if( undefined != "{{ intrusion_dictionary_id }}" ) {
-        args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-      }
+      args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["language"] = "{{ language }}";
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
@@ -92,8 +90,6 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
-          // TODO see if latest version of jquery has double enter key bug fixed
-          //$(this).trigger( 'change' );
         }
       } );// end autocomplete
 
@@ -105,7 +101,7 @@
         $(this).val( candidate );
         // update the value to present state
         $(this).attr( "value", candidate );
-        $(this).removeClass( "candidate intrusion variant primary" );
+        $(this).removeClass( "candidate primary intrusion variant" );
         if( 0 == candidate.length ) {
           alert( "Blank entries are not permitted" );
           configure_ui();
@@ -117,11 +113,12 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
-        if( 0 == args.id ) args.id = '';
         var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
-        columns["rank"] = rank;
-        columns["test_entry_id"] = {{ parent.id }};
-        columns["word_id"] = "";
+        if( 0 == args.id ) {
+          args.id = "";
+          columns["rank"] = rank;
+          columns["test_entry_id"] = {{ parent.id }};
+        }  
         columns["word_candidate"] = candidate;
         args.columns = columns;
 
@@ -248,11 +245,8 @@
         {% set value = '' %}
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
-        {% elseif entry_data[k].word_candidate is defined %}  
-            {% set value = entry_data[k].word_candidate %}
         {% endif %}
-        {% set status = entry_data[k].word_id ? "word" : 
-                        entry_data[k].word_candidate ? "candidate" : "empty" %} 
+        {% set status = entry_data[k].word_id ? "word" : "empty" %} 
 
         <td>
           <input type="text"
@@ -270,8 +264,6 @@
                { disabled }
              {% endif %}
              {% set kprev = 'false' %}
-           {% elseif status == 'candidate' %}
-               {% set kprev = 'true' %}
            {% elseif status == 'word' %}
                {% set kprev = 'true' %}
            {% endif %}

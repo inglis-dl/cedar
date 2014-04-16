@@ -82,12 +82,13 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
-        if( 0 == args.id ) args.id = '';
         var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
-        columns["rank"] = rank;
-        columns["test_entry_id"] = {{ parent.id }};
-        columns["word_id"] = $(this).prop( "name" ) === "undefined" ? "" : $(this).prop( "name" );
-        columns["word_value"] = candidate;
+        if( 0 == args.id ) {
+          args.id = "";
+          columns["rank"] = rank;
+          columns["test_entry_id"] = {{ parent.id }};
+        }  
+        columns["word_candidate"] = candidate;
         args.columns = columns;
 
         // push the edits
@@ -200,9 +201,6 @@
         {% set value = '' %}
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
-          {% set name = entry_data[k].word_id %}
-        {% else %}
-          {% set name = 'undefined' %}          
         {% endif %}
         {% set status = entry_data[k].word_id ? "word" : "empty" %} 
 
@@ -210,7 +208,6 @@
             <input type="text"
              style="width:20%"
              id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-             name="{{ name }}"
 
              {% if editable == 0  %}
                { readonly }
