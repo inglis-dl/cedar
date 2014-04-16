@@ -258,31 +258,22 @@ class test_entry_new extends \cenozo\ui\push\base_new
         // data is set in the test_entry_classification_adjudicate.twig file
         // during the submit
         $data = $columns['data'];
-        $db_dictionary = $db_test->get_dictionary();
-        $word_class_name = lib::get_class_name( 'database\word' );
-        $base_mod = lib::create( 'database\modifier' );
-        $base_mod->where( 'dictionary_id', '=', $db_dictionary->id );
-        $base_mod->where( 'language', '=', $language );
-        $base_mod->limit( 1 );
         reset( $c );
         foreach( $c as $db_entry )
         {
           if( array_key_exists( $db_entry->rank, $data ) )
           {
-            $db_entry->word_candidate = $data[$db_entry->rank]['word_candidate'];
-            $db_entry->word_id = $data[$db_entry->rank]['word_id'];
-            if( $db_entry->word_id == 'candidate' )
+            $word_candidate = $data[$db_entry->rank]['word_candidate'];
+            $word_data = $db_test->get_word_classification( $word_candidate, $language );
+            if( !is_null( $word_data['word'] ) )
             {
-              // does the word candidate exist in the primary dictionary ?
-              $modifier = clone $base_mod;
-              $modifier->where( 'word', '=', $db_entry->word_candidate );
-              $db_word = current( $word_class_name::select( $modifier ) );
-              if( false !== $db_word ) 
-              {   
-                $db_entry->word_id = $db_word->id;
-                $db_entry->word_candidate = NULL;
-              }
-              else $db_entry->word_id = NULL;
+              $db_entry->word_id = $word_data['word']->id;
+              $db_entry->word_candidate = NULL;
+            }
+            else
+            {
+              $db_entry->word_id = NULL;
+              $db_entry->word_candidate = $word_candidate;  
             }
             $db_entry->save();
           }
@@ -311,6 +302,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
         $operation = lib::create( 'ui\push\test_entry_alpha_numeric_new', $args );
         $operation->process();
       }
+
       if( $adjudicate )
       {
         $db_test_entry_1 = lib::create( 'database\test_entry', $columns['id_1'] );
@@ -353,33 +345,23 @@ class test_entry_new extends \cenozo\ui\push\base_new
         }
 
         $data = $columns['data'];
-        $db_dictionary = $db_test->get_dictionary();
-        $word_class_name = lib::get_class_name( 'database\word' );
-        $base_mod = lib::create( 'database\modifier' );
-        $base_mod->where( 'dictionary_id', '=', $db_dictionary->id );
-        $base_mod->where( 'language', '=', $language );
-        $base_mod->limit( 1 );
         reset( $c );
         foreach( $c as $db_entry )
-        {   
-          if( array_key_exists( $db_entry->rank, $data ) ) 
-          {   
+        {
+          if( array_key_exists( $db_entry->rank, $data ) )
+          {
             $word_candidate = $data[$db_entry->rank]['word_candidate'];
-            $db_entry->word_id = $data[$db_entry->rank]['word_id'];
-            if( $db_entry->word_id == 'candidate' )
-            {   
-              // does the word candidate exist in the primary dictionary ?
-              $modifier = clone $base_mod;
-              $modifier->where( 'word', '=', $word_candidate );
-              $db_word = current( $word_class_name::select( $modifier ) );
-              if( false !== $db_word ) 
-              {   
-                $db_entry->word_id = $db_word->id;
-              }     
-              else $db_entry->word_id = NULL;
-            }     
+            $word_data = $db_test->get_word_classification( $word_candidate, $language );
+            if( !is_null( $word_data['word'] ) )
+            {
+              $db_entry->word_id = $word_data['word']->id;
+            }
+            else
+            {
+              $db_entry->word_id = NULL;
+            }
             $db_entry->save();
-          }     
+          }
         }
         $db_test_entry_1->adjudicate = 0;
         $db_test_entry_2->adjudicate = 0;
