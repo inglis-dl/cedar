@@ -60,15 +60,16 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
       if( $record->selection == 'variant' )
       {
-        if( $classification == 'primary' )
+        if( $classification != 'variant' )
         {
           throw lib::create( 'exception\notice',
-            'The word "' . $record->word_candidate . '" is one of the '.
-            'primary words and cannot be added as a variant.',
+            'The word "' . $record->word_candidate . '" is not in the '.
+            'variant dictionary and so cannot be added as a variant. '.
+            'Pleae add as an intrusion and make a note.',
              __METHOD__ );
-         }    
+         }
       }
-      else if( '' === $record->selection )
+      else if( is_null( $record->selection ) )
       {
         if( $classification == 'primary' ||
             $classification == 'variant' )

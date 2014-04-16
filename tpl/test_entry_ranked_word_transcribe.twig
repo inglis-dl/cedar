@@ -57,7 +57,7 @@
               }
               else {
                 if( $(this).prop( "id" ).split( "__" )[1] === "candidate" ) {
-                  var id = "#" + $(this).prop( "id" ).split( "__" )[0] + "__variant";
+                  var id = "#" + $(this).prop( "id" ).replace( "candidate", "variant" );
                   disable = !$( id ).prop( "checked" );              
                 }
               }
@@ -94,7 +94,7 @@
 
     function update_input_list() {
 
-      $( table_selector + " input:text[id$='variant']" ).autocomplete( {
+      $( table_selector + ' input:text[id$="candidate"]' ).autocomplete( {
         source: get_variant_text_complete(),
         minLength: 1,
         select: function( event, ui ) {
@@ -102,7 +102,7 @@
           }
         } );
 
-      $( table_selector + " input:text[id$='intrusion']" ).autocomplete( {
+      $( table_selector + ' input:text[id$="intrusion"]' ).autocomplete( {
         source: get_intrusion_text_complete(),
         minLength: 1,
         select: function( event, ui ) {
@@ -123,8 +123,8 @@
         } else {
           var args = new Object();
           var columns = new Object();
-          args.id = $(this).prop( "id" ).split("__")[0];
-          var is_variant = $(this).prop( "id" ).split("__")[1] === "variant";
+          args.id = $(this).prop( "id" ).split( "__" )[0];
+          var is_variant = $(this).prop( "id" ).split( "__" )[1] === "candidate";
           columns["test_entry_id"] = {{ parent.id }};
           columns["word_candidate"] = candidate;
           if( is_variant ) {
@@ -149,9 +149,10 @@
             $( table_selector + " input:radio" ).each( function() {
               $(this).prop( "disabled", false );
               if( $(this).val() === "variant" ) {
-                var text_id = table_selector + " input:text[name=" + $(this).prop( "name" ) + "]";
-                if( 0 < $(text_id).val().length ) {
-                  $(text_id).prop( "disabled", false );
+                var text_id = table_selector + ' input:text[id="' + 
+                  $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
+                if( 0 < $( text_id ).val().length ) {
+                  $( text_id ).prop( "disabled", false );
                 }  
               }
             } );
@@ -199,19 +200,20 @@
         args.columns = columns;
         var do_text = true;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          var text_id = table_selector + " input:text[name=" + $(this).prop( "name" ) + "]";
-          $(text_id).removeClass( "candidate primary intrusion variant" );
+          var text_id = 
+            table_selector + ' input:text[id="' + args.id + '__candidate"]';
+          $( text_id ).removeClass( "candidate primary intrusion variant" );
           if( $(this).val() === "variant" ) {
             // disable inputs until the variant is entered
             $( table_selector + " input" ).prop( "disabled", true );
-            $(text_id).prop( "disabled", false );
-            $(text_id).focus();
+            $( text_id ).prop( "disabled", false );
+            $( text_id ).focus();
             do_text = false;
           } else {
-            $(text_id).prop( "disabled", true );
-            $(text_id).val( "" );
+            $( text_id ).prop( "disabled", true );
+            $( text_id ).val( "" );
             // update the value to present state
-            $(text_id).attr( "value", "" );
+            $( text_id ).attr( "value", "" );
           }
         }
 
@@ -292,18 +294,19 @@
                {% endif %}
                {{ entry.selection == 'variant' ? "checked" : "" }}></td>
           <td><input type="text"
-               id="{{ entry.id }}__variant"
+               id="{{ entry.id }}__candidate"
                name="{{ entry.word_id }}"
-               {% if entry.classification is defined %}
-                 class="{{ entry.classification }}"
-               {% endif %}  
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {% if entry.classification is defined %}
-                 class="{{ entry.classification }}"
-               {% endif %}
-               value="{{ entry.word_candidate }}"></td>
+               {% if entry.word_candidate is defined %}
+                 value="{{ entry.word_candidate }}"
+                 {% if entry.classification is defined %}
+                   class="{{ entry.classification }}"
+                 {% endif %}  
+               {% else %}
+                 { disabled }
+               {% endif %}></td>
         </tr>       
         {% else %}
         <tr class="intrusion">
@@ -314,10 +317,12 @@
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {% if entry.classification is defined %}
-                 class="{{ entry.classification }}"
-               {% endif %}
-               value="{{ entry.word_candidate }}"></td>
+               {% if entry.word_candidate is defined %}
+                 value="{{ entry.word_candidate }}"
+                 {% if entry.classification is defined %}
+                   class="{{ entry.classification }}"
+                 {% endif %}  
+               {% endif %}></td>
          </tr>      
         {% endif %}
     {% endfor %}  
