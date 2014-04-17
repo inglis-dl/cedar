@@ -82,9 +82,9 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
+        var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
         if( 0 == args.id ) {
           args.id = "";
-          var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
           columns["rank"] = rank;
           columns["test_entry_id"] = {{ parent.id }};
         }  
@@ -96,8 +96,7 @@
 
           // enable the next empty input
           var next_rank_id = "__" + ( rank + 1 );
-          $( table_selector + ' input:text[id$="' +
-            next_rank_id + '"]' ).prop( "disabled", false );
+          $( table_selector + ' input:text[id$="' + next_rank_id + '"]' ).prop( "disabled", false );
 
           configure_ui();
         } else {
@@ -174,9 +173,7 @@
     {% endif %}
 
     {% for i in range(0, imax, numcell) %}
-
       <tr>
-
       {% set kmax = i+numcell-1 %}
       {% if kmax > imax %}
         {% set kmax = imax %}
@@ -197,7 +194,6 @@
              {% if editable == 0  %}
                { readonly }
              {% endif %}
-
              {% if status == 'empty'  %} 
                {% if kprev == 'false' %}
                  { disabled }

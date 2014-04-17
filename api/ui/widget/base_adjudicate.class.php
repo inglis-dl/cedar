@@ -64,7 +64,7 @@ abstract class base_adjudicate extends \cenozo\ui\widget
     $db_test_entry = $this->parent->get_record();
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
-    $this->set_variable( 'adjudicate_data', 
+    $this->set_variable( 'entry_data', 
       $assignment_manager::get_adjudicate_data( $db_test_entry ) );
   }
 }

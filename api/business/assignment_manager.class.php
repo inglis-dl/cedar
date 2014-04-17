@@ -330,7 +330,8 @@ class assignment_manager extends \cenozo\singleton
         $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
           array( 'test_id', 'participant_id' ),
           array( $db_test->id, $db_assignment->get_participant()->id ) );
-        if( false === $db_adjudicate_test_entry )
+
+        if( is_null( $db_adjudicate_test_entry ) )
         {
           // create a new test entry to hold the data
           $db_adjudicate_test_entry = lib::create( 'database\test_entry' );
@@ -382,7 +383,7 @@ class assignment_manager extends \cenozo\singleton
             $db_max_rank_entry = current( $entry_class_name::select( $max_rank_modifier ) );
 
             // this record should never be empty if we got this far in the process
-            if( false === $db_max_test_entry )
+            if( false === $db_max_rank_entry )
              throw lib::create( 'exception\runtime',
                'Invalid max ranked test entry', __METHOD__ );
 
@@ -457,7 +458,7 @@ class assignment_manager extends \cenozo\singleton
                   if( !$adjudicate )
                   {
                     $c_obj->word_id = $a_obj->word_id;
-                    $c->obj->save();
+                    $c_obj->save();
                   }
 
                   if( !is_null( $a_obj->word_id ) )
@@ -625,7 +626,7 @@ class assignment_manager extends \cenozo\singleton
                 }
 
                 $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
-                                $a_obj->selection != $b_obj->selection ) 
+                                $a_obj->selection != $b_obj->selection );
 
                 //copy the progenitor to the adjudicate
                 if( !$adjudicate )
@@ -687,9 +688,6 @@ class assignment_manager extends \cenozo\singleton
         'Adjudication is not required for one or more entries for the '. 
         $db_test_entry->get_test()->name . ' test pertaining to participant UID '. 
         $db_test_entry->get_assignment()->get_participant()->uid, __METHOD__ );
-
-    
-    log::debug( $adjudicate_data );    
 
     return $adjudicate_data;
   }

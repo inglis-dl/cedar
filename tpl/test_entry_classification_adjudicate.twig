@@ -16,14 +16,20 @@
     var table_selector = "#{{ widget.full }}__entry_table";
 
     function configure_ui() {
-      var numFilled = $( table_selector + ' input:text[id$="adjudicate"][value!=""]' ).length;
-      var numInput = $( table_selector + ' input:text[id$="adjudicate"]' ).length;
-      var numChecked = $( table_selector + ' input:radio[value="accept"]:checked' ).length;
-      // it is possible that some fields can be blank
       var disable = false;
-      if( numFilled != numInput ) {
-        disable = numChecked != numInput;
-      }
+      $( table_selector + ' input:text[id$="adjudicate"]').each( function() {
+        var id_1 = "#" + $(this).prop( "name" ).split( "__" )[0] + "__accept";
+        var id_2 = "#" + $(this).prop( "name" ).split( "__" )[1] + "__accept";
+        if( ! ( $( id_1 ).prop( "checked" ) || $( id_2 ).prop( "checked" ) ) &&
+            0 == $(this).val().length ) {
+          var blank_id = '#' + $(this).prop( "id" ).replace( "adjudicate", "blank" );
+          if( ! $( blank_id ).prop( "checked" ) ) {
+            disable = true;            
+            return false;
+          }
+        }
+      } );
+
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );  
     }
 
@@ -54,25 +60,25 @@
       $( table_selector + ' input:radio[value="accept"]' ).change(
         function() {
           var entry_id = $(this).prop( "id" ).split( "__" )[0];
+          var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
+          var blank_id = target_text_id.replace( "adjudicate", "blank" );
+          $( blank_id ).removeProp( "checked" );
           var source_text_id = '#' + entry_id + "__candidate";
           var candidate = $( source_text_id ).val();
-          var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
-          $( target_text_id ).removeClass( "intrusion variant" );
+          $( target_text_id ).removeClass( "candidate primary intrusion variant" );
           $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
           $( target_text_id ).val( candidate );
           $( target_text_id ).attr( "value", candidate );
-          $( target_text_id ).removeProp( "disabled" );
+          $( target_text_id ).prop( "disabled", false );
 
           // push the edit
           var args = new Object();
           var columns = new Object();
           args.id = $(this).prop( "name" );
-
-          if( 0 == candidate.length ) {
+          if ( 0 == candidate.length ) {
             columns["word_id"] = '';
-          } else {
-            columns["word_candidate"] = candidate;
-          }
+          }  
+          columns["word_candidate"] = candidate;
           args.columns = columns;
 
           // push the edits
@@ -84,9 +90,7 @@
               args["language"] = "{{ language }}";
               args["word_candidate"] = candidate;
               var classification = ajax_pull( "test", "classify_word", args );
-              if( undefined != classification ) {
-                $(this).addClass( classification );
-              }
+              $(this).addClass( classification );
             }
             configure_ui();
           } else {
@@ -112,8 +116,8 @@
       } )
       .change( function() {
         // uncheck the progenitor radio items
-        $( table_selctor +
-          ' input:radio[name="' + $(this).prop( "id" ) + '"]' ).removeProp( "checked" );
+        $( table_selector + ' input:radio[name="' +
+          $(this).prop( "id" ).split( "__" )[0] + '"]' ).removeProp( "checked" );
         // uncheck the all checkboxes
         $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
 
@@ -122,17 +126,17 @@
         $(this).val( candidate );
         // update the value to present state
         $(this).attr( "value", candidate );
-        $(this).removeClass( "intrusion variant" );
+        $(this).removeClass( "candidate primary intrusion variant" );
 
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split( "__" )[0];
-        if( 0 == candidate.length ) {
-          columns["word_id"] = '';
-        } else {
-          columns["word_candidate"] = candidate;
-        }
+        columns["word_candidate"] = candidate;
         args.columns = columns;
+
+        // flag to determine the Submit button enable state 
+        var blank_id = '#' + $(this).prop( "id" ).replace( "adjudicate", "blank" );
+        $( blank_id ).prop( "checked", 0 == candidate.length );
 
         // push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -143,10 +147,9 @@
             args["language"] = "{{ language }}";
             args["word_candidate"] = candidate;
             var classification = ajax_pull( "test", "classify_word", args );
-            if( undefined != classification ) {
               $(this).addClass( classification );
-            }
           }
+
           configure_ui();
         } else {
           // clear the text entry and re-focus
@@ -160,6 +163,7 @@
         // toggle check state of companion All checkbox
         $( table_selector + ' input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
         $(this).prop( "checked", $(this).prop( "checked" ) );
+        $( table_selector + ' input:checkbox[value="blank"]' ).removeProp( "checked" );
         if( $(this).prop( "checked" ) ) {
           // check all the radio items corresponding to the progenitor column (1 or 2)?
           var id = $(this).prop( "id" ).split("__")[3];
@@ -170,8 +174,8 @@
           $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
           $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' ); 
           $text_selector.prop( "disabled", true );  
-          $text_selector.removeClass( "intrusion variant" );
           // update previous and present state of value
+          $text_selector.removeClass( "candidate primary intrusion variant" );
           $text_selector.val( "" );  
           $text_selector.attr( "value", "" );  
         }
@@ -188,7 +192,7 @@
 
   <div class="spacer"></div>
 
-  {% if adjudicate_data is empty %}
+  {% if entry_data is empty %}
 
     <caption style="text-align: left;">
       <strong>No adjudication required. Please press Prev, Next or Quit</strong>
@@ -204,50 +208,35 @@
           <th>Entry #</th>
           <th colspan="2">"{{ user_1 }}"</th>
           <th colspan="2">"{{ user_2 }}"</th>
-          <th colspan="2">Adjudicate</th>
+          <th>Adjudicate</th>
         </tr>
       </thead>
 
       <tbody>
-      {% for entry in adjudicate_data %}
+      {% for entry in entry_data %}
         <tr>
           <td class="heading" style="text-align:center">{{ entry.rank }}</td>
-
-            {% set value_1 = '' %}
-            {% set value_2 = '' %}
-            {% set name_1 = 'candidate' %}
-            {% set name_2 = 'candidate' %}
-
-            {% if entry.word_id_1 is defined %}
-              {% set value_1 = entry.word_1 %}
-              {% set name_1 = entry.word_id_1 %}
-            {% endif %}
-            {% if entry.word_id_2 is defined %}
-              {% set value_2 = entry.word_2 %}
-              {% set name_2 = entry.word_id_2 %}
-            {% endif %}
 
             <td>
               <input type="text"
                 id="{{ entry.id_1 }}__candidate"
-                {% if entry.classification_1 is defined %}
+                {% if entry.word_1 is defined %}
+                  value="{{ entry.word_1 }}"
                   class="{{ entry.classification_1 }}"
                 {% endif %}
-                readonly
-                name="{{ name_1 }}"
-                value="{{ value_1 }}">
+                readonly>
             </td>
 
             {% if entry.adjudicate is defined %}
-            <td bgcolor=#B1F3B1>
-              <div class="radio__accept__1">
-                <input type="radio"
-                  id="{{ entry.id_1 }}__accept"
-                  name="{{ entry.id_3 }}"
-                  value="accept">
-                <label for="{{ entry.id_1 }}__accept">Accept</label>
-              </div>
-            </td>
+              <td bgcolor=#B1F3B1>
+                <div class="radio__accept__1">
+                  <input type="radio"
+                    id="{{ entry.id_1 }}__accept"
+                    name="{{ entry.id_3 }}"
+                    value="accept">
+                  <label for="{{ entry.id_1 }}__accept">Accept</label>
+                </div>
+              </td>
             {% else %}
               <td></td>
             {% endif %}  
@@ -255,32 +244,37 @@
             <td>
               <input type="text"
                 id="{{ entry.id_2 }}__candidate"
-                {% if entry.classification_2 is defined %}
+                {% if entry.word_2 is defined %}
+                  value="{{ entry.word_2 }}"
                   class="{{ entry.classification_2 }}"
                 {% endif %}
-                readonly
-                name="{{ name_2 }}"
-                value="{{ value_2 }}">
+                readonly>
             </td>
 
             {% if entry.adjudicate is defined %}
-            <td bgcolor=#B1F3B1>
-              <div class="radio__accept__2">
-                <input type="radio"
-                  id="{{ entry.id_2 }}__accept"
-                  name="{{ entry.id_3 }}"
-                  value="accept">
-                <label for="{{ entry.id_2 }}__accept">Accept</label>
-              </div>
-            </td>
-            <td>
-              <div class="adjudicate">
-                <input type="text"
-                  id="{{ entry.id_3 }}__adjudicate"
-                  disabled
-                  value="">
-              </div>
-            </td>
+              <td bgcolor=#B1F3B1>
+                <div class="radio__accept__2">
+                  <input type="radio"
+                    id="{{ entry.id_2 }}__accept"
+                    name="{{ entry.id_3 }}"
+                    value="accept">
+                  <label for="{{ entry.id_2 }}__accept">Accept</label>
+                </div>
+              </td>
+              <td>
+                <div class="adjudicate">
+                  <input type="text"
+                    id="{{ entry.id_3 }}__adjudicate"
+                    name="{{ entry.id_1 }}__{{ entry.id_2 }}"
+                    disabled>
+                  <input type="checkbox"
+                    id="{{ entry.id_3 }}__blank"
+                    name="{{ entry.id_3 }}"
+                    readonly
+                    disabled
+                    value="blank">
+                </div>
+              </td>
             {% else %}
               <td></td><td></td>
             {% endif %}

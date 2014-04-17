@@ -44,11 +44,9 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       $grand_parent::prepare(); 
       $columns = $this->get_argument( 'columns' );    
       $class_name = lib::get_class_name( 'database\test_entry_alpha_numeric' );
-      $db_test_entry_alpha_numeric = $class_name::get_unique_record( 
+      $this->set_record( $class_name::get_unique_record( 
         array( 'test_entry_id', 'rank' ),  
-        array( $columns['test_entry_id'], $columns['rank'] ) );
-
-      $this->set_record( $db_test_entry_alpha_numeric );
+        array( $columns['test_entry_id'], $columns['rank'] ) ) );
     }     
     else
     {   

@@ -101,7 +101,7 @@
         $(this).val( candidate );
         // update the value to present state
         $(this).attr( "value", candidate );
-        $(this).removeClass( "candidate intrusion variant primary" );
+        $(this).removeClass( "candidate primary intrusion variant" );
         if( 0 == candidate.length ) {
           alert( "Blank entries are not permitted" );
           configure_ui();
@@ -113,9 +113,9 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
+        var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
         if( 0 == args.id ) {
           args.id = "";
-          var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
           columns["rank"] = rank;
           columns["test_entry_id"] = {{ parent.id }};
         }  
