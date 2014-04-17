@@ -521,10 +521,13 @@ class assignment_manager extends \cenozo\singleton
           }
           else if( $test_type_name == 'ranked_word' )
           {
+            $ranked_word_id = 'word_' . $language . '_id';
+
             $rank_modifier = lib::create( 'database\modifier' );
             $rank_modifier->order( 'ranked_word_set.rank' );
             $a = $db_test_entry->$get_list_function( clone $rank_modifier );
             $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
+            $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
 
             // now get the intrusions and append them to the primary word entries
             $intrusion_modifier = lib::create( 'database\modifier' );
@@ -533,21 +536,25 @@ class assignment_manager extends \cenozo\singleton
 
             $a_intrusion = $db_test_entry->$get_list_function( clone $intrusion_modifier );
             $b_intrusion = $db_sibling_test_entry->$get_list_function( clone $intrusion_modifier );
+            $c_intrusion =  $db_adjudicate_test_entry->$get_list_function( clone $intrusion_modifier );
 
             if( 0 < count( $a_intrusion ) )
               $a = array_merge( $a, $a_intrusion );
             if( 0 < count( $b_intrusion ) )
               $b = array_merge( $b, $b_intrusion );
+            if( 0 < count( $c_intrusion ) )
+              $c = array_merge( $c, $c_intrusion );
 
             //create additional entries if necessary
-            if( $is_new_adjudicate )
+            $count = abs( max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -  count( $c_intrusion ) );
+            if( 0 < $count )
             {
-              $count = abs( count( $a ) - count( $b ) );
               for( $i = 0; $i < $count; $i++ )
               {
                 $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
                 $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
                 $db_entry->save();
+                array_push( $c, $db_entry );
               }
             }
 
@@ -620,7 +627,8 @@ class assignment_manager extends \cenozo\singleton
                       'Invalid test entry ranked word pair', __METHOD__ );
 
                   $db_ranked_word_set = $a_obj->get_ranked_word_set();
-                  $db_ranked_word_set_word = $db_test_entry_ranked_word->get_word();
+                  $db_ranked_word_set_word =
+                    lib::create( 'database\word', $db_ranked_word_set->$ranked_word_id );
                   $ranked_word_set_word = $db_ranked_word_set_word->word;
                   $ranked_word_set_id = $db_ranked_word_set->id;
                 }

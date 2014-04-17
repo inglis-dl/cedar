@@ -85,7 +85,8 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     }
 
     $columns = $this->get_argument( 'columns' );
-    $word_candidate = array_key_exists( 'word_candidate', $columns ) ?
+    $word_candidate = 
+      array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
       $columns['word_candidate'] : NULL;
     
     $data = $db_test->get_word_classification( $word_candidate, $language );
@@ -96,7 +97,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     {
       $db_test_entry_classification->word_id = $db_word->id;
     }
-    else
+    else if( !is_null( $word_candidate ) )
     {
       // the word isnt in the primary, variant or intrusion dictionaries
       $db_dictionary = NULL;
@@ -152,6 +153,10 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       $db_new_word->language = $language;
       $db_new_word->save();
       $db_test_entry_classification->word_id = $word_class_name::db()->insert_id();
+    }
+    else
+    {
+      $db_test_entry_classification->word_id = NULL;
     }
 
     $db_test_entry_classification->save();

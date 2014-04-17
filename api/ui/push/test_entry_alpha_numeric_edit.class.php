@@ -69,11 +69,16 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
 
     if( array_key_exists( 'word_candidate', $columns ) ) 
     {   
-      if( !preg_match( '/^(0|[1-9][0-9]*)$/', $columns['word_candidate'] ) &&
-          !preg_match( '/^\pL$/', $columns['word_candidate'] ) )
-        throw lib::create( 'exception\notice',
-          'The word "'. $columns['word_candidate'] . '" must be a letter or a number.',
-          __METHOD__ );
+      // check if this is a transcription or an adjudication
+      // empty entries are permitted for adjudicates
+      if( is_null( $this->get_test_entry()->get_participant() )
+      {
+        if( !preg_match( '/^(0|[1-9][0-9]*)$/', $columns['word_candidate'] ) &&
+            !preg_match( '/^\pL$/', $columns['word_candidate'] ) )
+          throw lib::create( 'exception\notice',
+            'The word "'. $columns['word_candidate'] . '" must be a letter or a number.',
+            __METHOD__ );
+      }      
     }
   }
 
@@ -102,29 +107,37 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $language = is_null( $language ) ? 'en' : $language;
 
     $columns = $this->get_argument( 'columns' );
-    $word_candidate = array_key_exists( 'word_candidate', $columns ) ?
+    $word_candidate = 
+      array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
       $columns['word_candidate'] : NULL;
 
-    // does the word candidate exist in the primary dictionary?
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
-    $modifier->where( 'language', '=', $language );
-    $modifier->where( 'word', '=', $word_candidate );
-    $modifier->limit( 1 );
-
-    $db_word = current( $word_class_name::select( $modifier ) );
-    if( false !== $db_word )
+    if( !is_null( $word_candidate ) )
     {
-      $db_test_entry_alpha_numeric->word_id = $db_word->id;
+      // does the word candidate exist in the primary dictionary?
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
+      $modifier->where( 'language', '=', $language );
+      $modifier->where( 'word', '=', $word_candidate );
+      $modifier->limit( 1 );
+
+      $db_word = current( $word_class_name::select( $modifier ) );
+      if( false !== $db_word )
+      {
+        $db_test_entry_alpha_numeric->word_id = $db_word->id;
+      }
+      else
+      {
+        $db_new_word = lib::create( 'database\word' );
+        $db_new_word->dictionary_id = $db_dictionary->id;
+        $db_new_word->word = $word_candidate;
+        $db_new_word->language = $language;
+        $db_new_word->save();
+        $db_test_entry_alpha_numeric->word_id = $word_class_name::db()->insert_id();
+      }
     }
     else
     {
-      $db_new_word = lib::create( 'database\word' );
-      $db_new_word->dictionary_id = $db_dictionary->id;
-      $db_new_word->word = $word_candidate;
-      $db_new_word->language = $language;
-      $db_new_word->save();
-      $db_test_entry_alpha_numeric->word_id = $word_class_name::db()->insert_id();
+      $db_test_entry_alpha_numeric->word_id = NULL;
     }
 
     $db_test_entry_alpha_numeric->save();

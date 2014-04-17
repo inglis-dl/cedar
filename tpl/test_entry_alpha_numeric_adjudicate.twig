@@ -146,7 +146,7 @@
 
   <div class="spacer"></div>
 
-  {% if adjudicate_data is empty %}
+  {% if entry_data is empty %}
 
     <caption style="text-align: left;">
       <strong>No adjudication required. Please press Prev, Next or Quit</strong>
@@ -167,7 +167,7 @@
       </thead>
 
       <tbody>
-      {% for entry in adjudicate_data %}
+      {% for entry in entry_data %}
         <tr>
           <td class="heading" style="text-align:center">{{ entry.rank }}</td>
 
@@ -177,7 +177,6 @@
                 id="{{ entry.id_1 }}__candidate"
                 {% if entry.word_1 is defined %}
                   value="{{ entry.word_1 }}"
-                  class="{{ entry.classification_1 }}"
                 {% endif %}
                 readonly>
             </td>
@@ -202,7 +201,6 @@
                 id="{{ entry.id_2 }}__candidate"
                 {% if entry.word_2 is defined %}
                   value="{{ entry.word_2 }}"
-                  class="{{ entry.classification_2 }}"
                 {% endif %}
                 readonly>
             </td>

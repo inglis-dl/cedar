@@ -116,10 +116,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
         }
       }
       else if( $db_role->name == 'administrator' && 
-               $complete_count == $test_count && 0 < $adjudicate_count)
+               $complete_count == $test_count && 0 < $adjudicate_count && 0 == $defer_count )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-        if( $db_sibling_assignment != NULL && $db_sibling_assignment->all_tests_complete() )
+        if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
         {
           $allow_adjudicate = false;
 

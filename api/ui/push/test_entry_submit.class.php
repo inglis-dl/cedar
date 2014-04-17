@@ -24,7 +24,7 @@ class test_entry_submit extends \cenozo\ui\push\base_record
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry', $args );
+    parent::__construct( 'test_entry', 'submit', $args );
   }
 
   /** 
@@ -38,7 +38,9 @@ class test_entry_submit extends \cenozo\ui\push\base_record
   {
     parent::validate();
 
-   if( !$db_test_entry->completed )
+    $db_test_entry = $this->get_record();
+
+    if( !$db_test_entry->completed )
       throw lib::create( 'exception\notice',
         'Tried to submit an incomplete adjudication.', __METHOD__ );
   }
@@ -58,6 +60,7 @@ class test_entry_submit extends \cenozo\ui\push\base_record
     // get one of the assignments of the original test entry based
     // on participant id
     $assignment_class_name = lib::get_class_name( 'database\assignment' ); 
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $db_test_entry = $this->get_record();
 
@@ -69,10 +72,16 @@ class test_entry_submit extends \cenozo\ui\push\base_record
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_assignment( $db_assignment );
 
-    $db_test_entry->adjudicate = false;
-    $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+    // get the progenitor test entry records
+
+    $db_test_entry_progenitor = $test_entry_class_name::get_unique_record(
+      array( 'test_id', 'assignment_id' ),
+      array( $db_test_entry->get_test()->id, $db_assignment->id ) );
+    $db_sibling_test_entry = $db_test_entry_progenitor->get_sibling_test_entry();
+
+    $db_test_entry_progenitor->adjudicate = false;
     $db_sibling_test_entry->adjudicate = false;
-    $db_test_entry->save();
+    $db_test_entry_progenitor->save();
     $db_sibling_test_entry->save();     
   }
 }
