@@ -102,44 +102,64 @@
 
       // find and handle Accept radio input change events:
       // copy the progenitor to the adjudicate entry
-      $( table_selector + ' input:radio[value="accept"]' ).change( function() {
+      $( table_selector + ' input:radio[value="accept"]' ).change(
+        function() {
+          var entry_id = $(this).prop( "id" ).split( "__" )[0];
+          var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
 
-        var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
-        var entry_id = $(this).prop( "id" ).split( "__" )[0];
+          var args = new Object();
+          var columns = new Object();
+          args.id = $(this).prop( "name" ).split( "__" )[3];
+          args.columns = columns;
+          var candidate = "";
 
-        if( is_intrusion ) {
-          var target_text_id = '#' + 
-            $( table_selector + ' input:text[name*="'+ entry_id + '__"][id$="intrusion"]' ).prop( "id" );
-          var source_text_id = '#' + entry_id + "__intrusion__source";
-          $( target_text_id ).val( $( source_text_id ).val() );
-          $( target_text_id ).attr( "value", $( source_text_id ).val() );
-          $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
-        } else {
-          var radio_id =
-            $( table_selector + ' input:radio[id^="' + entry_id + '__"]:checked').prop( "id" );
-          var target_text_id = '#' +
-            $( table_selector + ' input:text[name*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
-          $( target_text_id ).removeClass( "candidate primary intrusion variant" );
-          if( -1 != radio_id.indexOf( "variant" ) ) {
-            var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
-            $( target_text_id ).val( $( source_text_id ).val() );
-            $( target_text_id ).prop( "disabled", false );
+          if( is_intrusion ) {
+            var target_text_id = '#' + $( table_selector +
+              ' input:text[name*="'+ entry_id + '__"][id$="intrusion"]' ).prop( "id" );
+            var source_text_id = '#' + entry_id + "__intrusion__source";
+            candidate = $( source_text_id ).val();
+            $( target_text_id ).removeClass( "candidate primary intrusion variant" );
             $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
+            $( target_text_id ).val( candidate );
+            $( target_text_id ).attr( "value", candidate );
+            columns["word_candidate"] = candidate;
+            columns["selection"] = "";
           } else {
-            $( target_text_id ).val( "" );
-            $( target_text_id ).attr( "value", "" );
-            $( target_text_id ).prop( "disabled", true );
+            var radio_id =
+              $( table_selector + ' input:radio[id^="' + entry_id + '__"]:checked').prop( "id" );
+            var target_text_id = '#' +
+              $( table_selector + ' input:text[name*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
+            $( target_text_id ).removeClass( "candidate primary intrusion variant" );
+            if( -1 != radio_id.indexOf( "variant" ) ) {
+              var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
+              candidate = $( source_text_id ).val();
+              $( target_text_id ).val( candidate );
+              $( target_text_id ).attr( "value", candidate );
+              $( target_text_id ).prop( "disabled", false );
+              $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
+              columns["word_candidate"] = candidate;
+              columns["selection"] = "variant";
+            } else {
+              $( target_text_id ).val( "" );
+              $( target_text_id ).attr( "value", "" );
+              $( target_text_id ).prop( "disabled", true );
+              if( -1 != radio_id.indexOf( "yes" ) ) {
+                columns["selection"] = "yes";
+              } else {
+                columns["selection"] = "no";
+              }              
+            }
+            var source_radio_id = '#' + radio_id;
+            var source_radio_value = $( source_radio_id ).val();
+            var target_radio_id = '#' + $( table_selector + ' input:radio[id*="' + entry_id +
+                '__"][name$="adjudicate"][value="' + source_radio_value + '"]' ).prop( "id" );
+            $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );  
           }
-          var source_radio_id = '#' + radio_id;
-          var source_radio_value = $( source_radio_id ).val();
-          var target_radio_id = '#' +
-            $( table_selector + ' input:radio[id*="' + 
-            entry_id + '__"][name$="adjudicate"][value="' +
-            source_radio_value + '"]' ).prop( "id" );
-          $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );  
-        }
 
-        configure_ui();
+          // push the edits
+          ajax_push( "{{ widget.subject }}", "edit", args );          
+
+          configure_ui();
       } )
       .click( function () {
 
@@ -174,6 +194,8 @@
 
       $( table_selector + ' div.adjudicate :text' ).change( function() {
         var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
+
+        // uncheck the Accept radio inputs
         var id_1 = '#' + $(this).prop( "name" ).split( "__" )[0] + 
           (is_intrusion ? "__intrusion__accept" : "__accept");
         var id_2 = '#' + $(this).prop( "name" ).split( "__" )[1] +
@@ -182,26 +204,47 @@
         $( id_2 ).removeProp( "checked" );
         
         var candidate = $(this).val().trim().toLowerCase();
+        // we've trimmed and lower-cased the candidate, so update the UI
         $(this).val( candidate );
+        // update the value to present state
         $(this).attr( "value", candidate );
         $(this).removeClass( "candidate primary intrusion variant" );
 
-        // if this is an intrusion, allow an empty input
-        if( 0 == candidate.length ) {
-          if( !is_intrusion ) {
-            alert ( "Blank entries are not permitted" );
-            return false;
-          }
-        } else {
-          var args = new Object();
-          args.id = {{ test_id }};
-          args["language"] = "{{ language }}";
-          args["word_candidate"] = candidate;
-          var classification = ajax_pull( "test", "classify_word", args );
-          $(this).addClass( classification );
-        }
+        var args = new Object();
+        var columns = new Object();
+        args.id = $(this).prop( "id" ).split( "__" )[0];
+        columns["word_candidate"] = candidate;
+        args.columns = columns;
 
-        configure_ui();
+        // if this is an intrusion, allow an empty input
+        if( !is_intrusion && 0 == candidate.length ) {
+          alert ( "Blank entries are not permitted" );
+        } else {
+          // is this a variant of a primary word?
+          if( !is_intrusion ) {
+            columns["selection"] = "variant";
+          } 
+          
+          // push the edits
+          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            // get the word
+            if( 0 != candidate.length ) {
+              var args = new Object();
+              args.id = {{ test_id }};
+              args["language"] = "{{ language }}";
+              args["word_candidate"] = candidate;
+              var classification = ajax_pull( "test", "classify_word", args );
+              $(this).addClass( classification );
+            }
+
+            configure_ui();
+          } else {
+            // clear the text entry and re-focus
+            $(this).val( "" );
+            $(this).attr( "value", "" );
+            $(this).focus();
+          }
+        }
       } );// end text input change  
 
       $( table_selector + ' input:checkbox[value="all"]' ).click( function() {
@@ -272,26 +315,26 @@
         <tr>
           {% if entry.ranked_word_set_word is defined %}
 
-            <td class="heading" style="text-align:center">{{ entry.word_1 }}</td>
+            <td class="heading" style="text-align:center">{{ entry.ranked_word_set_word }}</td>
 
             <td>
               <input type="radio"
                 id="{{ entry.id_1 }}__yes"
-                name="{{ entry.ranked_word_set_id }}__1"
+                name="{{ entry.id_1 }}"
                 value="yes"
                 {{ entry.selection_1 == 'yes' ? "checked" : "" }}>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry.id_1 }}__no"
-                name="{{ entry.ranked_word_set_id }}__1"
+                name="{{ entry.id_1 }}"
                 value="no"
                 {{ entry.selection_1 == 'no' ? "checked" : "" }}>
             </td>
             <td style="white-space: nowrap">
               <input type="radio"
                 id="{{ entry.id_1 }}__variant"
-                name="{{ entry.ranked_word_set_id }}__1"
+                name="{{ entry.id_1 }}"
                 value="variant"
                 {{ entry.selection_1 == 'variant' ? "checked" : "" }}>
               <input type="text"
@@ -309,7 +352,7 @@
                 <div class="radio__accept__1">
                   <input type="radio"
                     id="{{ entry.id_1 }}__accept"
-                    name="{{ entry.ranked_word_set_id }}__accept"
+                    name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.id_3 }}__accept"
                     value="accept">
                   <label for="{{ entry.id_1 }}__accept">Accept</label>
                 </div>
@@ -321,21 +364,21 @@
             <td>
               <input type="radio"
                 id="{{ entry.id_2 }}__yes"
-                name="{{ entry.ranked_word_set_id }}__2"
+                name="{{ entry.id_2 }}"
                 value="yes"
                 {{ entry.selection_2 == 'yes' ? "checked" : "" }}>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry.id_2 }}__no"
-                name="{{ entry.ranked_word_set_id }}__2"
+                name="{{ entry.id_2 }}"
                 value="no"
                 {{ entry.selection_2 == 'no' ? "checked" : "" }}>
             </td>
             <td style="white-space: nowrap">
               <input type="radio"
                 id="{{ entry.id_2 }}__variant"
-                name="{{ entry.ranked_word_set_id }}__2"
+                name="{{ entry.id_2 }}"
                 value="variant"
                 {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
               <input type="text"
@@ -353,7 +396,7 @@
                 <div class="radio__accept__2">
                   <input type="radio"
                     id="{{ entry.id_2 }}__accept"
-                    name="{{ entry.ranked_word_set_id }}__accept"
+                    name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.id_3 }}__accept"
                     value="accept">
                   <label for="{{ entry.id_2 }}__accept">Accept</label>
                 </div>
@@ -387,13 +430,12 @@
                 </div>
               </td>
             {% else %}
-              <td></td><td></td><td></td><td></td>
+              <td></td><td colspan="3"></td>
             {% endif %}
 
           {% else %}
 
             <td class="heading" style="text-align:center">"INTRUSION"</td>
-
             <td colspan="2"></td>
 
             <td>
@@ -411,7 +453,7 @@
                 <div class="radio__accept__1">
                   <input type="radio"
                     id="{{ entry.id_1 }}__intrusion__accept"
-                    name="{{ entry.id_1 }}__{{ entry.id_2 }}__accept"
+                    name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.id_3 }}__accept"
                     value="accept">
                   <label for="{{ entry.id_1 }}__intrusion__accept">Accept</label>
                 </div>
@@ -437,18 +479,12 @@
                 <div class="radio__accept__2">
                   <input type="radio"
                     id="{{ entry.id_2 }}__intrusion__accept"
-                    name="{{ entry.id_1 }}__{{ entry.id_2 }}__accept"
+                    name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.id_3 }}__accept"
                     value="accept">
                   <label for="{{ entry.id_2 }}__intrusion__accept">Accept</label>
                 </div>
               </td>
-            {% else %}
-              <td></td>
-            {% endif %} 
-
-            <td colspan="2"></td>
-
-            {% if entry.adjudicate is defined %}
+              <td colspan="2"></td>
               <td>
                 <div class="adjudicate">
                   <input type="text"
@@ -459,6 +495,7 @@
               </td>
             {% else %}
               <td></td>
+              <td colspan="3"></td>
             {% endif %}
 
           {% endif %}
@@ -468,7 +505,6 @@
 
         <tr>
           <td colspan="4"></td>
-
           <td bgcolor=#B1F3B1>
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__1"
@@ -476,9 +512,7 @@
               value="all">
               <label for="{{ widget.full }}__accept__all__1">All</label>
           </td>
-
           <td colspan="3"></td>
-
           <td bgcolor=#B1F3B1>
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__2"
@@ -486,7 +520,6 @@
               value="all">
               <label for="{{ widget.full }}__accept__all__2">All</label>
           </td>
-
           <td colspan="3"></td> 
         </tr>
 

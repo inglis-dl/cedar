@@ -59,7 +59,7 @@ class user_list extends \cenozo\ui\widget\user_list
      
       // determine the last activity
       $db_activity = $record->get_last_activity();
-      $last = is_null( $db_activity ) ? null : $db_activity->datetime;
+      $last = is_null( $db_activity ) ? NULL : $db_activity->datetime;
 
       $cohort = 'none';
       $db_cohort = $record->get_cohort_list();

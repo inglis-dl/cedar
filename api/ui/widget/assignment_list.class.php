@@ -153,11 +153,11 @@ class assignment_list extends \cenozo\ui\widget\base_list
                'cohort.name' => $db_participant->get_cohort()->name,
                'user.name' => $db_assignment->get_user()->name,
                'defer' => 
-                 $defer_count > 0 ? $defer_count . '/' . $test_count : 'none',
+                 0 < $defer_count ? $defer_count . '/' . $test_count : 'none',
                'adjudicate' => 
-                 $adjudicate_count > 0 ? $adjudicate_count . '/' . $test_count : 'none',
+                 0 < $adjudicate_count ? $adjudicate_count . '/' . $test_count : 'none',
                'complete' =>  
-                 $complete_count > 0 ? $complete_count . '/' . $test_count : 'none',
+                 0 < $complete_count ? $complete_count . '/' . $test_count : 'none',
                'allow_transcribe' => $allow_transcribe,
                'allow_adjudicate' => $allow_adjudicate,
                'test_entry_id' => $test_entry_id ) );

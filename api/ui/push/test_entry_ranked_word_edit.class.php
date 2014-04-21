@@ -56,14 +56,15 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     $language = is_null( $language ) ? 'en' : $language;
 
     $columns = $this->get_argument( 'columns' );
-
-    $word_candidate = array_key_exists( 'word_candidate', $columns ) ? 
+    $word_candidate =
+      array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
       $columns['word_candidate'] : NULL;
 
     if( !is_null( $word_candidate ) )
     {
       $data = $db_test->get_word_classification( $word_candidate, $language );
-      $classification = $data['classification'];  
+      $classification = $data['classification'];
+      $db_word = $data['word'];
 
       if( $db_test_entry_ranked_word->selection == 'variant' )
       {
@@ -74,11 +75,13 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             'accepted variant words: add as an intrusion instead.',
              __METHOD__ );
         }
+        else
+          $db_test_entry_ranked_word->word_id = $db_word->id;
       }
       // NULL selection implies test_entry was created for an intrusion
       else if( is_null( $db_test_entry_ranked_word->selection ) )
       {
-        // reject words that are already in the primary or variant dictionaries
+        // reject words that are in the primary or variant dictionaries
         if( $classification == 'primary' ||
             $classification == 'variant' )
         {    
@@ -109,6 +112,9 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             $db_test_entry_ranked_word->word_id = $word_class_name::db()->insert_id();
           }
         }
+        // it is an intrusion
+        else
+          $db_test_entry_ranked_word->word_id = $db_word->id;
       }
 
       $db_test_entry_ranked_word->save();

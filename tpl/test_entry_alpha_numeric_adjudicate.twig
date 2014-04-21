@@ -118,7 +118,7 @@
         // toggle check state of companion All checkbox
         $( table_selector + ' input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
         $(this).prop( "checked", $(this).prop( "checked" ) );
-         $( table_selector + ' input:checkbox[value="blank"]' ).removeProp( "checked" );
+        $( table_selector + ' input:checkbox[value="blank"]' ).removeProp( "checked" );
         if( $(this).prop( "checked" ) ) {
           // check all the radio items corresponding to the progenitor column (1 or 2)?
           var id = $(this).prop( "id" ).split("__")[3];

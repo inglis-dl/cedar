@@ -85,7 +85,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     
     $words = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
-    if( 0 < $dictionary_word_count && 
+    if( 0 < $dictionary_word_count &&
         0 == ( $dictionary_word_count % count( $this->languages ) ) )
     {
       foreach( $this->languages as $language )
@@ -155,5 +155,5 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = null;
+  protected $languages = NULL;
 }

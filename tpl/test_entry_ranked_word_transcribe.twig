@@ -149,7 +149,7 @@
             $( table_selector + " input:radio" ).each( function() {
               $(this).prop( "disabled", false );
               if( $(this).val() === "variant" ) {
-                var text_id = table_selector + ' input:text[id=" + 
+                var text_id = table_selector + ' input:text[id="' + 
                   $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
                 if( 0 < $( text_id ).val().length ) {
                   $( text_id ).prop( "disabled", false );
@@ -220,7 +220,6 @@
 
         configure_ui( do_text );
       } );// end radio input change
-
     } );
   </script>
 
@@ -308,7 +307,7 @@
 
       {% if editable == 1 %}
       <tr>
-        <td colspan=5 class="button">
+        <td colspan="5" class="button">
             <button class="{{ widget.full }}__add_entry"
               style="float:right"
               disabled

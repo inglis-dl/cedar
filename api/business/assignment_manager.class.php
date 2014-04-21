@@ -536,7 +536,7 @@ class assignment_manager extends \cenozo\singleton
 
             $a_intrusion = $db_test_entry->$get_list_function( clone $intrusion_modifier );
             $b_intrusion = $db_sibling_test_entry->$get_list_function( clone $intrusion_modifier );
-            $c_intrusion =  $db_adjudicate_test_entry->$get_list_function( clone $intrusion_modifier );
+            $c_intrusion = $db_adjudicate_test_entry->$get_list_function( clone $intrusion_modifier );
 
             if( 0 < count( $a_intrusion ) )
               $a = array_merge( $a, $a_intrusion );
@@ -546,7 +546,8 @@ class assignment_manager extends \cenozo\singleton
               $c = array_merge( $c, $c_intrusion );
 
             //create additional entries if necessary
-            $count = abs( max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -  count( $c_intrusion ) );
+            $count = abs( max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
+              count( $c_intrusion ) );
             if( 0 < $count )
             {
               for( $i = 0; $i < $count; $i++ )

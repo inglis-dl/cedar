@@ -29,7 +29,7 @@
           }
         }
       } );
-
+      
       $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );  
     }
 
@@ -147,7 +147,7 @@
             args["language"] = "{{ language }}";
             args["word_candidate"] = candidate;
             var classification = ajax_pull( "test", "classify_word", args );
-              $(this).addClass( classification );
+            $(this).addClass( classification );
           }
 
           configure_ui();
@@ -308,4 +308,3 @@
   {% endif %}
 
 {% endblock widget %}
-

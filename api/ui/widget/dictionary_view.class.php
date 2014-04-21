@@ -116,6 +116,6 @@ class dictionary_view extends \cenozo\ui\widget\base_view
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = null;
+  protected $languages = NULL;
 
 }

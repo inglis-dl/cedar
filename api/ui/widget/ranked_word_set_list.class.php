@@ -85,5 +85,5 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = null;
+  protected $languages = NULL;
 }

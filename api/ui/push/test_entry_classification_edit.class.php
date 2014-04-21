@@ -127,7 +127,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         }          
         if( $is_intrusion )
         { 
-          //get the test's intrusion dictionary and add it as an intrusion
+          // get the test's intrusion dictionary and add it as an intrusion
           $db_dictionary = $db_test->get_intrusion_dictionary();
           if( is_null( $db_dictionary ) ) 
             throw lib::create( 'exception\notice',
@@ -139,7 +139,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
       if( is_null( $db_dictionary ) )
       {
-        //get the test's variant dictionary and add it as a variant
+        // get the test's variant dictionary and add it as a variant
         $db_dictionary = $db_test->get_variant_dictionary();
         if( is_null( $db_dictionary ) ) 
           throw lib::create( 'exception\notice',
