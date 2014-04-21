@@ -71,7 +71,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     {   
       // check if this is a transcription or an adjudication
       // empty entries are permitted for adjudicates
-      if( is_null( $this->get_test_entry()->get_participant() )
+      if( is_null( $this->get_test_entry()->get_participant() ) )
       {
         if( !preg_match( '/^(0|[1-9][0-9]*)$/', $columns['word_candidate'] ) &&
             !preg_match( '/^\pL$/', $columns['word_candidate'] ) )
