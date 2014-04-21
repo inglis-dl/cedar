@@ -90,7 +90,7 @@
                 id="{{ entry_data.id_1 }}__yes"
                 name="{{ entry_data.id_1 }}"
                 value="1"
-                {{ entry_data.confirmation_1 == '1' ? "checked" : "" }}>
+                {{ entry_data.confirmation_1 == '1' ? "checked" : "" }}/>
               <label for="{{ entry_data.id_1 }}__yes">Yes</label>
             </td>
             <td>
@@ -98,14 +98,14 @@
                 id="{{ entry_data.id_1 }}__no"
                 name="{{ entry_data.id_1 }}"
                 value="0"
-                {{ entry_data.confirmation_1 == '1' ? "" : "checked" }}>
+                {{ entry_data.confirmation_1 == '1' ? "" : "checked" }}/>
               <label for="{{ entry_data.id_1 }}__no">No</label>
             </td>
             <td bgcolor=#B1F3B1>
               <input type="radio"
                 id="{{ entry_data.id_1 }}__accept"
                 name="accept"
-                value="accept">
+                value="accept"/>
               <label for="{{ entry_data.id_1 }}__accept">Accept</label>
             </td>
 
@@ -114,7 +114,7 @@
                 id="{{ entry_data.id_2 }}__yes"
                 name="{{ entry_data.id_2 }}"
                 value="1"
-                {{ entry_data.confirmation_2 == '1' ? "checked" : "" }}>
+                {{ entry_data.confirmation_2 == '1' ? "checked" : "" }}/>
               <label for="{{ entry_data.id_2 }}__yes">Yes</label>
             </td>
             <td>
@@ -122,14 +122,14 @@
                 id="{{ entry_data.id_2 }}__no"
                 name="{{ entry_data.id_2 }}"
                 value="0"
-                {{ entry_data.confirmation_2 == '1' ? "" : "checked" }}>
+                {{ entry_data.confirmation_2 == '1' ? "" : "checked" }}/>
               <label for="{{ entry_data.id_2 }}__no">No</label>
             </td>
             <td bgcolor=#B1F3B1>
               <input type="radio"
                 id="{{ entry_data.id_2 }}__accept"
                 name="accept"
-                value="accept">
+                value="accept"/>
               <label for="{{ entry_data.id_2 }}__accept">Accept</label>
             </td>
 
@@ -137,19 +137,19 @@
               <input type="radio"
                 id="{{ entry_data.id_3 }}__yes"
                 name="adjudicate"
-                value="1">
+                value="1"/>
               <label for="{{ entry_data.id_3 }}__yes">Yes</label>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry_data.id_3 }}__no"
                 name="adjudicate"
-                value="0">
+                value="0"/>
               <label for="{{ entry_data.id_3 }}__no">No</label>
             </td>
           </tr>
 
-      </tbody>    
+      </tbody>
     </table>
 
   {% else %}
@@ -161,4 +161,3 @@
   {% endif %}
 
 {% endblock widget %}
-

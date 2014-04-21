@@ -245,24 +245,24 @@
     {% for entry in entry_data %}
       
         {% if entry.ranked_word_set_word is defined %}
-        <tr class="ranked_word">  
+        <tr class="ranked_word">
           <td class="heading">{{ entry.ranked_word_set_word }}</td>
-          <td><input type="radio" 
+          <td><input type="radio"
                id="{{ entry.id }}__yes"
                name="{{ entry.ranked_word_set_id }}"
                value="yes"
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {{ entry.selection == 'yes' ? "checked" : "" }}></td>
+               {{ entry.selection == 'yes' ? "checked" : "" }}/></td>
           <td><input type="radio"
                id="{{ entry.id }}__no"
-               name="{{ entry.ranked_word_set_id }}" 
+               name="{{ entry.ranked_word_set_id }}"
                value="no"
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {{ entry.selection == 'no' ? "checked" : "" }}></td>
+               {{ entry.selection == 'no' ? "checked" : "" }}/></td>
           <td><input type="radio"
                id="{{ entry.id }}__variant"
                name="{{ entry.ranked_word_set_id }}"
@@ -270,7 +270,7 @@
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {{ entry.selection == 'variant' ? "checked" : "" }}></td>
+               {{ entry.selection == 'variant' ? "checked" : "" }}/></td>
           <td><input type="text"
                id="{{ entry.id }}__candidate"
                name="{{ entry.ranked_word_set_id }}"
@@ -281,11 +281,11 @@
                  value="{{ entry.word }}"
                  {% if entry.classification is defined %}
                    class="{{ entry.classification }}"
-                 {% endif %} 
+                 {% endif %}
                {% else %}
                  { disabled }
-               {% endif %}></td>
-        </tr>       
+               {% endif %}/></td>
+        </tr>
         {% else %}
         <tr class="intrusion">
           <td class="heading">INTRUSION</td>
@@ -295,15 +295,15 @@
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {% if entry.word is defined %} 
+               {% if entry.word is defined %}
                  value="{{ entry.word }}"
                  {% if entry.classification is defined %}
                    class="{{ entry.classification }}"
                  {% endif %}
-               {% endif %}></td>
-         </tr>      
+               {% endif %}/></td>
+         </tr>
         {% endif %}
-    {% endfor %}  
+    {% endfor %}
 
       {% if editable == 1 %}
       <tr>
@@ -312,11 +312,11 @@
               style="float:right"
               disabled
               id="{{ widget.full }}_Add">Add</button>
-         </td>      
+         </td>
       </tr>
       {% endif %}
 
-    </tbody>   
+    </tbody> 
   </table>
 
   <div id="{{ widget.full }}__variant_dialog"></div>

@@ -144,7 +144,7 @@
         {% for recording in recording_data %}
           <tr>
             <audio controls
-              id="{{ widget.full }}__recording__{{ recording_id }}" 
+              id="{{ widget.full }}__recording__{{ recording_id }}"
               <embed height="50" style="width:100%">
               <source src="{{ recording }}" type="audio/wav">
             </audio>
@@ -155,27 +155,27 @@
     {% endif %}
     <input type="checkbox"
       {% if editable == 0 %}
-        { readonly }  
+        { readonly }
       {% endif %}
       id="{{ widget.full }}__audio_fault"
       {{ audio_fault ? "checked":"" }}/>
-    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
-  </div>  
+    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>
+  </div>
 
   <div class="spacer"></div>
-  
+
   <div>
     {% if actionable == 1 %}
       {% from 'macros.twig' import confirm_buttons %}
-        {{ confirm_buttons( slot, widget.full, 
+        {{ confirm_buttons( slot, widget.full,
           ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
      
-      {% from 'macros.twig' import note_widget %}    
+      {% from 'macros.twig' import note_widget %}
       {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
 
       <button id="{{ widget.full }}__break"
         style="width: 200px;">Go on break</button>
-    {% endif %}    
+    {% endif %}
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>

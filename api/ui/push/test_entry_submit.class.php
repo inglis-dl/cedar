@@ -62,10 +62,12 @@ class test_entry_submit extends \cenozo\ui\push\base_record
     $assignment_class_name = lib::get_class_name( 'database\assignment' ); 
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    $db_test_entry = $this->get_record();
+    $db_adjudicate_test_entry = $this->get_record();
+
+    log::debug( $db_adjudicate_test_entry );
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'participant_id', '=', $db_test_entry->participant_id );
+    $modifier->where( 'participant_id', '=', $db_adjudicate_test_entry->participant_id );
     $modifier->limit( 1 );
     $db_assignment = current( $assignment_class_name::select( $modifier ) );
     
@@ -73,15 +75,13 @@ class test_entry_submit extends \cenozo\ui\push\base_record
     $assignment_manager::complete_assignment( $db_assignment );
 
     // get the progenitor test entry records
-
-    $db_test_entry_progenitor = $test_entry_class_name::get_unique_record(
-      array( 'test_id', 'assignment_id' ),
-      array( $db_test_entry->get_test()->id, $db_assignment->id ) );
-    $db_sibling_test_entry = $db_test_entry_progenitor->get_sibling_test_entry();
-
-    $db_test_entry_progenitor->adjudicate = false;
-    $db_sibling_test_entry->adjudicate = false;
-    $db_test_entry_progenitor->save();
-    $db_sibling_test_entry->save();     
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment.participant_id', '=', $db_assignment->participant_id );
+    $modifier->where( 'test_id', '=', $db_adjudicate_test_entry->get_test()->id );
+    foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
+    {
+      $db_test_entry->adjudicate = false;
+      $db_test_entry->save();
+    }  
   }
 }

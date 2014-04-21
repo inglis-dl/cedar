@@ -185,24 +185,28 @@ class assignment_manager extends \cenozo\singleton
 
     if( is_null( $db_assignment->end_datetime ) && $db_assignment->all_tests_complete() )
     {
+       log::debug( 'start set end datetime');
       $modifier = lib::create( 'database\modifier' );
       $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+      
       if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
       {
-        $modifier->where( 'assignment_id', 'IN', 
-            array( $db_assignment->id, $db_sibling_assignment->id ) );
         // count the number of records requiring adjudication
+        $modifier->where( 'assignment_id', 'IN',
+            array( $db_assignment->id, $db_sibling_assignment->id ) );
         $modifier->where( 'IFNULL( adjudicate, 1 )', '=', 1 );
 
-        if( 0 == $test_entry_class_name::count( $modifier ) ) 
-        {   
+        if( 2 == $test_entry_class_name::count( $modifier ) )
+        {
           // both assignments are now complete: set their end datetimes
           $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
           $db_assignment->end_datetime = $end_datetime;
           $db_sibling_assignment->end_datetime = $end_datetime;
           $db_assignment->save();
-          $db_sibling_assignment->save(); 
+          $db_sibling_assignment->save();
+          log::debug("set end datetimes");
         }
+        log::debug( 'tests remaining to adjudicate: ' + $test_entry_class_name::count( $modifier ) );
       }
       else
       {
@@ -326,7 +330,6 @@ class assignment_manager extends \cenozo\singleton
         $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
 
         // if we havent created the adjudicate entry, do so now
-        $is_new_adjudicate = false;
         $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
           array( 'test_id', 'participant_id' ),
           array( $db_test->id, $db_assignment->get_participant()->id ) );
@@ -339,7 +342,6 @@ class assignment_manager extends \cenozo\singleton
           $db_adjudicate_test_entry->test_id = $db_test->id;
           $db_adjudicate_test_entry->save();
           static::initialize_test_entry( $db_adjudicate_test_entry );
-          $is_new_adjudicate = true;
         }
 
         if( $test_type_name == 'confirmation' )
@@ -371,9 +373,9 @@ class assignment_manager extends \cenozo\singleton
             $rank_modifier->order( 'rank' );
             $a = $db_test_entry->$get_list_function( clone $rank_modifier );
             $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
+            $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
 
             // get the max ranked entry that has something entered
-
             $max_rank_modifier = lib::create( 'database\modifier' );
             $max_rank_modifier->where( 'test_entry_id', 'IN', 
               array( $db_test_entry->id, $db_sibling_test_entry->id ) );
@@ -390,24 +392,20 @@ class assignment_manager extends \cenozo\singleton
             $max_rank = $db_max_rank_entry->rank;
          
             //create additional entries if necessary
-            if( $is_new_adjudicate )
+            $count = $max_rank - count( $c );
+            for( $i = 0; $i < $count; $i++ )
             {
-              $count = abs( count( $a ) - count( $b ) );
-              for( $i = 0; $i < $count; $i++ )
-              {
-                $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
-                $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
-                $db_entry->save();
-              }
+              $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
+              $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
+              $db_entry->save();
             }
 
-            $rank = 0;
+            $rank = 1;
             $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
-
+            log::debug(array(count($a),count($b), count($c), $max_rank));
             while( ( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) ) &&
-                   $rank < $max_rank )
+                   $rank <= $max_rank )
             {
-              $rank = $rank + 1;
               $a_obj = current( $a );
               $b_obj = current( $b );
               $c_obj = current( $c );
@@ -449,31 +447,27 @@ class assignment_manager extends \cenozo\singleton
               {
                 $id_1 = $a_obj->id;
                 $id_2 = $b_obj->id;
+                $adjudicate = $a_obj->word_id != $b_obj->word_id;
 
-                if( !is_null( $a_obj->word_id ) && !is_null( $b_obj->word_id ) )
+                //copy the progenitor to the adjudicate
+                if( !$adjudicate )
                 {
-                  $adjudicate = $a_obj->word_id != $b_obj->word_id;
+                  $c_obj->word_id = $a_obj->word_id;
+                  $c_obj->save();
+                }
 
-                  //copy the progenitor to the adjudicate
-                  if( !$adjudicate )
-                  {
-                    $c_obj->word_id = $a_obj->word_id;
-                    $c_obj->save();
-                  }
+                if( !is_null( $a_obj->word_id ) )
+                {
+                  $db_word = lib::create( 'database\word', $a_obj->word_id );
+                  $word_id_1 = $db_word->id;
+                  $word_1 = $db_word->word;
+                }
 
-                  if( !is_null( $a_obj->word_id ) )
-                  {
-                    $db_word = lib::create( 'database\word', $a_obj->word_id );
-                    $word_id_1 = $db_word->id;
-                    $word_1 = $db_word->word;
-                  }
-
-                  if( !is_null( $b_obj->word_id ) )
-                  {
-                    $db_word = lib::create( 'database\word', $b_obj->word_id );
-                    $word_id_2 = $db_word->id;
-                    $word_2 = $db_word->word;
-                  }
+                if( !is_null( $b_obj->word_id ) )
+                {
+                  $db_word = lib::create( 'database\word', $b_obj->word_id );
+                  $word_id_2 = $db_word->id;
+                  $word_2 = $db_word->word;
                 }
               }
 
@@ -513,7 +507,7 @@ class assignment_manager extends \cenozo\singleton
               }
 
               $adjudicate_data[] = $row;
-
+              $rank = $rank + 1;
               next( $a );
               next( $b );
               next( $c );
@@ -620,6 +614,8 @@ class assignment_manager extends \cenozo\singleton
               {
                 $id_1 = $a_obj->id;
                 $id_2 = $b_obj->id;
+                $selection_1 = $a_obj->selection;
+                $selection_2 = $b_obj->selection;
 
                 if( !is_null( $a_obj->ranked_word_set_id ) && !is_null( $b_obj->ranked_word_set_id ) )
                 {

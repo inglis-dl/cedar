@@ -75,13 +75,13 @@
         } )
       .click( function () {
 
-        $( table_selector + ' input:checkbox[name="all"]' ).removeProp( "checked" );
+        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
 
       } );// end radio input change and click
 
       $( table_selector + ' input:text[id$="adjudicate"]' ).change( function() {
         // uncheck the progenitor radio items
-        $( table_selctor + ' input:radio[name="' +
+        $( table_selector + ' input:radio[name="' +
           $(this).prop( "id" ).split( "__" )[0] + '"]' ).removeProp( "checked" );
         // uncheck the all checkboxes
         $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
@@ -178,7 +178,7 @@
                 {% if entry.word_1 is defined %}
                   value="{{ entry.word_1 }}"
                 {% endif %}
-                readonly>
+                readonly/>
             </td>
 
             {% if entry.adjudicate is defined %}
@@ -187,7 +187,7 @@
                   <input type="radio"
                     id="{{ entry.id_1 }}__accept"
                     name="{{ entry.id_3 }}"
-                    value="accept">
+                    value="accept"/>
                   <label for="{{ entry.id_1 }}__accept">Accept</label>
                 </div>
               </td>
@@ -202,7 +202,7 @@
                 {% if entry.word_2 is defined %}
                   value="{{ entry.word_2 }}"
                 {% endif %}
-                readonly>
+                readonly/>
             </td>
 
             {% if entry.adjudicate is defined %}
@@ -211,24 +211,25 @@
                   <input type="radio"
                     id="{{ entry.id_2 }}__accept"
                     name="{{ entry.id_3 }}"
-                    value="accept">
+                    value="accept"/>
                   <label for="{{ entry.id_2 }}__accept">Accept</label>
                 </div>
               </td>
               <td>
                 <div class="adjudicate">
                   <input type="text"
+                    id="{{ entry.id_3 }}__adjudicate"
                     style="width:10%; text-align:center"
                     name="{{ entry.id_1 }}__{{ entry.id_2 }}"
-                    disabled>
+                    disabled/>
                   <input type="checkbox"
                     id="{{ entry.id_3 }}__blank"
                     name="{{ entry.id_3 }}"
                     readonly
                     disabled
-                    value="blank">
-                </div>  
-               </td>   
+                    value="blank"/>
+                </div>
+               </td> 
             {% else %}
               <td></td><td></td>
             {% endif %}
@@ -241,7 +242,7 @@
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__1"
               name="{{ widget.full }}__accept__all"
-              value="all">
+              value="all"/>
               <label for="{{ widget.full }}__accept__all__1">All</label>
           </td>
           <td></td>
@@ -249,7 +250,7 @@
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__2"
               name="{{ widget.full }}__accept__all"
-              value="all">
+              value="all"/>
               <label for="{{ widget.full }}__accept__all__2">All</label>
           </td>
           <td></td>
@@ -261,4 +262,3 @@
   {% endif %}
 
 {% endblock widget %}
-
