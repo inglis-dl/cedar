@@ -123,7 +123,9 @@
           // check all the radio items corresponding to the progenitor column (1 or 2)?
           var id = $(this).prop( "id" ).split("__")[3];
           $radio_selector = $( table_selector + " div.radio__accept__" + id + " :radio" );
+          $('body').css( 'cursor', 'wait' );
           $radio_selector.prop( "checked", true ).trigger( "change" );
+          $('body').css( 'cursor', 'auto' );
         } else {
           // uncheck all the radio items and clear the adjudicate text inputs
           $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );

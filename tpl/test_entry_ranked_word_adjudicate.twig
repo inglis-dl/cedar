@@ -126,11 +126,12 @@
             columns["selection"] = "";
           } else {
             var radio_id =
-              $( table_selector + ' input:radio[id^="' + entry_id + '__"]:checked').prop( "id" );
+              $( table_selector + ' input:radio[name="' + entry_id + '"]:checked').prop( "id" );
             var target_text_id = '#' +
-              $( table_selector + ' input:text[name*="'+ entry_id + '__"][id$="adjudicate"]' ).prop( "id" );
+              $( table_selector + ' input:text[name="'+ args.id + '__candidate"]' ).prop( "id" );
             $( target_text_id ).removeClass( "candidate primary intrusion variant" );
-            var selection = radio_id.prop( "value" );
+            var source_radio_id = '#' + radio_id;
+            var selection = $( source_radio_id ).prop( "value" );
             columns["selection"] = selection;
             columns["word_id"] = "";
             if( selection == "variant" ) {
@@ -146,10 +147,8 @@
               $( target_text_id ).attr( "value", "" );
               $( target_text_id ).prop( "disabled", true );
             }
-            var source_radio_id = '#' + radio_id;
-            var source_radio_value = $( source_radio_id ).val();
-            var target_radio_id = '#' + $( table_selector + ' input:radio[id*="' + entry_id +
-                '__"][name$="adjudicate"][value="' + source_radio_value + '"]' ).prop( "id" );
+            var target_radio_id = '#' + $( table_selector + ' input:radio[id="' + args.id +
+                "__" + selection + '"]' ).prop( "id" );
             $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );  
           }
 
@@ -262,7 +261,9 @@
         if( $(this).prop( "checked" ) ) {
           var id = $(this).prop( "id" ).split("__")[3];
           var radio_selector_id = " div.radio__accept__" + id + " :radio";
+          $('body').css( 'cursor', 'wait' );
           $( table_selector + radio_selector_id ).prop( "checked", true ).trigger( "change" );
+          $('body').css( 'cursor', 'auto' );
         } else {
           $( table_selector + ' div.adjudicate :radio' ).removeProp( "checked" ).trigger( "change" );  
           $text_selector = $( table_selector + ' div.adjudicate :text' );

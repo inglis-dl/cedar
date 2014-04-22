@@ -185,7 +185,6 @@ class assignment_manager extends \cenozo\singleton
 
     if( is_null( $db_assignment->end_datetime ) && $db_assignment->all_tests_complete() )
     {
-       log::debug( 'start set end datetime');
       $modifier = lib::create( 'database\modifier' );
       $db_sibling_assignment = $db_assignment->get_sibling_assignment();
       
@@ -204,9 +203,7 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_assignment->end_datetime = $end_datetime;
           $db_assignment->save();
           $db_sibling_assignment->save();
-          log::debug("set end datetimes");
         }
-        log::debug( 'tests remaining to adjudicate: ' + $test_entry_class_name::count( $modifier ) );
       }
       else
       {
@@ -402,7 +399,6 @@ class assignment_manager extends \cenozo\singleton
 
             $rank = 1;
             $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
-            log::debug(array(count($a),count($b), count($c), $max_rank));
             while( ( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) ) &&
                    $rank <= $max_rank )
             {

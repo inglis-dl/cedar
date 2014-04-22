@@ -64,8 +64,6 @@ class test_entry_submit extends \cenozo\ui\push\base_record
 
     $db_adjudicate_test_entry = $this->get_record();
 
-    log::debug( $db_adjudicate_test_entry );
-
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'participant_id', '=', $db_adjudicate_test_entry->participant_id );
     $modifier->limit( 1 );
