@@ -204,7 +204,7 @@ class test_entry extends \cenozo\database\has_note
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @param database\test_entry $db_test_entry
-   * @return bool completed status
+   * @return bool true if identical
    */
   public function compare( $db_test_entry )
   {
@@ -223,7 +223,7 @@ class test_entry extends \cenozo\database\has_note
    * Get the sibling of this test_entry
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @return record (NULL if no sibling)
+   * @return db_test_entry (NULL if no sibling)
    * @access public
    */
   public function get_sibling_test_entry()

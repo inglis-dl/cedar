@@ -48,7 +48,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
     $round_times = $this->get_argument( 'round_times', true );
 
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
-    $restrict_site_id = $this->get_argument( 'restrict_site_id', false );
+    $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
     $site_mod = lib::create( 'database\modifier' );
     if( $restrict_site_id ) 
       $site_mod->where( 'id', '=', $restrict_site_id );
@@ -101,7 +101,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
       $user_mod->where( 'access.role_id', '=', $db_role->id );
       foreach( $user_class_name::select( $user_mod ) as $db_user )
       {
-        log::debug( $db_user->name );
         // ensure the typist has min/max time for this date range
         $activity_mod = lib::create( 'database\modifier' );
         $activity_mod->where( 'activity.user_id', '=', $db_user->id );
@@ -109,15 +108,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $activity_mod->where( 'activity.role_id', '=', $db_role->id );
         $activity_mod->where( 'operation.subject', '!=', 'self' );
 
-        $assignment_mod = lib::create( 'database\modifier' );
-        $assignment_mod->where( 'user_id', '=', $db_user->id );
-        //TODO: the db must be updated to estimate the last activity
-        // performed on the assignment as either when
-        // the adjudication was completed
-        // or the time when the the last test_entry was edited:wq
-
-        $assignment_mod->where( 'end_datetime', '!=', NULL );
-        
         if( $restrict_start_date && $restrict_end_date )
         {
           $activity_mod->where( 'datetime', '>=',
@@ -145,11 +135,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         }
 
         // if there is no activity then skip this user
-        if( 0 == $activity_class_name::count( $activity_mod ) )
-        {
-        log::debug('no activity for user');
-        continue;
-        }
+        if( 0 == $activity_class_name::count( $activity_mod ) ) continue;
 
         // Determine the total time spent as a typist over the desired period
         $total_time = $user_time_class_name::get_sum(
@@ -164,14 +150,18 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $num_adjudicate = 0;
         $num_defer = 0;
         $assignment_time = 0;
+        $assignment_mod = lib::create( 'database\modifier' );
+        $assignment_mod->where( 'user_id', '=', $db_user->id );
         foreach( $db_user->get_assignment_list( $assignment_mod ) as $db_assignment )
         {
-          // each test_entry deferral must have a note created by the user
-          $test_entry_mod = lib::create( 'database\modifier' );
-          $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
-          $test_entry_mod->where( 'test_entry_note.user_id', '=', $db_user->id );
-          if( 0 < $test_entry_class_name::count( $test_entry_mod ) )
-            $num_defer++; 
+          // are all of the assignment's tests complete?
+          if( $db_assignment->all_tests_complete() )
+          {
+            // each test_entry deferral must have a note created by the user
+            $test_entry_mod = lib::create( 'database\modifier' );
+            $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
+            $test_entry_mod->where( 'test_entry_note.user_id', '=', $db_user->id );
+            if( 0 < $test_entry_class_name::count( $test_entry_mod ) ) $num_defer++;
 
           // NOTE: currently the assignment time includes all time until the assignment is
           // completed by the typist even if there was a delay to complete due to a deferral.
@@ -183,39 +173,33 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $interval->d * 24.0 + $interval->h + $interval->i / 60.0 + $interval->s / 3600.0;
           */  
 
-          // count the adjudicate submissions
-          $db_participant = $db_assignment->get_participant();
-          $test_entry_mod = lib::create( 'database\modifier' );
-          $test_entry_mod->where( 'assignment_id', '=', NULL );
-          $test_entry_mod->where( 'participant_id', '=', $db_participant->id ); 
-          foreach( $test_entry_class_name::select( $test_entry_mod ) as $db_test_entry_sibling )
-          {
-            // this is the adjudicated test entry submitted by an administrator
-            // get the test entries from the test transcribed by the current user
-            // and compare them
+            $num_complete++;
 
+            // count the adjudicate submissions
             $test_entry_mod = lib::create( 'database\modifier' );
-            $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
-            $test_entry_mod->where( 'test_id', '=', $db_test_entry_sibling->test_id );
-            $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
-            if( false !== $db_test_entry )
+            $test_entry_mod->where( 'assignment_id', '=', NULL );
+            $test_entry_mod->where( 'participant_id', '=', $db_assignment->participant_id );
+            foreach( $test_entry_class_name::select( $test_entry_mod ) as $db_adjudicate_test_entry )
             {
-              // if they match, then this user sourced the entries meaning the companion
-              // user was in error
-              if( $db_test_entry->compare( $db_sibling_test_entry ) ) $num_adjudicate++;
-            }              
-          } // end loop on test entries
+              // this is the adjudicated test entry submitted by an administrator
+              // get the test entries from the test transcribed by the current user
+              // and compare them
 
-          $num_complete++;
-
+              $db_test_entry = $test_entry_class_name::get_unique_record(
+                array( 'assignment_id', 'test_id' ),
+                array( $db_assignment->id, $db_adjudicate_test_entry->test_id ) );
+              if( !is_null( $db_test_entry ) )
+              {
+                // if they match, then this user sourced the entries meaning the companion
+                // user was in error
+                if( !$db_test_entry->compare( $db_adjudicate_test_entry ) ) $num_adjudicate++;
+              }              
+            } // end loop on test entries
+          }
         } // end loop on assignments
 
         // if there were no completed assignments then ignore this user
-        if( 0 == $num_complete ) 
-        {
-        log::debug( 'no completed assignments for user' );
-        continue;
-        }
+        if( 0 == $num_complete ) continue;
         
         // Now we can use all the information gathered above to fill in the contents of the table.
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -242,7 +226,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
             is_null( $min_datetime_obj ) ? '??' : $min_datetime_obj->format( "H:i" ),
             is_null( $max_datetime_obj ) ? '??' : $max_datetime_obj->format( "H:i" ),
             sprintf( '%0.2f', $total_time ),
-            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
+            0 < $total_time ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
         }
         else
         {
@@ -252,10 +236,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $num_adjudicate,
             $num_complete,
             sprintf( '%0.2f', $total_time ),
-            $total_time > 0 ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
+            0 < $total_time ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
         }
  
-        log::debug( $row );
         $contents[] = $row;
 
         $grand_total_defer += $num_defer;
@@ -264,7 +247,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $grand_total_time += $total_time;
       }
 
-      $average_complete_PH = $grand_total_time > 0 ? 
+      $average_complete_PH = 0 < $grand_total_time? 
         sprintf( '%0.2f', $grand_total_complete / $grand_total_time ) : 'N/A';
 
       if( $single_date )
