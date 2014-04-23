@@ -38,15 +38,28 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
+    $session = lib::create( 'business\session' );
+    $db_role = $session->get_role();
+
+    $this->add_column( 'start_datetime', 'date', 'Start Date', true );
     $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
-    $this->add_column( 'defer', 'string', 'Defer', false );
+    $this->add_column( 'deferred', 'string', 'Defer', false );
     $this->add_column( 'adjudicate', 'string', 'Adjudicate', false );
-    $this->add_column( 'complete', 'string', 'Complete', false );
+    $this->add_column( 'completed', 'string', 'Complete', false );
 
-    $session = lib::create( 'business\session' );
-    $this->set_addable( $session->get_role()->name == 'typist' );
+    $this->set_addable( $db_role->name == 'typist' );
+    $this->set_allow_restrict_state( $db_role->name != 'typist' );
+
+    if( $this->allow_restrict_state )
+    {
+      $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
+      if( $restrict_state_id )
+        $this->set_heading(
+          sprintf( '%s, restricted to %s',
+                   $this->get_subject(), $this->get_restrict_state( $restrict_state_id ) ) );
+    }
   }
   
   /**
@@ -149,18 +162,27 @@ class assignment_list extends \cenozo\ui\widget\base_list
       }
 
       $this->add_row( $db_assignment->id,
-        array( 'participant.uid' => $db_participant->uid,
+        array( 'start_datetime' => $db_assignment->start_datetime,
+               'participant.uid' => $db_participant->uid,
                'cohort.name' => $db_participant->get_cohort()->name,
                'user.name' => $db_assignment->get_user()->name,
-               'defer' => 
+               'deferred' => 
                  0 < $defer_count ? $defer_count . '/' . $test_count : 'none',
                'adjudicate' => 
                  0 < $adjudicate_count ? $adjudicate_count . '/' . $test_count : 'none',
-               'complete' =>  
+               'completed' =>  
                  0 < $complete_count ? $complete_count . '/' . $test_count : 'none',
                'allow_transcribe' => $allow_transcribe,
                'allow_adjudicate' => $allow_adjudicate,
                'test_entry_id' => $test_entry_id ) );
+    }
+
+    if( $this->allow_restrict_state )
+    {
+      $state_list[1] = 'open';
+      $state_list[2] = 'closed';    
+      $this->set_variable( 'state_list', $state_list );
+      $this->set_variable( 'restrict_state_id', $this->get_argument( 'restrict_state_id', '' ) );
     }
 
     // define whether or not test_entry transcribing or adjudicating is allowed
@@ -189,11 +211,24 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
-    if( $session->get_role()->name == 'typist' )
+    $db_role = $session->get_role();
+    if( $db_role->name == 'typist' )
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where( 'test_entry.completed', '=', false );
+    }
+    if( $this->allow_restrict_state )
+    {
+      $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
+      if( isset( $restrict_state_id ) && $restrict_state_id !== '' )
+      {
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+        if( $restrict_state_id == 1 )
+          $modifier->where( 'end_datetime', '=', NULL );
+        else if( $restrict_state_id == 2 )
+          $modifier->where( 'end_datetime', '!=', NULL );
+      }
     }
 
     return parent::determine_record_count( $modifier );
@@ -212,13 +247,68 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
-    if( $session->get_role()->name == 'typist' )
+    $db_role = $session->get_role();
+    if( $db_role->name == 'typist' )
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
-      $modifier->where( 'test_entry.completed', '=', false );      
+      $modifier->where( 'test_entry.completed', '=', false );
+    }
+    if( $this->allow_restrict_state )
+    {
+      $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
+      if( isset( $restrict_state_id ) && $restrict_state_id !== '' )
+      {
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+        if( $restrict_state_id == 1 )
+          $modifier->where( 'end_datetime', '=', NULL );
+        else if( $restrict_state_id == 2 )
+          $modifier->where( 'end_datetime', '!=', NULL );
+      }
     }
 
     return parent::determine_record_list( $modifier );
+  }
+
+  /**
+   * Get whether to include a drop down to restrict the list by state
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return boolean
+   * @access public
+   */
+  public function get_allow_restrict_state()
+  {
+    return $this->allow_restrict_state;
+  }
+
+  /** 
+   * Set whether to include a drop down to restrict the list by state
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param boolean $enable
+   * @access public
+   */
+  public function set_allow_restrict_state( $enable )
+  {
+    $this->allow_restrict_state = $enable;
+  }
+
+  /** 
+   * Whether to include a drop down to restrict the list by state
+   * @var boolean
+   * @access protected
+   */
+  protected $allow_restrict_state = true;
+
+
+  /** 
+   * Get a restrict state name from its id
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param boolean $enable
+   * @access public
+   */
+  private function get_restrict_state( $id )
+  {
+     if( $id == 1 ) return 'open';
+     else return 'closed';
   }
 }
