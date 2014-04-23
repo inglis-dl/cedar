@@ -315,9 +315,12 @@ CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
   `create_timestamp` TIMESTAMP NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
   `participant_id` INT UNSIGNED NOT NULL,
+  `start_datetime` DATETIME NOT NULL,
+  `end_datetime` DATETIME NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_participant_id` (`participant_id` ASC),
   INDEX `fk_user_id` (`user_id` ASC),
+  UNIQUE INDEX `uq_user_id_participant_id` (`user_id` ASC, `participant_id` ASC),
   CONSTRAINT `fk_assignment_participant_id`
     FOREIGN KEY (`participant_id`)
     REFERENCES `cenozo`.`participant` (`id`)
@@ -346,8 +349,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `audio_fault` TINYINT(1) NOT NULL DEFAULT 0,
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
-  `adjudicate` TINYINT(1) NOT NULL DEFAULT 0,
-  `note` TEXT NULL DEFAULT NULL COMMENT 'id required to track adjudicate progenitors',
+  `adjudicate` TINYINT(1) NULL DEFAULT NULL COMMENT '0 , 1, or NULL (never set)',
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
   INDEX `fk_assignment_id` (`assignment_id` ASC),
@@ -491,12 +493,13 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_ranked_word` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_entry_id` INT UNSIGNED NOT NULL,
-  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
-  `word_candidate` VARCHAR(45) NULL DEFAULT NULL,
-  `selection` ENUM('yes','no','variant') NULL DEFAULT NULL,
+  `ranked_word_set_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL this is an intrusion',
+  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NOT NULL then a variant or intrusion',
+  `selection` ENUM('yes','no','variant') NULL DEFAULT NULL COMMENT 'if NULL an intrusion or not filled in',
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
   INDEX `fk_word_id` (`word_id` ASC),
+  INDEX `fk_ranked_word_set_id` (`ranked_word_set_id` ASC),
   CONSTRAINT `fk_test_entry_ranked_word_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
@@ -505,6 +508,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_ranked_word` (
   CONSTRAINT `fk_test_entry_ranked_word_word_id`
     FOREIGN KEY (`word_id`)
     REFERENCES `cedar`.`word` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_ranked_word_ranked_word_set_id`
+    FOREIGN KEY (`ranked_word_set_id`)
+    REFERENCES `cedar`.`ranked_word_set` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -520,8 +528,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_classification` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_entry_id` INT UNSIGNED NOT NULL,
-  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'if NULL word_candidate NOT NULL',
-  `word_candidate` VARCHAR(45) NULL DEFAULT NULL,
+  `word_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'NULL if not set yet',
   `rank` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_entry_id` (`test_entry_id` ASC),
@@ -596,6 +603,82 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_note` (
     FOREIGN KEY (`user_id`)
     REFERENCES `cenozo`.`user` (`id`)
     ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`away_time`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`away_time` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`away_time` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `site_id` INT UNSIGNED NOT NULL,
+  `role_id` INT UNSIGNED NOT NULL,
+  `start_datetime` DATETIME NOT NULL,
+  `end_datetime` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_user_id` (`user_id` ASC),
+  INDEX `fk_site_id` (`site_id` ASC),
+  INDEX `fk_role_id` (`role_id` ASC),
+  INDEX `dk_start_datetime` (`start_datetime` ASC),
+  INDEX `dk_end_datetime` (`end_datetime` ASC),
+  CONSTRAINT `fk_away_time_user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_away_time_site_id`
+    FOREIGN KEY (`site_id`)
+    REFERENCES `cenozo`.`site` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_away_time_role_id`
+    FOREIGN KEY (`role_id`)
+    REFERENCES `cenozo`.`role` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`user_time`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`user_time` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`user_time` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `site_id` INT UNSIGNED NOT NULL,
+  `role_id` INT UNSIGNED NOT NULL,
+  `date` DATE NOT NULL,
+  `total` FLOAT NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_user_id` (`user_id` ASC),
+  INDEX `fk_site_id` (`site_id` ASC),
+  INDEX `fk_role_id` (`role_id` ASC),
+  UNIQUE INDEX `uq_user_id_site_id_role_id_date` (`user_id` ASC, `site_id` ASC, `role_id` ASC, `date` ASC),
+  INDEX `dk_date` (`date` ASC),
+  CONSTRAINT `fk_user_time_user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_user_time_site_id`
+    FOREIGN KEY (`site_id`)
+    REFERENCES `cenozo`.`site` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_user_time_role_id`
+    FOREIGN KEY (`role_id`)
+    REFERENCES `cenozo`.`role` (`id`)
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 

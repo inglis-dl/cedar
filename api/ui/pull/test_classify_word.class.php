@@ -36,11 +36,11 @@ class test_classify_word extends \cenozo\ui\pull\base_record
   {
     parent::execute();
     
-    $record = $this->get_record();
+    $db_test = $this->get_record();
     $word_candidate = $this->get_argument( 'word_candidate' );
     $language = $this->get_argument( 'language', 'any' );
 
-    $data = $record->get_word_classification( $word_candidate, $language );
+    $data = $db_test->get_word_classification( $word_candidate, $language );
     $this->data = $data['classification'];   
   }
   

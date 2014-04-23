@@ -55,6 +55,8 @@ class dictionary_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     $this->report->set_orientation( 'landscape' );
 
     $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'dictionary_id' ) );
@@ -64,8 +66,6 @@ class dictionary_report extends \cenozo\ui\pull\base_report
     $word_mod->where( 'word.dictionary_id', '=', $db_dictionary->id );
     $word_mod->order( 'word.language' );
     $contents = array();
-    $word_class_name = lib::get_class_name( 'database\word' );
-
     foreach( $word_class_name::select( $word_mod ) as $db_word )
     {
       $contents[] = array( $db_word->word, $db_word->language );

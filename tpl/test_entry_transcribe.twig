@@ -11,8 +11,27 @@
   {{ parent() }}
 
   <script type="text/javascript">
+
+    function break_dialog() {
+      confirm_dialog(
+        "On a break",
+        "<p>Close this window when you wish to end your break.</p>",
+        function() {
+          ajax_push( "typist", "end_break" );
+        },
+        false
+      );
+    }
   
     $( function () {
+
+      // go on break button
+      $( "#{{ widget.full }}__break" ).click( function() {
+        if( ajax_push( "typist", "begin_break" ) ) break_dialog();
+      } );
+
+      {# show the break dialog if the operator is on break #}
+      {% if on_break %}break_dialog();{% endif %}
 
       $( "#{{ widget.full }}__audio_fault" ).click( function() {
         var args = new Object();
@@ -70,6 +89,7 @@
           dialogClass: "alert",
           width: 450,
           buttons: buttons,
+          beforeClose: function( event, ui ) { $(this).html( "" ); },
           open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
         } );
 
@@ -95,6 +115,13 @@
         {% endif %}
       } ); // end Next click
 
+      $( "#{{ widget.full }}_Reset" ).click( function() {
+        if( ajax_push( "{{ widget.subject }}", "reset", { "id": {{ id }} } ) ) {
+          slot_refresh( {{ slot }} );
+        }
+      } ); // end Reset click  
+
+
     } );
   </script>
 
@@ -102,13 +129,13 @@
 
 {% block record %}
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <div>
     {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
   </div>  
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <div id="audio_control">
     {% if recording_data is defined %}
@@ -117,7 +144,7 @@
         {% for recording in recording_data %}
           <tr>
             <audio controls
-              id="{{ widget.full }}__recording__{{ recording_id }}" 
+              id="{{ widget.full }}__recording__{{ recording_id }}"
               <embed height="50" style="width:100%">
               <source src="{{ recording }}" type="audio/wav">
             </audio>
@@ -128,24 +155,27 @@
     {% endif %}
     <input type="checkbox"
       {% if editable == 0 %}
-        { readonly }  
+        { readonly }
       {% endif %}
       id="{{ widget.full }}__audio_fault"
       {{ audio_fault ? "checked":"" }}/>
-    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
-  </div>  
+    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>
+  </div>
 
-  <div class="spacer">
-  
+  <div class="spacer"></div>
+
   <div>
     {% if actionable == 1 %}
       {% from 'macros.twig' import confirm_buttons %}
-        {{ confirm_buttons( slot, widget.full, 
+        {{ confirm_buttons( slot, widget.full,
           ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
      
-      {% from 'macros.twig' import note_widget %}    
+      {% from 'macros.twig' import note_widget %}
       {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
-    {% endif %}    
+
+      <button id="{{ widget.full }}__break"
+        style="width: 200px;">Go on break</button>
+    {% endif %}
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>

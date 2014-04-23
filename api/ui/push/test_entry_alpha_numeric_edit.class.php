@@ -35,8 +35,9 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
    */
   protected function prepare()
   {
+    // if the id argument is absent, create a new entry for the data
     $id = $this->get_argument( 'id' );
-    if( is_null( $id ) || $id == '' )
+    if( !isset( $id ) || $id === '' )
     {   
       // skip the parent method
       $grand_parent = get_parent_class( get_parent_class( get_class() ) );
@@ -66,12 +67,18 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
 
     $columns = $this->get_argument( 'columns' );
 
-    if( array_key_exists( 'word_value', $columns ) ) 
+    if( array_key_exists( 'word_candidate', $columns ) ) 
     {   
-      if( !preg_match( '/^[1-9][0-9]*$/', $columns['word_value'] ) &&
-          !preg_match( '/^\pL$/', $columns['word_value'] ) )
-        throw lib::create( 'exception\notice',
-          'The word must be a letter or a number.', __METHOD__ );     
+      // check if this is a transcription or an adjudication
+      // empty entries are permitted for adjudicates
+      if( is_null( $this->get_record()->get_test_entry()->get_participant() ) )
+      {
+        if( !preg_match( '/^(0|[1-9][0-9]*)$/', $columns['word_candidate'] ) &&
+            !preg_match( '/^\pL$/', $columns['word_candidate'] ) )
+          throw lib::create( 'exception\notice',
+            'The word "'. $columns['word_candidate'] . '" must be a letter or a number.',
+            __METHOD__ );
+      }      
     }
   }
 
@@ -85,47 +92,57 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
-    $record = $this->get_record();
-    $db_test_entry = $record->get_test_entry();    
+    $word_class_name = lib::get_class_name( 'database\word' );
+
+    $db_test_entry_alpha_numeric = $this->get_record();
+    $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();    
     $db_dictionary = $db_test_entry->get_test()->get_dictionary();
 
-    $language = $db_test_entry->get_assignment()->get_participant()->language;
+    $language = NULL;
+    $db_assignment = $db_test_entry->get_assignment();
+    if( is_null( $db_assignment ) )
+      $language = $db_test_entry->get_participant()->language;
+    else
+      $language = $db_assignment->get_participant()->language;      
     $language = is_null( $language ) ? 'en' : $language;
-    $columns = $this->get_argument( 'columns' );
-    $word_value = $columns['word_value'];
 
-    // does the word candidate exist in the primary dictionary?
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
-    $modifier->where( 'language', '=', $language );
-    $modifier->where( 'word', '=', $word_value );
-    $modifier->limit( 1 );
-    $word_class_name = lib::get_class_name( 'database\word' );
-    $db_word = $word_class_name::select( $modifier );
-    if( !empty( $db_word ) )
+    $columns = $this->get_argument( 'columns' );
+    $word_candidate = 
+      array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
+      $columns['word_candidate'] : NULL;
+
+    if( !is_null( $word_candidate ) )
     {
-      $record->word_id = $db_word[0]->id;
+      // does the word candidate exist in the primary dictionary?
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
+      $modifier->where( 'language', '=', $language );
+      $modifier->where( 'word', '=', $word_candidate );
+      $modifier->limit( 1 );
+
+      $db_word = current( $word_class_name::select( $modifier ) );
+      if( false !== $db_word )
+      {
+        $db_test_entry_alpha_numeric->word_id = $db_word->id;
+      }
+      else
+      {
+        $db_new_word = lib::create( 'database\word' );
+        $db_new_word->dictionary_id = $db_dictionary->id;
+        $db_new_word->word = $word_candidate;
+        $db_new_word->language = $language;
+        $db_new_word->save();
+        $db_test_entry_alpha_numeric->word_id = $word_class_name::db()->insert_id();
+      }
     }
     else
     {
-      $db_new_word = lib::create( 'database\word' );
-      $db_new_word->dictionary_id = $db_dictionary->id;
-      $db_new_word->word = $word_value;
-      $db_new_word->language = $language;
-      $db_new_word->save();
-      $record->word_id = $word_class_name::db()->insert_id();
+      $db_test_entry_alpha_numeric->word_id = NULL;
     }
 
-    $record->save();
+    $db_test_entry_alpha_numeric->save();
 
-    // consider the test entry completed if 1 or more entries exist and
-    // the entry is not deferred
-    // if none exist, the typist must defer to the admin to set completed status
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'word_id', '!=', '' );
-    $test_entry_alpha_numeric_class_name = 
-      lib::get_class_name('database\test_entry_alpha_numeric');
-    $completed = 0 < $test_entry_alpha_numeric_class_name::count( $modifier ) ? 1 : 0;
-    $db_test_entry->update_status_fields( $completed );
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_test_entry( $db_test_entry );
   }
 }

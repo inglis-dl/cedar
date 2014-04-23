@@ -54,12 +54,13 @@ class word_add extends \cenozo\ui\widget\base_view
   {
     parent::setup();
     
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     // this widget must have a parent, and it's subject must be a dictionary
     if( is_null( $this->parent ) || 'dictionary' != $this->parent->get_subject() )
       throw lib::create( 'exception\runtime',
         'Word widget must have a parent with dictionary as the subject.', __METHOD__ );
     
-    $word_class_name = lib::get_class_name( 'database\word' );
     $languages = $word_class_name::get_enum_values( 'language' );
     $languages = array_combine( $languages, $languages );
 

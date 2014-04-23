@@ -44,7 +44,6 @@ abstract class base_transcribe extends \cenozo\ui\widget
     $db_test_entry = $this->parent->get_record();
     $heading = $db_test_entry->get_test()->name . ' test entry form';
 
-    //TODO put this somewhere else
     if( $db_test_entry->deferred )
       $heading = $heading . ' NOTE: this test is currently deferred';
 

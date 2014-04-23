@@ -52,15 +52,6 @@
         }
       } );// end radio input change
 
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          $( table_selector ).find( "input:radio" ).each( function() {
-            $(this).removeProp( "checked" );
-          } );
-          configure_ui();
-        }
-      } );// end Reset button click
-
     } );
   </script>
 
@@ -68,11 +59,11 @@
 
 {% block widget %}
     
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <caption style="text-align: left;"><strong>{{ entry_data.instruction }}</strong></caption>
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <table id="{{ widget.full }}__entry_table" style="width:20%">
       
@@ -93,7 +84,7 @@
             {% if editable == 0 %}
               { readonly }
             {% endif %}
-            {{ entry_data.confirmation == '1' ? "checked" : "" }}>
+            {{ entry_data.confirmation == '1' ? "checked" : "" }}/>
         </td>
         <td>
           <input type="radio"
@@ -103,10 +94,10 @@
             {% if editable == 0 %}
               { readonly }
             {% endif %}
-            {{ entry_data.confirmation == '0' ? "checked" : "" }}>
+            {{ entry_data.confirmation == '0' ? "checked" : "" }}/>
         </td>
-      </tr> 
+      </tr>
     </tbody>
-  </table> 
+  </table>
 
 {% endblock widget %}

@@ -38,12 +38,13 @@ class dictionary_view extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
 
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+    $word_class_name = lib::get_class_name( 'database\word' );
+
     // create an associative array with everything we want to display about the dictionary
     $this->add_item( 'name', 'string', 'Name' );
 
-    $word_class_name = lib::get_class_name( 'database\word' );
-    $this->languages = $word_class_name::get_enum_values( 'language' );
-    
+    $this->languages = $word_class_name::get_enum_values( 'language' );    
     foreach( $this->languages as $language )
     {
       $description = 'unknown language';
@@ -62,7 +63,6 @@ class dictionary_view extends \cenozo\ui\widget\base_view
     $this->word_list->set_parent( $this );
     $this->word_list->set_heading( 'Dictionary words' );
 
-    $operation_class_name = lib::get_class_name( 'database\operation' );
     $db_operation = $operation_class_name::get_operation( 'widget', 'dictionary', 'import' );
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) ) 
     {   
@@ -116,6 +116,6 @@ class dictionary_view extends \cenozo\ui\widget\base_view
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = null;
+  protected $languages = NULL;
 
 }

@@ -56,7 +56,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
         'Only administrators can view transcriptions within a test_entry_view', __METHOD__ );    
 
     $this->test_entry_transcribe = lib::create( 'ui\widget\test_entry_transcribe', 
-      array( 'test_entry_transcribe' => array('id'=> $this->get_argument( 'id' )))  );
+      array( 'test_entry_transcribe' => array( 'id' => $this->get_argument( 'id' ) ) ) );
     $this->test_entry_transcribe->set_parent( $this );
     $this->test_entry_transcribe->set_validate_access( false );
     $this->test_entry_transcribe->set_editable( false );

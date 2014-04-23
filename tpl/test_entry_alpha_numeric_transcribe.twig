@@ -82,12 +82,13 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
-        if( 0 == args.id ) args.id = '';
         var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
-        columns["rank"] = rank;
-        columns["test_entry_id"] = {{ parent.id }};
-        columns["word_id"] = $(this).prop( "name" ) === "undefined" ? "" : $(this).prop( "name" );
-        columns["word_value"] = candidate;
+        if( 0 == args.id ) {
+          args.id = "";
+          columns["rank"] = rank;
+          columns["test_entry_id"] = {{ parent.id }};
+        }  
+        columns["word_candidate"] = candidate;
         args.columns = columns;
 
         // push the edits
@@ -124,12 +125,12 @@
         $td_selector = $( table_selector + " td" ).not( '.button' );
         var rank = $td_selector.length + 1;
         var html = '<td class="added"><input type="text" style="width:20%" id="0__' + 
-          rank + '"></td>';
+          rank + '"/></td>';
         // the number of entries in a typical row
-        var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
+        var maxTd = $( table_selector + " tr:first td" ).length;
 
         // the number of entries in the target row
-        var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
+        var targetRow = $( table_selector + " tr" ).length - 1;
         var numTd = $( table_selector + " tr:nth-child(" + targetRow + ") td" ).length;
 
         // add a new table row if required
@@ -151,25 +152,6 @@
         }
       } );// end Add button click
 
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        // push reset
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          // remove any cells and rows created with the Add button
-          $( table_selector + ' td.added' ).remove();
-          $( table_selector + ' tr.added' ).remove();
-          // clear all text fields and set focus to the first
-          $( table_selector + " input:text" ).each( function() {
-            $(this).val( "" );
-            $(this).attr( "value", "" );
-            $(this).prop( "name", "undefined" );
-            var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-            $(this).prop( "disabled", 1 != rank );
-          } );
-
-          configure_ui();
-        }        
-      } );// end Reset button click
-
     } );
   </script>
 
@@ -177,11 +159,12 @@
 
 {% block widget %}
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <table id="{{ widget.full }}__entry_table">
 
     <tbody>
+
     {% set numcell = 10 %}
     {% set kprev = 'true' %}
     {% set imax = entry_data|length-1 %}
@@ -200,9 +183,6 @@
         {% set value = '' %}
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
-          {% set name = entry_data[k].word_id %}
-        {% else %}
-          {% set name = 'undefined' %}          
         {% endif %}
         {% set status = entry_data[k].word_id ? "word" : "empty" %} 
 
@@ -210,7 +190,6 @@
             <input type="text"
              style="width:20%"
              id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-             name="{{ name }}"
 
              {% if editable == 0  %}
                { readonly }
@@ -224,7 +203,7 @@
                {% set kprev = 'true' %}
              {% endif %}
                
-             value="{{ value }}">
+             value="{{ value }}"/>
           </td>
 
         {% endfor %}
