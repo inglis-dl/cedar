@@ -125,7 +125,7 @@
         $td_selector = $( table_selector + " td" ).not( '.button' );
         var rank = $td_selector.length + 1;
         var html = '<td class="added"><input type="text" style="width:20%" id="0__' + 
-          rank + '"></td>';
+          rank + '"/></td>';
         // the number of entries in a typical row
         var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
 
@@ -221,7 +221,7 @@
                {% set kprev = 'true' %}
              {% endif %}
                
-             value="{{ value }}">
+             value="{{ value }}"/>
           </td>
 
         {% endfor %}

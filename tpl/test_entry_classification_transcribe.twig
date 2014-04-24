@@ -90,6 +90,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
         }
       } );// end autocomplete
 
@@ -166,7 +167,7 @@
         // one containing the Add button
         $td_selector = $( table_selector + " td" ).not( '.button' );
         var rank = $td_selector.length + 1;
-        var html = '<td class="added"><input type="text" id="0__' + rank + '"></td>';
+        var html = '<td class="added"><input type="text" id="0__' + rank + '"/></td>';
         // the number of entries in a typical row
         var maxTd = $( table_selector + " tr:first td" ).length;
 
@@ -268,7 +269,7 @@
                {% set kprev = 'true' %}
            {% endif %}
            
-           value="{{ value }}">
+           value="{{ value }}"/>
         </td>
 
       {% endfor %}

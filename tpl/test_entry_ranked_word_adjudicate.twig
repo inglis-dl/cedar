@@ -90,6 +90,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -98,6 +99,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -329,21 +331,21 @@
                 id="{{ entry.id_1 }}__yes"
                 name="{{ entry.word_id_1 }}__1"
                 value="yes"
-                {{ entry.selection_1 == 'yes' ? "checked" : "" }}>
+                {{ entry.selection_1 == 'yes' ? "checked" : "" }}/>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry.id_1 }}__no"
                 name="{{ entry.word_id_1 }}__1"
                 value="no"
-                {{ entry.selection_1 == 'no' ? "checked" : "" }}>
+                {{ entry.selection_1 == 'no' ? "checked" : "" }}/>
             </td>
             <td style="white-space: nowrap">
               <input type="radio"
                 id="{{ entry.id_1 }}__variant"
                 name="{{ entry.word_id_1 }}__1"
                 value="variant"
-                {{ entry.selection_1 == 'variant' ? "checked" : "" }}>
+                {{ entry.selection_1 == 'variant' ? "checked" : "" }}/>
               <input type="text"
                 id="{{ entry.id_1 }}__variant"
                 {% if entry.word_candidate_1 is defined %}
@@ -351,7 +353,7 @@
                   value="{{ entry.word_candidate_1 }}"
                 {% endif %}
                 readonly
-                disabled>
+                disabled/>
             </td>
 
             {% if entry.adjudicate is defined %}
@@ -360,7 +362,7 @@
                   <input type="radio"
                     id="{{ entry.id_1 }}__accept"
                     name="{{ entry.word_id_1 }}__accept"
-                    value="accept">
+                    value="accept"/>
                   <label for="{{ entry.id_1 }}__accept">Accept</label>
                 </div>
               </td>
@@ -373,21 +375,21 @@
                 id="{{ entry.id_2 }}__yes"
                 name="{{ entry.word_id_2 }}__2"
                 value="yes"
-                {{ entry.selection_2 == 'yes' ? "checked" : "" }}>
+                {{ entry.selection_2 == 'yes' ? "checked" : "" }}/>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry.id_2 }}__no"
                 name="{{ entry.word_id_2 }}__2"
                 value="no"
-                {{ entry.selection_2 == 'no' ? "checked" : "" }}>
+                {{ entry.selection_2 == 'no' ? "checked" : "" }}/>
             </td>
             <td style="white-space: nowrap">
               <input type="radio"
                 id="{{ entry.id_2 }}__variant"
                 name="{{ entry.word_id_2 }}__2"
                 value="variant"
-                {{ entry.selection_2 == 'variant' ? "checked" : "" }}>
+                {{ entry.selection_2 == 'variant' ? "checked" : "" }}/>
               <input type="text"
                 id="{{ entry.id_2 }}__variant"
                 {% if entry.word_candidate_2 is defined %}
@@ -395,7 +397,7 @@
                   class="{{ entry.classification_2 }}"
                 {% endif %}
                 readonly
-                disabled>
+                disabled/>
             </td>
 
             {% if entry.adjudicate is defined %}
@@ -404,7 +406,7 @@
                   <input type="radio"
                     id="{{ entry.id_2 }}__accept"
                     name="{{ entry.word_id_2 }}__accept"
-                    value="accept">
+                    value="accept"/>
                   <label for="{{ entry.id_2 }}__accept">Accept</label>
                 </div>   
               </td>
@@ -418,7 +420,7 @@
                   <input type="radio"
                     id="{{ entry.id_1 }}__{{ entry.id_2 }}__yes"
                     name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                    value="yes">
+                    value="yes"/>
                 </div>
               </td>
               <td>
@@ -426,7 +428,7 @@
                 <input type="radio"
                   id="{{ entry.id_1 }}__{{ entry.id_2 }}__no"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                  value="no">
+                  value="no"/>
               </div>
               </td>
               <td style="white-space: nowrap">
@@ -434,11 +436,11 @@
                   <input type="radio"
                     id="{{ entry.id_1 }}__{{ entry.id_2 }}__variant"
                     name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                    value="variant">
+                    value="variant"/>
                   <input type="text"
                     id="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
                     disabled
-                    value="">
+                    value=""/>
                 </div>
               </td>
             {% else %}
@@ -468,7 +470,7 @@
                 id="{{ intrusion_id_1 }}__intrusion__source"
                 readonly
                 value="{{ entry.word_candidate_1 }}"
-                class="{{ entry.classification_1 }}">
+                class="{{ entry.classification_1 }}"/>
             </td>
 
             {% if entry.adjudicate is defined %}
@@ -477,7 +479,7 @@
                   <input type="radio"
                     id="{{ intrusion_id_1 }}__intrusion__accept"
                     name="{{ intrusion_id_1 }}__{{ intrusion_id_2 }}__accept"
-                    value="accept">
+                    value="accept"/>
                   <label for="{{ intrusion_id_1 }}__intrusion__accept">Accept</label>
                 </div>  
               </td>
@@ -492,7 +494,7 @@
                 id="{{ intrusion_id_2 }}__intrusion__source"
                 readonly
                 value="{{ entry.word_candidate_2 }}"
-                class="{{ entry.classification_2 }}">
+                class="{{ entry.classification_2 }}"/>
             </td>
 
             {% if entry.adjudicate is defined %}
@@ -501,7 +503,7 @@
                   <input type="radio"
                     id="{{ intrusion_id_2 }}__intrusion__accept"
                     name="{{ intrusion_id_1 }}__{{ intrusion_id_2 }}__accept"
-                    value="accept">
+                    value="accept"/>
                   <label for="{{ intrusion_id_2 }}__intrusion__accept">Accept</label>
                 </div>  
               </td>
@@ -516,7 +518,7 @@
                 <div class="adjudicate">
                   <input type="text"
                     id="{{ intrusion_id_1 }}__{{ intrusion_id_2 }}__intrusion"
-                    disabled>
+                    disabled/>
                 </div>
               </td>
             {% else %}
@@ -535,7 +537,7 @@
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__1"
               name="{{ widget.full }}__accept__all"
-              value="all">
+              value="all"/>
               <label for="{{ widget.full }}__accept__all__1">All</label>
           </td>
 
@@ -545,7 +547,7 @@
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__2"
               name="{{ widget.full }}__accept__all"
-              value="all">
+              value="all"/>
               <label for="{{ widget.full }}__accept__all__2">All</label>
           </td>
 

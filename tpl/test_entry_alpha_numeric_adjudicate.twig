@@ -186,7 +186,7 @@
               style="width:10%; text-align:center"
               id="{{ entry.id_1 }}__candidate"
               readonly
-              value="{{ value_1 }}">
+              value="{{ value_1 }}"/>
           </td>
 
           {% if entry.adjudicate is defined %}
@@ -195,7 +195,7 @@
                 <input type="radio"
                   id="{{ entry.id_1 }}__accept"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}"
-                  value="accept">
+                  value="accept"/>
                 <label for="{{ entry.id_1 }}__accept">Accept</label>
               </div>
             </td>
@@ -208,7 +208,7 @@
               style="width:10%; text-align:center"
               id="{{ entry.id_2 }}__candidate"
               readonly
-              value="{{ value_2 }}">
+              value="{{ value_2 }}"/>
           </td>
 
           {% if entry.adjudicate is defined %}
@@ -217,7 +217,7 @@
                 <input type="radio"
                   id="{{ entry.id_2 }}__accept"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}"
-                  value="accept">
+                  value="accept"/>
                 <label for="{{ entry.id_2 }}__accept">Accept</label>
               </div>
             </td>
@@ -227,13 +227,13 @@
                   style="width:10%; text-align:center"
                   id="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}__adjudicate"
                   disabled
-                  value="">
+                  value=""/>
                 <input type="checkbox"
                   id="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}__blank"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.rank }}"
                   readonly
                   disabled
-                  value="blank">
+                  value="blank"/>
               </div>  
              </td>
           {% else %}
@@ -248,7 +248,7 @@
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__1"
               name="{{ widget.full }}__accept__all"
-              value="all">
+              value="all"/>
               <label for="{{ widget.full }}__accept__all__1">All</label>
           </td>
           <td></td>
@@ -256,7 +256,7 @@
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__2"
               name="{{ widget.full }}__accept__all"
-              value="all">
+              value="all"/>
               <label for="{{ widget.full }}__accept__all__2">All</label>
           </td>
           <td></td>

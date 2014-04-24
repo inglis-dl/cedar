@@ -99,6 +99,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -107,6 +108,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -276,7 +278,7 @@
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {{ entry.selection == 'yes' ? "checked" : "" }}></td>
+               {{ entry.selection == 'yes' ? "checked" : "" }}/></td>
           <td><input type="radio"
                id="{{ entry.id }}__no"
                name="{{ entry.word_id }}" 
@@ -284,7 +286,7 @@
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {{ entry.selection == 'no' ? "checked" : "" }}></td>
+               {{ entry.selection == 'no' ? "checked" : "" }}/></td>
           <td><input type="radio"
                id="{{ entry.id }}__variant"
                name="{{ entry.word_id }}"
@@ -292,7 +294,7 @@
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {{ entry.selection == 'variant' ? "checked" : "" }}></td>
+               {{ entry.selection == 'variant' ? "checked" : "" }}/></td>
           <td><input type="text"
                id="{{ entry.id }}__candidate"
                name="{{ entry.word_id }}"
@@ -306,7 +308,7 @@
                  {% endif %}  
                {% else %}
                  { disabled }
-               {% endif %}></td>
+               {% endif %}/></td>
         </tr>       
         {% else %}
         <tr class="intrusion">
@@ -322,7 +324,7 @@
                  {% if entry.classification is defined %}
                    class="{{ entry.classification }}"
                  {% endif %}  
-               {% endif %}></td>
+               {% endif %}/></td>
          </tr>      
         {% endif %}
     {% endfor %}  
