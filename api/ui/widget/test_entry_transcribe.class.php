@@ -99,12 +99,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       if( !is_null( $db_dictionary ) )
         $this->set_variable( 'dictionary_id', $db_dictionary->id );
 
-      if( !preg_match( '/FAS/', $db_test->name ) )
-      {
-        $db_variant_dictionary = $db_test->get_variant_dictionary();
-        if( !is_null( $db_variant_dictionary ) )
-          $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
-      }
+      $db_variant_dictionary = $db_test->get_variant_dictionary();
+      if( !is_null( $db_variant_dictionary ) )
+        $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
       
       $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
       if( !is_null( $db_intrusion_dictionary ) )

@@ -176,9 +176,9 @@ class test_entry extends \cenozo\database\has_note
       
       $completed = 0 == static::db()->get_one( $sql );
 
-      if( $completed )
+      // check that intrusions are filled in for non-adjucate entries
+      if( $completed && is_null( $this->participant_id ) )
       {
-        // check that intrusions are filled in
         $sql = sprintf( 
           'SELECT COUNT(*) FROM test_entry_ranked_word '.
           'WHERE test_entry_id = %s '.

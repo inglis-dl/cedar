@@ -58,8 +58,9 @@
 
           if( 0 == candidate.length ) {
             columns["word_id"] = '';
-          }
-          columns["word_candidate"] = candidate;
+          } else {
+            columns["word_candidate"] = candidate;
+          }  
           args.columns = columns;
 
           // push the edits
@@ -95,7 +96,11 @@
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split( "__" )[0];
-        columns["word_candidate"] = candidate;
+        if( 0 == candidate.length ) {
+          columns["word_id"] = '';
+        } else {
+          columns["word_candidate"] = candidate;
+        }  
         args.columns = columns;
 
         // flag to determine the Submit button enable state 

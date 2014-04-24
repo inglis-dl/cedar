@@ -90,7 +90,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             $classification . ' words and cannot be entered as an intrusion.',
             __METHOD__ );
         }
-        // not a primary, variant, or intrusion
+        // not a primary or variant
         else if( $classification == 'candidate' )
         {
           //get the test's intrusion dictionary and add it as an intrusion
@@ -112,9 +112,11 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             $db_test_entry_ranked_word->word_id = $word_class_name::db()->insert_id();
           }
         }
-        // it is an intrusion
+        // it is an existing intrusion
         else
+        {
           $db_test_entry_ranked_word->word_id = $db_word->id;
+        }  
       }
 
       $db_test_entry_ranked_word->save();

@@ -75,6 +75,7 @@
       var args = new Object();
       args["dictionary_id"] = {{ dictionary_id }};
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
+      args["variant_dictionary_id"] = {{ variant_dictionary_id }};
       args["language"] = "{{ language }}";
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
@@ -132,6 +133,15 @@
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification ) {
             $(this).addClass( classification );
+            // if a variant, check and add the word if not in the autocomplete source
+            if( classification == 'variant' ) {
+              var source = $input_list.autocomplete( "option", "source" );
+              if( -1 == $.inArray( candidate, source ) ) {
+                source.push( candidate );
+                source.sort();
+                $input_list.autocomplete( "option", "source", source );
+              }
+            }  
           }
 
           // enable the next empty input
