@@ -105,12 +105,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
         {  
           $test_entry_id = $db_test_entry->id;
           $allow_transcribe = true;
-          $allow_transcribe_operation |= $allow_transcribe;
+          $allow_transcribe_operation = $allow_transcribe;
         }
       }
       else if( $db_role->name == 'administrator' )
       {
-        if( $complete_count == $test_count && 0 < $adjudicate_count )
+        if( $complete_count == $test_count && 0 < $adjudicate_count && 0 == $defer_count )
         {
           $allow_adjudicate = true;
           $mod_test_entry = clone $base_mod;
