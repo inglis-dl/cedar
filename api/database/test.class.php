@@ -73,6 +73,7 @@ class test extends \cenozo\database\has_rank
     $data = array();
     $data['classification'] = 'candidate';
     $data['word'] = NULL;
+    $data['language'] = NULL;
 
     $base_mod = lib::create( 'database\modifier' );
     if( 'any' != $language ) $base_mod->where( 'language', '=', $language );
@@ -87,6 +88,7 @@ class test extends \cenozo\database\has_rank
     {   
       $data['classification'] = 'primary';
       $data['word'] = $db_word;
+      $data['language'] = $db_word->language;
     }    
     else
     {   
@@ -99,6 +101,7 @@ class test extends \cenozo\database\has_rank
         {   
           $data['classification'] = 'intrusion';
           $data['word'] = $db_word;
+          $data['language'] = $db_word->language;
         }   
         else
         {   
@@ -109,6 +112,7 @@ class test extends \cenozo\database\has_rank
           {   
             $data['classification'] = 'variant';
             $data['word'] = $db_word;
+            $data['language'] = $db_word->language;
           }   
         }   
       }     
