@@ -54,11 +54,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     if( $this->allow_restrict_state )
     {
-      $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
+      $restrict_state_id = $this->get_argument( 'restrict_state_id', 1 );
       if( $restrict_state_id )
-        $this->set_heading(
-          sprintf( '%s, restricted to %s',
-                   $this->get_subject(), $this->get_restrict_state( $restrict_state_id ) ) );
+        $this->set_heading( sprintf( '%s %s, restricted to %s',
+          $this->get_subject(),
+          $this->get_name(),
+          $this->get_restrict_state( $restrict_state_id ) ) );
     }
   }
   
@@ -182,7 +183,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $state_list[1] = 'open';
       $state_list[2] = 'closed';    
       $this->set_variable( 'state_list', $state_list );
-      $this->set_variable( 'restrict_state_id', $this->get_argument( 'restrict_state_id', '' ) );
+      $this->set_variable( 'restrict_state_id', $this->get_argument( 'restrict_state_id', 1 ) );
     }
 
     // define whether or not test_entry transcribing or adjudicating is allowed
