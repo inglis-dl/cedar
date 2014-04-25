@@ -126,7 +126,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         {  
           $test_entry_id = $db_test_entry->id;
           $allow_transcribe = true;
-          $allow_transcribe_operation |= $allow_transcribe;
+          $allow_transcribe_operation = $allow_transcribe;
         }
       }
       else if( $db_role->name == 'administrator' && 
@@ -156,7 +156,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
             {
               $test_entry_id = $db_test_entry->id;
               $allow_adjudicate = true;
-              $allow_adjudicate_operation |= $allow_adjudicate;
+              $allow_adjudicate_operation = $allow_adjudicate;
             }
           }
         }
