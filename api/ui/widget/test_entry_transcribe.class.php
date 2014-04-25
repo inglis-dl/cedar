@@ -74,12 +74,13 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     parent::setup();
 
     $session = lib::create( 'business\session' );
+    $db_user = $session->get_user();
 
     // determine whether the typist is on a break
     $away_time_mod = lib::create( 'database\modifier' );
     $away_time_mod->where( 'end_datetime', '=', NULL );
     $this->set_variable( 'on_break',
-      0 < $session->get_user()->get_away_time_count( $away_time_mod ) );
+      0 < $db_user->get_away_time_count( $away_time_mod ) );
 
     $db_test_entry = $this->get_record();
     $db_test = $db_test_entry->get_test();
@@ -93,8 +94,11 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'test_id', $db_test->id );
 
     // set the dictionary id's needed for text autocomplete
+    $is_FAS = false;
     if( $test_type_name == 'classification' || $test_type_name == 'ranked_word' )
     {
+      $is_FAS = preg_match( '/FAS/', $db_test->name );
+
       $db_dictionary = $db_test->get_dictionary();
       if( !is_null( $db_dictionary ) )
         $this->set_variable( 'dictionary_id', $db_dictionary->id );
@@ -108,9 +112,10 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
         $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
     }  
 
-    $language = 'any';
+    // allow bilingual responses for FAS tests if both the typist and the participant speak french
     $db_participant = $db_test_entry->get_assignment()->get_participant();
     $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
+    if( $is_FAS && $language == 'fr' && $db_user->language == 'fr' ) $language = 'any';
     $this->set_variable( 'language', $language );    
     
     // get the audio files from sabretooth
