@@ -43,7 +43,7 @@
         columns["id_1"] = {{ id_1 }};
         columns["id_2"] = {{ id_2 }};
 
-        data["confirmation"] =
+        data =
           $( table_selector + ' input:radio[name="adjudicate"]:checked' ).val() === "yes" ? 1 : 0;
         
         columns['data'] = data;

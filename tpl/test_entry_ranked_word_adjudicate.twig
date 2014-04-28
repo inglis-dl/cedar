@@ -127,16 +127,16 @@
         
         var rank = 1;
         $( table_selector + ' input:text[id$="intrusion"]' ).each( function() {
-          var candidate = $(this).val();
-          // if the entry is empty ignore it
-          if( 0 < candidate.length ) {            
-            intrusion_data[rank] = candidate;
-          }
+          intrusion_data[rank] = $(this).val();
           rank = rank + 1;
         } );
  
-        columns["data"] = data;
-        columns["intrusion_data"] = intrusion_data;
+        if( 0 < data.length ) {
+          columns["data"] = data;
+        }
+        if( 0 < intrusion_data.length ) {
+          columns["intrusion_data"] = intrusion_data;
+        }  
         args.columns = columns;
 
         if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
