@@ -117,12 +117,13 @@
           var id = $(this).prop( "id" ).split( "__" )[0] + "__" + $(this).val();
           var word_id = 
             $( table_selector + ' input:radio[id="' + id + '"]' ).prop( "name" ).split( "__" )[0];
+          var selection = $(this).val();  
           var candidate = "";
-          if( $(this).val() === "variant" ) {
+          if( selection === "variant" ) {
             candidate = 
               $( table_selector + ' input:text[id="' + $(this).prop( "name" ) + '"]' ).val();
-          } 
-          data[word_id] = { 'selection' : $(this).val(), 'word_candidate' : candidate };
+          }
+          data[word_id] = { 'selection' : selection, 'word_candidate' : candidate };
         } );
         
         var rank = 1;
@@ -131,10 +132,10 @@
           rank = rank + 1;
         } );
  
-        if( 0 < data.length ) {
+        if( 0 < Object.keys( data ).length ) {
           columns["data"] = data;
         }
-        if( 0 < intrusion_data.length ) {
+        if( 0 < Object.keys( intrusion_data ).length ) {
           columns["intrusion_data"] = intrusion_data;
         }  
         args.columns = columns;
