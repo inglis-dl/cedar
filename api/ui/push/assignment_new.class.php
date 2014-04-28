@@ -77,14 +77,13 @@ class assignment_new extends \cenozo\ui\push\base_new
       $pre_mod = lib::create( 'database\modifier' );
       $pre_mod->where( 'user_id', '!=', $db_user->id );
       $pre_mod->where( 'participant.active', '=', true );
-      $pre_mod->where( 'participant.cohort_id', 'IN', $cohort_ids );
-      
+      $pre_mod->where( 'participant.cohort_id', 'IN', $cohort_ids );      
       // filter on participants who have the same language as the user
       if( $db_user->language != 'any' )
       {
         $pre_mod->where( 'participant.language', '=', $db_user->language );
-      }  
-
+      }
+      
       // block with a semaphore
       $session->acquire_semaphore();
 
@@ -146,6 +145,12 @@ class assignment_new extends \cenozo\ui\push\base_new
           $base_mod->where( 'event.event_type_id', '=', $db_comprehensive_event_type->id );
         }
 
+        // exclude participants with two assignments
+        $sql = 'SELECT participant_id FROM assignment '.
+               'GROUP BY participant_id '.
+               'HAVING COUNT(participant_id) = 2';
+        $base_mod->where( 'participant.id', 'NOT IN', sprintf( '( %s )', $sql ) );
+
         $sabretooth_manager = NULL;
         if( $has_tracking )
         {
@@ -169,38 +174,43 @@ class assignment_new extends \cenozo\ui\push\base_new
           $mod_limit = clone $base_mod;
           $mod_limit->limit( $limit, $offset );
           $participant_list = $participant_class_name::select( $mod_limit );
-
           $participant_count = count( $participant_list );
           if( 0 < $participant_count )
           {
             foreach( $participant_list as $db_participant )
-            {
-              $assignment_mod = lib::create( 'database\modifier' );
-              $assignment_mod->where( 'user_id', '!=', $db_user->id );
-              $assignment_mod->where( 'participant_id', '=', $db_participant->id );
-              if( 2 > $assignment_class_name::count( $assignment_mod ) )
+            { 
+              $db_assignment = $assignment_class_name::get_unique_record(
+                array( 'user_id', 'participant_id' ),
+                array( $db_user->id, $db_participant->id ) );
+              if( is_null( $db_assignment ) )
               {
-                // now see if this participant has any recordings
-                if( $has_tracking )
+                $db_cohort = $db_participant->get_cohort();
+                $assignment_mod = lib::create( 'database\modifier' );
+                $assignment_mod->where( 'participant_id', '=', $db_participant->id );
+                if( 2 > $assignment_class_name::count( $assignment_mod ) )
                 {
-                  $args = array(
-                    'qnaire_rank' => 1,
-                    'participant_id' => $db_participant->id );
-                  $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
-                  $recording_data = array();
-                  if( !is_null( $recording_list) &&
-                      1 == $recording_list->success && 0 < count( $recording_list->data ) )
+                  // now see if this participant has any recordings
+                  if( $has_tracking && $db_cohort->name == 'tracking' )
                   {
-                    $participant_id = $db_participant->id;
-                    $cohort_name = 'tracking';
-                    $found = true;
-                    break;
+                    $args = array(
+                      'qnaire_rank' => 1,
+                      'participant_id' => $db_participant->id );
+                    $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
+                    $recording_data = array();
+                    if( !is_null( $recording_list) &&
+                        1 == $recording_list->success && 0 < count( $recording_list->data ) )
+                    {
+                      $participant_id = $db_participant->id;
+                      $cohort_name = 'tracking';
+                      $found = true;
+                      break;
+                    }
                   }
+                  else if( $has_comprehensive && $db_cohort->name == 'comprehensive' )
+                  {
+                    // stub until comprehensive recordings are worked out
+                  } 
                 }
-                if( !$found && $has_comprehensive )
-                {
-                  // stub until comprehensive recordings are worked out
-                } 
               }
             }
             $offset += $limit;
