@@ -93,6 +93,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
       // start by determining the table contents
       $grand_total_time = 0;
       $grand_total_complete = 0;
+      $grand_total_incomplete = 0;
       $grand_total_adjudicate = 0;
       $grand_total_defer = 0;
 
@@ -107,6 +108,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $activity_mod->where( 'activity.site_id', '=', $db_site->id );
         $activity_mod->where( 'activity.role_id', '=', $db_role->id );
         $activity_mod->where( 'operation.subject', '!=', 'self' );
+
+        $assignment_mod = lib::create( 'database\modifier' );
+        $assignment_mod->where( 'user_id', '=', $db_user->id );
 
         if( $restrict_start_date && $restrict_end_date )
         {
@@ -147,33 +151,22 @@ class productivity_report extends \cenozo\ui\pull\base_report
         // Determine the number of completed assignments and their average length.
         //////////////////////////////////////////////////////////////////////////
         $num_complete = 0;
+        $num_incomplete = 0;
         $num_adjudicate = 0;
         $num_defer = 0;
         $assignment_time = 0;
-        $assignment_mod = lib::create( 'database\modifier' );
-        $assignment_mod->where( 'user_id', '=', $db_user->id );
         foreach( $db_user->get_assignment_list( $assignment_mod ) as $db_assignment )
         {
           // are all of the assignment's tests complete?
           if( $db_assignment->all_tests_complete() )
           {
+            $num_complete++;
+
             // each test_entry deferral must have a note created by the user
             $test_entry_mod = lib::create( 'database\modifier' );
             $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
             $test_entry_mod->where( 'test_entry_note.user_id', '=', $db_user->id );
             if( 0 < $test_entry_class_name::count( $test_entry_mod ) ) $num_defer++;
-
-          // NOTE: currently the assignment time includes all time until the assignment is
-          // completed by the typist even if there was a delay to complete due to a deferral.
-          // Therefore, code remains commented out until required.
-          /*
-          $interval = util::get_interval( 
-            $db_assignment->start_datetime, $db_assignment->end_datetime );
-          $assignment_time = 
-            $interval->d * 24.0 + $interval->h + $interval->i / 60.0 + $interval->s / 3600.0;
-          */  
-
-            $num_complete++;
 
             // count the adjudicate submissions
             $test_entry_mod = lib::create( 'database\modifier' );
@@ -196,10 +189,15 @@ class productivity_report extends \cenozo\ui\pull\base_report
               }              
             } // end loop on test entries
           }
+          else
+          {
+            $num_incomplete++;
+          }  
+
         } // end loop on assignments
 
         // if there were no completed assignments then ignore this user
-        if( 0 == $num_complete ) continue;
+        if( 0 == ( $num_complete + $num_incomplete ) ) continue;
         
         // Now we can use all the information gathered above to fill in the contents of the table.
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -223,10 +221,14 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $num_defer,
             $num_adjudicate,
             $num_complete,
+            $num_incomplete,
             is_null( $min_datetime_obj ) ? '??' : $min_datetime_obj->format( "H:i" ),
             is_null( $max_datetime_obj ) ? '??' : $max_datetime_obj->format( "H:i" ),
             sprintf( '%0.2f', $total_time ),
-            0 < $total_time ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
+            0 < $total_time ?
+              sprintf( '%0.2f', $num_complete / $total_time ) : '',
+            0 < $total_time ?
+              sprintf( '%0.2f', ( $num_complete + $num_incomplete ) / $total_time ) : '' );
         }
         else
         {
@@ -235,8 +237,12 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $num_defer,
             $num_adjudicate,
             $num_complete,
+            $num_incomplete,
             sprintf( '%0.2f', $total_time ),
-            0 < $total_time ? sprintf( '%0.2f', $num_complete / $total_time ) : '' );
+            0 < $total_time ?
+              sprintf( '%0.2f', $num_complete / $total_time ) : '',
+            0 < $total_time ?
+              sprintf( '%0.2f', ( $num_complete + $num_incomplete ) / $total_time ) : '' );
         }
  
         $contents[] = $row;
@@ -244,11 +250,14 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $grand_total_defer += $num_defer;
         $grand_total_adjudicate += $num_adjudicate;
         $grand_total_complete += $num_complete;
+        $grand_total_incomplete += $num_incomplete;
         $grand_total_time += $total_time;
       }
 
-      $average_complete_PH = 0 < $grand_total_time? 
-        sprintf( '%0.2f', $grand_total_complete / $grand_total_time ) : 'N/A';
+      $average_complete_PH = 0 < $grand_total_time ? sprintf( '%0.2f', 
+        $grand_total_complete / $grand_total_time ) : 'N/A';
+      $average_assignment_PH = 0 < $grand_total_time ? sprintf( '%0.2f',
+        ( $grand_total_complete +  $grand_total_incomplete ) / $grand_total_time ) : 'N/A';
 
       if( $single_date )
       {
@@ -257,20 +266,24 @@ class productivity_report extends \cenozo\ui\pull\base_report
           "Defer",
           "Adjudicate",
           "Complete",
+          "Incomplete",
           "Start Time",
           "End Time",
           "Total Time",
-          "Complete PH" );
+          "Complete PH",
+          "Assignment PH" );
 
         $footer = array(
           "Total",
           "sum()",
           "sum()",
           "sum()",
+          "sum()",
           "--",
           "--",
           "sum()",
-          $average_complete_PH );
+          $average_complete_PH,
+          $average_assignment_PH );
       }
       else
       {
@@ -279,8 +292,10 @@ class productivity_report extends \cenozo\ui\pull\base_report
           "Defer",
           "Adjudicate",
           "Complete",
+          "Incomplete",
           "Total Time",
-          "Complete PH" );
+          "Complete PH",
+          "Assignment PH" );
 
         $footer = array(
           "Total",
@@ -288,7 +303,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
           "sum()",
           "sum()",
           "sum()",
-          $average_complete_PH );
+          "sum()",
+          $average_complete_PH,
+          $average_assignment_PH );
       }
 
       $title = 0 == $restrict_site_id ? $db_site->name : NULL;

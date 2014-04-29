@@ -66,23 +66,20 @@ class assignment_report extends \cenozo\ui\pull\base_report
        $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' )->id );
 
     $cohort_list = array();
-    $total_open = array();
     $total_complete = array();
     $header = array( 'Year', 'Month' );
     foreach( $cohort_class_name::select() as $db_cohort )
     {
       $cohort_list[$db_cohort->name] = $db_cohort->id;
-      $total_open[$db_cohort->name] = 0;
       $total_complete[$db_cohort->name] = 0;
       $header[] = ucwords( $db_cohort->name ) . ' Closed';
       $header[] = ucwords( $db_cohort->name ) . ' Open';
-
     }
 
     $total_available['tracking'] = $participant_class_name::count( $base_cati_mod );
     $total_available['comprehensive'] = $participant_class_name::count( $base_comp_mod );
 
-    $footer = array( '--', '--', 'sum()', 'sum()', 'sum()', 'sum()' );
+    $footer = array( '--', '--', 'sum()', '--', 'sum()', '--' );
 
     // validate the dates
     if( $restrict_start_date )
@@ -154,7 +151,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       // skip if no users at this site
       if( 0 == count( $id_list ) )
       {
-        $this->add_table( $title, $header, array( '--','--', 0, 0, 0, 0 ), $footer );        
+        $this->add_table( $title, $header, array( '--','--', 0, '0', 0, '0' ), $footer );        
         continue;
       }
 
@@ -222,14 +219,13 @@ class assignment_report extends \cenozo\ui\pull\base_report
           $row[] = $num_complete;
           $row[] = $num_partial + $num_started;
           $total_complete[ $cohort_name ] += $num_complete;
-          $total_open[ $cohort_name ] += $num_partial + $num_started;
         }
 
         $content[] = $row;
 
         if( $do_summary_table )
         {
-          $key = implode( array_slice( $row, 0, 2 ) );         
+          $key = implode( array_slice( $row, 0, 2 ) );
           if( !array_key_exists( $key, $summary_content ) )
           {
             $summary_content[ $key ] = $row;
@@ -242,30 +238,28 @@ class assignment_report extends \cenozo\ui\pull\base_report
         }
       }
 
-      $this->add_table( $title, $header, $content, $footer );      
+      $this->add_table( $title, $header, $content, $footer );
     }
 
     if( $do_summary_table )
-    {      
-      $this->add_table( 'Summary (All Sites)', 
-        $header, array_values( $summary_content ), $footer );       
+    {
+      $this->add_table( 'Summary (All Sites)',
+        $header, array_values( $summary_content ), $footer );
     }
-
     
-    $status_heading =  array( 'Cohort', 'Closed', 'Remaining', 'Open' );
+    $status_heading =  array( 'Cohort', 'Closed', 'Remaining' );
     $status_content = array();
-    $status_footer =  array( '--', 'sum()', 'sum()', 'sum()' );
+    $status_footer =  array( '--', 'sum()', 'sum()' );
 
     foreach( $cohort_list as $cohort_name => $cohort_id )
-    {  
-      $status_content[] = 
-        array( $cohort_name, 
-               ucwords( $total_complete[$cohort_name] ),
-               $total_available[$cohort_name] - $total_complete[$cohort_name],
-               $total_open[$cohort_name] );
+    {
+      $status_content[] =
+        array( ucwords( $cohort_name ),
+               $total_complete[$cohort_name],
+               $total_available[$cohort_name] - $total_complete[$cohort_name] );
     }
 
-    $this->add_table( 'Status (All Sites)', 
+    $this->add_table( 'Status (All Sites)',
       $status_heading, $status_content, $status_footer );
   }
 }
