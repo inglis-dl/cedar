@@ -59,11 +59,12 @@
         {% set recording_id = 0 %}
         {% for recording in recording_data %}
           <tr>
-            <audio controls
-              id="{{ widget.full }}__recording__{{ recording_id }}" 
-              <embed height="50" style="width:100%">
-              <source src="{{ recording }}" type="audio/wav">
-            </audio>
+            <td>
+              <audio controls height="50" style="width:100%">
+                id="{{ widget.full }}__recording__{{ recording_id }}" 
+                <source src="{{ recording }}" type="audio/wav">
+              </audio>
+            </td>
           </tr>
           {% set recording_id = recording_id+1 %}
         {% endfor %}
