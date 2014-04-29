@@ -122,37 +122,47 @@ class test_entry_new extends \cenozo\ui\push\base_new
           next( $c );
         }
 
-        $data = $columns['data'];
+        if( !array_key_exists( 'data', $columns ) &&
+            !array_key_exists( 'intrusion_data', $columns ) )
+          throw lib::create( 'exception\runtime',
+            'Test entry adjudication requires data', __METHOD__ );
+
         reset( $c );
-        foreach( $c as $db_entry )
+        if( array_key_exists( 'data', $columns ) )
         {
-          if( array_key_exists( $db_entry->word_id, $data ) )
+          $data = $columns['data'];
+          foreach( $c as $db_entry )
           {
-            $db_entry->selection = $data[$db_entry->word_id]['selection'];
-            if( !is_null( $db_entry->selection ) && $db_entry->selection == 'variant' )
-              $db_entry->word_candidate = $data[$db_entry->word_id]['word_candidate'];
-            $db_entry->save();
+            if( array_key_exists( $db_entry->word_id, $data ) )
+            {
+              $db_entry->selection = $data[$db_entry->word_id]['selection'];
+              if( !is_null( $db_entry->selection ) && $db_entry->selection == 'variant' )
+                $db_entry->word_candidate = $data[$db_entry->word_id]['word_candidate'];
+              $db_entry->save();
+            }
           }
         }
 
-        // do the intrusions now
-        $intrusion_data = $columns['intrusion_data'];
-        if( 0 < count( $intrusion_data ) )
+        if( array_key_exists( 'intrusion_data', $columns ) )
         {
-          $rank = 1;
-          $intrusion_modifier = lib::create( 'database\modifier' );
-          $intrusion_modifier->where( 'selection', '=', NULL );
-          $c = $record->get_test_entry_ranked_word_list( $intrusion_modifier );
-          foreach( $c as $db_entry )
+          $intrusion_data = $columns['intrusion_data'];
+          if( 0 < count( $intrusion_data ) )
           {
-            if( is_null( $db_entry->word_id ) && is_null( $db_entry->word_candidate ) &&
-                array_key_exists( $rank, $intrusion_data ) )
+            $rank = 1;
+            $intrusion_modifier = lib::create( 'database\modifier' );
+            $intrusion_modifier->where( 'selection', '=', NULL );
+            $c = $record->get_test_entry_ranked_word_list( $intrusion_modifier );
+            foreach( $c as $db_entry )
             {
-              $word_candidate = $intrusion_data[ $rank ];
-              $db_entry->word_candidate = $word_candidate;
-              $db_entry->save();              
+              if( is_null( $db_entry->word_id ) && is_null( $db_entry->word_candidate ) &&
+                  array_key_exists( $rank, $intrusion_data ) )
+              {
+                $word_candidate = $intrusion_data[ $rank ];
+                $db_entry->word_candidate = $word_candidate;
+                $db_entry->save();              
+              }
+              $rank = $rank + 1;
             }
-            $rank = $rank + 1;
           }
         }
 
@@ -171,12 +181,12 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
       if( $adjudicate )
       {
-        $data = $columns['data'];
-        if( !array_key_exists( 'confirmation', $data ) )
+        if( !array_key_exists( 'data', $columns ) )
           throw lib::create( 'exception\runtime',
-            'Test entry adjudication requires a valid confirmation', __METHOD__ );
+            'Test entry adjudication requires data', __METHOD__ );
 
-        $args['columns']['confirmation'] = $data['confirmation'];  
+        $data = $columns['data'];
+        $args['columns']['confirmation'] = $data;
       }
 
       $operation = lib::create( 'ui\push\test_entry_confirmation_new', $args );
@@ -257,8 +267,12 @@ class test_entry_new extends \cenozo\ui\push\base_new
 
         // data is set in the test_entry_classification_adjudicate.twig file
         // during the submit
-        $data = $columns['data'];
+        if( !array_key_exists( 'data', $columns ) )
+          throw lib::create( 'exception\runtime',
+            'Test entry adjudication requires data', __METHOD__ );
+
         reset( $c );
+        $data = $columns['data'];
         foreach( $c as $db_entry )
         {
           if( array_key_exists( $db_entry->rank, $data ) )
@@ -278,6 +292,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
             $db_entry->save();
           }
         }
+
         $db_test_entry_1->adjudicate = 0;
         $db_test_entry_2->adjudicate = 0;
         $db_test_entry_1->save();
@@ -344,8 +359,12 @@ class test_entry_new extends \cenozo\ui\push\base_new
           next( $c );
         }
 
-        $data = $columns['data'];
+        if( !array_key_exists( 'data', $columns ) )
+          throw lib::create( 'exception\runtime',
+            'Test entry adjudication requires data', __METHOD__ );
+
         reset( $c );
+        $data = $columns['data'];
         foreach( $c as $db_entry )
         {
           if( array_key_exists( $db_entry->rank, $data ) )
