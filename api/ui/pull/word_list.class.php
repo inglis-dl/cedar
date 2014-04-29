@@ -51,6 +51,11 @@ class word_list extends \cenozo\ui\pull
     $modifier = lib::create( 'database\modifier' );
 
     $first = true;
+    $do_where_bracket = ( 1 < count( $dictionary ) ) && ( 'any' != $language );
+    if( $do_where_bracket )
+    {
+      $modifier->where_bracket( true );
+    }
     foreach( $dictionary as $key => $value )
     {
       if( $first )
@@ -62,6 +67,10 @@ class word_list extends \cenozo\ui\pull
       {
         $modifier->where( 'dictionary_id', '=', $value, true, true );
       }
+    }
+    if( $do_where_bracket )
+    {
+      $modifier->where_bracket( false );
     }
 
     if( 'any' != $language ) $modifier->where( 'language', '=', $language );

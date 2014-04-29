@@ -99,6 +99,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -107,6 +108,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -125,7 +127,6 @@
           var columns = new Object();
           args.id = $(this).prop( "id" ).split( "__" )[0];
           var is_variant = $(this).prop( "id" ).split( "__" )[1] === "candidate";
-          columns["test_entry_id"] = {{ parent.id }};
           columns["word_candidate"] = candidate;
           if( is_variant ) {
             columns["selection"] = "variant";
@@ -143,6 +144,16 @@
             var classification = ajax_pull( "test", "classify_word", args );
             if( undefined != classification ) {
                $(this).addClass( classification );
+              // if a intrusion, check and add the word if not in the autocomplete source
+              if( classification == 'intrusion' ) {
+                var text_selector = $( table_selector + ' input:text[id$="intrusion"]' );
+                var source = text_selector.autocomplete( "option", "source" );
+                if( -1 == $.inArray( candidate, source ) ) {
+                  source.push( candidate );
+                  source.sort();
+                  text_selector.autocomplete( "option", "source", source );
+                }
+              }
             }           
             
             // re-enable all radio and variant text inputs
@@ -195,16 +206,19 @@
       $( table_selector + " input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
+        var selection = $(this).val();
         args.id = $(this).prop( "id" ).split("__")[0];
-        columns["test_entry_id"] = {{ parent.id }};
-        columns["selection"] = $(this).val();
+        columns["selection"] = selection;
+        if( selection !== "variant" ) {
+          columns["word_candidate"] = '';
+        }
         args.columns = columns;
         var do_text = true;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           var text_id = 
             table_selector + ' input:text[id="' + args.id + '__candidate"]';
           $( text_id ).removeClass( "candidate primary intrusion variant" );
-          if( $(this).val() === "variant" ) {
+          if( selection === "variant" ) {
             // disable inputs until the variant is entered
             $( table_selector + " input" ).prop( "disabled", true );
             $( text_id ).prop( "disabled", false );

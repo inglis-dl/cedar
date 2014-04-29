@@ -80,6 +80,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -88,6 +89,7 @@
         minLength: 1,
         select: function( event, ui ) {
           $(this).val( ui.item.value );
+          $(this).attr( "value", ui.item.value );
           }
         } );
 
@@ -111,7 +113,7 @@
           var columns = new Object();
           args.id = $(this).prop( "name" ).split( "__" )[2];
           args.columns = columns;
-          var candidate = "";
+          var candidate = null;
 
           if( is_intrusion ) {
             var target_text_id = '#' + $( table_selector +
@@ -122,8 +124,12 @@
             $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
             $( target_text_id ).val( candidate );
             $( target_text_id ).attr( "value", candidate );
-            columns["word_candidate"] = candidate;
-            columns["selection"] = "";
+            $( target_text_id ).prop( "disabled", false );
+            if( 0 == candidate.length ) {
+              columns["word_id"]='';
+            } else {
+              columns["word_candidate"] = candidate;
+            }  
           } else {
             var radio_id =
               $( table_selector + ' input:radio[name="' + entry_id + '"]:checked').prop( "id" );
@@ -133,14 +139,14 @@
             var source_radio_id = '#' + radio_id;
             var selection = $( source_radio_id ).prop( "value" );
             columns["selection"] = selection;
-            columns["word_id"] = "";
+            columns["word_id"] = '';
             if( selection == "variant" ) {
               var source_text_id = '#' + radio_id.replace( "variant", "candidate" );
               candidate = $( source_text_id ).val();
+              $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
               $( target_text_id ).val( candidate );
               $( target_text_id ).attr( "value", candidate );
               $( target_text_id ).prop( "disabled", false );
-              $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
               columns["word_candidate"] = candidate;
             } else {
               $( target_text_id ).val( "" );
@@ -165,10 +171,13 @@
 
       $( table_selector + ' div.adjudicate :radio' ).change( function() {
         var selection =  $(this).prop( "value" );
-        var disable = selection != "variant";
         var target_text_id = '#' +  $(this).prop( "id" ).split( "__" )[0] + "__candidate";
         $( target_text_id ).removeClass( "candidate primary intrusion variant" );
-        if( disable ) {
+
+        if( selection == "variant" ) {
+          $( target_text_id ).prop( "disabled", false );
+          $( target_text_id ).focus();
+        } else {
           $( target_text_id ).prop( "disabled", true );
           $( target_text_id ).val( "" );
           // update the value to present state
@@ -182,19 +191,16 @@
 
           // push the edits
           ajax_push( "{{ widget.subject }}", "edit", args );
-
-        } else {
-          $( target_text_id ).prop( "disabled", false );
-          $( target_text_id ).focus();
         }
-        // ensure corresponding Accept radio inputs are unchecked
+
+        // uncheck the Accept radio inputs
         var id_1 = '#' + $(this).prop( "name" ).split( "__" )[0] + "__accept";
         var id_2 = '#' + $(this).prop( "name" ).split( "__" )[1] + "__accept";
-        $( id_1 ).removeProp( "checked" ); 
-        $( id_2 ).removeProp( "checked" ); 
+        $( id_1 ).removeProp( "checked" );
+        $( id_2 ).removeProp( "checked" );
 
         // uncheck the "All" checkboxes if not all Accept radio items are selected
-        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );  
+        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
 
         configure_ui();
       } );// end adjudicate radio input change
@@ -203,13 +209,16 @@
         var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
 
         // uncheck the Accept radio inputs
-        var id_1 = '#' + $(this).prop( "name" ).split( "__" )[0] + 
+        var id_1 = '#' + $(this).prop( "name" ).split( "__" )[0] +
           (is_intrusion ? "__intrusion__accept" : "__accept");
         var id_2 = '#' + $(this).prop( "name" ).split( "__" )[1] +
           (is_intrusion ? "__intrusion__accept" : "__accept");
-        $( id_1 ).removeProp( "checked" );  
+        $( id_1 ).removeProp( "checked" );
         $( id_2 ).removeProp( "checked" );
         
+        // uncheck the "All" checkboxes if not all Accept radio items are selected
+        $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
+
         var candidate = $(this).val().trim().toLowerCase();
         // we've trimmed and lower-cased the candidate, so update the UI
         $(this).val( candidate );
@@ -227,9 +236,8 @@
         if( !is_intrusion && 0 == candidate.length ) {
           alert ( "Blank entries are not permitted" );
         } else {
-          // is this a variant of a primary word?
-          if( !is_intrusion ) {
-            columns["selection"] = "variant";
+          if( 0 == candidate.length ) {
+            columns["word_id"] = "";
           } 
           
           // push the edits
@@ -242,6 +250,16 @@
               args["word_candidate"] = candidate;
               var classification = ajax_pull( "test", "classify_word", args );
               $(this).addClass( classification );
+              // if an intrusion, check and add the word if not in the autocomplete source
+              if( classification == 'intrusion' ) {
+                var text_selector = $( table_selector + ' input:text[id$="intrusion"]' );
+                var source = text_selector.autocomplete( "option", "source" );
+                if( -1 == $.inArray( candidate, source ) ) {
+                  source.push( candidate );
+                  source.sort();
+                  text_selector.autocomplete( "option", "source", source );
+                }
+              }
             }
 
             configure_ui();

@@ -72,7 +72,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $db_test = $db_test_entry->get_test();
 
     // allow bilingual responses for FAS classification tests
-    $language = 'any';
+    $language = 'en';
     $is_FAS = preg_match( '/FAS/', $db_test->name );
     if( !$is_FAS )
     {
@@ -147,6 +147,10 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
             '" to a non-existant variant dictionary.  Assign a variant dictionary for the '.
             $db_test->name . ' test.', __METHOD__ );
       }
+      // TODO: the language is either that of the participant or english, since this is a new
+      // word that has never been added to a dictionary.  The only way to be certain of
+      // which language is to be assigned is to pass it from the UI layer: consider adding
+      // a drop down list of languages to select from beside text entry fields
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
       $db_new_word->word = $word_candidate;
