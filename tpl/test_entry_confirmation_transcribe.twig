@@ -44,7 +44,6 @@
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split( "__" )[0];
-        columns["test_entry_id"] = {{ parent.id }};
         columns["confirmation"] = ( $(this).val() === "yes" ) ? 1 : 0;
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
