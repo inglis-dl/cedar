@@ -144,7 +144,7 @@
         {% for recording in recording_data %}
           <tr>
             <td>
-              <audio controls height="50" style="width:100%">
+              <audio controls>
                 id="{{ widget.full }}__recording__{{ recording_id }}"
                 <source src="{{ recording }}" type="audio/wav">
               </audio>
