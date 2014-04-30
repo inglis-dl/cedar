@@ -96,3 +96,17 @@ debugging tips
 \cenozo\database\database::$debug=true;
 \cenozo\database\database::$debug=false;
 
+git management
+
+- if it is necessary to update qa and develop, then pull from release to qa 
+and from release to develop.  However, if the code is in a state where there 
+is no qa release ready for testing and you're not actively developing, commit 
+the fix in release and that's all.  Then, once you start developing again, 
+pull from release to develop to make sure you have all hot-fixes before 
+continuing development.  You never have to pull into qa unless there is an 
+active qa branch which is being tested.
+
+- when you fix bugs in qa do not pull them back into develop.  Instead, wait 
+until all the bugs are fixed and you merge into release, then you can pull from 
+release back into development (when you're ready to proceed with new development)
+
