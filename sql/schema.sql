@@ -682,6 +682,23 @@ CREATE TABLE IF NOT EXISTS `cedar`.`user_time` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+USE `cedar` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`sabretooth_recording`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`sabretooth_recording` (`interview_id` INT, `assignment_id` INT, `rank` INT, `participant_id` INT);
+
+-- -----------------------------------------------------
+-- View `cedar`.`sabretooth_recording`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`sabretooth_recording` ;
+DROP TABLE IF EXISTS `cedar`.`sabretooth_recording`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `sabretooth_recording` AS
+SELECT r.interview_id, r.assignment_id, r.rank, i.participant_id
+FROM sabretooth.recording r
+JOIN sabretooth.interview i ON i.id=r.interview_id;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

@@ -11,6 +11,7 @@ SOURCE away_time.sql;
 SOURCE user_time.sql;
 SOURCE test_entry_ranked_word.sql
 SOURCE test_entry_classification.sql
+SOURCE sabretooth_recording.sql
 
 -- after all SOURCES, update service version
 SOURCE update_version_number.sql;
