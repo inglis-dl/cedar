@@ -25,6 +25,7 @@ class assignment extends \cenozo\database\record
   public static function get_next_available_participant( $db_user )
   {
     $participant_class_name = lib::get_class_name( 'database\participant' );
+    $database_class_name = lib::get_class_name( 'database\database' );
 
     $has_tracking = false;
     $has_comprehensive = false;
@@ -46,27 +47,30 @@ class assignment extends \cenozo\database\record
     {
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'participant.active', '=', true );
-      $modifier->where( 'IFNULL( assignment.user_id, 0 )', '!=', $db_user->id );
+      $modifier->where( 'user_assignment.id', '=', NULL );
       $modifier->where( 'cohort.name', '=', 'tracking' );
       $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
       if( $language != 'any' )
         $modifier->where( 'participant.language', '=', $language );
       $modifier->group( 'participant.id' );
 
-      $sql = 
-           'SELECT participant.id FROM participant '.
-           'JOIN cohort ON cohort.id = participant.cohort_id '.
-           'JOIN event ON event.participant_id = participant.id '.
-           'JOIN event_type ON event_type.id = event.event_type_id '.
-           'JOIN '.
-           '('.
-           'SELECT participant_id FROM sabretooth_recording '.
-           'GROUP BY participant_id '.
-           ') '.
-           'AS temp ON participant.id = temp.participant_id '.
-           'LEFT JOIN assignment ON assignment.participant_id = participant.id '.
-           $modifier->get_sql() . ' '.
-           'HAVING COUNT(*) < 2 ';
+      $sql = sprintf(
+        'SELECT participant.id FROM participant '.
+        'JOIN cohort ON cohort.id = participant.cohort_id '.
+        'JOIN event ON event.participant_id = participant.id '.
+        'JOIN event_type ON event_type.id = event.event_type_id '.
+        'JOIN '.
+        '('.
+          'SELECT participant_id FROM sabretooth_recording '.
+          'GROUP BY participant_id '.
+        ') AS temp ON participant.id = temp.participant_id '.
+        'LEFT JOIN assignment ON assignment.participant_id = participant.id '.
+        'LEFT JOIN assignment AS user_assignment '.
+        'ON user_assignment.participant_id = participant.id '.
+        'AND user_assignment.user_id = %s %s '.
+        'HAVING COUNT(*) < 2 ',
+        $database_class_name::format_string( $db_user->id ),
+        $modifier->get_sql() );
 
        $id = static::db()->get_one( $sql );
     } 
