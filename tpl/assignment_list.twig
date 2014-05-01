@@ -54,9 +54,39 @@
       } );
     {% endif %}
 
+    {% if state_list is defined %}
+      $( function() {
+        // reload page if state selector is changed
+        $( "#{{ widget.full }}__restrict_state_id" ).change( function() {
+          var state_id = $( "#{{ widget.full }}__restrict_state_id option:selected" ).val();
+          slot_load( {{ slot }}, "{{ widget.subject }}", "{{ widget.name }}", 
+                     { "restrict_state_id": state_id } );
+        } );
+      } );
+    {% endif %}
+
   </script>
 
 {% endblock javascript %}
+
+{% block prelist %}
+  
+  {% if state_list is defined %}
+    {% set restrict_state_id = restrict_state_id|default(0) %}
+    <label for="{{ widget.full }}__restrict_state_id">Restrict to condition:</label>
+    <select id="{{ widget.full }}__restrict_state_id" class="ui-state-default"
+            style="margin-top:4px;margin-bottom:4px;">
+      <option {% if "" == restrict_state_id %}selected{% endif %}
+              value="">No restriction</option>
+      {% for id, name in state_list %}
+        <option {% if id == restrict_state_id %}selected{% endif %}
+                value="{{ id }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  {% endif %}
+  {{ parent() }}
+
+{% endblock prelist %}
 
 {% block header_button_columns %}
   <th width="1%"></th>

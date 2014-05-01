@@ -51,15 +51,6 @@
         }
       } );// end radio input change
 
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          $( table_selector ).find( "input:radio" ).each( function() {
-            $(this).removeProp( "checked" );
-          } );
-          configure_ui();
-        }
-      } );// end Reset button click
-
     } );
   </script>
 
@@ -104,8 +95,8 @@
             {% endif %}
             {{ entry_data.confirmation == '0' ? "checked" : "" }}/>
         </td>
-      </tr> 
+      </tr>
     </tbody>
-  </table> 
+  </table>
 
 {% endblock widget %}

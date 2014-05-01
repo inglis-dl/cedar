@@ -73,6 +73,8 @@ class test_view extends \cenozo\ui\widget\base_view
   {
     parent::setup();
 
+    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
+
     $record = $this->get_record();
     $this->set_variable( 'test_id', $record->id );
 
@@ -86,8 +88,6 @@ class test_view extends \cenozo\ui\widget\base_view
     $this->set_item( 'rank_words', 
       $record->rank_words ? "yes: primary dictionary words must be ranked" :  
                             "no: primary dictionary words are not ranked", true );
-
-    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
 
     $dictionary_list = array();
     foreach( $dictionary_class_name::select() as $db_dictionary )

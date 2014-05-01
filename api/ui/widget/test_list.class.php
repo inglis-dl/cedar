@@ -38,8 +38,8 @@ class test_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
 
-    $test_class_name = lib::get_class_name( 'database\test');
-    $modifier = lib::create('database\modifier');
+    $test_class_name = lib::get_class_name( 'database\test' );
+    $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'dictionary_id', '=', NULL );
     $allow_primary_sort = 
       $test_class_name::count( $modifier ) != $test_class_name::count();
@@ -72,23 +72,23 @@ class test_list extends \cenozo\ui\widget\base_list
     foreach( $dictionary_class_name::select() as $db_dictionary )
        $dictionary_list[$db_dictionary->id] = $db_dictionary->name;
 
-    foreach( $this->get_record_list() as $record )
+    foreach( $this->get_record_list() as $db_test )
     {
       // assemble the row for this record
-      $this->add_row( $record->id,
+      $this->add_row( $db_test->id,
         array( 
-          'rank' => $record->rank,
-          'name' => $record->name,
-          'strict' => ( $record->strict ? 'yes' : 'no' ),
-          'rank_words' => ( $record->rank_words ? 'yes' : 'no' ),
-          'dictionary_id' =>  ( is_null( $record->dictionary_id ) ? '(none)' :
-             $dictionary_list[ $record->dictionary_id ] ),
-           'variant_dictionary_id' => ( is_null( $record->variant_dictionary_id ) ? 
-             ( $record->strict ? 'N/A' : '(none)' ) :
-             $dictionary_list[ $record->variant_dictionary_id ] ),
-           'intrusion_dictionary_id' => ( is_null( $record->intrusion_dictionary_id ) ?
-             ( $record->strict ? 'N/A' : '(none)' ) :
-             $dictionary_list[ $record->intrusion_dictionary_id ] ) )
+          'rank' => $db_test->rank,
+          'name' => $db_test->name,
+          'strict' => ( $db_test->strict ? 'yes' : 'no' ),
+          'rank_words' => ( $db_test->rank_words ? 'yes' : 'no' ),
+          'dictionary_id' =>  ( is_null( $db_test->dictionary_id ) ? '(none)' :
+             $dictionary_list[ $db_test->dictionary_id ] ),
+           'variant_dictionary_id' => ( is_null( $db_test->variant_dictionary_id ) ? 
+             ( $db_test->strict ? 'N/A' : '(none)' ) :
+             $dictionary_list[ $db_test->variant_dictionary_id ] ),
+           'intrusion_dictionary_id' => ( is_null( $db_test->intrusion_dictionary_id ) ?
+             ( $db_test->strict ? 'N/A' : '(none)' ) :
+             $dictionary_list[ $db_test->intrusion_dictionary_id ] ) )
         );
     }
   }

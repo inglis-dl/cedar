@@ -44,10 +44,27 @@ abstract class base_adjudicate extends \cenozo\ui\widget
     $db_test_entry = $this->parent->get_record();
     $heading = $db_test_entry->get_test()->name . ' test adjudicate form';
 
-    //TODO put this somewhere else
     if( $db_test_entry->deferred )
       $heading = $heading . ' NOTE: this test is currently deferred';
 
     $this->set_heading( $heading );
+  }
+
+  /** 
+   * Sets up the operation with any pre-execution instructions that may be necessary.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @access protected
+   */
+  protected function setup()
+  {
+    parent::setup();
+
+    $db_test_entry = $this->parent->get_record();
+
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $this->set_variable( 'entry_data', 
+      $assignment_manager::get_adjudicate_data( $db_test_entry ) );
   }
 }

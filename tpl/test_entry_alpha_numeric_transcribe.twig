@@ -127,10 +127,10 @@
         var html = '<td class="added"><input type="text" style="width:20%" id="0__' + 
           rank + '"/></td>';
         // the number of entries in a typical row
-        var maxTd = $( "#{{ widget.full }}__entry_table tr:first td" ).length;
+        var maxTd = $( table_selector + " tr:first td" ).length;
 
         // the number of entries in the target row
-        var targetRow = $( "#{{ widget.full }}__entry_table tr" ).length - 1;
+        var targetRow = $( table_selector + " tr" ).length - 1;
         var numTd = $( table_selector + " tr:nth-child(" + targetRow + ") td" ).length;
 
         // add a new table row if required
@@ -152,25 +152,6 @@
         }
       } );// end Add button click
 
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        // push reset
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          // remove any cells and rows created with the Add button
-          $( table_selector + ' td.added' ).remove();
-          $( table_selector + ' tr.added' ).remove();
-          // clear all text fields and set focus to the first
-          $( table_selector + " input:text" ).each( function() {
-            $(this).val( "" );
-            $(this).attr( "value", "" );
-            $(this).prop( "name", "undefined" );
-            var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-            $(this).prop( "disabled", 1 != rank );
-          } );
-
-          configure_ui();
-        }        
-      } );// end Reset button click
-
     } );
   </script>
 
@@ -183,6 +164,7 @@
   <table id="{{ widget.full }}__entry_table">
 
     <tbody>
+
     {% set numcell = 10 %}
     {% set kprev = 'true' %}
     {% set imax = entry_data|length-1 %}

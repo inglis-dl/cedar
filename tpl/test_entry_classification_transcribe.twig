@@ -75,6 +75,7 @@
       var args = new Object();
       args["dictionary_id"] = {{ dictionary_id }};
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
+      args["variant_dictionary_id"] = {{ variant_dictionary_id }};
       args["language"] = "{{ language }}";
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
@@ -133,6 +134,15 @@
           var classification = ajax_pull( "test", "classify_word", args );
           if( undefined != classification ) {
             $(this).addClass( classification );
+            // if a variant, check and add the word if not in the autocomplete source
+            if( classification == 'variant' ) {
+              var source = $input_list.autocomplete( "option", "source" );
+              if( -1 == $.inArray( candidate, source ) ) {
+                source.push( candidate );
+                source.sort();
+                $input_list.autocomplete( "option", "source", source );
+              }
+            }  
           }
 
           // enable the next empty input
@@ -194,25 +204,6 @@
         }                          
       } );// end Add button click
 
-      $( "#{{ parent.full }}_Reset" ).click( function() {
-        // push reset
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          // remove any cells and rows created with the Add button
-          $( table_selector + " td.added" ).remove();
-          $( table_selector + " tr.added" ).remove();
-          // clear all text fields and set focus to the first
-          $( table_selector + " input:text" ).each( function() {
-            $(this).removeClass( "candidate intrusion variant primary" );
-            $(this).val( "" );
-            // update the value to present state
-            $(this).attr( "value", "" );
-            var rank = parseInt( $(this).prop( "id" ).split("__")[1] );
-            $(this).prop( "disabled", 1 != rank );
-          } );
-
-          configure_ui();
-        }
-      } );// end Reset button click
     } );
   </script>
 
@@ -247,7 +238,7 @@
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
         {% endif %}
-        {% set status = entry_data[k].word_id ? "word" : "empty" %} 
+        {% set status = entry_data[k].word_id ? "word" : "empty" %}
 
         <td>
           <input type="text"
@@ -292,4 +283,3 @@
   </table>
 
 {% endblock widget %}
-

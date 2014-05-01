@@ -29,7 +29,6 @@ class test_entry_ranked_word_transcribe extends base_transcribe
    * Sets up the operation with any pre-execution instructions that may be necessary.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
    * @access protected
    */
   protected function setup()
@@ -38,57 +37,65 @@ class test_entry_ranked_word_transcribe extends base_transcribe
 
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
-
-    if( $test_type_name != 'ranked_word' )
-      throw lib::create( 'exception\runtime',
-              'Widget requires test type to be ranked word, not ' . 
-              $test_type_name, __METHOD__ );
-
     $db_participant = $db_test_entry->get_assignment()->get_participant();
+
     $language = $db_participant->language;
     $language = is_null( $language ) ? 'en' : $language;
+    $word_id = 'word_' . $language . '_id';
     
-    $word_list = array();
-    $intrusion_list = array();
     $modifier = lib::create( 'database\modifier' );
-    $modifier->order( 'id' );
+    $modifier->order( 'ranked_word_set.rank' );
     $entry_data = array();
     foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as 
              $db_test_entry_ranked_word )
     {
-      $selection = is_null( $db_test_entry_ranked_word->selection ) ? '' :
-                            $db_test_entry_ranked_word->selection;                            
-      $word_candidate = is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
-                                 $db_test_entry_ranked_word->word_candidate;
-      $word_id = is_null( $db_test_entry_ranked_word->word_id ) ? '' : 
-                          $db_test_entry_ranked_word->word_id;
-      $word = '';                    
-      $classification = '';                    
+      $db_ranked_word_set = $db_test_entry_ranked_word->get_ranked_word_set();
+      $db_ranked_word_set_word = is_null( $db_ranked_word_set ) ? NULL : 
+        lib::create( 'database\word', $db_ranked_word_set->$word_id );
 
-      if( !empty( $word_id ) )
+      $selection = $db_test_entry_ranked_word->selection;
+      $db_word = $db_test_entry_ranked_word->get_word();
+      $classification = '';
+
+      if( is_null( $selection ) && is_null( $db_ranked_word_set_word ) && !is_null( $db_word ) )
       {
-        $word = $db_test_entry_ranked_word->get_word()->word;
-        if( !empty( $word_candidate ) && $selection == 'variant' )
-        {
-          $data = $db_test_entry->get_test()->get_word_classification(
-                  $word_candidate, $language );
-          $classification = $data['classification'];        
-        }
+        $classification = 'intrusion';
       }
-      else
-      { 
-        $classification = 'intrusion';  
-      }
+      if( !is_null( $db_word ) && $selection == 'variant' )
+      {
+        $classification = 'variant';
+      }      
 
-      $entry_data[] = 
-          array(
-            'id' => $db_test_entry_ranked_word->id,
-            'word_id' => $word_id,
-            'word' => $word,
-            'selection' => $selection,  
-            'word_candidate' => $word_candidate,
-            'classification' => $classification );
+      $entry_data[] =
+        array(
+          'id' => $db_test_entry_ranked_word->id,
+          'ranked_word_set_id' => is_null( $db_ranked_word_set ) ? '' : $db_ranked_word_set->id,
+          'ranked_word_set_word' => 
+            is_null( $db_ranked_word_set_word ) ? '' : $db_ranked_word_set_word->word,
+          'word_id' => is_null( $db_word ) ? '' : $db_word->id,
+          'word' => is_null( $db_word ) ? '' : $db_word->word,
+          'selection' => is_null( $selection ) ? '' : $selection,
+          'classification' => $classification );
+    }
+    // now get the intrusions
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'ranked_word_set_id', '=', NULL );
+    $modifier->where( 'selection' , '=', NULL );
+    foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as 
+             $db_test_entry_ranked_word )
+    {
+      $db_word = is_null( $db_test_entry_ranked_word->word_id ) ? NULL :
+        lib::create( 'database\word', $db_test_entry_ranked_word->word_id );
+
+      $entry_data[] =
+        array(
+          'id' => $db_test_entry_ranked_word->id,
+          'ranked_word_set_id' => '',
+          'ranked_word_set_word' => '',
+          'word_id' => is_null( $db_word ) ? '' : $db_word->id,
+          'word' => is_null( $db_word ) ? '' : $db_word->word,
+          'selection' => '',
+          'classification' => is_null( $db_word ) ? '' : 'intrusion' );
     }
 
     $this->set_variable( 'entry_data', $entry_data );

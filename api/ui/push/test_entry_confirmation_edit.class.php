@@ -37,9 +37,9 @@ class test_entry_confirmation_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
-    $record = $this->get_record();
-    $completed = is_null( $record->confirmation ) ? 0 : 1;
-    $db_test_entry = $record->get_test_entry();
-    $db_test_entry->update_status_fields( $completed );
+    $db_test_entry = $this->get_record()->get_test_entry();
+
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_test_entry( $db_test_entry );
   }  
 }

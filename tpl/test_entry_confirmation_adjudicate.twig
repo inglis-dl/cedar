@@ -28,42 +28,32 @@
       //hijack all the non-accept radio buttons so that
       //a non-greyed out appearance can be maintained instead
       //of assigning the disabled attribute
-      $( table_selector + ' input:radio[value!="accept"]' ).click(function(e) {
+      $( table_selector + ' input:radio[value!="accept"]' ).click( function( e ) {
         e.preventDefault();
         return false;
-      });
+      } );
 
-      $( "#{{ parent.full }}_Submit" ).click( function() {
-        var args = new Object();
-        var columns = new Object();
-        var data = new Object();
-        columns["participant_id"] = {{ participant_id }};
-        columns["test_id"] = {{ test_id }};
-        columns["completed"] = 1;
-        columns["id_1"] = {{ id_1 }};
-        columns["id_2"] = {{ id_2 }};
-
-        data =
-          $( table_selector + ' input:radio[name="adjudicate"]:checked' ).val() === "yes" ? 1 : 0;
-        
-        columns['data'] = data;
-        args.columns = columns;
-
-        if( ajax_push( "{{ parent.subject }}", "new", args ) ) {
-          $( "#{{ parent.full }}_Submit" ).button( { disabled : true } );
-          $( "#{{ parent.full }}_Next" ).trigger( "click" );
-        }
-      } );// end Submit button click
-
-      $( table_selector + ' input:radio[value="accept"]' ).change(
-        function() {
+      $( table_selector + ' input:radio[value="accept"]' ).change( function() {
+        // get the progenitor column's data
         var id = $(this).prop( "id" ).split( "__" )[0];
         var confirmation = $( table_selector + ' input:radio[id^="' + id + '"]:checked' ).val();
+        
         $( table_selector + ' input:radio[name="adjudicate"]' ).removeProp( "checked" );
         $( table_selector + ' input:radio[name="adjudicate"][value="' + 
           confirmation +'"]' ).prop( "checked", true );
 
-        configure_ui();
+        // push the edit
+        var args = new Object();
+        args.id =  $( table_selector + 
+          ' input:radio[name="adjudicate"]:checked' ).prop( "id" ).split( "__" )[0];
+        var columns = new Object();
+        columns['confirmation'] = confirmation;
+        args.columns = columns;
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          configure_ui();
+        } else {
+          $( table_selector + ' input:radio[name="adjudicate"]' ).removeProp( "checked" );
+        }
       } );// end radio input change
 
     } );
@@ -77,7 +67,7 @@
 
   {% if entry_data.id_1 is defined and entry_data.id_2 is defined %}
 
-    <caption style="text-align: left;"><strong>{{ entry_data.instruction }}</strong></caption>
+    <caption style="text-align: left;"><strong>{{ instruction }}</strong></caption>
 
     <div class="spacer"></div>
 
@@ -98,16 +88,16 @@
             <td>
               <input type="radio"
                 id="{{ entry_data.id_1 }}__yes"
-                name="{{ entry_data.id_1 }}__confirmation"
-                value="yes"
+                name="{{ entry_data.id_1 }}"
+                value="1"
                 {{ entry_data.confirmation_1 == '1' ? "checked" : "" }}/>
               <label for="{{ entry_data.id_1 }}__yes">Yes</label>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry_data.id_1 }}__no"
-                name="{{ entry_data.id_1 }}__confirmation"
-                value="no"
+                name="{{ entry_data.id_1 }}"
+                value="0"
                 {{ entry_data.confirmation_1 == '1' ? "" : "checked" }}/>
               <label for="{{ entry_data.id_1 }}__no">No</label>
             </td>
@@ -122,16 +112,16 @@
             <td>
               <input type="radio"
                 id="{{ entry_data.id_2 }}__yes"
-                name="{{ entry_data.id_2 }}__confirmation"
-                value="yes"
+                name="{{ entry_data.id_2 }}"
+                value="1"
                 {{ entry_data.confirmation_2 == '1' ? "checked" : "" }}/>
               <label for="{{ entry_data.id_2 }}__yes">Yes</label>
             </td>
             <td>
               <input type="radio"
                 id="{{ entry_data.id_2 }}__no"
-                name="{{ entry_data.id_2 }}__confirmation"
-                value="no"
+                name="{{ entry_data.id_2 }}"
+                value="0"
                 {{ entry_data.confirmation_2 == '1' ? "" : "checked" }}/>
               <label for="{{ entry_data.id_2 }}__no">No</label>
             </td>
@@ -145,22 +135,22 @@
 
             <td>
               <input type="radio"
-                id="{{ widget.full }}__yes"
+                id="{{ entry_data.id_3 }}__yes"
                 name="adjudicate"
-                value="yes"/>
-              <label for="{{ widget.full }}__confirmation__yes">Yes</label>
+                value="1"/>
+              <label for="{{ entry_data.id_3 }}__yes">Yes</label>
             </td>
             <td>
               <input type="radio"
-                id="{{ widget.full }}__no"
+                id="{{ entry_data.id_3 }}__no"
                 name="adjudicate"
-                value="no"/>
-              <label for="{{ widget.full }}__confirmation__no">No</label>
+                value="0"/>
+              <label for="{{ entry_data.id_3 }}__no">No</label>
             </td>
           </tr>
 
-      </tbody>    
-    </table> 
+      </tbody>
+    </table>
 
   {% else %}
 
@@ -171,4 +161,3 @@
   {% endif %}
 
 {% endblock widget %}
-

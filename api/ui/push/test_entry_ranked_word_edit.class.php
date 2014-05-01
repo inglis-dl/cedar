@@ -29,56 +29,68 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
   /** 
    * This method executes the operation's purpose.
+   * This type of test has two possible sources of edits from the UI layer:
+   * 1) when a text entry field for a variant or intrusion changes
+   * 2) when a selection changes
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
    * @access protected
    */
   protected function execute()
   {
     parent::execute();
-    
-    $record = $this->get_record();
-    $db_test_entry = $record->get_test_entry();
+
+    $word_class_name = lib::get_class_name( 'database\word' );
+
+    $db_test_entry_ranked_word = $this->get_record();
+    $db_test_entry = $db_test_entry_ranked_word->get_test_entry();
     $db_test = $db_test_entry->get_test();
 
-    // note that for adjudication entries, there is no assignment and such
-    // entries cannot be edited
+    $language = NULL;
     $db_assignment = $db_test_entry->get_assignment();
-    if( is_null( $db_assignment ) ) 
-      throw lib::create( 'exception\runtime',
-        'Tried to edit an adjudication entry', __METHOD__ );
-
-    $language = $db_assignment->get_participant()->language;
+    if( is_null( $db_assignment ) )
+      $language = $db_test_entry->get_participant()->language;
+    else
+      $language = $db_assignment->get_participant()->language;      
     $language = is_null( $language ) ? 'en' : $language;
 
-    if( !is_null( $record->word_candidate ) )
+    $columns = $this->get_argument( 'columns' );
+    $word_candidate =
+      array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
+      $columns['word_candidate'] : NULL;
+
+    if( !is_null( $word_candidate ) )
     {
-      $data = $db_test->get_word_classification( 
-        $record->word_candidate, $language );
+      $data = $db_test->get_word_classification( $word_candidate, $language );
+      $classification = $data['classification'];
+      $db_word = $data['word'];
 
-      $classification = $data['classification'];  
-
-      if( $record->selection == 'variant' )
+      if( $db_test_entry_ranked_word->selection == 'variant' )
       {
         if( $classification != 'variant' )
         {
           throw lib::create( 'exception\notice',
-            'The word "' . $record->word_candidate . '" is not in the '.
-            'variant dictionary and so cannot be added as a variant. '.
-            'Pleae add as an intrusion and make a note.',
+            'The word "' . $word_candidate . '" is not one of the '.
+            'accepted variant words: add as an intrusion instead.',
              __METHOD__ );
-         }
+        }
+        else
+          $db_test_entry_ranked_word->word_id = $db_word->id;
       }
-      else if( is_null( $record->selection ) )
+      // NULL selection implies test_entry was created for an intrusion
+      else if( is_null( $db_test_entry_ranked_word->selection ) )
       {
+        // reject words that are in the primary or variant dictionaries
         if( $classification == 'primary' ||
             $classification == 'variant' )
         {    
           throw lib::create( 'exception\notice',
-            'The word "' . $record->word_candidate . '" is one of the '.
+            'The word "' . $word_candidate . '" is one of the '.
             $classification . ' words and cannot be entered as an intrusion.',
             __METHOD__ );
         }
+        // not a primary or variant
         else if( $classification == 'candidate' )
         {
           //get the test's intrusion dictionary and add it as an intrusion
@@ -86,41 +98,31 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
           if( is_null( $db_dictionary ) )
           {
             throw lib::create( 'exception\notice',
-              'Trying to add the word "'.  $record->word_candidate . '" to a non-existant ' .
-              ' intrusion dictionary.  Assign an intrusion dictionary for the ' . 
+              'Trying to add the word "'.  $word_candidate .
+              '" to a non-existant intrusion dictionary.  Assign an intrusion dictionary for the '.
               $db_test->name . ' test.', __METHOD__ );
           }
           else
           {
             $db_new_word = lib::create( 'database\word' );
             $db_new_word->dictionary_id = $db_dictionary->id;
-            $db_new_word->word = $record->word_candidate;
+            $db_new_word->word = $word_candidate;
             $db_new_word->language = $language;
             $db_new_word->save();
+            $db_test_entry_ranked_word->word_id = $word_class_name::db()->insert_id();
           }
-        }           
+        }
+        // it is an existing intrusion
+        else
+        {
+          $db_test_entry_ranked_word->word_id = $db_word->id;
+        }  
       }
-    } 
 
-    $test_entry_ranked_word_class_name = lib::get_class_name( 'database\test_entry_ranked_word' );
-    $base_mod = lib::create( 'database\modifier' );
-    $base_mod->where( 'test_entry_id', '=', $db_test_entry->id );
+      $db_test_entry_ranked_word->save();
+    }
 
-    $modifier = clone $base_mod;
-    $modifier->where( 'selection', '=', 'yes' );
-    $num_yes = $test_entry_ranked_word_class_name::count( $modifier );
-    $modifier = clone $base_mod;
-    $modifier->where( 'selection', '=', 'no' );
-    $num_no = $test_entry_ranked_word_class_name::count( $modifier );
-    $modifier = clone $base_mod;
-    $modifier->where( 'selection', '=', 'variant' );
-    $modifier->where( 'word_candidate', '!=', NULL );
-    $num_variant = $test_entry_ranked_word_class_name::count( $modifier );
-
-    $num_selection = $db_test->get_ranked_word_set_count();
-   
-    $completed = ( $num_yes + $num_no + $num_variant ) == $num_selection;
-
-    $db_test_entry->update_status_fields( $completed );
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_test_entry( $db_test_entry );
   }
 }

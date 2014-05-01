@@ -130,8 +130,8 @@
           columns["word_candidate"] = candidate;
           if( is_variant ) {
             columns["selection"] = "variant";
-            columns["word_id"] = $(this).prop( "name" );
-          }  
+            columns["ranked_word_set_id"] = $(this).prop( "name" );
+          }
           args.columns = columns;
           
           // push edits
@@ -144,6 +144,16 @@
             var classification = ajax_pull( "test", "classify_word", args );
             if( undefined != classification ) {
                $(this).addClass( classification );
+              // if a intrusion, check and add the word if not in the autocomplete source
+              if( classification == 'intrusion' ) {
+                var text_selector = $( table_selector + ' input:text[id$="intrusion"]' );
+                var source = text_selector.autocomplete( "option", "source" );
+                if( -1 == $.inArray( candidate, source ) ) {
+                  source.push( candidate );
+                  source.sort();
+                  text_selector.autocomplete( "option", "source", source );
+                }
+              }
             }           
             
             // re-enable all radio and variant text inputs
@@ -175,6 +185,7 @@
       update_input_list();
       configure_ui();
 
+      // note that only non-strict tests can have new entries added for intrusions
       $( "#{{ widget.full }}_Add" ).button( {
         text: false,
         icons: { primary: "ui-icon-plusthick" }
@@ -223,29 +234,6 @@
 
         configure_ui( do_text );
       } );// end radio input change
-
-      $( "#{{ parent.full }}_Reset" ).click( function() {
-        // push reset
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": {{ parent.id }} } ) ) {
-          // clear all text entries
-          $( table_selector + ' input:text' ).each( function() {
-            $(this).removeClass( "candidate primary intrusion variant" );
-            $(this).val( "" );
-            // update the value to present state
-            $(this).attr( "value", "" );
-            $(this).prop( "disabled", true );
-          } );
-          // remove table rows added for intrusions
-          $( table_selector + ' tr.intrusion' ).remove();
-          // clear all radio inputs
-          $( table_selector + ' input:radio' ).each( function() {
-            $(this).prop( "checked", false );
-          } );
-
-          configure_ui();
-        }
-      } );// end Reset button click
-
     } );
   </script>
 
@@ -270,12 +258,12 @@
     <tbody>
     {% for entry in entry_data %}
       
-        {% if entry.word is defined %}
-        <tr class="ranked_word">  
-          <td class="heading">{{ entry.word }}</td>
-          <td><input type="radio" 
+        {% if entry.ranked_word_set_word is defined %}
+        <tr class="ranked_word">
+          <td class="heading">{{ entry.ranked_word_set_word }}</td>
+          <td><input type="radio"
                id="{{ entry.id }}__yes"
-               name="{{ entry.word_id }}"
+               name="{{ entry.ranked_word_set_id }}"
                value="yes"
                {% if editable == 0 %}
                  { readonly }
@@ -283,7 +271,7 @@
                {{ entry.selection == 'yes' ? "checked" : "" }}/></td>
           <td><input type="radio"
                id="{{ entry.id }}__no"
-               name="{{ entry.word_id }}" 
+               name="{{ entry.ranked_word_set_id }}"
                value="no"
                {% if editable == 0 %}
                  { readonly }
@@ -291,7 +279,7 @@
                {{ entry.selection == 'no' ? "checked" : "" }}/></td>
           <td><input type="radio"
                id="{{ entry.id }}__variant"
-               name="{{ entry.word_id }}"
+               name="{{ entry.ranked_word_set_id }}"
                value="variant"
                {% if editable == 0 %}
                  { readonly }
@@ -299,19 +287,19 @@
                {{ entry.selection == 'variant' ? "checked" : "" }}/></td>
           <td><input type="text"
                id="{{ entry.id }}__candidate"
-               name="{{ entry.word_id }}"
+               name="{{ entry.ranked_word_set_id }}"
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {% if entry.word_candidate is defined %}
-                 value="{{ entry.word_candidate }}"
+               {% if entry.word is defined %}
+                 value="{{ entry.word }}"
                  {% if entry.classification is defined %}
                    class="{{ entry.classification }}"
-                 {% endif %}  
+                 {% endif %}
                {% else %}
                  { disabled }
                {% endif %}/></td>
-        </tr>       
+        </tr>
         {% else %}
         <tr class="intrusion">
           <td class="heading">INTRUSION</td>
@@ -321,28 +309,28 @@
                {% if editable == 0 %}
                  { readonly }
                {% endif %}
-               {% if entry.word_candidate is defined %}
-                 value="{{ entry.word_candidate }}"
+               {% if entry.word is defined %}
+                 value="{{ entry.word }}"
                  {% if entry.classification is defined %}
                    class="{{ entry.classification }}"
-                 {% endif %}  
+                 {% endif %}
                {% endif %}/></td>
-         </tr>      
+         </tr>
         {% endif %}
-    {% endfor %}  
+    {% endfor %}
 
       {% if editable == 1 %}
       <tr>
-        <td colspan=5 class="button">
+        <td colspan="5" class="button">
             <button class="{{ widget.full }}__add_entry"
               style="float:right"
               disabled
               id="{{ widget.full }}_Add">Add</button>
-         </td>      
+         </td>
       </tr>
       {% endif %}
 
-    </tbody>   
+    </tbody> 
   </table>
 
   <div id="{{ widget.full }}__variant_dialog"></div>

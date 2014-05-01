@@ -12,7 +12,7 @@ global $SETTINGS;
 // tagged version
 $SETTINGS['general']['application_name'] = 'cedar';
 $SETTINGS['general']['service_name'] = $SETTINGS['general']['application_name'];
-$SETTINGS['general']['version'] = '0.1.2';
+$SETTINGS['general']['version'] = '0.1.3';
 
 // always leave as false when running as production server
 $SETTINGS['general']['development_mode'] = false;

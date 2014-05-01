@@ -38,16 +38,17 @@ class test_entry_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
     
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+
     $this->add_column( 'test.rank', 'constant', 'Order', true );
     $this->add_column( 'test_id', 'string', 'Test', true );
     $this->add_column( 'audio_fault', 'boolean', 'Audio Fault', true );
     $this->add_column( 'completed', 'boolean', 'Completed', true );
     $this->add_column( 'deferred', 'boolean', 'Deferred', true );
 
-    // TODO adjudications may be removed at after system operates
+    // TODO adjudications may be removed after system operates
     // and shows that double data entry is not required.  Consider
     // setting as a system Setting to be set by an administrator
-    $operation_class_name = lib::get_class_name( 'database\operation' );
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
     {
@@ -55,7 +56,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
       $this->add_column( 'adjudicate', 'boolean', 'Adjudicate', true );
     }  
 
-    //TODO consider adding the typist(s) name assigned to the test and their email
+    // TODO consider adding the typist(s) name assigned to the test and their email
     // contact info
   }
   

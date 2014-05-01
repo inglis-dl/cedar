@@ -11,4 +11,7 @@ SOURCE test_entry_alpha_numeric.sql;
 SOURCE test_entry_classification.sql;
 SOURCE assignment.sql;
 
+-- after all SOURCES, update service version
+SOURCE update_version_number.sql;
+
 COMMIT;

@@ -45,7 +45,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       $columns = $this->get_argument( 'columns' );      
       $class_name = lib::get_class_name( 'database\test_entry_classification' );
       $this->set_record( $class_name::get_unique_record( 
-        array( 'test_entry_id', 'rank' ), 
+        array( 'test_entry_id', 'rank' ),  
         array( $columns['test_entry_id'], $columns['rank'] ) ) );
     }      
     else
@@ -71,26 +71,24 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $db_test_entry = $db_test_entry_classification->get_test_entry();
     $db_test = $db_test_entry->get_test();
 
-    // note that for adjudication entries, there is no assignment and such
-    // entries cannot be edited
-    $db_assignment = $db_test_entry->get_assignment();
-    if( is_null( $db_assignment ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to edit an adjudication entry', __METHOD__ );
-
     // allow bilingual responses for FAS classification tests
-    $language = 'any';
+    $language = 'en';
     $is_FAS = preg_match( '/FAS/', $db_test->name );
     if( !$is_FAS )
     {
-      $language = $db_assignment->get_participant()->language;
+      $db_assignment = $db_test_entry->get_assignment();
+      if( is_null( $db_assignment ) )
+        $language = $db_test_entry->get_participant()->language;
+      else
+        $language = $db_assignment->get_participant()->language;      
       $language = is_null( $language ) ? 'en' : $language;
-    }  
-    
-    $columns = $this->get_argument( 'columns' );
-    $word_candidate = array_key_exists( 'word_candidate', $columns ) ? 
-      $columns['word_candidate'] : NULL;
+    }
 
+    $columns = $this->get_argument( 'columns' );
+    $word_candidate = 
+      array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
+      $columns['word_candidate'] : NULL;
+    
     $data = $db_test->get_word_classification( $word_candidate, $language );
     $classification = $data['classification'];
     $db_word = $data['word'];
@@ -98,9 +96,8 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     if( !is_null( $db_word ) )
     {
       $db_test_entry_classification->word_id = $db_word->id;
-      $db_test_entry_classification->word_candidate = NULL;
     }
-    else
+    else if( !is_null( $word_candidate ) )
     {
       // the word isnt in the primary, variant or intrusion dictionaries
       $db_dictionary = NULL;
@@ -130,7 +127,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         }          
         if( $is_intrusion )
         { 
-          //get the test's intrusion dictionary and add it as an intrusion
+          // get the test's intrusion dictionary and add it as an intrusion
           $db_dictionary = $db_test->get_intrusion_dictionary();
           if( is_null( $db_dictionary ) ) 
             throw lib::create( 'exception\notice',
@@ -142,7 +139,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
       if( is_null( $db_dictionary ) )
       {
-        //get the test's variant dictionary and add it as a variant
+        // get the test's variant dictionary and add it as a variant
         $db_dictionary = $db_test->get_variant_dictionary();
         if( is_null( $db_dictionary ) ) 
           throw lib::create( 'exception\notice',
@@ -150,24 +147,25 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
             '" to a non-existant variant dictionary.  Assign a variant dictionary for the '.
             $db_test->name . ' test.', __METHOD__ );
       }
+      // TODO: the language is either that of the participant or english, since this is a new
+      // word that has never been added to a dictionary.  The only way to be certain of
+      // which language is to be assigned is to pass it from the UI layer: consider adding
+      // a drop down list of languages to select from beside text entry fields
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
       $db_new_word->word = $word_candidate;
       $db_new_word->language = $language;
       $db_new_word->save();
       $db_test_entry_classification->word_id = $word_class_name::db()->insert_id();
-      $db_test_entry_classification->word_candidate = NULL;
+    }
+    else
+    {
+      $db_test_entry_classification->word_id = NULL;
     }
 
     $db_test_entry_classification->save();
 
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'word_id', '!=', NULL );
-    $modifier->where( 'word_candidate', '!=', NULL, true, true );
-    $test_entry_classification_class_name = 
-      lib::get_class_name('database\test_entry_classification');
-    $completed = 0 < $test_entry_classification_class_name::count( $modifier );
-
-    $db_test_entry->update_status_fields( $completed );
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_test_entry( $db_test_entry );
   }
 }

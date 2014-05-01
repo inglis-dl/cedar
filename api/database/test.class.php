@@ -16,99 +16,106 @@ class test extends \cenozo\database\has_rank
 {
   /** 
    * Get the variant dictionary.
+   * This method is required because there is no variant_dictionary table,
+   * only a dictionary table.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
-   * @return record()
+   * @return record() db_dictionary or NULL
    */
   public function get_variant_dictionary()
   {
-    if( is_null( $this->variant_dictionary_id ) )
-    {
-      return NULL;
-    }
-    else
-    {
-      return lib::create( 'database\dictionary', $this->variant_dictionary_id );
-    }
+    return is_null( $this->variant_dictionary_id ) ? NULL :
+           lib::create( 'database\dictionary', $this->variant_dictionary_id );
   }
 
   /** 
    * Get the intrusion dictionary.
+   * This method is required because there is no intrusion_dictionary table,
+   * only a dictionary table.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
-   * @return record()
+   * @return record() db_dictionary or NULL
    */
   public function get_intrusion_dictionary()
   {
-    if( is_null( $this->intrusion_dictionary_id ) )
-    {
-      return NULL;
-    }
-    else
-    {
-      return lib::create( 'database\dictionary', $this->intrusion_dictionary_id );
-    }
+    return is_null( $this->intrusion_dictionary_id ) ? NULL :
+           lib::create( 'database\dictionary', $this->intrusion_dictionary_id );
   }
 
   /** 
-   * Classify a word candidate based on dictionary membership.
+   * Classify a word based on test's dictionary membership.
+   * All tests must have a primary dictionary assigned. Non-strict tests 
+   * must also have variant and intrusion dictionaries assigned.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @throws exception\runtime
-   * @return array()  classification={candidate, primary, intrusion, variant}, record
+   * @param string $word A non-empty word.
+   * @param string $language The language of the word.
+   * @return array()  classification={candidate, primary, intrusion, variant}, db_word
    */
-  public function get_word_classification( $word_candidate, $language = "any" )
+  public function get_word_classification( $word, $language = 'any' )
   {
-    if( is_null( $this->id ) )
+    // all tests must have a primary dictionary assigned
+    // non-strict tests must also have variant and intrusion dictionaries assigned
+    if( ( !$this->strict && is_null( $this->dictionary_id ) ) ||
+         ( is_null( $this->dictionary_id ) || 
+           is_null( $this->intrusion_dictionary_id ) ||
+           is_null( $this->variant_dictionary_id ) ) )
       throw lib::create( 'exception\runtime',
-        'Tried to classify a word candidate on a test with no id', __METHOD__ );
+        'Word classification requires the test to have the necessary ' .
+        'dictionaries assigned.' , __METHOD__ );
+
+    $word_class_name = lib::get_class_name( 'database\word' );
 
     $data = array();
     $data['classification'] = 'candidate';
     $data['word'] = NULL;
+    $data['language'] = NULL;
 
     $base_mod = lib::create( 'database\modifier' );
     if( 'any' != $language ) $base_mod->where( 'language', '=', $language );
-    $base_mod->where( 'word', '=', $word_candidate );
+    $base_mod->where( 'word', '=', $word );
     $base_mod->limit( 1 );
 
     $modifier = clone $base_mod;
-    $modifier->where( 'dictionary_id', '=', $this->get_dictionary()->id );
+    $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
 
-    $word_class_name = lib::get_class_name( 'database\word' );
     $db_word = current( $word_class_name::select( $modifier ) );
-    if( false !== $db_word ) 
+    if( false !== $db_word )
     {   
       $data['classification'] = 'primary';
       $data['word'] = $db_word;
+      $data['language'] = $db_word->language;
     }    
     else
     {   
       if( !$this->strict ) 
       {   
         $modifier = clone $base_mod;
-        $modifier->where( 'dictionary_id', '=', $this->get_intrusion_dictionary()->id );
+        $modifier->where( 'dictionary_id', '=', $this->intrusion_dictionary_id );
         $db_word = current( $word_class_name::select( $modifier ) );
         if( false !== $db_word )
         {   
           $data['classification'] = 'intrusion';
           $data['word'] = $db_word;
+          $data['language'] = $db_word->language;
         }   
         else
         {   
           $modifier = clone $base_mod;
-          $modifier->where( 'dictionary_id', '=', $this->get_variant_dictionary()->id );
+          $modifier->where( 'dictionary_id', '=', $this->variant_dictionary_id );
           $db_word = current( $word_class_name::select( $modifier ) );
-          if( false !== $db_word )
+          if( false !== $db_word ) 
           {   
             $data['classification'] = 'variant';
             $data['word'] = $db_word;
-          }
-        } 
-      }   
+            $data['language'] = $db_word->language;
+          }   
+        }   
+      }     
     }
 
     return $data;
