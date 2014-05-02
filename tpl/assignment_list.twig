@@ -77,10 +77,10 @@
     <select id="{{ widget.full }}__restrict_state_id" class="ui-state-default"
             style="margin-top:4px;margin-bottom:4px;">
       <option {% if "" == restrict_state_id %}selected{% endif %}
-              value="">No restriction</option>
+              value = "">Open</option>
       {% for id, name in state_list %}
         <option {% if id == restrict_state_id %}selected{% endif %}
-                value="{{ id }}">{{ name }}</option>
+                value = "{{ id }}">{{ name }}</option>
       {% endfor %}
     </select>
   {% endif %}

@@ -54,12 +54,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     if( $this->allow_restrict_state )
     {
-      $restrict_state_id = $this->get_argument( 'restrict_state_id', 1 );
-      if( $restrict_state_id )
+      $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
+      if( $restrict_state_id != 2 )
         $this->set_heading( sprintf( '%s %s, restricted to %s',
           $this->get_subject(),
           $this->get_name(),
-          $this->get_restrict_state( $restrict_state_id ) ) );
+          $this->get_restrict_state_name( $restrict_state_id ) ) );
     }
   }
   
@@ -180,10 +180,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     if( $this->allow_restrict_state )
     {
-      $state_list[1] = 'open';
-      $state_list[2] = 'closed';    
+      $state_list[1] = 'Closed';    
+      $state_list[2] = 'No restriction';    
       $this->set_variable( 'state_list', $state_list );
-      $this->set_variable( 'restrict_state_id', $this->get_argument( 'restrict_state_id', 1 ) );
+      $this->set_variable( 'restrict_state_id', $this->get_argument( 'restrict_state_id', '' ) );
     }
 
     // define whether or not test_entry transcribing or adjudicating is allowed
@@ -222,12 +222,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( isset( $restrict_state_id ) && $restrict_state_id !== '' )
+      if( isset( $restrict_state_id ) && $restrict_state_id != 2 )
       {
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-        if( $restrict_state_id == 1 )
+        if( $restrict_state_id == '' )
           $modifier->where( 'end_datetime', '=', NULL );
-        else if( $restrict_state_id == 2 )
+        else if( $restrict_state_id == 1 )
           $modifier->where( 'end_datetime', '!=', NULL );
       }
     }
@@ -258,12 +258,12 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( isset( $restrict_state_id ) && $restrict_state_id !== '' )
+      if( isset( $restrict_state_id ) && $restrict_state_id != 2 )
       {
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-        if( $restrict_state_id == 1 )
+        if( $restrict_state_id == '' )
           $modifier->where( 'end_datetime', '=', NULL );
-        else if( $restrict_state_id == 2 )
+        else if( $restrict_state_id == 1 )
           $modifier->where( 'end_datetime', '!=', NULL );
       }
     }
@@ -307,9 +307,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
    * @param boolean $enable
    * @access public
    */
-  private function get_restrict_state( $id )
+  private function get_restrict_state_name( $id )
   {
-     if( $id == 1 ) return 'open';
-     else return 'closed';
+     if( $id == 1 ) return 'closed';
+     else return 'open';
   }
 }
