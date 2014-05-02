@@ -386,21 +386,21 @@ class assignment_manager extends \cenozo\singleton
              throw lib::create( 'exception\runtime',
                'Invalid max ranked test entry', __METHOD__ );
 
-            $max_rank = $db_max_rank_entry->rank;
-         
             //create additional entries if necessary
-            $count = $max_rank - count( $c );
-            for( $i = 0; $i < $count; $i++ )
+            $c_obj = end( $c );
+            for( $rank = $c_obj->rank + 1; $rank <= $db_max_rank_entry->rank; $rank++ )
             {
               $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
               $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
+              $db_entry->rank = $rank;
               $db_entry->save();
             }
+            reset( $c ); 
 
             $rank = 1;
             $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
             while( ( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) ) &&
-                   $rank <= $max_rank )
+                   $rank <= $db_max_rank_entry->rank )
             {
               $a_obj = current( $a );
               $b_obj = current( $b );
