@@ -113,6 +113,11 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
     }
 
+    if( is_null( $end_datetime_obj ) )
+    {
+      $end_datetime_obj = clone $now_datetime_obj;
+    }
+
     // we only care about what months have been selected, set days of month appropriately
     // such that the for loop below will include the start and end date's months
     $start_datetime_obj->setDate(
