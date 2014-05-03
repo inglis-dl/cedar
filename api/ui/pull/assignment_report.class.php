@@ -192,7 +192,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $in_progress_mod->where( 'user_id', 'IN', $id_list );
         $in_progress_mod->where( 'start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
         $in_progress_mod->where( 'end_datetime', '=', NULL );
-        foreach( $cohort_list as $cohort_name => $cohord_id )
+        foreach( $cohort_list as $cohort_name => $cohort_id )
         {
           $complete_values
             = array_count_values( array_values( $complete_list[$cohort_name] ) );
