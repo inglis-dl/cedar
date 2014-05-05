@@ -94,12 +94,9 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       if( !is_null( $db_dictionary ) ) 
         $this->set_variable( 'dictionary_id', $db_dictionary->id );
 
-      if( !preg_match( '/FAS/', $db_test->name ) ) 
-      {   
-        $db_variant_dictionary = $db_test->get_variant_dictionary();
-        if( !is_null( $db_variant_dictionary ) ) 
-          $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
-      }   
+      $db_variant_dictionary = $db_test->get_variant_dictionary();
+      if( !is_null( $db_variant_dictionary ) ) 
+        $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
      
       $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
       if( !is_null( $db_intrusion_dictionary ) ) 
@@ -153,8 +150,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
+    $modifier->where( 'deferred', '=', false );
+    $modifier->where( 'completed', '=', true );
     $modifier->where( 'adjudicate', '=', true );
     $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
+    $modifier->limit( 1 );
     $db_sibling_test_entry = current( $test_entry_class_name::select( $modifier ) );
     if( false === $db_sibling_test_entry )
       throw lib::create( 'exception\runtime',

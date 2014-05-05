@@ -185,17 +185,36 @@ class assignment_manager extends \cenozo\singleton
 
     if( is_null( $db_assignment->end_datetime ) && $db_assignment->all_tests_complete() )
     {
-      $modifier = lib::create( 'database\modifier' );
       $db_sibling_assignment = $db_assignment->get_sibling_assignment();
       
       if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
       {
-        // count the number of records requiring adjudication
-        $modifier->where( 'assignment_id', 'IN',
-            array( $db_assignment->id, $db_sibling_assignment->id ) );
-        $modifier->where( 'IFNULL( adjudicate, 1 )', '=', 1 );
+        // go through all the tests and look for differences
+        // get all the assignment's tests
+        $modifier = lib::create( 'database\modifier' );
+        $modifier->where( 'assignment_id', '=', $db_assignment->id );
+        $modifier->where( 'completed', '=', true );
+        $modifier->where( 'deferred', '=', false );
+        $complete = true;
+        foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
+        {
+          $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+          $adjudicate = $db_test_entry->compare( $db_sibling_test_entry ) ? NULL : true;
+          if( !is_null( $adjudicate ) ) $complete = false;
+          
+          if( $db_test_entry->adjudicate != $adjudicate )
+          {
+            $db_test_entry->adjudicate = $adjudicate;
+            $db_test_entry->save();
+          }
+          if( $db_sibling_test_entry->adjudicate != $adjudicate )
+          {
+             $db_sibling_test_entry->adjudicate = $adjudicate;
+             $db_sibling_test_entry->save();
+          }
+        }
 
-        if( 2 == $test_entry_class_name::count( $modifier ) )
+        if( $complete )
         {
           // both assignments are now complete: set their end datetimes
           $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
@@ -205,21 +224,11 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_assignment->save();
         }
       }
-      else
-      {
-        $modifier->where( 'IFNULL( adjudicate, 1 )', '=', 1 );
-        if( 0 == $db_assignment->get_test_entry_count( $modifier ) )
-        {
-          $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
-          $db_assignment->end_datetime = $end_datetime;
-          $db_assignment->save();
-        }
-      }
     }  
   }
 
   /**
-   * Update a test_entry, its assigment, its sibling assignment and its sibling
+   * Update test_entry, its assigment, its sibling assignment and its sibling
    * assignment's test_entry based on its complete status.  This method is
    * typically called whenever a daughter table entry is edited.
    * 
@@ -233,52 +242,20 @@ class assignment_manager extends \cenozo\singleton
     $db_test = $db_test_entry->get_test();
 
     $db_test_entry->completed = $db_test_entry->is_completed();
+    $db_test_entry->save();
 
     // no further processing is required for an adjudicate entry
     if( is_null( $db_test_entry->participant_id ) )
     {
-      // check if we need to adjudicate
+      // check if the assignment can be completed
       if( $db_test_entry->completed && !$db_test_entry->deferred )
       {   
         $db_assignment = $db_test_entry->get_assignment();
-
-        // does the sibling assignment exist?
-        $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-        if( !is_null( $db_sibling_assignment ) ) 
-        {   
-          // get the sibling test entry
-          $db_sibling_test_entry = $test_entry_class_name::get_unique_record(
-            array( 'test_id', 'assignment_id' ), 
-            array( $db_test->id, $db_sibling_assignment->id ) );
-
-          // only check for adjudication if both tests are complete and not deferred
-          if( $db_sibling_test_entry->completed && !$db_sibling_test_entry->deferred )
-          {   
-            // compare the daughter table entries, true if identical
-            if( !$db_test_entry->compare( $db_sibling_test_entry ) )
-            {
-              $db_test_entry->adjudicate = true;
-              $db_sibling_test_entry->adjudicate = true;
-              $db_sibling_test_entry->save();
-
-              // roll back the complete status of the sibling assignment if required
-              if( !is_null( $db_sibling_assignment->end_datetime ) )
-              {
-                $db_sibling_assignment->end_datetime = NULL;
-                $db_sibling_assignment->save();
-              }
-            }
-          }   
-        }
-        else
-        {
-          // check and mark this assignment as complete
-          static::complete_assignment( $db_assignment );
-        }
+        
+        // the assignment will determine the adjudicate status
+        static::complete_assignment( $db_assignment );
       }   
     }
-
-    $db_test_entry->save();
   }
 
   /**
@@ -386,21 +363,21 @@ class assignment_manager extends \cenozo\singleton
              throw lib::create( 'exception\runtime',
                'Invalid max ranked test entry', __METHOD__ );
 
-            $max_rank = $db_max_rank_entry->rank;
-         
             //create additional entries if necessary
-            $count = $max_rank - count( $c );
-            for( $i = 0; $i < $count; $i++ )
+            $c_obj = end( $c );
+            for( $rank = $c_obj->rank + 1; $rank <= $db_max_rank_entry->rank; $rank++ )
             {
               $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
               $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
+              $db_entry->rank = $rank;
               $db_entry->save();
             }
+            reset( $c ); 
 
             $rank = 1;
             $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
             while( ( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) ) &&
-                   $rank <= $max_rank )
+                   $rank <= $db_max_rank_entry->rank )
             {
               $a_obj = current( $a );
               $b_obj = current( $b );
