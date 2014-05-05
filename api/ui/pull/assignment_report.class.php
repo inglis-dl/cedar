@@ -176,7 +176,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $complete_mod->where( 'end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $complete_mod->where( 'end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
           
-        $complete_list = array_keys( $cohort_list );
+        $complete_list = array_fill_keys( array_keys( $cohort_list ), array() );
         foreach( $assignment_class_name::select( $complete_mod ) as $db_assignment )
         {
           // which cohort does this assignment pertain to?
@@ -199,8 +199,8 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $in_progress_mod->where( 'end_datetime', '=', NULL );
         foreach( $cohort_list as $cohort_name => $cohort_id )
         {
-          $complete_values
-            = array_count_values( array_values( $complete_list[$cohort_name] ) );
+          $complete_values =
+            array_count_values( array_values( $complete_list[$cohort_name] ) );
 
           // number completed by two typists
           $num_complete = 
