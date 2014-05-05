@@ -140,6 +140,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
           $test_entry_mod->where( 'adjudicate', '=', true );
+          $test_entry_mod->where( 'deferred', '=', false );
+          $test_entry_mod->where( 'completed', '=', true );
           $test_entry_mod->order( 'test.rank' );
           $test_entry_mod->limit( 1 );
 
@@ -149,6 +151,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
             // see if the sibling test_entry exists
             $sibling_mod = lib::create( 'database\modifier' );
             $sibling_mod->where( 'adjudicate', '=', true );
+            $sibling_mod->where( 'deferred', '=', false );
+            $sibling_mod->where( 'completed', '=', true );
             $sibling_mod->where( 'assignment_id', '=', $db_sibling_assignment->id );
             $sibling_mod->where( 'test_id', '=', $db_test_entry->test_id );
             $db_sibling_test_entry = current( $test_entry_class_name::select( $sibling_mod ) );
