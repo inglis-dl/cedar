@@ -23,9 +23,8 @@ CREATE PROCEDURE patch_assignment_total()
         "JOIN test_entry_total_deferred ON test_entry_total_deferred.assignment_id=assignment.id ",
         "JOIN test_entry_total_completed ON test_entry_total_completed.assignment_id=assignment.id ",
         "JOIN test_entry_total_adjudicate ON test_entry_total_adjudicate.assignment_id=assignment.id" );
-      PREPARE statement FROM @sql;
-      EXECUTE statement;
-      DEALLOCATE PREPARE statement;
+      SELECT "Run the following sql in the cedar database" AS "";
+      SELECT @sql AS "";
      
     END IF; 
   END //
