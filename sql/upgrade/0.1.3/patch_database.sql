@@ -12,6 +12,11 @@ SOURCE user_time.sql;
 SOURCE test_entry_ranked_word.sql
 SOURCE test_entry_classification.sql
 SOURCE sabretooth_recording.sql
+SOURCE test_entry_total.sql
+SOURCE test_entry_total_deferred.sql
+SOURCE test_entry_total_completed.sql
+SOURCE test_entry_total_adjudicate.sql
+SOURCE assignment_total.sql
 
 -- after all SOURCES, update service version
 SOURCE update_version_number.sql;
