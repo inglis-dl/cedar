@@ -15,6 +15,66 @@ use cenozo\lib, cenozo\log, cedar\util;
 class assignment extends \cenozo\database\record
 {
   /** 
+   * Get the number of deferred test_entry records for this assignment.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return integer
+   * @access public
+   */
+  public function get_deferred_count()
+  {
+    if( is_null( $this->id ) )
+    {
+      throw lib::create( 'exception\runtime',
+        'Tried to get deferred count for an assignment with no id', __METHOD__ );
+    }
+    return static::db()->get_one(
+      sprintf( 'SELECT deferred FROM assignment_total WHERE assignment_id = %s', 
+               $this->id ) );
+  }
+
+  /** 
+   * Get the number of completed test_entry records for this assignment.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return integer
+   * @access public
+   */
+  public function get_completed_count()
+  {
+    if( is_null( $this->id ) )
+    {
+      throw lib::create( 'exception\runtime',
+        'Tried to get completed count for an assignment with no id', __METHOD__ );
+    }
+    return static::db()->get_one(
+      sprintf( 'SELECT completed FROM assignment_total WHERE assignment_id = %s', 
+               $this->id ) );
+  }
+
+  /** 
+   * Get the number of adjudicate test_entry records for this assignment.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return integer
+   * @access public
+   */
+  public function get_adjudicate_count()
+  {
+    if( is_null( $this->id ) )
+    {
+      throw lib::create( 'exception\runtime',
+        'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
+    }
+    return static::db()->get_one(
+      sprintf( 'SELECT adjudicate FROM assignment_total WHERE assignment_id = %s', 
+               $this->id ) );
+  }
+
+  /** 
    * Get the next available participant id to create an assignment for.
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>

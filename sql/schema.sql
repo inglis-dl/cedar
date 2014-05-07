@@ -690,6 +690,31 @@ USE `cedar` ;
 CREATE TABLE IF NOT EXISTS `cedar`.`sabretooth_recording` (`interview_id` INT, `assignment_id` INT, `rank` INT, `participant_id` INT);
 
 -- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`assignment_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`assignment_total` (`id` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total_completed`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total_completed` (`assignment_id` INT, `completed` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total_deferred`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total_deferred` (`assignment_id` INT, `deferred` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total_adjudicate`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total_adjudicate` (`assignment_id` INT, `adjudicate` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total` (`assignment_id` INT, `total` INT);
+
+-- -----------------------------------------------------
 -- View `cedar`.`sabretooth_recording`
 -- -----------------------------------------------------
 DROP VIEW IF EXISTS `cedar`.`sabretooth_recording` ;
@@ -699,6 +724,69 @@ CREATE  OR REPLACE VIEW `sabretooth_recording` AS
 SELECT r.interview_id, r.assignment_id, r.rank, i.participant_id
 FROM sabretooth.recording r
 JOIN sabretooth.interview i ON i.id=r.interview_id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`assignment_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`assignment_total` ;
+DROP TABLE IF EXISTS `cedar`.`assignment_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `assignment_total` AS
+SELECT assignment.id AS assignment_id,
+test_entry_total.total AS total,
+test_entry_total_deferred.deferred AS deferred,
+test_entry_total_completed.completed AS completed,
+test_entry_total_adjudicate.adjudicate AS adjudicate,
+FROM assignment
+JOIN test_entry_total ON test_entry_total.assignment_id=assignment.id
+JOIN test_entry_total_deferred ON test_entry_total_deferred.assignment_id=assignment.id
+JOIN test_entry_total_completed ON test_entry_total_completed.assignment_id=assignment.id
+JOIN test_entry_total_adjudicate ON test_entry_total_adjudicate.assignment_id=assignment.id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total_completed`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total_completed` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total_completed`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total_completed` AS
+SELECT assignment_id, SUM( completed ) AS completed FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total_deferred`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total_deferred` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total_deferred`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total_deferred` AS
+SELECT assignment_id, SUM( deferred ) AS deferred FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id
+;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total_adjudicate`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total_adjudicate` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total_adjudicate`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total_adjudicate` AS
+SELECT assignment_id, SUM( IFNULL( adjudicate, 0 ) ) AS adjudicate FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total` AS
+SELECT assignment_id, COUNT(*) AS total FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

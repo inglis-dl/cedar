@@ -199,18 +199,17 @@ class assignment_manager extends \cenozo\singleton
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
-          $adjudicate = $db_test_entry->compare( $db_sibling_test_entry ) ? NULL : true;
-          if( !is_null( $adjudicate ) ) $complete = false;
-          
-          if( $db_test_entry->adjudicate != $adjudicate )
+          if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
-            $db_test_entry->adjudicate = $adjudicate;
-            $db_test_entry->save();
-          }
-          if( $db_sibling_test_entry->adjudicate != $adjudicate )
-          {
-             $db_sibling_test_entry->adjudicate = $adjudicate;
-             $db_sibling_test_entry->save();
+            if( is_null( $db_test_entry->adjudicate ) || 
+                is_null( $db_sibling_test_entry->adjudicate ) )
+            {
+              $db_test_entry->adjudicate = true;
+              $db_test_entry->save();
+              $db_sibling_test_entry->adjudicate = true;
+              $db_sibling_test_entry->save();
+              $complete = false;
+            }
           }
         }
 

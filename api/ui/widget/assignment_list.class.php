@@ -45,9 +45,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
-    $this->add_column( 'deferred', 'string', 'Defer', false );
-    $this->add_column( 'adjudicate', 'string', 'Adjudicate', false );
-    $this->add_column( 'completed', 'string', 'Complete', false );
+    $this->add_column( 'assignment_total.deferred', 'number', 'Deferred', true );
+    $this->add_column( 'assignment_total.adjudicate', 'number', 'Adjudicate', true );
+    $this->add_column( 'assignment_total.completed', 'number', 'Completed', true );
 
     $this->set_addable( $db_role->name == 'typist' );
     $this->set_allow_restrict_state( $db_role->name != 'typist' );
@@ -55,7 +55,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( $restrict_state_id != 2 )
+      if( $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
         $this->set_heading( sprintf( '%s %s, restricted to %s',
           $this->get_subject(),
           $this->get_name(),
@@ -90,23 +90,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
 
-      // the number of tests is cohort and therefore assigment dependent
-      $test_count = $test_entry_class_name::count( clone $base_mod );
-
-      $completed_mod = clone $base_mod;
-      $completed_mod->where( 'completed', '=', true );
-      $complete_count = $test_entry_class_name::count( $completed_mod );
-
       $db_participant = $db_assignment->get_participant();
       $language = $db_participant->language;
-
-      $deferred_mod = clone $base_mod;
-      $deferred_mod->where( 'deferred', '=', true );
-      $defer_count = $test_entry_class_name::count( $deferred_mod );
-
-      $adjudicate_mod = clone $base_mod;
-      $adjudicate_mod->where( 'adjudicate', '=', true );
-      $adjudicate_count = $test_entry_class_name::count( $adjudicate_mod );
 
       $allow_transcribe = false;
       $allow_adjudicate = false;
@@ -130,7 +115,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         }
       }
       else if( $db_role->name == 'administrator' && 
-               $complete_count == $test_count && 0 < $adjudicate_count && 0 == $defer_count )
+               $db_assignment->all_tests_complete() )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
         if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
@@ -140,6 +125,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
           $test_entry_mod->where( 'adjudicate', '=', true );
+          $test_entry_mod->where( 'deferred', '=', false );
+          $test_entry_mod->where( 'completed', '=', true );
           $test_entry_mod->order( 'test.rank' );
           $test_entry_mod->limit( 1 );
 
@@ -149,6 +136,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
             // see if the sibling test_entry exists
             $sibling_mod = lib::create( 'database\modifier' );
             $sibling_mod->where( 'adjudicate', '=', true );
+            $sibling_mod->where( 'deferred', '=', false );
+            $sibling_mod->where( 'completed', '=', true );
             $sibling_mod->where( 'assignment_id', '=', $db_sibling_assignment->id );
             $sibling_mod->where( 'test_id', '=', $db_test_entry->test_id );
             $db_sibling_test_entry = current( $test_entry_class_name::select( $sibling_mod ) );
@@ -167,12 +156,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
                'participant.uid' => $db_participant->uid,
                'cohort.name' => $db_participant->get_cohort()->name,
                'user.name' => $db_assignment->get_user()->name,
-               'deferred' => 
-                 0 < $defer_count ? $defer_count . '/' . $test_count : 'none',
-               'adjudicate' => 
-                 0 < $adjudicate_count ? $adjudicate_count . '/' . $test_count : 'none',
-               'completed' =>  
-                 0 < $complete_count ? $complete_count . '/' . $test_count : 'none',
+               'assignment_total.deferred' => $db_assignment->get_deferred_count(),
+               'assignment_total.adjudicate' =>  $db_assignment->get_adjudicate_count(),
+               'assignment_total.completed' =>  $db_assignment->get_completed_count(),
                'allow_transcribe' => $allow_transcribe,
                'allow_adjudicate' => $allow_adjudicate,
                'test_entry_id' => $test_entry_id ) );
@@ -180,9 +166,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
     if( $this->allow_restrict_state )
     {
-      $state_list[1] = 'Closed';    
-      $state_list[2] = 'No restriction';    
-      $this->set_variable( 'state_list', $state_list );
+      $this->set_variable( 'state_list', $this->state_list );
       $this->set_variable( 'restrict_state_id', $this->get_argument( 'restrict_state_id', '' ) );
     }
 
@@ -222,13 +206,20 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( isset( $restrict_state_id ) && $restrict_state_id != 2 )
+      if( isset( $restrict_state_id ) && 
+          $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-        if( $restrict_state_id == '' )
-          $modifier->where( 'end_datetime', '=', NULL );
-        else if( $restrict_state_id == 1 )
+        // Closed
+        if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
+        {
           $modifier->where( 'end_datetime', '!=', NULL );
+        }  
+        else
+        {
+          // Open
+          $modifier->where( 'end_datetime', '=', NULL );
+        }
       }
     }
 
@@ -246,6 +237,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
    */
   public function determine_record_list( $modifier = NULL )
   {
+    $database_class_name = lib::get_class_name( 'database\database' );
+
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
@@ -258,13 +251,20 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( isset( $restrict_state_id ) && $restrict_state_id != 2 )
+      if( isset( $restrict_state_id ) && 
+          $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-        if( $restrict_state_id == '' )
-          $modifier->where( 'end_datetime', '=', NULL );
-        else if( $restrict_state_id == 1 )
+        // Closed
+        if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
+        {
           $modifier->where( 'end_datetime', '!=', NULL );
+        }  
+        else
+        {
+          // Open
+          $modifier->where( 'end_datetime', '=', NULL );
+        }
       }
     }
 
@@ -300,6 +300,13 @@ class assignment_list extends \cenozo\ui\widget\base_list
    */
   protected $allow_restrict_state = true;
 
+  /** 
+   * The associative array of restrictable states
+   * @var array
+   * @access protected
+   */
+  protected $state_list = array( 
+    1 => 'Closed', 2 => 'No restriction' );
 
   /** 
    * Get a restrict state name from its id
@@ -309,7 +316,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
    */
   private function get_restrict_state_name( $id )
   {
-     if( $id == 1 ) return 'closed';
-     else return 'open';
+    return array_key_exists( $id, $this->state_list ) ? $this->state_list[$id] : 'Open';
   }
 }
