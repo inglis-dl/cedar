@@ -237,9 +237,6 @@ class assignment_manager extends \cenozo\singleton
    */
   public static function complete_test_entry( $db_test_entry )
   {
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-    $db_test = $db_test_entry->get_test();
-
     $db_test_entry->completed = $db_test_entry->is_completed();
     $db_test_entry->save();
 
@@ -277,12 +274,13 @@ class assignment_manager extends \cenozo\singleton
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
-
-    $adjudicate_data = NULL;
    
-    if( is_null( $db_test_entry->adjudicate ) || !$db_test_entry->adjudicate ||
-         !$db_test_entry->completed || $db_test_entry->deferred )
+    if( $db_test_entry->adjudicate != true ||
+       !$db_test_entry->completed ||
+        $db_test_entry->deferred )
       throw lib::create( 'exception\runtime', 'Invalid test entry', __METHOD__ );
+      
+    $adjudicate_data = NULL;
     
     // get the sibling entry
     $db_assignment = $db_test_entry->get_assignment();
@@ -293,11 +291,11 @@ class assignment_manager extends \cenozo\singleton
         array( 'test_id', 'assignment_id' ),
         array( $db_test->id, $db_sibling_assignment->id ) );
 
-      if( is_null( $db_sibling_test_entry ) || !$db_sibling_test_entry->adjudicate ||
+      if( is_null( $db_sibling_test_entry ) || $db_sibling_test_entry->adjudicate != true ||
           !$db_sibling_test_entry->completed || $db_sibling_test_entry->deferred )
         throw lib::create( 'exception\runtime', 'Invalid sibling test entry', __METHOD__ );
 
-      if( $db_sibling_test_entry->adjudicate )
+      if( $db_sibling_test_entry->adjudicate == true )
       {
         $adjudicate_data = array();
         $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
@@ -326,7 +324,7 @@ class assignment_manager extends \cenozo\singleton
           $adjudicate_data[ 'id_1' ] = $a->id;
           $adjudicate_data[ 'id_2' ] = $b->id;
           $adjudicate_data[ 'id_3' ] = $c->id;
-          $adjudicate_data[ 'confirmation_1' ] = $c->confirmation;
+          $adjudicate_data[ 'confirmation_1' ] = $a->confirmation;
           $adjudicate_data[ 'confirmation_2' ] = $b->confirmation;
         }
         else
