@@ -270,6 +270,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   `dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `intrusion_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `variant_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
+  `mispelled_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `test_type_id` INT UNSIGNED NOT NULL,
   `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words',
   `rank_words` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = requires ranked words',
@@ -281,6 +282,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   UNIQUE INDEX `uq_name` (`name` ASC),
   UNIQUE INDEX `uq_rank` (`rank` ASC),
   INDEX `fk_test_type_id` (`test_type_id` ASC),
+  INDEX `fk_mispelled_dictionary_id` (`mispelled_dictionary_id` ASC),
   CONSTRAINT `fk_test_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
@@ -299,6 +301,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   CONSTRAINT `fk_test_test_type_id`
     FOREIGN KEY (`test_type_id`)
     REFERENCES `cedar`.`test_type` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_mispelled_dictionary_id`
+    FOREIGN KEY (`mispelled_dictionary_id`)
+    REFERENCES `cedar`.`dictionary` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

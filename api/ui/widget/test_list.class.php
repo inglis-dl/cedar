@@ -51,6 +51,7 @@ class test_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'dictionary_id', 'string', 'Primary Dictionary', $allow_primary_sort );
     $this->add_column( 'variant_dictionary_id', 'string', 'Variant Dictionary', true );
     $this->add_column( 'intrusion_dictionary_id', 'string', 'Intrusion Dictionary', true );
+    $this->add_column( 'mispelled_dictionary_id', 'string', 'Mispelled Dictionary', true );
 
     $this->set_variable( 'sort_column', 'rank' );
     $this->set_variable( 'sort_desc', false );
@@ -88,7 +89,10 @@ class test_list extends \cenozo\ui\widget\base_list
              $dictionary_list[ $db_test->variant_dictionary_id ] ),
            'intrusion_dictionary_id' => ( is_null( $db_test->intrusion_dictionary_id ) ?
              ( $db_test->strict ? 'N/A' : '(none)' ) :
-             $dictionary_list[ $db_test->intrusion_dictionary_id ] ) )
+             $dictionary_list[ $db_test->intrusion_dictionary_id ] ),
+           'mispelled_dictionary_id' => ( is_null( $db_test->mispelled_dictionary_id ) ?
+             ( $db_test->strict ? 'N/A' : '(none)' ) :
+             $dictionary_list[ $db_test->mispelled_dictionary_id ] ) )
         );
     }
   }
