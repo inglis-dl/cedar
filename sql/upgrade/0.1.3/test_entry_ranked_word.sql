@@ -1,4 +1,4 @@
--- removing note column
+-- adding comments and ranked_word_set_id column
 
 DROP PROCEDURE IF EXISTS patch_test_entry_ranked_word;
 DELIMITER //

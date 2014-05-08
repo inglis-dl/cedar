@@ -65,16 +65,16 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
   {
     parent::validate();
 
+    $word_class_name = lib::get_class_name( 'database\word' );
     $columns = $this->get_argument( 'columns' );
 
-    if( array_key_exists( 'word_candidate', $columns ) ) 
+    if( array_key_exists( 'word_candidate', $columns ) )
     {   
       // check if this is a transcription or an adjudication
       // empty entries are permitted for adjudicates
       if( is_null( $this->get_record()->get_test_entry()->get_participant() ) )
       {
-        if( !preg_match( '/^(0|[1-9][0-9]*)$/', $columns['word_candidate'] ) &&
-            !preg_match( '/^\pL$/', $columns['word_candidate'] ) )
+        if( !$word_class_name::is_valid_word( $columns['word_candidate'], true ) )
           throw lib::create( 'exception\notice',
             'The word "'. $columns['word_candidate'] . '" must be a letter or a number.',
             __METHOD__ );
@@ -95,24 +95,24 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     $word_class_name = lib::get_class_name( 'database\word' );
 
     $db_test_entry_alpha_numeric = $this->get_record();
-    $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();    
-    $db_dictionary = $db_test_entry->get_test()->get_dictionary();
-
-    $language = NULL;
-    $db_assignment = $db_test_entry->get_assignment();
-    if( is_null( $db_assignment ) )
-      $language = $db_test_entry->get_participant()->language;
-    else
-      $language = $db_assignment->get_participant()->language;      
-    $language = is_null( $language ) ? 'en' : $language;
+    $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();
 
     $columns = $this->get_argument( 'columns' );
-    $word_candidate = 
+    $word_candidate =
       array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
       $columns['word_candidate'] : NULL;
 
     if( !is_null( $word_candidate ) )
     {
+      $db_dictionary = $db_test_entry->get_test()->get_dictionary();
+      $language = NULL;
+      $db_assignment = $db_test_entry->get_assignment();
+      if( is_null( $db_assignment ) )
+        $language = $db_test_entry->get_participant()->language;
+      else
+        $language = $db_assignment->get_participant()->language;      
+      $language = is_null( $language ) ? 'en' : $language;
+
       // does the word candidate exist in the primary dictionary?
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
@@ -127,6 +127,11 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
+        // is this a valid word?
+        if( !$word_class_name::is_valid_word( $word_candidate, true ) )
+          throw lib::create( 'exception\notice',
+            '"'. $word_candidate . '" is not a valid alpha numeric word entry.', __METHOD__ );
+
         $db_new_word = lib::create( 'database\word' );
         $db_new_word->dictionary_id = $db_dictionary->id;
         $db_new_word->word = $word_candidate;

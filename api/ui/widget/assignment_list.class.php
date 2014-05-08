@@ -96,6 +96,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $allow_transcribe = false;
       $allow_adjudicate = false;
 
+      $deferred_count   = $db_assignment->get_deferred_count();
+      $adjudicate_count = $db_assignment->get_adjudicate_count();
+      $completed_count  = $db_assignment->get_completed_count();
+
       // select the first test_entry for which we either want to transcribe
       // or adjudicate depending on user role
       $test_entry_id = NULL;
@@ -114,14 +118,13 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $allow_transcribe_operation = $allow_transcribe;
         }
       }
-      else if( $db_role->name == 'administrator' && 
-               $db_assignment->all_tests_complete() )
+      else if( $db_role->name == 'administrator' && $db_assignment->all_tests_complete() &&
+               $adjudicate_count > 0 )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-        if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
+        if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() &&
+            $db_sibling_assignment->get_adjudicate_count() > 0 )
         {
-          $allow_adjudicate = false;
-
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
           $test_entry_mod->where( 'adjudicate', '=', true );
@@ -156,9 +159,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
                'participant.uid' => $db_participant->uid,
                'cohort.name' => $db_participant->get_cohort()->name,
                'user.name' => $db_assignment->get_user()->name,
-               'assignment_total.deferred' => $db_assignment->get_deferred_count(),
-               'assignment_total.adjudicate' =>  $db_assignment->get_adjudicate_count(),
-               'assignment_total.completed' =>  $db_assignment->get_completed_count(),
+               'assignment_total.deferred' => $deferred_count,
+               'assignment_total.adjudicate' =>  $adjudicate_count,
+               'assignment_total.completed' =>  $completed_count,
                'allow_transcribe' => $allow_transcribe,
                'allow_adjudicate' => $allow_adjudicate,
                'test_entry_id' => $test_entry_id ) );
