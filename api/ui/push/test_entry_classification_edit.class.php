@@ -59,6 +59,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
    * 
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
+   * @throws exception\notice
    * @throws exception\runtime
    */
   protected function execute()
@@ -95,6 +96,12 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
     if( !is_null( $db_word ) )
     {
+      // check if mispelled and throw an exception
+      if( $classification == 'mispelled' )
+        throw lib::create( 'exception\notice',
+          'The word "'. $db_word->word . '" is a mispelled word and cannot be accepted.',
+          __METHOD__ );
+
       $db_test_entry_classification->word_id = $db_word->id;
     }
     else if( !is_null( $word_candidate ) )

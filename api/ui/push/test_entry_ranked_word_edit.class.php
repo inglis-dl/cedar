@@ -66,6 +66,12 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
       $classification = $data['classification'];
       $db_word = $data['word'];
 
+      // check if mispelled and throw an exception
+      if( $classification == 'mispelled' )
+        throw lib::create( 'exception\notice',
+          'The word "'. $db_word->word . '" is a mispelled word and cannot be accepted.',
+          __METHOD__ );
+
       if( $db_test_entry_ranked_word->selection == 'variant' )
       {
         if( $classification != 'variant' )
