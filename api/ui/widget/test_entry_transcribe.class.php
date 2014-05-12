@@ -156,8 +156,8 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'next_test_entry_id', 
       is_null( $db_next_test_entry ) ? 0 : $db_next_test_entry->id );
 
-    $this->set_variable( 'editable', $this->editable );
-    $this->set_variable( 'actionable', $this->actionable );
+    $this->set_variable( 'editable', $this->editable ? 1 : 0 );
+    $this->set_variable( 'actionable', $this->actionable ? 1 : 0 );
     
     try 
     {   
