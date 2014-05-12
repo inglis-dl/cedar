@@ -40,6 +40,22 @@ class word_list extends \cenozo\ui\widget\base_list
     
     $this->add_column( 'word', 'string', 'Word', true );
     $this->add_column( 'language', 'string', 'Language', true );
+
+    if( is_null( $this->parent ) )
+      throw lib::create( 'exception\runtime',
+        'Word list requires a dictionary view as parent', __METHOD__ );
+
+    $dictionary_id = $this->parent->get_variable( 'dictionary_id' );
+    $test_class_name = lib::get_class_name( 'database\test' );
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'dictionary_id', '=', $dictionary_id );
+    $modifier->or_where( 'variant_dictionary_id', '=', $dictionary_id );
+    $modifier->or_where( 'intrusion_dictionary_id', '=', $dictionary_id );
+    $modifier->or_where( 'mispelled_dictionary_id', '=', $dictionary_id );
+    $db_test = current( $test_class_name::select( $modifier ) );
+    $this->word_total_column = $db_test->get_test_type()->name . '_word_total.total';
+    
+    $this->add_column( $this->word_total_column, 'number', 'Usage', true );
   }
   
   /**
@@ -56,7 +72,10 @@ class word_list extends \cenozo\ui\widget\base_list
     {
       $this->add_row( $record->id,
         array( 'word' => $record->word,
-               'language' => $record->language ) );
+               'language' => $record->language,
+               $this->word_total_column => $record->get_usage_count() ) );
     }
   }
+
+  private $word_total_column = '';
 }
