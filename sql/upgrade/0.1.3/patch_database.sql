@@ -18,6 +18,10 @@ SOURCE test_entry_total_completed.sql
 SOURCE test_entry_total_adjudicate.sql
 SOURCE assignment_total.sql
 SOURCE test.sql
+SOURCE classification_word_total.sql
+SOURCE alpha_numeric_word_total.sql
+SOURCE ranked_word_word_total.sql
+SOURCE confirmation_word_total.sql
 
 -- after all SOURCES, update service version
 SOURCE update_version_number.sql;

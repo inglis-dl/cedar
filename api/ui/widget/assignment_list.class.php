@@ -45,9 +45,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
-    $this->add_column( 'assignment_total.deferred', 'number', 'Deferred', true );
-    $this->add_column( 'assignment_total.adjudicate', 'number', 'Adjudicate', true );
-    $this->add_column( 'assignment_total.completed', 'number', 'Completed', true );
+    $this->add_column( 'test_entry_total_deferred.deferred', 'number', 'Deferred', true );
+    $this->add_column( 'test_entry_total_adjudicate.adjudicate', 'number', 'Adjudicate', true );
+    $this->add_column( 'test_entry_total_completed.completed', 'number', 'Completed', true );
 
     $this->set_addable( $db_role->name == 'typist' );
     $this->set_allow_restrict_state( $db_role->name != 'typist' );
@@ -159,9 +159,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
                'participant.uid' => $db_participant->uid,
                'cohort.name' => $db_participant->get_cohort()->name,
                'user.name' => $db_assignment->get_user()->name,
-               'assignment_total.deferred' => $deferred_count,
-               'assignment_total.adjudicate' =>  $adjudicate_count,
-               'assignment_total.completed' =>  $completed_count,
+               'test_entry_total_deferred.deferred' => $deferred_count,
+               'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
+               'test_entry_total_completed.completed' =>  $completed_count,
                'allow_transcribe' => $allow_transcribe,
                'allow_adjudicate' => $allow_adjudicate,
                'test_entry_id' => $test_entry_id ) );
