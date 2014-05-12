@@ -30,7 +30,7 @@ class assignment extends \cenozo\database\record
         'Tried to get deferred count for an assignment with no id', __METHOD__ );
     }
     return static::db()->get_one(
-      sprintf( 'SELECT deferred FROM assignment_total WHERE assignment_id = %s', 
+      sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s', 
                $this->id ) );
   }
 
@@ -50,7 +50,7 @@ class assignment extends \cenozo\database\record
         'Tried to get completed count for an assignment with no id', __METHOD__ );
     }
     return static::db()->get_one(
-      sprintf( 'SELECT completed FROM assignment_total WHERE assignment_id = %s', 
+      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s', 
                $this->id ) );
   }
 
@@ -70,7 +70,7 @@ class assignment extends \cenozo\database\record
         'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
     }
     return static::db()->get_one(
-      sprintf( 'SELECT adjudicate FROM assignment_total WHERE assignment_id = %s', 
+      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s', 
                $this->id ) );
   }
 
