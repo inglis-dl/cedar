@@ -41,7 +41,9 @@ class word_view extends \cenozo\ui\widget\base_view
     // add items to the view
     $this->add_item( 'word', 'string', 'Word' );
     $this->add_item( 'language', 'enum', 'Language' );
-    $this->add_item( 'dictionary', 'string', 'Dictionary' );
+
+    // allow words to be moved within dictionaries that are referenced by a test
+    $this->add_item( 'dictionary_id', 'enum', 'Dictionary' );
   }
 
   /**
@@ -54,14 +56,38 @@ class word_view extends \cenozo\ui\widget\base_view
   {
     parent::setup();
 
+    $test_class_name = lib::get_class_name( 'database\test' );
     $word_class_name = lib::get_class_name( 'database\word' );
+
     $languages = $word_class_name::get_enum_values( 'language' );
     $languages = array_combine( $languages, $languages );
     $db_word = $this->get_record();
 
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'dictionary_id', '=', $db_word->dictionary_id );
+    $modifier->or_where( 'variant_dictionary_id', '=', $db_word->dictionary_id );
+    $modifier->or_where( 'intrusion_dictionary_id', '=', $db_word->dictionary_id );
+    $modifier->or_where( 'mispelled_dictionary_id', '=', $db_word->dictionary_id );
+    $db_test = current( $test_class_name::select( $modifier ) );
+
+    // get the dictionaries that reference this test
+    $dictionaries = array();
+    $db_primary_dictionary = $db_test->get_dictionary();
+    $db_variant_dictionary = $db_test->get_variant_dictionary();
+    $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
+    $db_mispelled_dictionary = $db_test->get_mispelled_dictionary();
+    if( !is_null( $db_primary_dictionary ) )
+      $dictionaries[$db_primary_dictionary->id] = $db_primary_dictionary->name;
+    if( !is_null( $db_variant_dictionary ) )
+      $dictionaries[$db_variant_dictionary->id] = $db_variant_dictionary->name;
+    if( !is_null( $db_intrusion_dictionary ) )
+      $dictionaries[$db_intrusion_dictionary->id] = $db_intrusion_dictionary->name;
+    if( !is_null( $db_mispelled_dictionary ) )
+      $dictionaries[$db_mispelled_dictionary->id] = $db_mispelled_dictionary->name;
+
     // set the view's items
     $this->set_item( 'word', $db_word->word, true );
     $this->set_item( 'language', $db_word->language, false, $languages );
-    $this->set_item( 'dictionary', $db_word->get_dictionary()->name, true );
+    $this->set_item( 'dictionary_id', $db_word->get_dictionary()->id, true, $dictionaries );
   }
 }
