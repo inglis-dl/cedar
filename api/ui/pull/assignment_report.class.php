@@ -76,7 +76,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $header[] = ucwords( $db_cohort->name ) . ' Open';
     }
 
-    $total_available['tracking'] = $participant_class_name::count( $base_cati_mod );
+    $total_available['tracking']      = $participant_class_name::count( $base_cati_mod );
     $total_available['comprehensive'] = $participant_class_name::count( $base_comp_mod );
 
     $footer = array( '--', '--', 'sum()', '--', 'sum()', '--' );
@@ -85,17 +85,14 @@ class assignment_report extends \cenozo\ui\pull\base_report
     if( $restrict_start_date )
     {
       $start_datetime_obj = util::get_datetime_object( $restrict_start_date );
-      if( $start_datetime_obj > $now_datetime_obj ) $start_datetime_obj = clone $now_datetime_obj;
+      if( $start_datetime_obj > $now_datetime_obj )
+        $start_datetime_obj = clone $now_datetime_obj;
     }
-    
     if( $restrict_end_date )
     {
       $end_datetime_obj = util::get_datetime_object( $restrict_end_date );
-      if( $end_datetime_obj > $now_datetime_obj ) $end_datetime_obj = clone $now_datetime_obj;
-    }
-    else
-    {
-      $end_datetime_obj = $now_datetime_obj;
+      if( $end_datetime_obj > $now_datetime_obj )
+        $end_datetime_obj = clone $now_datetime_obj;
     }
 
     if( $restrict_start_date && $restrict_end_date && $end_datetime_obj < $start_datetime_obj )
@@ -114,6 +111,11 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $db_assignment = current( $assignment_class_name::select( $assignment_mod ) );
       if( false !== $db_assignment )
         $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
+    }
+
+    if( is_null( $end_datetime_obj ) )
+    {
+      $end_datetime_obj = clone $now_datetime_obj;
     }
 
     // we only care about what months have been selected, set days of month appropriately
@@ -174,7 +176,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $complete_mod->where( 'end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $complete_mod->where( 'end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
           
-        $complete_list = array_keys( $cohort_list );
+        $complete_list = array_fill_keys( array_keys( $cohort_list ), array() );
         foreach( $assignment_class_name::select( $complete_mod ) as $db_assignment )
         {
           // which cohort does this assignment pertain to?
@@ -195,10 +197,10 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $in_progress_mod->where( 'user_id', 'IN', $id_list );
         $in_progress_mod->where( 'start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
         $in_progress_mod->where( 'end_datetime', '=', NULL );
-        foreach( $cohort_list as $cohort_name => $cohord_id )
+        foreach( $cohort_list as $cohort_name => $cohort_id )
         {
-          $complete_values
-            = array_count_values( array_values( $complete_list[$cohort_name] ) );
+          $complete_values =
+            array_count_values( array_values( $complete_list[$cohort_name] ) );
 
           // number completed by two typists
           $num_complete = 

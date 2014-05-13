@@ -38,7 +38,7 @@ class test_view extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
 
-    $record = $this->get_record();
+    $db_test = $this->get_record();
 
     $this->add_item( 'name', 'string', 'Name' );
     $this->add_item( 'rank', 'number', 'Test Order' );
@@ -46,13 +46,14 @@ class test_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'rank_words', 'constant', 'Rank Words' );
     $this->add_item( 'dictionary_id', 'enum', 'Primary Dictionary' );
 
-    if( !$record->strict )
+    if( !$db_test->strict )
     {
       $this->add_item( 'variant_dictionary_id', 'enum', 'Variant Dictionary' );
       $this->add_item( 'intrusion_dictionary_id', 'enum', 'Intrusion Dictionary' );
+      $this->add_item( 'mispelled_dictionary_id', 'enum', 'Mispelled Dictionary' );
     }
 
-    if( $record->rank_words )
+    if( $db_test->rank_words )
     {
       $this->add_item( 'words', 'constant', 'Number of ranked word sets' );
      
@@ -75,37 +76,39 @@ class test_view extends \cenozo\ui\widget\base_view
 
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
 
-    $record = $this->get_record();
-    $this->set_variable( 'test_id', $record->id );
+    $db_test = $this->get_record();
+    $this->set_variable( 'test_id', $db_test->id );
 
     // set the view's items
-    $this->set_item( 'name', $record->name, true );
-    $this->set_item( 'rank', $record->rank, true );
+    $this->set_item( 'name', $db_test->name, true );
+    $this->set_item( 'rank', $db_test->rank, true );
     $this->set_item( 'strict', 
-      $record->strict ? "yes: variants and intrusions are ignored" :
+      $db_test->strict ? "yes: variants and intrusions are ignored" :
                         "no: variants and intrusions are recorded", true );
 
     $this->set_item( 'rank_words', 
-      $record->rank_words ? "yes: primary dictionary words must be ranked" :  
+      $db_test->rank_words ? "yes: primary dictionary words must be ranked" :  
                             "no: primary dictionary words are not ranked", true );
 
     $dictionary_list = array();
     foreach( $dictionary_class_name::select() as $db_dictionary )
        $dictionary_list[$db_dictionary->id] = $db_dictionary->name;
 
-    $this->set_item( 'dictionary_id', $record->dictionary_id, false, $dictionary_list );
-    $this->set_variable( 'dictionary_id', $record->dictionary_id ); 
-    if( !$record->strict )
+    $this->set_item( 'dictionary_id', $db_test->dictionary_id, false, $dictionary_list );
+    $this->set_variable( 'dictionary_id', $db_test->dictionary_id ); 
+    if( !$db_test->strict )
     {
       $this->set_item( 'variant_dictionary_id', 
-        $record->variant_dictionary_id, false, $dictionary_list );
+        $db_test->variant_dictionary_id, false, $dictionary_list );
       $this->set_item( 'intrusion_dictionary_id', 
-        $record->intrusion_dictionary_id, false, $dictionary_list );
+        $db_test->intrusion_dictionary_id, false, $dictionary_list );
+      $this->set_item( 'mispelled_dictionary_id', 
+        $db_test->mispelled_dictionary_id, false, $dictionary_list );
     }
 
-    if( $record->rank_words )
+    if( $db_test->rank_words )
     {
-      $this->set_item( 'words', $record->get_ranked_word_set_count() );
+      $this->set_item( 'words', $db_test->get_ranked_word_set_count() );
       try
       {
         $this->ranked_word_set_list->process();
@@ -121,5 +124,4 @@ class test_view extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $ranked_word_set_list = NULL;
-
 }

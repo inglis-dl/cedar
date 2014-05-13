@@ -270,6 +270,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   `dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `intrusion_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `variant_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
+  `mispelled_dictionary_id` INT UNSIGNED NULL DEFAULT NULL,
   `test_type_id` INT UNSIGNED NOT NULL,
   `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words',
   `rank_words` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = requires ranked words',
@@ -281,6 +282,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   UNIQUE INDEX `uq_name` (`name` ASC),
   UNIQUE INDEX `uq_rank` (`rank` ASC),
   INDEX `fk_test_type_id` (`test_type_id` ASC),
+  INDEX `fk_mispelled_dictionary_id` (`mispelled_dictionary_id` ASC),
   CONSTRAINT `fk_test_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
@@ -299,6 +301,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   CONSTRAINT `fk_test_test_type_id`
     FOREIGN KEY (`test_type_id`)
     REFERENCES `cedar`.`test_type` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_mispelled_dictionary_id`
+    FOREIGN KEY (`mispelled_dictionary_id`)
+    REFERENCES `cedar`.`dictionary` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -682,6 +689,193 @@ CREATE TABLE IF NOT EXISTS `cedar`.`user_time` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+USE `cedar` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`sabretooth_recording`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`sabretooth_recording` (`interview_id` INT, `assignment_id` INT, `rank` INT, `participant_id` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`assignment_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`assignment_total` (`id` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total_completed`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total_completed` (`assignment_id` INT, `completed` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total_deferred`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total_deferred` (`assignment_id` INT, `deferred` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total_adjudicate`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total_adjudicate` (`assignment_id` INT, `adjudicate` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`test_entry_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_total` (`assignment_id` INT, `total` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`classification_word_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`classification_word_total` (`word_id` INT, `total` INT, `dictionary_id` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`alpha_numeric_word_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`alpha_numeric_word_total` (`word_id` INT, `total` INT, `dictionary_id` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`ranked_word_word_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`ranked_word_word_total` (`word_id` INT, `total` INT, `dictionary_id` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `cedar`.`confirmation_word_total`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `cedar`.`confirmation_word_total` (`word_id` INT, `total` INT, `dictionary_id` INT);
+
+-- -----------------------------------------------------
+-- View `cedar`.`sabretooth_recording`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`sabretooth_recording` ;
+DROP TABLE IF EXISTS `cedar`.`sabretooth_recording`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `sabretooth_recording` AS
+SELECT r.interview_id, r.assignment_id, r.rank, i.participant_id
+FROM sabretooth.recording r
+JOIN sabretooth.interview i ON i.id=r.interview_id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`assignment_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`assignment_total` ;
+DROP TABLE IF EXISTS `cedar`.`assignment_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `assignment_total` AS
+SELECT assignment.id AS assignment_id,
+test_entry_total.total AS total,
+test_entry_total_deferred.deferred AS deferred,
+test_entry_total_completed.completed AS completed,
+test_entry_total_adjudicate.adjudicate AS adjudicate,
+FROM assignment
+JOIN test_entry_total ON test_entry_total.assignment_id=assignment.id
+JOIN test_entry_total_deferred ON test_entry_total_deferred.assignment_id=assignment.id
+JOIN test_entry_total_completed ON test_entry_total_completed.assignment_id=assignment.id
+JOIN test_entry_total_adjudicate ON test_entry_total_adjudicate.assignment_id=assignment.id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total_completed`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total_completed` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total_completed`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total_completed` AS
+SELECT assignment_id, SUM( completed ) AS completed FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total_deferred`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total_deferred` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total_deferred`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total_deferred` AS
+SELECT assignment_id, SUM( deferred ) AS deferred FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id
+;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total_adjudicate`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total_adjudicate` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total_adjudicate`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total_adjudicate` AS
+SELECT assignment_id, SUM( IFNULL( adjudicate, 0 ) ) AS adjudicate FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`test_entry_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`test_entry_total` ;
+DROP TABLE IF EXISTS `cedar`.`test_entry_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `test_entry_total` AS
+SELECT assignment_id, COUNT(*) AS total FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`classification_word_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`classification_word_total` ;
+DROP TABLE IF EXISTS `cedar`.`classification_word_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `classification_word_total` AS
+SELECT w.id AS word_id, COUNT(tec.id) AS total, w.dictionary_id AS dictionary_id FROM word w
+LEFT JOIN test_entry_classification tec ON tec.word_id=w.id
+LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
+LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
+LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
+LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
+GROUP BY w.id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`alpha_numeric_word_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`alpha_numeric_word_total` ;
+DROP TABLE IF EXISTS `cedar`.`alpha_numeric_word_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `alpha_numeric_word_total` AS
+SELECT w.id AS word_id, COUNT(tean.id) AS total, w.dictionary_id AS dictionary_id FROM word w
+LEFT JOIN test_entry_alpha_numeric tean ON tean.word_id=w.id
+LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
+LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
+LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
+LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
+GROUP BY w.id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`ranked_word_word_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`ranked_word_word_total` ;
+DROP TABLE IF EXISTS `cedar`.`ranked_word_word_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `ranked_word_word_total` AS
+SELECT w.id AS word_id, COUNT(terw.id) + (COUNT(rws1.id) + COUNT( rws2.id)) DIV 2 AS total, w.dictionary_id AS dictionary_id FROM word w
+LEFT JOIN test_entry_ranked_word terw ON terw.word_id=w.id
+LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
+LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
+LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
+LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
+LEFT JOIN ranked_word_set AS rws1 ON rws1.word_en_id=w.id
+LEFT JOIN ranked_word_set AS rws2 ON rws2.word_fr_id=w.id
+LEFT JOIN test_entry_ranked_word AS terw1 ON terw1.ranked_word_set_id=rws1.id
+LEFT JOIN test_entry_ranked_word AS terw2 ON terw2.ranked_word_set_id=rws2.id
+GROUP BY w.id;
+
+-- -----------------------------------------------------
+-- View `cedar`.`confirmation_word_total`
+-- -----------------------------------------------------
+DROP VIEW IF EXISTS `cedar`.`confirmation_word_total` ;
+DROP TABLE IF EXISTS `cedar`.`confirmation_word_total`;
+USE `cedar`;
+CREATE  OR REPLACE VIEW `confirmation_word_total` AS
+SELECT w.id AS word_id, COUNT(tec.id) AS total, w.dictionary_id AS dictionary_id FROM word w
+JOIN test t ON t.dictionary_id=w.dictionary_id
+JOIN test_entry te ON te.test_id=t.id
+JOIN test_entry_confirmation tec ON tec.test_entry_id=te.id
+GROUP BY w.id;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

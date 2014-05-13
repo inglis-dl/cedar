@@ -68,9 +68,6 @@ class test_entry_submit extends \cenozo\ui\push\base_record
     $modifier->where( 'participant_id', '=', $db_adjudicate_test_entry->participant_id );
     $modifier->limit( 1 );
     $db_assignment = current( $assignment_class_name::select( $modifier ) );
-    
-    $assignment_manager = lib::create( 'business\assignment_manager' );
-    $assignment_manager::complete_assignment( $db_assignment );
 
     // get the progenitor test entry records
     $modifier = lib::create( 'database\modifier' );
@@ -80,6 +77,9 @@ class test_entry_submit extends \cenozo\ui\push\base_record
     {
       $db_test_entry->adjudicate = false;
       $db_test_entry->save();
-    }  
+    }
+
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_assignment( $db_assignment );
   }
 }

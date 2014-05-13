@@ -84,7 +84,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
                      $start_datetime_obj == $end_datetime_obj ) || 
                    ( !is_null( $start_datetime_obj ) &&
                      $start_datetime_obj == $now_datetime_obj );
-    if( $single_date ) $single_datetime_obj = clone $start_datetime_obj;
 
     // create a table for every site included in the report
     foreach( $site_class_name::select( $site_mod ) as $db_site )
@@ -120,8 +119,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
           $assignment_mod->where( 'start_datetime', '>=',
             $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
-          $assignment_mod->where( 'end_datetime', '<=',
-            $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
         }
         else if( $restrict_start_date && !$restrict_end_date ) 
         {
@@ -150,10 +147,10 @@ class productivity_report extends \cenozo\ui\pull\base_report
         
         // Determine the number of completed assignments and their average length.
         //////////////////////////////////////////////////////////////////////////
-        $num_complete = 0;
-        $num_incomplete = 0;
-        $num_adjudicate = 0;
-        $num_defer = 0;
+        $num_complete    = 0;
+        $num_incomplete  = 0;
+        $num_adjudicate  = 0;
+        $num_defer       = 0;
         $assignment_time = 0;
         foreach( $db_user->get_assignment_list( $assignment_mod ) as $db_assignment )
         {
@@ -216,7 +213,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
           $min_datetime_obj = $activity_class_name::get_min_datetime( $day_activity_mod );
           $max_datetime_obj = $activity_class_name::get_max_datetime( $day_activity_mod );
 
-          $row = array(
+          $contents[] = array(
             $db_user->name,
             $num_defer,
             $num_adjudicate,
@@ -232,7 +229,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         }
         else
         {
-          $row = array(
+          $contents[] = array(
             $db_user->name,
             $num_defer,
             $num_adjudicate,
@@ -245,13 +242,11 @@ class productivity_report extends \cenozo\ui\pull\base_report
               sprintf( '%0.2f', ( $num_complete + $num_incomplete ) / $total_time ) : '' );
         }
  
-        $contents[] = $row;
-
-        $grand_total_defer += $num_defer;
+        $grand_total_defer      += $num_defer;
         $grand_total_adjudicate += $num_adjudicate;
-        $grand_total_complete += $num_complete;
+        $grand_total_complete   += $num_complete;
         $grand_total_incomplete += $num_incomplete;
-        $grand_total_time += $total_time;
+        $grand_total_time       += $total_time;
       }
 
       $average_complete_PH = 0 < $grand_total_time ? sprintf( '%0.2f', 

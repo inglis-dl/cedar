@@ -45,15 +45,6 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
     $db_test_entry_ranked_word = $this->get_record();
     $db_test_entry = $db_test_entry_ranked_word->get_test_entry();
-    $db_test = $db_test_entry->get_test();
-
-    $language = NULL;
-    $db_assignment = $db_test_entry->get_assignment();
-    if( is_null( $db_assignment ) )
-      $language = $db_test_entry->get_participant()->language;
-    else
-      $language = $db_assignment->get_participant()->language;      
-    $language = is_null( $language ) ? 'en' : $language;
 
     $columns = $this->get_argument( 'columns' );
     $word_candidate =
@@ -62,9 +53,24 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
     if( !is_null( $word_candidate ) )
     {
+      $db_test = $db_test_entry->get_test();
+      $language = NULL;
+      $db_assignment = $db_test_entry->get_assignment();
+      if( is_null( $db_assignment ) )
+        $language = $db_test_entry->get_participant()->language;
+      else
+        $language = $db_assignment->get_participant()->language;      
+      $language = is_null( $language ) ? 'en' : $language;
+
       $data = $db_test->get_word_classification( $word_candidate, $language );
       $classification = $data['classification'];
       $db_word = $data['word'];
+
+      // check if mispelled and throw an exception
+      if( $classification == 'mispelled' )
+        throw lib::create( 'exception\notice',
+          'The word "'. $db_word->word . '" is a mispelled word and cannot be accepted.',
+          __METHOD__ );          
 
       if( $db_test_entry_ranked_word->selection == 'variant' )
       {
@@ -84,7 +90,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
         // reject words that are in the primary or variant dictionaries
         if( $classification == 'primary' ||
             $classification == 'variant' )
-        {    
+        {
           throw lib::create( 'exception\notice',
             'The word "' . $word_candidate . '" is one of the '.
             $classification . ' words and cannot be entered as an intrusion.',
@@ -104,6 +110,11 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
           }
           else
           {
+            // is this a valid word?
+            if( !$word_class_name::is_valid_word( $word_candidate ) )
+              throw lib::create( 'exception\notice',
+                '"'. $word_candidate . '" is not a valid intrusion word entry.', __METHOD__ );
+
             $db_new_word = lib::create( 'database\word' );
             $db_new_word->dictionary_id = $db_dictionary->id;
             $db_new_word->word = $word_candidate;
