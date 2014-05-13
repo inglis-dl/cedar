@@ -27,7 +27,14 @@ class word extends \cenozo\database\record
       return ( preg_match( '/^(0|[1-9][0-9]*)$/', $word_candidate ) ||
                preg_match( '/^\pL$/', $word_candidate ) );
     else
-      return preg_match( '/^[A-Za-z\pL\-\']+$/', $word_candidate );
+    {
+      $word_list = explode( ' ', $word_candidate );
+      foreach( $word_list as $word )
+      {
+        if( !preg_match( '/^[A-Za-z\pL\-\']+$/', $word ) ) return false;
+      }  
+      return true;
+    }  
   }
 
   /** 
