@@ -14,7 +14,7 @@
 
     $( function () {
 
-      $( "#{{ widget.full }}_Submit" ).click( function() {
+      $( "#{{ widget.full }}_submit" ).click( function() {
         // submit the adjudication
         if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ id_3 }} } ) ) {
           $( "#{{ widget.full }}_Submit" ).button( { disabled : true } );
@@ -23,11 +23,11 @@
       } );// end Submit button click
 
 
-      $( "#{{ widget.full }}_Quit" ).click( function() {
+      $( "#{{ widget.full }}_quit" ).click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click
 
-      $( "#{{ widget.full }}_Prev" ).click( function() {
+      $( "#{{ widget.full }}_prev" ).click( function() {
         {% if 0 == prev_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
         {% else %}  
@@ -37,7 +37,7 @@
         {% endif %}
       } ).button( { disabled : 1 == {{ rank }} } ); // end Prev click
 
-      $( "#{{ widget.full }}_Next" ).click( function() {
+      $( "#{{ widget.full }}_next" ).click( function() {
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
         {% else %}  
@@ -79,9 +79,6 @@
         {% endfor %}
       </table>
     {% endif %}
-    <input type="checkbox" id="{{ widget.full }}__audio_fault" 
-      {{ audio_fault ? "checked":"" }}/>
-    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>  
   </div>  
 
   <div class="spacer"></div>
@@ -89,7 +86,7 @@
   <div>
     {% from 'macros.twig' import confirm_buttons %}
       {{ confirm_buttons( slot, widget.full, 
-        ['Submit', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
+        ['submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>

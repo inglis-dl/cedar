@@ -26,4 +26,29 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
   {
     parent::__construct( 'test_entry', $args );
   }
+
+  /** 
+   * Validate the operation.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
+   * @access protected
+   */
+  public function validate()
+  {
+    parent::validate();
+
+    $columns = $this->get_argument( 'columns' );
+    if( array_key_exists( 'participant_status', $columns ) &&
+       'refused' == $columns['participant_status'] )
+    {
+      $db_test_entry = $this->get_record();
+      if( 'unavailable' == $db_test_entry->audio_status ||
+          'unusable'    == $db_test_entry->audio_status )
+      {
+        throw lib::create( 'exception\notice',
+          'The audio status is inconsistent with the participant status.', __METHOD__ );
+      }         
+    }
+  }
 }

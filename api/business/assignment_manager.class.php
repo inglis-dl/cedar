@@ -183,10 +183,10 @@ class assignment_manager extends \cenozo\singleton
   {
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    if( is_null( $db_assignment->end_datetime ) && $db_assignment->all_tests_complete() )
-    {
-      $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-      
+    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+
+    if( $db_assignment->all_tests_complete() )
+    {      
       if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
       {
         // go through all the tests and look for differences
@@ -201,14 +201,26 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
           if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
-            if( is_null( $db_test_entry->adjudicate ) || 
-                is_null( $db_sibling_test_entry->adjudicate ) )
+            $db_test_entry->adjudicate = true;
+            $db_test_entry->save();
+            $db_sibling_test_entry->adjudicate = true;
+            $db_sibling_test_entry->save();
+            $complete = false;
+          }
+          else
+          {
+            // if they are identical check if there is an adjudicate entry and delete it
+            $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
+              array( 'test_id', 'participant_id' ),
+              array( $db_test->id, $db_assignment->get_participant()->id ) );
+            if( !is_null( $db_adjudicate_test_entry ) )
             {
-              $db_test_entry->adjudicate = true;
-              $db_test_entry->save();
-              $db_sibling_test_entry->adjudicate = true;
-              $db_sibling_test_entry->save();
-              $complete = false;
+              // delete test_entry daughter record(s)              
+              $sql = sprintf( 'DELETE FROM test_entry_'.
+              $db_test_entry->get_test()->get_test_type()->name .
+                ' WHERE test_entry_id = %d', $db_test_entry->id );
+              $test_entry_class_name::db()->execute( $sql );
+              $db_adjudicate_test_entry->delete();
             }
           }
         }
@@ -221,9 +233,33 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_assignment->end_datetime = $end_datetime;
           $db_assignment->save();
           $db_sibling_assignment->save();
+        } 
+        else
+        {
+          if( !is_null( $db_assignment->end_datetime ) ||
+              !is_null( $db_sibling_assignment->end_datetime ) )
+          {
+            $db_assignment->end_datetime = NULL;
+            $db_sibling_assignment->end_datetime = NULL;
+            $db_assignment->save();
+            $db_sibling_assignment->save();              
+          }
         }
       }
-    }  
+    } 
+    else 
+    {
+      if( !is_null( $db_assignment->end_datetime ) )
+      {
+        $db_assignment->end_datetime = NULL;
+        $db_assignment->save();
+      }
+      if( !is_null( $db_sibling_assignment ) && !is_null( $db_sibling_assignment->end_datetime ) )
+      {
+        $db_sibling_assignment->end_datetime = NULL;
+        $db_sibling_assignment->save();
+      }
+    }    
   }
 
   /**

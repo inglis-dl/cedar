@@ -33,18 +33,30 @@
       {# show the break dialog if the operator is on break #}
       {% if on_break %}break_dialog();{% endif %}
 
-      $( "#{{ widget.full }}__audio_fault" ).click( function() {
+      $( "#{{ widget.full }}__audio_status" ).change( function() {
+        var state = $( "#{{ widget.full }}__audio_status option:selected" ).val();
+        if( 'unavailable' == state ) {
+          $( "#{{ widget.full }}_defer" ).click();
+        }
         var args = new Object();
-        args.columns = { audio_fault : $(this).is(':checked') ? 1 : 0 };
+        args.columns = { audio_status : 'NULL' == state ? '' : state };
         args.id = {{ id }};
         ajax_push( "{{ widget.subject }}", "edit", args );
-      } ); // end Audio Fault click
+      } ); // end Audio Status change
+
+      $( "#{{ widget.full }}__participant_status" ).change( function() {
+        var state = $( "#{{ widget.full }}__participant_status option:selected" ).val();
+        var args = new Object();
+        args.columns = { participant_status : 'NULL' == state ? '' : state };
+        args.id = {{ id }};
+        ajax_push( "{{ widget.subject }}", "edit", args );
+      } ); // end Participant Status change
       
-      $("#{{ widget.full }}_Quit").click( function() {
+      $("#{{ widget.full }}_quit").click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click
 
-      $( "#{{ widget.full }}_Defer" ).click( function() {
+      $( "#{{ widget.full }}_defer" ).click( function() {
 
         $dialog = $( "#{{ widget.full }}__note_dialog" );
         var buttons = new Object;
@@ -66,16 +78,27 @@
               if( ajax_push( "note", "new", args ) ) {
                 $dialog.dialog( "close" );
 
-                $( "#{{ widget.full }}_Next" ).button( { disabled : false } );
-                $( "#{{ widget.full }}_Reset" ).button( { disabled : true } );
-                $( "#{{ widget.full }}_Defer" ).button( { disabled : true } );
+                $( "#{{ widget.full }}_next" ).button( { disabled : false } );
+                $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
+                $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
 
                 slot_refresh( {{ slot }} );
               }
             }
           }
         };
-        buttons.Cancel = function() { $dialog.dialog( "close" ); };
+        buttons.Cancel = function() {
+          var note = $("#{{ widget.full }}__note").val();
+          $audio_select = $( "#{{ widget.full }}__audio_status" );
+          if( 0 == note.length && 'unavailable' == $audio_select.val() ) {
+            error_dialog( "Error",
+              "You cannot leave a blank note when setting audio status as unavaiable." +
+              "Resetting audio state to the default unset state." );
+            $audio_select.val( 'NULL' );
+            $audio_select.change();
+          }
+          $dialog.dialog( "close" );
+        };
 
         var html = "A note is required indicating the reason for deferral.";
         html += "<textarea id=\"{{ widget.full }}__note\"></textarea>";
@@ -93,34 +116,33 @@
           open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
         } );
 
-      } ).button( { disabled : {{ deferred }} } ); // end Defer click
+      } ).button( { disabled : {{ deferred }} } ); // end defer click
 
-      $( "#{{ widget.full }}_Prev" ).click( function() {
+      $( "#{{ widget.full }}_prev" ).click( function() {
         {% if 0 == prev_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
         {% else %}
-          slot_load( {{ slot }}, 
-            "{{ widget.subject }}", "{{ widget.name }}", 
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
             { id : {{ prev_test_entry_id}} } );
         {% endif %}
-      } ).button( { disabled : 1 == {{ rank }} } ); // end Prev click
+      } ).button( { disabled : 1 == {{ rank }} } ); // end prev click
 
-      $( "#{{ widget.full }}_Next" ).click( function() {
+      $( "#{{ widget.full }}_next" ).click( function() {
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
-        {% else %}  
-          slot_load( {{ slot }}, 
-            "{{ widget.subject }}", "{{ widget.name }}", 
+        {% else %}
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
             { id : {{ next_test_entry_id }} } );
         {% endif %}
-      } ); // end Next click
+      } ); // end next click
 
-      $( "#{{ widget.full }}_Reset" ).click( function() {
+      $( "#{{ widget.full }}_reset" ).click( function() {
         if( ajax_push( "{{ widget.subject }}", "reset", { "id": {{ id }} } ) ) {
           slot_refresh( {{ slot }} );
         }
-      } ); // end Reset click  
-
+      } ); // end reset click
 
     } );
   </script>
@@ -132,8 +154,8 @@
   <div class="spacer"></div>
 
   <div>
-    {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
-  </div>  
+    {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}
+  </div>
 
   <div class="spacer"></div>
 
@@ -154,29 +176,53 @@
         {% endfor %}
       </table>
     {% endif %}
-    <input type="checkbox"
-      {% if editable == 0 %}
-        { readonly }
-      {% endif %}
-      id="{{ widget.full }}__audio_fault"
-      {{ audio_fault ? "checked":"" }}/>
-    <label for="{{ widget.full }}__audio_fault">Audio Fault</label>
   </div>
 
-  <div class="spacer"></div>
+  <div id="test_entry_status">
+    <table style="width:20%">
+      <tr><td class="heading">Audio Status:</td><td>
+        <select id="{{ widget.full }}__audio_status"
+          class="ui-state-default"
+          style="width: 100%"
+          {% if editable == 0 %}
+            { disabled }
+          {% endif %}>
+          {% for status_id, status in audio_status_list %}
+            {% set status_display = status is defined ? status : "" %}
+            <option{{ audio_status == status_id ? ' selected' : '' }}
+             value="{{ status_id }}">{{ status_display }}</option>
+          {% endfor %}
+        </select>
+      </td></tr>
+      <tr><td class="heading">Participant Status:</td><td>
+        <select id="{{ widget.full }}__participant_status"
+          class="ui-state-default"
+          style="width: 100%"
+          {% if editable == 0 %}
+            { disabled }
+          {% endif %}>
+          {% for status_id, status in participant_status_list %}
+            {% set status_display = status is defined ? status : "" %}
+            <option{{ participant_status == status_id ? ' selected' : '' }}
+             value="{{ status_id }}">{{ status_display }}</option>
+          {% endfor %}
+        </select>
+      </td></tr>
+    </table>
+  </div>
 
   <div>
     {% if actionable == 1 %}
+      <div style="width: 50%; float: left;">
+        {% from 'macros.twig' import note_widget %}
+        {{ note_widget( widget.full, 'test_entry', id, false, 'Notes' ) }}
+        <button id="{{ widget.full }}__break"
+          style="width: 200px;">Go on break</button>
+      </div>
       {% from 'macros.twig' import confirm_buttons %}
         {{ confirm_buttons( slot, widget.full,
-          ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-     
-      {% from 'macros.twig' import note_widget %}
-      {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
-
-      <button id="{{ widget.full }}__break"
-        style="width: 200px;">Go on break</button>
-    {% endif %}
+          ['defer', 'reset', 'prev', 'next', 'quit'], '', 'right', true ) }}
+    {% endif %}     
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>

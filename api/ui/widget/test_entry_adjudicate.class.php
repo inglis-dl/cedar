@@ -142,6 +142,8 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $this->set_variable( 'deferred_1', $db_test_entry->deferred );
     $this->set_variable( 'completed_1', $db_test_entry->completed );
     $this->set_variable( 'user_1', $db_assignment->get_user()->name );
+    $this->set_variable( 'audio_status_1', $db_test_entry->audio_status );
+    $this->set_variable( 'participant_status_1', $db_test_entry->participant_status );
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
     if( is_null( $db_sibling_assignment ) )
@@ -165,9 +167,9 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $this->set_variable( 'deferred_2', $db_sibling_test_entry->deferred );
     $this->set_variable( 'completed_2', $db_sibling_test_entry->completed );
     $this->set_variable( 'user_2', $db_sibling_assignment->get_user()->name );
+    $this->set_variable( 'audio_status_2', $db_test_entry->audio_status );
+    $this->set_variable( 'participant_status_2', $db_test_entry->participant_status );
 
-    $this->set_variable( 'audio_fault', 
-      $db_test_entry->audio_fault || $db_sibling_test_entry->audio_fault );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
 
