@@ -138,9 +138,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     }
 
     $this->set_variable( 'test_entry_id_1', $db_test_entry->id );
-    //$this->set_variable( 'adjudicate_1', $db_test_entry->adjudicate );
-    //$this->set_variable( 'deferred_1', $db_test_entry->deferred );
-    //$this->set_variable( 'completed_1', $db_test_entry->completed );
     $this->set_variable( 'user_1', $db_assignment->get_user()->name );
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
@@ -161,9 +158,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
         'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
       
     $this->set_variable( 'test_entry_id_2', $db_sibling_test_entry->id );
-    //$this->set_variable( 'adjudicate_2', $db_sibling_test_entry->adjudicate );
-    //$this->set_variable( 'deferred_2', $db_sibling_test_entry->deferred );
-    //$this->set_variable( 'completed_2', $db_sibling_test_entry->completed );
     $this->set_variable( 'user_2', $db_sibling_assignment->get_user()->name );
 
     $this->set_variable( 'rank', $db_test->rank );

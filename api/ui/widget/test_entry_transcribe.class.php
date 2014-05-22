@@ -104,6 +104,13 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $participant_status_list['NULL'] = '';
     $participant_status_list = array_reverse( $participant_status_list, true );
 
+    // only classification tests (FAS and AFT) require prompt status
+    if( $test_type_name != 'classification' )
+    {   
+      unset( $participant_status_list['suspected prompt'],
+             $participant_status_list['prompted'] );
+    }
+
     $this->set_variable( 'participant_status',
       array_search( $db_test_entry->participant_status, $participant_status_list ) );
     $this->set_variable(  'participant_status_list', $participant_status_list );

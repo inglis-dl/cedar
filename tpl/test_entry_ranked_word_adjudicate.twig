@@ -537,8 +537,7 @@
               </div>
             </td>
           {% else %}
-            <td></td>
-            <td colspan="3"></td>
+            <td></td><td colspan="3"></td>
           {% endif %}
         {% endif %}
       </tr>
@@ -564,7 +563,7 @@
         <td colspan="3"></td> 
       </tr>
     {% endif %}
-    <tr style="height: 25px"><td colspan="6"></td></tr>
+    <tr style="height: 25px"><td colspan="12"></td></tr>
     {% for status in status_data %}
       <tr>
         <td class="heading">{{ status.status_label }}</td>
@@ -612,18 +611,18 @@
             <label for="{{ status.id_2 }}__{{ status.status_type }}__status__accept">Accept</label>
           </td>
           <td colspan="3">
-          <select id="{{ status.id_3 }}__{{ status.status_type }}__status__adjudicate"
-            class="ui-state-default"
-            style="width: 100%">
-            {% for status_id, status_value in status.status_list %}
-              {% set status_display = status_value is defined ? status_value : "" %}
-              <option{{ status.status_3 == status_id ? ' selected' : '' }}
-               value="{{ status_id }}">{{ status_display }}</option>
-            {% endfor %}
-          </select>
+            <select id="{{ status.id_3 }}__{{ status.status_type }}__status__adjudicate"
+              class="ui-state-default"
+              style="width: 100%">
+              {% for status_id, status_value in status.status_list %}
+                {% set status_display = status_value is defined ? status_value : "" %}
+                <option{{ status.status_3 == status_id ? ' selected' : '' }}
+                 value="{{ status_id }}">{{ status_display }}</option>
+              {% endfor %}
+            </select>
           </td>
         {% else %}
-          <td colspan="4"></td>
+          <td></td><td colspan="3"></td>
         {% endif %}
       </tr>
     {% endfor %}

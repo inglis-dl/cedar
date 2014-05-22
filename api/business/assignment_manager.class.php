@@ -363,6 +363,13 @@ class assignment_manager extends \cenozo\singleton
         $participant_status_list['NULL'] = ''; 
         $participant_status_list = array_reverse( $participant_status_list, true );
 
+        // only classification tests (FAS and AFT) require prompt status
+        if( $test_type_name != 'classification' )
+        {
+          unset( $participant_status_list['suspected prompt'],
+                 $participant_status_list['prompted'] );
+        }
+
         $status_data = array();
         $status_data[] = array( 
           'status_label' => 'Audio Status',
