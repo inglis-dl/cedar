@@ -1,0 +1,91 @@
+====================================================================================================
+0.1.4
+====================================================================================================
+
+* Adding management of a service's jurisdiction and region-site associations
+  - adminstrators can now add/edit/delete which sites a region is assigned to
+  - incorporated from cenozo
+
+* Adding audio and participant enumerated status
+  - audio status refined to unusable, salvageable and unavailable states
+  - participant status includes refusals and interviewer prompting during FAS and AFT tests 
+
+* Event system now tracks when participants are released to services
+
+====================================================================================================
+0.1.3
+====================================================================================================
+
+* Adding typist breaks
+  - added functionality for typists to take timed breaks and for administrators to 
+  manage them
+  - added away_time and user_time tables (copied and adapted from sabretooth)
+
+* Improved performance and functionality of assignment list
+  - created views of test_entry adjudicate/deferred/completed counts to allow
+  sorting assignments
+  - assignment list can be restricted to open, closed or unrestricted
+
+* Adding start and end datetimes to assignment table
+  - track the datetime when assignments are first created until they are finished with or
+  without adjudication
+
+* Adding enhanced word management
+  - added mispelled words column to test table
+  - created views of word usage counts based on test type
+  - words having zero usage count can be identified and deleted
+  - typists are notified of and prevented submission of known mispelled words
+  - words can be moved among dictionaries of the same test type
+
+* Adding reports
+  - added typist productivity and assignment status reports
+
+* Enhanced test adjudication management
+  - created an assignment manager in the business layer
+  - adjudication test_entry is created and updated during the adjudication process at the
+  daughter table level
+  - changed test_entry adjudicate column to default to NULL to accomodate tertiary status:
+  NULL (never adjudicated), 0 (adjudicated), 1 (requiring adjudication)
+ 
+* Improved perfomance during assignment creation
+  - created a view of sabretooth's recording table
+
+* Simplified handling of word candidates during transcription and adjudication
+  - removed word_candidate columns from ranked word, classification and alpha numeric tests
+  - added ranked_word_set_id column to test_entry_ranked_word
+
+====================================================================================================
+0.1.2
+====================================================================================================
+
+* Adding unique constraint to assignment table
+  - assignments are unique to participant and user
+
+* Adding word classifications
+  - word entries are classified and colored at the UI layer: primary (no coloring),
+  candidate (yellow), intrusion (red), variant (blue)
+
+* Adding text autocompletion
+  - added jquery autocompletion for text input fields
+  - added word list pull operation to retrieve a dictionary's words for populating the
+  autocomplete widget
+
+* Adding unique constraint to alpha numeric and classification test entry type tables
+  - entries are unique on test_entry_id and rank columns
+
+* Adding notes to test_entry
+  - created test_entry_note table so that users and administrators can pass notes
+  particular to a given test_entry
+  - removed defunct note column from test_entry table
+
+* Adding entry field additions
+  - created add button to append new text input fields to the UI for alpha numeric
+  test transcriptions
+
+====================================================================================================
+0.1.1
+====================================================================================================
+
+* Adding new operations to roles
+  - added push new test_entry daughter table entries as part of the
+  adjudication and transcription process
