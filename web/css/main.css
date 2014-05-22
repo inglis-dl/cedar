@@ -4,23 +4,24 @@
  * Main styles used throughout the application
  */
 
-input[type=text][class*=intrusion]
-{
+input[type=text][class*=intrusion] {
   background: #FFB2D1;
   border: 1px solid #C0C0C0;
   -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
 }
 
-input[type=text][class*=variant]
-{
+input[type=text][class*=variant] {
   background: #A9FFFF;
   border: 1px solid #C0C0C0;
   -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
 }
 
-input[type=text][class*=candidate]
-{
+input[type=text][class*=candidate] {
   background: #FFFF66;
   border: 1px solid #C0C0C0;
   -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+}
+
+audio {
+  width: 100%;
 }

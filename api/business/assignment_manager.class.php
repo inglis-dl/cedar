@@ -183,10 +183,10 @@ class assignment_manager extends \cenozo\singleton
   {
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    if( is_null( $db_assignment->end_datetime ) && $db_assignment->all_tests_complete() )
-    {
-      $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-      
+    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+
+    if( $db_assignment->all_tests_complete() )
+    {      
       if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
       {
         // go through all the tests and look for differences
@@ -201,14 +201,27 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
           if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
-            if( is_null( $db_test_entry->adjudicate ) || 
-                is_null( $db_sibling_test_entry->adjudicate ) )
+            $db_test_entry->adjudicate = true;
+            $db_test_entry->save();
+            $db_sibling_test_entry->adjudicate = true;
+            $db_sibling_test_entry->save();
+            $complete = false;
+          }
+          else
+          {
+            // if they are identical check if there is an adjudicate entry and delete it
+            $db_test = $db_test_entry->get_test();
+            $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
+              array( 'test_id', 'participant_id' ),
+              array( $db_test->id, $db_assignment->get_participant()->id ) );
+            if( !is_null( $db_adjudicate_test_entry ) )
             {
-              $db_test_entry->adjudicate = true;
-              $db_test_entry->save();
-              $db_sibling_test_entry->adjudicate = true;
-              $db_sibling_test_entry->save();
-              $complete = false;
+              // delete test_entry daughter record(s)              
+              $sql = sprintf( 'DELETE FROM test_entry_'.
+                $db_test->get_test_type()->name .
+                ' WHERE test_entry_id = %d', $db_test_entry->id );
+              $test_entry_class_name::db()->execute( $sql );
+              $db_adjudicate_test_entry->delete();
             }
           }
         }
@@ -221,9 +234,33 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_assignment->end_datetime = $end_datetime;
           $db_assignment->save();
           $db_sibling_assignment->save();
+        } 
+        else
+        {
+          if( !is_null( $db_assignment->end_datetime ) ||
+              !is_null( $db_sibling_assignment->end_datetime ) )
+          {
+            $db_assignment->end_datetime = NULL;
+            $db_sibling_assignment->end_datetime = NULL;
+            $db_assignment->save();
+            $db_sibling_assignment->save();              
+          }
         }
       }
-    }  
+    } 
+    else 
+    {
+      if( !is_null( $db_assignment->end_datetime ) )
+      {
+        $db_assignment->end_datetime = NULL;
+        $db_assignment->save();
+      }
+      if( !is_null( $db_sibling_assignment ) && !is_null( $db_sibling_assignment->end_datetime ) )
+      {
+        $db_sibling_assignment->end_datetime = NULL;
+        $db_sibling_assignment->save();
+      }
+    }    
   }
 
   /**
@@ -297,7 +334,6 @@ class assignment_manager extends \cenozo\singleton
 
       if( $db_sibling_test_entry->adjudicate == true )
       {
-        $adjudicate_data = array();
         $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
 
         // if we havent created the adjudicate entry, do so now
@@ -315,17 +351,70 @@ class assignment_manager extends \cenozo\singleton
           static::initialize_test_entry( $db_adjudicate_test_entry );
         }
 
+        $audio_status_list = $test_entry_class_name::get_enum_values( 'audio_status' );
+        $audio_status_list = array_combine( $audio_status_list, $audio_status_list );
+        $audio_status_list = array_reverse( $audio_status_list, true );
+        $audio_status_list['NULL'] = ''; 
+        $audio_status_list = array_reverse( $audio_status_list, true );
+
+        $participant_status_list = $test_entry_class_name::get_enum_values( 'participant_status' );
+        $participant_status_list = array_combine( $participant_status_list, $participant_status_list );
+        $participant_status_list = array_reverse( $participant_status_list, true );
+        $participant_status_list['NULL'] = ''; 
+        $participant_status_list = array_reverse( $participant_status_list, true );
+
+        // only classification tests (FAS and AFT) require prompt status
+        if( $test_type_name != 'classification' )
+        {
+          unset( $participant_status_list['suspected prompt'],
+                 $participant_status_list['prompted'] );
+        }
+
+        $status_data = array();
+        $status_data[] = array( 
+          'status_label' => 'Audio Status',
+          'status_type' => 'audio',
+          'id_1' => $db_test_entry->id, 
+          'id_2' => $db_sibling_test_entry->id,
+          'id_3' => $db_adjudicate_test_entry->id,
+          'status_1' =>
+            array_search( $db_test_entry->audio_status, $audio_status_list ),
+          'status_2' =>
+            array_search( $db_sibling_test_entry->audio_status, $audio_status_list ),
+          'status_3' =>
+            array_search( $db_adjudicate_test_entry->audio_status, $audio_status_list ),
+          'status_list' => $audio_status_list,
+          'adjudicate' => $db_test_entry->audio_status != $db_sibling_test_entry->audio_status );
+
+        $status_data[] = array( 
+          'status_label' => 'Participant Status',
+          'status_type' => 'participant',
+          'id_1' => $db_test_entry->id, 
+          'id_2' => $db_sibling_test_entry->id,
+          'id_3' => $db_adjudicate_test_entry->id,
+          'status_1' =>
+            array_search( $db_test_entry->participant_status, $participant_status_list ),
+          'status_2' =>
+            array_search( $db_sibling_test_entry->participant_status, $participant_status_list ),
+          'status_3' =>
+            array_search( $db_adjudicate_test_entry->participant_status, $participant_status_list ),
+          'status_list' => $participant_status_list,
+          'adjudicate' => $db_test_entry->participant_status != $db_sibling_test_entry->participant_status );
+
+        $entry_data = array();
+         
         if( $test_type_name == 'confirmation' )
         {
           $a = current( $db_test_entry->$get_list_function() );
           $b = current( $db_sibling_test_entry->$get_list_function() );
           $c = current(  $db_adjudicate_test_entry->$get_list_function() );
 
-          $adjudicate_data[ 'id_1' ] = $a->id;
-          $adjudicate_data[ 'id_2' ] = $b->id;
-          $adjudicate_data[ 'id_3' ] = $c->id;
-          $adjudicate_data[ 'confirmation_1' ] = $a->confirmation;
-          $adjudicate_data[ 'confirmation_2' ] = $b->confirmation;
+          $entry_data[ 'id_1' ] = $a->id;
+          $entry_data[ 'id_2' ] = $b->id;
+          $entry_data[ 'id_3' ] = $c->id;
+          $entry_data[ 'confirmation_1' ] = $a->confirmation;
+          $entry_data[ 'confirmation_2' ] = $b->confirmation;
+          $entry_data[ 'adjudicate' ] = $a->confirmation != $b->confirmation;
         }
         else
         {
@@ -476,7 +565,7 @@ class assignment_manager extends \cenozo\singleton
                 $row['classification_2'] = $classification_2;
               }
 
-              $adjudicate_data[] = $row;
+              $entry_data[] = $row;
               $rank = $rank + 1;
               next( $a );
               next( $b );
@@ -633,7 +722,7 @@ class assignment_manager extends \cenozo\singleton
                 }
               }
 
-              $adjudicate_data[] = array(
+              $entry_data[] = array(
                        'id_1' => $id_1,
                        'id_2' => $id_2,
                        'id_3' => $id_3,
@@ -655,6 +744,7 @@ class assignment_manager extends \cenozo\singleton
             }
           }
         }
+        $adjudicate_data = array( 'entry_data' => $entry_data, 'status_data' => $status_data );  
       } 
     } 
 

@@ -42,7 +42,8 @@ class test_entry_list extends \cenozo\ui\widget\base_list
 
     $this->add_column( 'test.rank', 'constant', 'Order', true );
     $this->add_column( 'test_id', 'string', 'Test', true );
-    $this->add_column( 'audio_fault', 'boolean', 'Audio Fault', true );
+    $this->add_column( 'audio_status', 'string', 'Audio Status' );
+    $this->add_column( 'participant_status', 'string', 'Participant Status' );
     $this->add_column( 'completed', 'boolean', 'Completed', true );
     $this->add_column( 'deferred', 'boolean', 'Deferred', true );
 
@@ -70,19 +71,27 @@ class test_entry_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
 
-    foreach( $this->get_record_list() as $record )
+    foreach( $this->get_record_list() as $db_test_entry )
     {
-      $db_test = $record->get_test();
-      $columns = array( 'test.rank' => $db_test->rank,
-               'test_id' => $db_test->name,
-               'audio_fault' => $record->audio_fault,
-               'deferred' => $record->deferred,
-               'completed' => $record->completed,
-               // note count isn't a column, it's used for the note button
-               'note_count' => $record->get_note_count() );
+      $db_test = $db_test_entry->get_test();
+
+      $columns = array(
+        'test.rank' => $db_test->rank,
+        'test_id' => $db_test->name,
+        'audio_status' =>
+          is_null( $db_test_entry->audio_status ) ? '(N/A)' : $db_test_entry->audio_status,
+        'participant_status' =>
+          is_null( $db_test_entry->participant_status ) ? '(N/A)' : $db_test_entry->participant_status,
+        $db_test_entry->participant_status,
+        'deferred' => $db_test_entry->deferred,
+        'completed' => $db_test_entry->completed,
+        // note count isn't a column, it's used for the note button
+        'note_count' => $db_test_entry->get_note_count() );
+
       if( $this->adjudicate_allowed )
-        $columns['adjudicate'] = $record->adjudicate;
-      $this->add_row( $record->id, $columns );   
+        $columns['adjudicate'] = $db_test_entry->adjudicate;
+
+      $this->add_row( $db_test_entry->id, $columns );   
     }
   }
 

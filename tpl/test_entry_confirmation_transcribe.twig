@@ -19,19 +19,20 @@
 
       //disable elements based on deferred status
       if( {{ deferred }} || !{{ editable }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", "disabled" );
-        $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
-        $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
+        $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
+        $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
+        $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
         $( table_selector + " input" ).each( function() {
           $(this).prop( "disabled", true );
         } );
       } else {
         // only enable the next button when there is at least one entry filled
         var disable = 0 == $( table_selector + ' input[type="radio"]:checked' ).length;
-        $("#{{ parent.full }}_Next").button( { disabled : disable } );
+        $("#{{ parent.full }}_next").button( { disabled : disable } );
 
         // disable the Reset button if there is nothing to reset
-        $( "#{{ parent.full }}_Reset" ).button( { disabled : disable } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : disable } );
       }
     }
 

@@ -73,6 +73,8 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   {
     parent::setup();
 
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
     $session = lib::create( 'business\session' );
     $db_user = $session->get_user();
 
@@ -86,7 +88,33 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
 
-    $this->set_variable( 'audio_fault', $db_test_entry->audio_fault );
+    $audio_status_list = $test_entry_class_name::get_enum_values( 'audio_status' );
+    $audio_status_list = array_combine( $audio_status_list, $audio_status_list );
+    $audio_status_list = array_reverse( $audio_status_list, true );
+    $audio_status_list['NULL'] = '';
+    $audio_status_list = array_reverse( $audio_status_list, true );
+
+    $this->set_variable( 'audio_status',
+      array_search( $db_test_entry->audio_status, $audio_status_list ) );
+    $this->set_variable(  'audio_status_list', $audio_status_list );
+
+    $participant_status_list = $test_entry_class_name::get_enum_values( 'participant_status' );
+    $participant_status_list = array_combine( $participant_status_list, $participant_status_list );
+    $participant_status_list = array_reverse( $participant_status_list, true );
+    $participant_status_list['NULL'] = '';
+    $participant_status_list = array_reverse( $participant_status_list, true );
+
+    // only classification tests (FAS and AFT) require prompt status
+    if( $test_type_name != 'classification' )
+    {   
+      unset( $participant_status_list['suspected prompt'],
+             $participant_status_list['prompted'] );
+    }
+
+    $this->set_variable( 'participant_status',
+      array_search( $db_test_entry->participant_status, $participant_status_list ) );
+    $this->set_variable(  'participant_status_list', $participant_status_list );
+
     $this->set_variable( 'deferred', $db_test_entry->deferred );
     $this->set_variable( 'completed', $db_test_entry->completed );
     $this->set_variable( 'rank', $db_test->rank );

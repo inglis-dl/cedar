@@ -44,8 +44,8 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'uid', 'constant', 'UId' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
     $this->add_item( 'language', 'constant', 'Language' );
+    $this->add_item( 'user.name', 'constant', 'Typist' );
     $this->add_item( 'test_id', 'constant', 'Test' );
-    $this->add_item( 'audio_fault', 'boolean', 'Audio Fault' );
     $this->add_item( 'deferred', 'boolean', 'Deferred' );
     $this->add_item( 'completed', 'boolean', 'Completed' );
     $this->add_item( 'adjudicate', 'constant', 'Adjudicate' );
@@ -73,21 +73,22 @@ class test_entry_view extends \cenozo\ui\widget\base_view
   {
     parent::setup();
 
-    $record = $this->get_record();
-    $db_assignment = $record->get_assignment();
-    $db_test = $record->get_test();
-    $db_participant = $db_assignment->get_participant();
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
+    $db_test_entry = $this->get_record();
+    $db_assignment = $db_test_entry->get_assignment();
+    $db_test = $db_test_entry->get_test();
+    $db_participant = $db_assignment->get_participant();
     // set the view's items
     $this->set_item( 'uid', $db_participant->uid );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name );
     $this->set_item( 'language', 
       is_null( $db_participant->language ) ? 'en' : $db_participant->language );
+    $this->set_item( 'user.name', $db_assignment->get_user()->name );
     $this->set_item( 'test_id', $db_test->name );
-    $this->set_item( 'audio_fault', $record->audio_fault );
-    $this->set_item( 'deferred', $record->deferred  );
-    $this->set_item( 'completed', $record->completed );
-    $this->set_item( 'adjudicate', $record->adjudicate ? 'Yes' : 'No' );
+    $this->set_item( 'deferred', $db_test_entry->deferred  );
+    $this->set_item( 'completed', $db_test_entry->completed );
+    $this->set_item( 'adjudicate', $db_test_entry->adjudicate ? 'Yes' : 'No' );
 
     try
     {
