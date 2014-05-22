@@ -47,8 +47,38 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
           'unusable'    == $db_test_entry->audio_status )
       {
         throw lib::create( 'exception\notice',
-          'The audio status is inconsistent with the participant status.', __METHOD__ );
+          'The requested participant status is inconsistent with the current audio status.',
+          __METHOD__ );
       }         
+    }
+    if( array_key_exists( 'audio_status', $columns ) &&
+       ( 'unavailable' == $columns['audio_status']  || 
+         'unusable'    == $columns['audio_status'] ) )
+    {
+      $db_test_entry = $this->get_record();
+      if( 'refused' == $db_test_entry->participant_status )
+      {
+        throw lib::create( 'exception\notice',
+          'The requested audio status is inconsistent with the current participant status.',
+          __METHOD__ );
+      }         
+    }
+  }
+
+  public function execute()
+  {
+    parent::execute();
+
+    // check if the audio or participant status mandates a test_entry completion
+    $db_test_entry = $this->get_record();
+    if( !$db_test_entry->completed )
+    {
+      if( ( 'unavailable' == $db_test_entry->audio_status && !$db_test_entry->deferred ) ||
+            'refused' == $db_test_entry->participant_status )
+      {
+        $assignment_manager = lib::create( 'business\assignment_manager' );
+        $assignment_manager::complete_test_entry( $this->get_record() );
+      }
     }
   }
 }

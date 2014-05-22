@@ -16,12 +16,11 @@
 
       $( "#{{ widget.full }}_submit" ).click( function() {
         // submit the adjudication
-        if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ id_3 }} } ) ) {
+        if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ adjudicate_entry_id }} } ) ) {
           $( "#{{ widget.full }}_Submit" ).button( { disabled : true } );
           $( "#{{ widget.full }}_Next" ).trigger( "click" );
         }
       } );// end Submit button click
-
 
       $( "#{{ widget.full }}_quit" ).click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
@@ -55,13 +54,10 @@
 {% block record %}
 
   <div class="spacer"></div>
-
   <div>
     {% include [ 'test_entry_', test_type, '_adjudicate.twig']|join with test_entry_args %}      
   </div>
-
   <div class="spacer"></div>
-
   <div id="audio_control">
     {% if recording_data is defined %}
       <table>
@@ -80,15 +76,12 @@
       </table>
     {% endif %}
   </div>  
-
   <div class="spacer"></div>
-
   <div>
     {% from 'macros.twig' import confirm_buttons %}
       {{ confirm_buttons( slot, widget.full, 
         ['submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
   </div>
-
   <div id="{{ widget.full }}__note_dialog"></div>
 
 {% endblock record %}

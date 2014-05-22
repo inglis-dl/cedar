@@ -137,13 +137,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       $this->set_variable( 'recording_data', $recording_data );
     }
 
-    $this->set_variable( 'id_1', $db_test_entry->id );
-    $this->set_variable( 'adjudicate_1', $db_test_entry->adjudicate );
-    $this->set_variable( 'deferred_1', $db_test_entry->deferred );
-    $this->set_variable( 'completed_1', $db_test_entry->completed );
+    $this->set_variable( 'test_entry_id_1', $db_test_entry->id );
+    //$this->set_variable( 'adjudicate_1', $db_test_entry->adjudicate );
+    //$this->set_variable( 'deferred_1', $db_test_entry->deferred );
+    //$this->set_variable( 'completed_1', $db_test_entry->completed );
     $this->set_variable( 'user_1', $db_assignment->get_user()->name );
-    $this->set_variable( 'audio_status_1', $db_test_entry->audio_status );
-    $this->set_variable( 'participant_status_1', $db_test_entry->participant_status );
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
     if( is_null( $db_sibling_assignment ) )
@@ -162,13 +160,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
       
-    $this->set_variable( 'id_2', $db_sibling_test_entry->id );
-    $this->set_variable( 'adjudicate_2', $db_sibling_test_entry->adjudicate );
-    $this->set_variable( 'deferred_2', $db_sibling_test_entry->deferred );
-    $this->set_variable( 'completed_2', $db_sibling_test_entry->completed );
+    $this->set_variable( 'test_entry_id_2', $db_sibling_test_entry->id );
+    //$this->set_variable( 'adjudicate_2', $db_sibling_test_entry->adjudicate );
+    //$this->set_variable( 'deferred_2', $db_sibling_test_entry->deferred );
+    //$this->set_variable( 'completed_2', $db_sibling_test_entry->completed );
     $this->set_variable( 'user_2', $db_sibling_assignment->get_user()->name );
-    $this->set_variable( 'audio_status_2', $db_test_entry->audio_status );
-    $this->set_variable( 'participant_status_2', $db_test_entry->participant_status );
 
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
@@ -190,12 +186,12 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     }   
     catch( \cenozo\exception\permission $e ) {}
 
-    // assignment_manager creates the adjudicate entry in test_entry_widget setup()
+    // assignment_manager creates the adjudicate entry
     $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
       array( 'test_id', 'participant_id' ),
       array( $db_test_entry->get_test()->id,
              $db_test_entry->get_assignment()->get_participant()->id ) );
-    $this->set_variable( 'id_3', $db_adjudicate_test_entry->id );         
+    $this->set_variable( 'adjudicate_entry_id', $db_adjudicate_test_entry->id );         
   }
 
   /**
