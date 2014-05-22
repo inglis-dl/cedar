@@ -14,7 +14,7 @@ CREATE PROCEDURE upgrade_service_number()
 
     SET @sql = CONCAT(
       "UPDATE ", @cenozo, ".service ",
-      "SET version = '0.1.4' ",
+      "SET version = '1.0.0' ",
       "WHERE '", DATABASE(), "' LIKE CONCAT( '%_', name )" );
     PREPARE statement FROM @sql;
     EXECUTE statement;
