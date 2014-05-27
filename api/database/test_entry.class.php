@@ -232,10 +232,14 @@ class test_entry extends \cenozo\database\has_note
     if( !is_null( $this->assignment_id ) )
     {
       // find a sibling test_entry based on assignment id and test id uniqueness
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'assignment_id', '=', $this->assignment_id );
-      $modifier->where( 'test_id', '!=', $this->test_id );
-      $db_test_entry = current( static::select( $modifier ) );
+      $db_sibling_assignment = $this->get_assignment()->get_sibling_assignment();
+      if( !is_null( $db_sibling_assignment ) )
+      {
+        $modifier = lib::create( 'database\modifier' );
+        $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
+        $modifier->where( 'test_id', '=', $this->test_id );
+        $db_test_entry = current( static::select( $modifier ) );
+      }
     } 
     return false === $db_test_entry ? NULL : $db_test_entry;
   }

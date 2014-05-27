@@ -284,378 +284,372 @@ class assignment_manager extends \cenozo\singleton
     
     // get the sibling entry
     $db_assignment = $db_test_entry->get_assignment();
-    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-    if( !is_null( $db_sibling_assignment ) )
+    $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+
+    if( is_null( $db_sibling_test_entry ) || $db_sibling_test_entry->adjudicate != true ||
+        !$db_sibling_test_entry->completed || $db_sibling_test_entry->deferred )
+      throw lib::create( 'exception\runtime', 'Invalid sibling test entry', __METHOD__ );
+
+    if( $db_sibling_test_entry->adjudicate == true )
     {
-      $db_sibling_test_entry = $test_entry_class_name::get_unique_record(
-        array( 'test_id', 'assignment_id' ),
-        array( $db_test->id, $db_sibling_assignment->id ) );
+      $adjudicate_data = array();
+      $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
 
-      if( is_null( $db_sibling_test_entry ) || $db_sibling_test_entry->adjudicate != true ||
-          !$db_sibling_test_entry->completed || $db_sibling_test_entry->deferred )
-        throw lib::create( 'exception\runtime', 'Invalid sibling test entry', __METHOD__ );
+      // if we havent created the adjudicate entry, do so now
+      $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
+        array( 'test_id', 'participant_id' ),
+        array( $db_test->id, $db_assignment->get_participant()->id ) );
 
-      if( $db_sibling_test_entry->adjudicate == true )
+      if( is_null( $db_adjudicate_test_entry ) )
       {
-        $adjudicate_data = array();
-        $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
+        // create a new test entry to hold the data
+        $db_adjudicate_test_entry = lib::create( 'database\test_entry' );
+        $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
+        $db_adjudicate_test_entry->test_id = $db_test->id;
+        $db_adjudicate_test_entry->save();
+        static::initialize_test_entry( $db_adjudicate_test_entry );
+      }
 
-        // if we havent created the adjudicate entry, do so now
-        $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
-          array( 'test_id', 'participant_id' ),
-          array( $db_test->id, $db_assignment->get_participant()->id ) );
+      if( $test_type_name == 'confirmation' )
+      {
+        $a = current( $db_test_entry->$get_list_function() );
+        $b = current( $db_sibling_test_entry->$get_list_function() );
+        $c = current(  $db_adjudicate_test_entry->$get_list_function() );
 
-        if( is_null( $db_adjudicate_test_entry ) )
+        $adjudicate_data[ 'id_1' ] = $a->id;
+        $adjudicate_data[ 'id_2' ] = $b->id;
+        $adjudicate_data[ 'id_3' ] = $c->id;
+        $adjudicate_data[ 'confirmation_1' ] = $a->confirmation;
+        $adjudicate_data[ 'confirmation_2' ] = $b->confirmation;
+      }
+      else
+      {
+        $language = $db_test_entry->get_assignment()->get_participant()->language;
+        $language = is_null( $language ) ? 'en' : $language;
+
+        $classification = array_combine( 
+          array( $db_test->dictionary_id, 
+                 $db_test->intrusion_dictionary_id, 
+                 $db_test->variant_dictionary_id ),
+          array( 'primary', 'intrusion', 'variant' ) ); 
+
+        if( $test_type_name == 'alpha_numeric' || $test_type_name == 'classification' )
         {
-          // create a new test entry to hold the data
-          $db_adjudicate_test_entry = lib::create( 'database\test_entry' );
-          $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
-          $db_adjudicate_test_entry->test_id = $db_test->id;
-          $db_adjudicate_test_entry->save();
-          static::initialize_test_entry( $db_adjudicate_test_entry );
-        }
+          $rank_modifier = lib::create( 'database\modifier' );
+          $rank_modifier->order( 'rank' );
+          $a = $db_test_entry->$get_list_function( clone $rank_modifier );
+          $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
+          $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
 
-        if( $test_type_name == 'confirmation' )
-        {
-          $a = current( $db_test_entry->$get_list_function() );
-          $b = current( $db_sibling_test_entry->$get_list_function() );
-          $c = current(  $db_adjudicate_test_entry->$get_list_function() );
+          // get the max ranked entry that has something entered
+          $max_rank_modifier = lib::create( 'database\modifier' );
+          $max_rank_modifier->where( 'test_entry_id', 'IN', 
+            array( $db_test_entry->id, $db_sibling_test_entry->id ) );
+          $max_rank_modifier->where( 'word_id', '!=', NULL );
+          $max_rank_modifier->order_desc( 'rank' );
+          $max_rank_modifier->limit( 1 );
+          $db_max_rank_entry = current( $entry_class_name::select( $max_rank_modifier ) );
 
-          $adjudicate_data[ 'id_1' ] = $a->id;
-          $adjudicate_data[ 'id_2' ] = $b->id;
-          $adjudicate_data[ 'id_3' ] = $c->id;
-          $adjudicate_data[ 'confirmation_1' ] = $a->confirmation;
-          $adjudicate_data[ 'confirmation_2' ] = $b->confirmation;
-        }
-        else
-        {
-          $language = $db_test_entry->get_assignment()->get_participant()->language;
-          $language = is_null( $language ) ? 'en' : $language;
+          // this record should never be empty if we got this far in the process
+          if( false === $db_max_rank_entry )
+           throw lib::create( 'exception\runtime',
+             'Invalid max ranked test entry', __METHOD__ );
 
-          $classification = array_combine( 
-            array( $db_test->dictionary_id, 
-                   $db_test->intrusion_dictionary_id, 
-                   $db_test->variant_dictionary_id ),
-            array( 'primary', 'intrusion', 'variant' ) ); 
-
-          if( $test_type_name == 'alpha_numeric' || $test_type_name == 'classification' )
+          //create additional entries if necessary
+          $c_obj = end( $c );
+          for( $rank = $c_obj->rank + 1; $rank <= $db_max_rank_entry->rank; $rank++ )
           {
-            $rank_modifier = lib::create( 'database\modifier' );
-            $rank_modifier->order( 'rank' );
-            $a = $db_test_entry->$get_list_function( clone $rank_modifier );
-            $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
-            $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
+            $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
+            $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
+            $db_entry->rank = $rank;
+            $db_entry->save();
+          }
+          reset( $c ); 
 
-            // get the max ranked entry that has something entered
-            $max_rank_modifier = lib::create( 'database\modifier' );
-            $max_rank_modifier->where( 'test_entry_id', 'IN', 
-              array( $db_test_entry->id, $db_sibling_test_entry->id ) );
-            $max_rank_modifier->where( 'word_id', '!=', NULL );
-            $max_rank_modifier->order_desc( 'rank' );
-            $max_rank_modifier->limit( 1 );
-            $db_max_rank_entry = current( $entry_class_name::select( $max_rank_modifier ) );
+          $rank = 1;
+          $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
+          while( ( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) ) &&
+                 $rank <= $db_max_rank_entry->rank )
+          {
+            $a_obj = current( $a );
+            $b_obj = current( $b );
+            $c_obj = current( $c );
 
-            // this record should never be empty if we got this far in the process
-            if( false === $db_max_rank_entry )
-             throw lib::create( 'exception\runtime',
-               'Invalid max ranked test entry', __METHOD__ );
+            $id_1 = '';
+            $id_2 = '';
+            $id_3 = $c_obj->id;
+            $word_id_1 = '';
+            $word_id_2 = '';
+            $word_1 = '';
+            $word_2 = '';
+            $adjudicate = false;
 
-            //create additional entries if necessary
-            $c_obj = end( $c );
-            for( $rank = $c_obj->rank + 1; $rank <= $db_max_rank_entry->rank; $rank++ )
+            // unequal number of list elements case
+            if( false === $a_obj )
+            {
+              $adjudicate = true;
+              $id_2 = $b_obj->id;
+              if( !is_null( $b_obj->word_id ) )
+              {
+                $db_word = lib::create( 'database\word', $b_obj->word_id );
+                $word_2 = $db_word->word;
+                $word_id_2 = $db_word->id;
+              }
+            }
+            // unequal number of list elements case
+            else if( false === $b_obj )
+            {
+              $adjudicate = true;
+              $id_1 = $a_obj->id;
+              if( !is_null( $a_obj->word_id ) )
+              {
+                $db_word = lib::create( 'database\word', $a_obj->word_id );
+                $word_1 = $db_word->word;
+                $word_id_1 = $db_word->id;
+              }
+            }
+            else
+            {
+              $id_1 = $a_obj->id;
+              $id_2 = $b_obj->id;
+              $adjudicate = $a_obj->word_id != $b_obj->word_id;
+
+              //copy the progenitor to the adjudicate
+              if( !$adjudicate )
+              {
+                $c_obj->word_id = $a_obj->word_id;
+                $c_obj->save();
+              }
+
+              if( !is_null( $a_obj->word_id ) )
+              {
+                $db_word = lib::create( 'database\word', $a_obj->word_id );
+                $word_id_1 = $db_word->id;
+                $word_1 = $db_word->word;
+              }
+
+              if( !is_null( $b_obj->word_id ) )
+              {
+                $db_word = lib::create( 'database\word', $b_obj->word_id );
+                $word_id_2 = $db_word->id;
+                $word_2 = $db_word->word;
+              }
+            }
+
+            $row = array(
+                     'id_1' => $id_1,
+                     'id_2' => $id_2,
+                     'id_3' => $id_3,
+                     'rank' => $rank,
+                     'word_id_1' => $word_id_1,
+                     'word_1' => $word_1,
+                     'word_id_2' => $word_id_2,
+                     'word_2' => $word_2,
+                     'adjudicate' => $adjudicate );
+
+            // get word classfications
+            if( $test_type_name == 'classification' )
+            {
+              $classification_1 = '';
+              $classification_2 = '';
+              if( $word_id_1 !== '' )
+              {
+                $db_word = lib::create( 'database\word', $word_id_1 );
+                $dictionary_id = $db_word->dictionary_id;
+                $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification[ $dictionary_id ] : '';
+              }    
+              if( $word_id_2 !== '' )
+              {
+                $db_word = lib::create( 'database\word', $word_id_2 );
+                $dictionary_id = $db_word->dictionary_id;
+                $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification[ $dictionary_id ] : '';
+              }    
+
+              $row['classification_1'] = $classification_1;
+              $row['classification_2'] = $classification_2;
+            }
+
+            $adjudicate_data[] = $row;
+            $rank = $rank + 1;
+            next( $a );
+            next( $b );
+            next( $c );
+          }
+        }
+        else if( $test_type_name == 'ranked_word' )
+        {
+          $ranked_word_id = 'word_' . $language . '_id';
+
+          $rank_modifier = lib::create( 'database\modifier' );
+          $rank_modifier->order( 'ranked_word_set.rank' );
+          $a = $db_test_entry->$get_list_function( clone $rank_modifier );
+          $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
+          $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
+
+          // now get the intrusions and append them to the primary word entries
+          $intrusion_modifier = lib::create( 'database\modifier' );
+          $intrusion_modifier->where( 'selection', '=', NULL );
+          $intrusion_modifier->where( 'ranked_word_set_id', '=', NULL );
+
+          $a_intrusion = $db_test_entry->$get_list_function( clone $intrusion_modifier );
+          $b_intrusion = $db_sibling_test_entry->$get_list_function( clone $intrusion_modifier );
+          $c_intrusion = $db_adjudicate_test_entry->$get_list_function( clone $intrusion_modifier );
+
+          if( 0 < count( $a_intrusion ) )
+            $a = array_merge( $a, $a_intrusion );
+          if( 0 < count( $b_intrusion ) )
+            $b = array_merge( $b, $b_intrusion );
+          if( 0 < count( $c_intrusion ) )
+            $c = array_merge( $c, $c_intrusion );
+
+          //create additional entries if necessary
+          $count = abs( max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
+            count( $c_intrusion ) );
+          if( 0 < $count )
+          {
+            for( $i = 0; $i < $count; $i++ )
             {
               $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
               $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
-              $db_entry->rank = $rank;
               $db_entry->save();
-            }
-            reset( $c ); 
-
-            $rank = 1;
-            $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
-            while( ( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) ) &&
-                   $rank <= $db_max_rank_entry->rank )
-            {
-              $a_obj = current( $a );
-              $b_obj = current( $b );
-              $c_obj = current( $c );
-
-              $id_1 = '';
-              $id_2 = '';
-              $id_3 = $c_obj->id;
-              $word_id_1 = '';
-              $word_id_2 = '';
-              $word_1 = '';
-              $word_2 = '';
-              $adjudicate = false;
-
-              // unequal number of list elements case
-              if( false === $a_obj )
-              {
-                $adjudicate = true;
-                $id_2 = $b_obj->id;
-                if( !is_null( $b_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $b_obj->word_id );
-                  $word_2 = $db_word->word;
-                  $word_id_2 = $db_word->id;
-                }
-              }
-              // unequal number of list elements case
-              else if( false === $b_obj )
-              {
-                $adjudicate = true;
-                $id_1 = $a_obj->id;
-                if( !is_null( $a_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $a_obj->word_id );
-                  $word_1 = $db_word->word;
-                  $word_id_1 = $db_word->id;
-                }
-              }
-              else
-              {
-                $id_1 = $a_obj->id;
-                $id_2 = $b_obj->id;
-                $adjudicate = $a_obj->word_id != $b_obj->word_id;
-
-                //copy the progenitor to the adjudicate
-                if( !$adjudicate )
-                {
-                  $c_obj->word_id = $a_obj->word_id;
-                  $c_obj->save();
-                }
-
-                if( !is_null( $a_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $a_obj->word_id );
-                  $word_id_1 = $db_word->id;
-                  $word_1 = $db_word->word;
-                }
-
-                if( !is_null( $b_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $b_obj->word_id );
-                  $word_id_2 = $db_word->id;
-                  $word_2 = $db_word->word;
-                }
-              }
-
-              $row = array(
-                       'id_1' => $id_1,
-                       'id_2' => $id_2,
-                       'id_3' => $id_3,
-                       'rank' => $rank,
-                       'word_id_1' => $word_id_1,
-                       'word_1' => $word_1,
-                       'word_id_2' => $word_id_2,
-                       'word_2' => $word_2,
-                       'adjudicate' => $adjudicate );
-
-              // get word classfications
-              if( $test_type_name == 'classification' )
-              {
-                $classification_1 = '';
-                $classification_2 = '';
-                if( $word_id_1 !== '' )
-                {
-                  $db_word = lib::create( 'database\word', $word_id_1 );
-                  $dictionary_id = $db_word->dictionary_id;
-                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
-                    $classification[ $dictionary_id ] : '';
-                }    
-                if( $word_id_2 !== '' )
-                {
-                  $db_word = lib::create( 'database\word', $word_id_2 );
-                  $dictionary_id = $db_word->dictionary_id;
-                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
-                    $classification[ $dictionary_id ] : '';
-                }    
-
-                $row['classification_1'] = $classification_1;
-                $row['classification_2'] = $classification_2;
-              }
-
-              $adjudicate_data[] = $row;
-              $rank = $rank + 1;
-              next( $a );
-              next( $b );
-              next( $c );
+              array_push( $c, $db_entry );
             }
           }
-          else if( $test_type_name == 'ranked_word' )
+
+          while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) || !is_null( key( $c ) ) )
           {
-            $ranked_word_id = 'word_' . $language . '_id';
+            $a_obj = current( $a );
+            $b_obj = current( $b );
+            $c_obj = current( $c );
 
-            $rank_modifier = lib::create( 'database\modifier' );
-            $rank_modifier->order( 'ranked_word_set.rank' );
-            $a = $db_test_entry->$get_list_function( clone $rank_modifier );
-            $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
-            $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
+            $id_1 = '';
+            $id_2 = '';
+            $id_3 = $c_obj->id;
+            $word_id_1 = '';
+            $word_id_2 = '';
+            $word_1 = '';
+            $word_2 = '';
+            $classification_1 = '';
+            $classification_2 = '';
+            $selection_1 = '';
+            $selection_2 = '';
+            $ranked_word_set_id = '';
+            $ranked_word_set_word = '';
+            $adjudicate = false;
 
-            // now get the intrusions and append them to the primary word entries
-            $intrusion_modifier = lib::create( 'database\modifier' );
-            $intrusion_modifier->where( 'selection', '=', NULL );
-            $intrusion_modifier->where( 'ranked_word_set_id', '=', NULL );
-
-            $a_intrusion = $db_test_entry->$get_list_function( clone $intrusion_modifier );
-            $b_intrusion = $db_sibling_test_entry->$get_list_function( clone $intrusion_modifier );
-            $c_intrusion = $db_adjudicate_test_entry->$get_list_function( clone $intrusion_modifier );
-
-            if( 0 < count( $a_intrusion ) )
-              $a = array_merge( $a, $a_intrusion );
-            if( 0 < count( $b_intrusion ) )
-              $b = array_merge( $b, $b_intrusion );
-            if( 0 < count( $c_intrusion ) )
-              $c = array_merge( $c, $c_intrusion );
-
-            //create additional entries if necessary
-            $count = abs( max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
-              count( $c_intrusion ) );
-            if( 0 < $count )
+            // unequal number of list elements case
+            if( false === $a_obj )
             {
-              for( $i = 0; $i < $count; $i++ )
+              $adjudicate = true;
+              $id_2 = $b_obj->id;
+              $selection_2 = is_null( $b_obj->selection ) ? '' : $b_obj->selection;
+              $ranked_word_set_id = is_null( $b_obj->ranked_word_set_id ) ? '' : 
+                $b_obj->ranked_word_set_id;
+              if( !is_null( $b_obj->word_id ) )
               {
-                $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
-                $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
-                $db_entry->save();
-                array_push( $c, $db_entry );
+                $db_word = lib::create( 'database\word', $b_obj->word_id );
+                $word_2 = $db_word->word;
+                $word_id_2 = $db_word->id;
+                $dictionary_id = $db_word->dictionary_id;
+                $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification[ $dictionary_id ] : '';
+              }
+            }
+            // unequal number of list elements case
+            else if( false === $b_obj )
+            {
+              $adjudicate = true;
+              $id_1 = $a_obj->id;
+              $selection_1 = is_null( $a_obj->selection ) ? '' : $a_obj->selection;
+              $ranked_word_set_id = is_null( $a_obj->ranked_word_set_id ) ? '' : 
+                $a_obj->ranked_word_set_id;
+              if( !is_null( $a_obj->word_id ) )
+              {
+                $db_word = lib::create( 'database\word', $a_obj->word_id );
+                $word_1 = $db_word->word;
+                $word_id_1 = $db_word->id;
+                $dictionary_id = $db_word->dictionary_id;
+                $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification[ $dictionary_id ] : '';
+              }
+            }
+            else
+            {
+              $id_1 = $a_obj->id;
+              $id_2 = $b_obj->id;
+              $selection_1 = $a_obj->selection;
+              $selection_2 = $b_obj->selection;
+
+              if( !is_null( $a_obj->ranked_word_set_id ) && !is_null( $b_obj->ranked_word_set_id ) )
+              {
+                if( $a_obj->ranked_word_set_id != $b_obj->ranked_word_set_id )
+                  throw lib::create( 'exception\runtime', 
+                    'Invalid test entry ranked word pair', __METHOD__ );
+
+                $db_ranked_word_set = $a_obj->get_ranked_word_set();
+                $db_ranked_word_set_word =
+                  lib::create( 'database\word', $db_ranked_word_set->$ranked_word_id );
+                $ranked_word_set_word = $db_ranked_word_set_word->word;
+                $ranked_word_set_id = $db_ranked_word_set->id;
+              }
+
+              $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
+                              $a_obj->selection != $b_obj->selection );
+
+              //copy the progenitor to the adjudicate
+              if( !$adjudicate )
+              {
+                $c_obj->word_id= $a_obj->word_id;
+                $c_obj->selection = $a_obj->selection;
+                $c_obj->ranked_word_set_id = $ranked_word_set_id;
+                $c_obj->save();
+              }
+
+              if( !is_null( $a_obj->word_id ) )
+              {
+                $db_word = lib::create( 'database\word', $a_obj->word_id );
+                $word_id_1 = $db_word->id;
+                $word_1 = $db_word->word;
+                $dictionary_id = $db_word->dictionary_id;
+                $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification[ $dictionary_id ] : '';
+              }
+
+              if( !is_null( $b_obj->word_id ) )
+              {
+                $db_word = lib::create( 'database\word', $b_obj->word_id );
+                $word_id_2 = $db_word->id;
+                $word_2 = $db_word->word;
+                $dictionary_id = $db_word->dictionary_id;
+                $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification[ $dictionary_id ] : '';
               }
             }
 
-            while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) || !is_null( key( $c ) ) )
-            {
-              $a_obj = current( $a );
-              $b_obj = current( $b );
-              $c_obj = current( $c );
+            $adjudicate_data[] = array(
+                     'id_1' => $id_1,
+                     'id_2' => $id_2,
+                     'id_3' => $id_3,
+                     'ranked_word_set_id' => $ranked_word_set_id,
+                     'ranked_word_set_word' => $ranked_word_set_word,
+                     'selection_1' => $selection_1,
+                     'selection_2' => $selection_2,
+                     'word_id_1' => $word_id_1,
+                     'word_1' => $word_1,
+                     'classification_1' => $classification_1,
+                     'word_id_2' => $word_id_2,
+                     'word_2' => $word_2,
+                     'classification_2' => $classification_2,
+                     'adjudicate' => $adjudicate );
 
-              $id_1 = '';
-              $id_2 = '';
-              $id_3 = $c_obj->id;
-              $word_id_1 = '';
-              $word_id_2 = '';
-              $word_1 = '';
-              $word_2 = '';
-              $classification_1 = '';
-              $classification_2 = '';
-              $selection_1 = '';
-              $selection_2 = '';
-              $ranked_word_set_id = '';
-              $ranked_word_set_word = '';
-              $adjudicate = false;
-
-              // unequal number of list elements case
-              if( false === $a_obj )
-              {
-                $adjudicate = true;
-                $id_2 = $b_obj->id;
-                $selection_2 = is_null( $b_obj->selection ) ? '' : $b_obj->selection;
-                $ranked_word_set_id = is_null( $b_obj->ranked_word_set_id ) ? '' : 
-                  $b_obj->ranked_word_set_id;
-                if( !is_null( $b_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $b_obj->word_id );
-                  $word_2 = $db_word->word;
-                  $word_id_2 = $db_word->id;
-                  $dictionary_id = $db_word->dictionary_id;
-                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
-                    $classification[ $dictionary_id ] : '';
-                }
-              }
-              // unequal number of list elements case
-              else if( false === $b_obj )
-              {
-                $adjudicate = true;
-                $id_1 = $a_obj->id;
-                $selection_1 = is_null( $a_obj->selection ) ? '' : $a_obj->selection;
-                $ranked_word_set_id = is_null( $a_obj->ranked_word_set_id ) ? '' : 
-                  $a_obj->ranked_word_set_id;
-                if( !is_null( $a_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $a_obj->word_id );
-                  $word_1 = $db_word->word;
-                  $word_id_1 = $db_word->id;
-                  $dictionary_id = $db_word->dictionary_id;
-                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
-                    $classification[ $dictionary_id ] : '';
-                }
-              }
-              else
-              {
-                $id_1 = $a_obj->id;
-                $id_2 = $b_obj->id;
-                $selection_1 = $a_obj->selection;
-                $selection_2 = $b_obj->selection;
-
-                if( !is_null( $a_obj->ranked_word_set_id ) && !is_null( $b_obj->ranked_word_set_id ) )
-                {
-                  if( $a_obj->ranked_word_set_id != $b_obj->ranked_word_set_id )
-                    throw lib::create( 'exception\runtime', 
-                      'Invalid test entry ranked word pair', __METHOD__ );
-
-                  $db_ranked_word_set = $a_obj->get_ranked_word_set();
-                  $db_ranked_word_set_word =
-                    lib::create( 'database\word', $db_ranked_word_set->$ranked_word_id );
-                  $ranked_word_set_word = $db_ranked_word_set_word->word;
-                  $ranked_word_set_id = $db_ranked_word_set->id;
-                }
-
-                $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
-                                $a_obj->selection != $b_obj->selection );
-
-                //copy the progenitor to the adjudicate
-                if( !$adjudicate )
-                {
-                  $c_obj->word_id= $a_obj->word_id;
-                  $c_obj->selection = $a_obj->selection;
-                  $c_obj->ranked_word_set_id = $ranked_word_set_id;
-                  $c_obj->save();
-                }
-
-                if( !is_null( $a_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $a_obj->word_id );
-                  $word_id_1 = $db_word->id;
-                  $word_1 = $db_word->word;
-                  $dictionary_id = $db_word->dictionary_id;
-                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
-                    $classification[ $dictionary_id ] : '';
-                }
-
-                if( !is_null( $b_obj->word_id ) )
-                {
-                  $db_word = lib::create( 'database\word', $b_obj->word_id );
-                  $word_id_2 = $db_word->id;
-                  $word_2 = $db_word->word;
-                  $dictionary_id = $db_word->dictionary_id;
-                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
-                    $classification[ $dictionary_id ] : '';
-                }
-              }
-
-              $adjudicate_data[] = array(
-                       'id_1' => $id_1,
-                       'id_2' => $id_2,
-                       'id_3' => $id_3,
-                       'ranked_word_set_id' => $ranked_word_set_id,
-                       'ranked_word_set_word' => $ranked_word_set_word,
-                       'selection_1' => $selection_1,
-                       'selection_2' => $selection_2,
-                       'word_id_1' => $word_id_1,
-                       'word_1' => $word_1,
-                       'classification_1' => $classification_1,
-                       'word_id_2' => $word_id_2,
-                       'word_2' => $word_2,
-                       'classification_2' => $classification_2,
-                       'adjudicate' => $adjudicate );
-
-              next( $a );
-              next( $b );
-              next( $c );
-            }
+            next( $a );
+            next( $b );
+            next( $c );
           }
         }
-      } 
+      }
     } 
 
     if( is_null( $adjudicate_data ) )
