@@ -23,6 +23,18 @@
       );
     }
 
+    function configure() {
+      var audio_state = $( "#{{ widget.full }}__audio_status option:selected" ).val();
+      var participant_state = $( "#{{ widget.full }}__participant_status option:selected" ).val();
+      disable = audio_state == 'unusable' || audio_state == 'unavailable' ||
+                participant_state == 'refused';
+      $( "#{{ widget.full }}_next" ).button( { disabled : !disable } );
+      $( "#{{ widget.full }}_reset" ).button( { disabled : disable } );
+      $( "#{{ widget.full }}_defer" ).button( { disabled : disable } );
+      $( "#{{ widget.full }}__audio_status" ).prop( "disabled", disable );
+      $( "#{{ widget.full }}__participant_status" ).prop( "disabled", disable );        
+    }
+
     $( function () {
 
       // go on break button
@@ -42,14 +54,7 @@
         args.columns = { audio_status : 'NULL' == state ? '' : state };
         args.id = {{ id }};
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          if( 'unusable' == state ) {
-            $( "#{{ widget.full }}_next" ).button( { disabled : false } );
-            $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
-            $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
-          } else if( 'unavailable' == state ) {
-            $( "#{{ widget.full }}__audio_status" ).prop( "disabled", true );
-            $( "#{{ widget.full }}__participant_status" ).prop( "disabled", true );
-          }
+          configure();
         }
       } ); // end Audio Status change
 
@@ -59,13 +64,7 @@
         args.columns = { participant_status : 'NULL' == state ? '' : state };
         args.id = {{ id }};
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          if( 'refused' == state ) {
-            $( "#{{ widget.full }}_next" ).button( { disabled : false } );
-            $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
-            $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
-            $( "#{{ widget.full }}__audio_status" ).prop( "disabled", true );
-            $( "#{{ widget.full }}__participant_status" ).prop( "disabled", true );
-          }
+          configure();
         }
       } ); // end Participant Status change
 

@@ -65,20 +65,18 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
     }
   }
 
+  /** 
+   * This method executes the operation's purpose.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
   public function execute()
   {
     parent::execute();
 
     // check if the audio or participant status mandates a test_entry completion
-    $db_test_entry = $this->get_record();
-    if( !$db_test_entry->completed )
-    {
-      if( ( 'unavailable' == $db_test_entry->audio_status && !$db_test_entry->deferred ) ||
-            'refused' == $db_test_entry->participant_status )
-      {
-        $assignment_manager = lib::create( 'business\assignment_manager' );
-        $assignment_manager::complete_test_entry( $this->get_record() );
-      }
-    }
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_test_entry( $this->get_record() );
   }
 }

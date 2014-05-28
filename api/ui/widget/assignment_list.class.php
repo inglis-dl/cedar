@@ -108,6 +108,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
       {
         $test_entry_mod = clone $base_mod;
         $test_entry_mod->where( 'completed', '=', false );
+        $test_entry_mod->where( 'deferred', '=', false );
         $test_entry_mod->order( 'test.rank' );
         $test_entry_mod->limit( 1 );
         $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );

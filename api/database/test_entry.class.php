@@ -34,10 +34,9 @@ class test_entry extends \cenozo\database\has_note
     {
       $test_class_name = lib::get_class_name( 'database\test' );
       $rank = $this->get_test()->rank - 1;
-
+      $found = false;
       if( $adjudicate )
       {
-        $found = false;
         do
         {
           $db_prev_test = $test_class_name::get_unique_record( 'rank', $rank-- );
@@ -56,7 +55,6 @@ class test_entry extends \cenozo\database\has_note
       }
       else
       {
-        $found = false;
         do
         {
           $db_prev_test = $test_class_name::get_unique_record( 'rank', $rank-- );
@@ -65,15 +63,16 @@ class test_entry extends \cenozo\database\has_note
             $db_test_entry = static::get_unique_record(
               array( 'test_id', 'assignment_id' ),
               array( $db_prev_test->id, $this->assignment_id ) );
-            if( $db_test_entry->audio_status != 'unusable' && 
+            if( !is_null( $db_test_entry ) &&
+                $db_test_entry->audio_status != 'unusable' &&
                 $db_test_entry->audio_status != 'unavailable' &&
-                $db_test_entry->participant_statue != 'refused' )
+                $db_test_entry->participant_status != 'refused' )
             {
               $db_prev_test_entry = $db_test_entry;
               $found = true;
             }
           }
-        } while( !$found && 0 < $rank );      
+        } while( !$found && 0 < $rank );
       }
     }
     return $db_prev_test_entry;
@@ -98,12 +97,11 @@ class test_entry extends \cenozo\database\has_note
     else
     {
       $test_class_name = lib::get_class_name( 'database\test' );
-      $rank =  $this->get_test()->rank + 1;
-
+      $rank = $this->get_test()->rank + 1;
+      $max_rank = $test_class_name::count();
+      $found = false;
       if( $adjudicate )
       {
-        $max_rank = $test_class_name::count();
-        $found = false;
         do
         {
           $db_next_test = $test_class_name::get_unique_record( 'rank', $rank++ );
@@ -112,7 +110,7 @@ class test_entry extends \cenozo\database\has_note
             $db_test_entry = static::get_unique_record(
               array( 'test_id', 'assignment_id' ),
               array( $db_next_test->id, $this->assignment_id ) );
-            if( !is_null( $db_test_entry ) &&  true == $db_test_entry->adjudicate )
+            if( !is_null( $db_test_entry ) && true == $db_test_entry->adjudicate )
             {
               $db_next_test_entry = $db_test_entry;
               $found = true;
@@ -122,18 +120,18 @@ class test_entry extends \cenozo\database\has_note
       }
       else
       {
-        $found = false;
         do
         {
           $db_next_test = $test_class_name::get_unique_record( 'rank', $rank++ );
-          if( !is_null( $db_prev_test ) )
+          if( !is_null( $db_next_test ) )
           {
             $db_test_entry = static::get_unique_record(
               array( 'test_id', 'assignment_id' ),
               array( $db_next_test->id, $this->assignment_id ) );
-            if( $db_test_entry->audio_status != 'unusable' && 
+            if( !is_null( $db_test_entry ) &&
+                $db_test_entry->audio_status != 'unusable' &&
                 $db_test_entry->audio_status != 'unavailable' &&
-                $db_test_entry->participant_statue != 'refused' )
+                $db_test_entry->participant_status != 'refused' )
             {
               $db_next_test_entry = $db_test_entry;
               $found = true;
