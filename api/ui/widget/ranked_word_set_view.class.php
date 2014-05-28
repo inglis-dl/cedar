@@ -1,7 +1,7 @@
 <?php
 /**
  * ranked_word_set_view.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,14 +29,14 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function prepare()
   {
     parent::prepare();
-    
+
     $word_class_name = lib::get_class_name( 'database\word' );
 
     // view items to the view
@@ -57,7 +57,7 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -90,8 +90,8 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
     else
     {
       throw lib::create( 'exception\notice',
-        'The primary dictionary must contain at least one word of each language.', 
-         __METHOD__ );        
+        'The primary dictionary must contain at least one word of each language.',
+         __METHOD__ );
     }
 
     $num_ranks = $db_test->get_ranked_word_set_count();
@@ -104,15 +104,15 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
 
     foreach( $this->languages as $language )
     {
-      $word_list = $words[$language]; 
+      $word_list = $words[$language];
       $word_id = 'word_' . $language . '_id';
       $this->set_item( $word_id, $record->$word_id, true, $word_list );
     }
   }
 
-  /** 
+  /**
    * The languages.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

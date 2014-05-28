@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_reset.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     parent::__construct( 'test_entry', 'reset', $args );
   }
 
-  /** 
+  /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -42,5 +42,5 @@ class test_entry_reset extends \cenozo\ui\push\base_record
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::initialize_assignment(
       $db_test_entry->get_assignment(),  $db_test_entry );
-  }  
+  }
 }

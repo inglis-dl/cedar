@@ -1,6 +1,6 @@
 {##
  # assignment_list.twig
- # 
+ #
  # Lists assignments.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_list.twig for parameters
@@ -20,9 +20,9 @@
         // override the add button
         $( "#{{ widget.full }}_add" ).unbind( 'click' );
         $( "#{{ widget.full }}_add" ).click( function() {
-          if( ajax_push( "{{ widget.subject }}", "new" ) ) {   
+          if( ajax_push( "{{ widget.subject }}", "new" ) ) {
             slot_refresh( {{ slot }} );
-          } 
+          }
         } );
       {% endif %}
     } );
@@ -59,7 +59,7 @@
         // reload page if state selector is changed
         $( "#{{ widget.full }}__restrict_state_id" ).change( function() {
           var state_id = $( "#{{ widget.full }}__restrict_state_id option:selected" ).val();
-          slot_load( {{ slot }}, "{{ widget.subject }}", "{{ widget.name }}", 
+          slot_load( {{ slot }}, "{{ widget.subject }}", "{{ widget.name }}",
                      { "restrict_state_id": state_id } );
         } );
       } );
@@ -70,7 +70,7 @@
 {% endblock javascript %}
 
 {% block prelist %}
-  
+
   {% if state_list is defined %}
     {% set restrict_state_id = restrict_state_id|default(0) %}
     <label for="{{ widget.full }}__restrict_state_id">Restrict to condition:</label>

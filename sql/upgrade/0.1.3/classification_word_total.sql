@@ -3,9 +3,9 @@ DELIMITER //
 CREATE PROCEDURE patch_classification_word_total()
   BEGIN
 
-    SELECT "Adding new classification_word_total view" AS ""; 
+    SELECT "Adding new classification_word_total view" AS "";
 
-    SET @test = ( 
+    SET @test = (
       SELECT COUNT(*)
       FROM information_schema.VIEWS
       WHERE TABLE_SCHEMA = DATABASE()
@@ -23,10 +23,10 @@ CREATE PROCEDURE patch_classification_word_total()
       PREPARE statement FROM @sql;
       EXECUTE statement;
       DEALLOCATE PREPARE statement;
-     
-    END IF; 
+
+    END IF;
   END //
 DELIMITER ;
 
 CALL patch_classification_word_total();
-DROP PROCEDURE IF EXISTS patch_classification_word_total;       
+DROP PROCEDURE IF EXISTS patch_classification_word_total;

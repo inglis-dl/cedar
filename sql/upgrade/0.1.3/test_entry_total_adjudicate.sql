@@ -3,9 +3,9 @@ DELIMITER //
 CREATE PROCEDURE patch_test_entry_total_adjudicate()
   BEGIN
 
-    SELECT "Adding new test_entry_total_adjudicate view" AS ""; 
+    SELECT "Adding new test_entry_total_adjudicate view" AS "";
 
-    SET @test = ( 
+    SET @test = (
       SELECT COUNT(*)
       FROM information_schema.VIEWS
       WHERE TABLE_SCHEMA = DATABASE()
@@ -19,10 +19,10 @@ CREATE PROCEDURE patch_test_entry_total_adjudicate()
       PREPARE statement FROM @sql;
       EXECUTE statement;
       DEALLOCATE PREPARE statement;
-     
-    END IF; 
+
+    END IF;
   END //
 DELIMITER ;
 
 CALL patch_test_entry_total_adjudicate();
-DROP PROCEDURE IF EXISTS patch_test_entry_total_adjudicate;       
+DROP PROCEDURE IF EXISTS patch_test_entry_total_adjudicate;

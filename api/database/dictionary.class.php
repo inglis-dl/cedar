@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * dictionary: record
  */
-class dictionary extends \cenozo\database\record 
+class dictionary extends \cenozo\database\record
 {
 
   /**
@@ -28,9 +28,9 @@ class dictionary extends \cenozo\database\record
     if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
 
     $rows = static::db()->get_col( sprintf(
-      'SELECT word.word FROM word %s', 
+      'SELECT word.word FROM word %s',
       $modifier->get_sql() ) );
 
-    return $rows;  
+    return $rows;
   }
 }

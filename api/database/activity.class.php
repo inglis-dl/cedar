@@ -1,7 +1,7 @@
 <?php
 /**
  * activity.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -17,7 +17,7 @@ class activity extends \cenozo\database\activity
   /**
    * Returns the number of hours that a user has spend at a given site and role on a
    * particular day.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param user $db_user The user to query.
    * @param site $db_site The site to query.

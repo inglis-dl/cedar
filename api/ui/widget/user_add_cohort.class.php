@@ -1,7 +1,7 @@
 <?php
 /**
  * user_add_cohort.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class user_add_cohort extends \cenozo\ui\widget\base_add_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string $name The name of the cohort.
@@ -30,7 +30,7 @@ class user_add_cohort extends \cenozo\ui\widget\base_add_list
 
   /**
    * Overrides the cohort list widget's method.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return int
@@ -55,7 +55,7 @@ class user_add_cohort extends \cenozo\ui\widget\base_add_list
 
   /**
    * Overrides the cohort list widget's method.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return array( record )

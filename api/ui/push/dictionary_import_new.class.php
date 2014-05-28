@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_import_new.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class dictionary_import_new extends \cenozo\ui\push
     parent::__construct( 'dictionary_import', 'new', $args );
   }
 
-  /** 
+  /**
    * Validate the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -45,7 +45,7 @@ class dictionary_import_new extends \cenozo\ui\push
 
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -56,7 +56,7 @@ class dictionary_import_new extends \cenozo\ui\push
     $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
 
     $data = file_get_contents( 'php://input' );
-    $md5 = md5( utf8_encode( $data ) );  
+    $md5 = md5( utf8_encode( $data ) );
 
     $db_dictionary_import = $dictionary_import_class_name::get_unique_record( 'md5', $md5 );
     if( !is_null( $db_dictionary_import ) )

@@ -1,6 +1,6 @@
 {##
  # test_entry_ranked_word_adjudicate.twig
- # 
+ #
  # Adjudicate a ranked word test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -12,7 +12,7 @@
   {{ parent() }}
 
   <script type="text/javascript">
-    
+
     var table_selector = "#{{ widget.full }}__adjudicate_table";
 
     function configure_ui() {
@@ -75,7 +75,7 @@
     }
 
     $( function () {
-     
+
       configure_ui();
 
       $( table_selector + ' input:text[id$="candidate"]' ).autocomplete( {
@@ -131,7 +131,7 @@
               columns["word_id"]='';
             } else {
               columns["word_candidate"] = candidate;
-            }  
+            }
           } else {
             var radio_id =
               $( table_selector + ' input:radio[name="' + entry_id + '"]:checked').prop( "id" );
@@ -157,7 +157,7 @@
             }
             var target_radio_id = '#' + $( table_selector + ' input:radio[id="' + args.id +
                 "__" + selection + '"]' ).prop( "id" );
-            $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );  
+            $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );
           }
 
           // push the edits
@@ -217,7 +217,7 @@
           (is_intrusion ? "__intrusion__accept" : "__accept");
         $( id_1 ).removeProp( "checked" );
         $( id_2 ).removeProp( "checked" );
-        
+
         // uncheck the "All" checkboxes if not all Accept radio items are selected
         $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
 
@@ -240,8 +240,8 @@
         } else {
           if( 0 == candidate.length ) {
             columns["word_id"] = "";
-          } 
-          
+          }
+
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
             // get the word
@@ -272,7 +272,7 @@
             $(this).focus();
           }
         }
-      } );// end text input change  
+      } );// end text input change
 
       $( table_selector + ' input:checkbox[value="all"]' ).click( function() {
         // toggle check state of companion All checkbox
@@ -312,7 +312,7 @@
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $target_select = $( table_selector +
             ' [id="' + $(this).prop( "name" ).replace( "accept", "adjudicate" ) + '"]' );
-          $target_select.val( $source_select.val() );          
+          $target_select.val( $source_select.val() );
         }
       } );// end status radio input change
 
@@ -337,7 +337,7 @@
 {% endblock javascript %}
 
 {% block widget %}
-  
+
   <div class="spacer"></div>
   <table id="{{ widget.full }}__adjudicate_table" border="1">
     <thead>
@@ -506,7 +506,7 @@
             </td>
           {% else %}
             <td></td>
-          {% endif %} 
+          {% endif %}
           <td colspan="2"></td>
           <td>
             <input type="text"
@@ -560,7 +560,7 @@
             value="all"/>
             <label for="{{ widget.full }}__accept__all__2">All</label>
         </td>
-        <td colspan="3"></td> 
+        <td colspan="3"></td>
       </tr>
     {% endif %}
     <tr style="height: 25px"><td colspan="12"></td></tr>

@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_import_process.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -29,7 +29,7 @@ class dictionary_import_process extends \cenozo\ui\push
 
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -39,7 +39,7 @@ class dictionary_import_process extends \cenozo\ui\push
 
     $db_dictionary = lib::create( 'database\dictionary', $this->get_argument( 'dictionary_id' ) );
     $db_dictionary_import = lib::create( 'database\dictionary_import', $this->get_argument( 'id' ) );
-    
+
     $word_list = util::json_decode( $db_dictionary_import->serialization );
 
     foreach( $word_list as $key => $value )
@@ -47,7 +47,7 @@ class dictionary_import_process extends \cenozo\ui\push
       $db_new_word = lib::create( 'database\word' );
       $db_new_word->dictionary_id = $db_dictionary->id;
       $db_new_word->word = $value[0];
-      $db_new_word->language = $value[1];    
+      $db_new_word->language = $value[1];
       $db_new_word->save();
     }
 

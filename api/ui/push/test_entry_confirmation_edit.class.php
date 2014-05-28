@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_confirmation_edit.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class test_entry_confirmation_edit extends \cenozo\ui\push\base_edit
     parent::__construct( 'test_entry_confirmation', $args );
   }
 
-  /** 
+  /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -41,5 +41,5 @@ class test_entry_confirmation_edit extends \cenozo\ui\push\base_edit
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_test_entry( $db_test_entry );
-  }  
+  }
 }

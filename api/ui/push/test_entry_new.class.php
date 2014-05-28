@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_new.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,14 +27,14 @@ class test_entry_new extends \cenozo\ui\push\base_new
     parent::__construct( 'test_entry', $args );
   }
 
-  /** 
+  /**
    * Finishes the operation with any post-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
    */
-  protected function finish() 
+  protected function finish()
   {
     parent::finish();
 
@@ -52,7 +52,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
       $db_participant = $record->get_assignment()->get_participant();
     }
 
-    if( is_null( $db_participant ) ) 
+    if( is_null( $db_participant ) )
       throw lib::create( 'exception\runtime',
         'Test entry requires a valid participant', __METHOD__ );
 
@@ -62,7 +62,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
     // create default test_entry sub tables
     $db_test = $record->get_test();
     $test_type_name = $db_test->get_test_type()->name;
-    
+
     if( $test_type_name == 'ranked_word' )
     {
       $modifier = lib::create( 'database\modifier' );
@@ -159,7 +159,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
               {
                 $word_candidate = $intrusion_data[ $rank ];
                 $db_entry->word_candidate = $word_candidate;
-                $db_entry->save();              
+                $db_entry->save();
               }
               $rank = $rank + 1;
             }
@@ -287,7 +287,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
             else
             {
               $db_entry->word_id = NULL;
-              $db_entry->word_candidate = $word_candidate;  
+              $db_entry->word_candidate = $word_candidate;
             }
             $db_entry->save();
           }

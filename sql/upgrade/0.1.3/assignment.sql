@@ -4,9 +4,9 @@ DROP PROCEDURE IF EXISTS patch_assignment;
 DELIMITER //
 CREATE PROCEDURE patch_assignment()
   BEGIN
-    SELECT "Adding new datetime columns to assignment table" AS ""; 
+    SELECT "Adding new datetime columns to assignment table" AS "";
 
-    SET @test = ( 
+    SET @test = (
       SELECT COUNT(*)
       FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
@@ -23,8 +23,8 @@ CREATE PROCEDURE patch_assignment()
       FROM information_schema.referential_constraints
       WHERE constraint_schema = DATABASE()
       AND constraint_name = "fk_role_has_operation_role_id" );
- 
-    SET @test = ( 
+
+    SET @test = (
       SELECT COUNT(*)
       FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
@@ -56,7 +56,7 @@ CREATE PROCEDURE patch_assignment()
        PREPARE statement FROM @sql;
        EXECUTE statement;
        DEALLOCATE PREPARE statement;
-       
+
       SET @sql = CONCAT(
         "UPDATE assignment ",
         "INNER JOIN ( ",

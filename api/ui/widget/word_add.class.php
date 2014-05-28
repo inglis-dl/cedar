@@ -1,7 +1,7 @@
 <?php
 /**
  * word_add.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class word_add extends \cenozo\ui\widget\base_view
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class word_add extends \cenozo\ui\widget\base_view
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,7 +37,7 @@ class word_add extends \cenozo\ui\widget\base_view
   protected function prepare()
   {
     parent::prepare();
-    
+
     // add items to the view
     $this->add_item( 'dictionary_id', 'hidden' );
     $this->add_item( 'language', 'enum', 'Language' );
@@ -46,21 +46,21 @@ class word_add extends \cenozo\ui\widget\base_view
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function setup()
   {
     parent::setup();
-    
+
     $word_class_name = lib::get_class_name( 'database\word' );
 
     // this widget must have a parent, and it's subject must be a dictionary
     if( is_null( $this->parent ) || 'dictionary' != $this->parent->get_subject() )
       throw lib::create( 'exception\runtime',
         'Word widget must have a parent with dictionary as the subject.', __METHOD__ );
-    
+
     $languages = $word_class_name::get_enum_values( 'language' );
     $languages = array_combine( $languages, $languages );
 

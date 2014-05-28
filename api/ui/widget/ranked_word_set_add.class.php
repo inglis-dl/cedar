@@ -1,7 +1,7 @@
 <?php
 /**
  * ranked_word_set_add.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -38,7 +38,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     parent::prepare();
 
     $word_class_name = lib::get_class_name( 'database\word' );
-    
+
     // add items to the view
     $this->add_item( 'test_id', 'hidden' );
     $this->add_item( 'rank', 'enum', 'Rank' );
@@ -53,12 +53,12 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
         $description = 'French';
 
       $this->add_item( 'word_' . $language . '_id', 'enum', 'Word (' . $description  . ')' );
-    }    
+    }
   }
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @throws exception\notice
@@ -67,7 +67,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
   protected function setup()
   {
     parent::setup();
-    
+
     $word_class_name = lib::get_class_name( 'database\word' );
     $ranked_word_set_class_name = lib::get_class_name( 'database\ranked_word_set' );
 
@@ -82,7 +82,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     if( is_null( $db_dictionary ) )
       throw lib::create( 'exception\notice',
       'The primary dictionary selection cannot be left blank.', __METHOD__ );
-    
+
     $words = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
     if( 0 < $dictionary_word_count &&
@@ -105,9 +105,9 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
         $word_mod->where( 'word.dictionary_id', '=', $db_dictionary->id );
         $word_mod->where( 'word.language', '=', $language );
         if( !empty( $word_ids_exclude ) )
-        { 
+        {
           $word_mod->where( 'word.id', 'NOT IN', $word_ids_exclude );
-        }  
+        }
         foreach( $word_class_name::select( $word_mod ) as $db_word )
         {
           $words[$language][$db_word->id] = $db_word->word;
@@ -115,8 +115,8 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
       }
     }
     else
-    {     
-      throw lib::create( 'exception\notice', 
+    {
+      throw lib::create( 'exception\notice',
         'The primary dictionary must contain at least one word of each language.',
         __METHOD__ );
     }
@@ -124,7 +124,7 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     //TODO remove this exception once the list class turns off adding
     if( empty( $words ) )
     {
-      throw lib::create( 'exception\notice', 
+      throw lib::create( 'exception\notice',
         'There are no words left in the dictionary to create a ranked word set.',
         __METHOD__ );
     }
@@ -143,15 +143,15 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
 
     foreach( $this->languages as $language )
     {
-      $word_list = $words[$language];       
+      $word_list = $words[$language];
       $word_id = 'word_' . $language . '_id';
       $this->set_item( $word_id, key( $word_list ), true, $word_list, true );
     }
   }
 
-  /** 
+  /**
    * The languages.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

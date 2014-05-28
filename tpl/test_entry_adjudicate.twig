@@ -1,6 +1,6 @@
 {##
  # test_entry_adjudicate.twig
- # 
+ #
  # Extends the base_record template for adjudicating test entries.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
@@ -10,7 +10,7 @@
 
   {{ parent() }}
 
-  <script type="text/javascript">   
+  <script type="text/javascript">
 
     $( function () {
 
@@ -29,9 +29,9 @@
       $( "#{{ widget.full }}_prev" ).click( function() {
         {% if 0 == prev_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
-        {% else %}  
-          slot_load( {{ slot }}, 
-            "{{ widget.subject }}", "{{ widget.name }}", 
+        {% else %}
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
             { id : {{ prev_test_entry_id }} } );
         {% endif %}
       } ).button( { disabled : 1 == {{ rank }} } ); // end Prev click
@@ -39,11 +39,11 @@
       $( "#{{ widget.full }}_next" ).click( function() {
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
-        {% else %}  
-          slot_load( {{ slot }}, 
-            "{{ widget.subject }}", "{{ widget.name }}", 
+        {% else %}
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
             { id : {{ next_test_entry_id }} } );
-        {% endif %}  
+        {% endif %}
       } ); // end Next click
 
     } );
@@ -55,7 +55,7 @@
 
   <div class="spacer"></div>
   <div>
-    {% include [ 'test_entry_', test_type, '_adjudicate.twig']|join with test_entry_args %}      
+    {% include [ 'test_entry_', test_type, '_adjudicate.twig']|join with test_entry_args %}
   </div>
   <div class="spacer"></div>
   <div id="audio_control">
@@ -66,7 +66,7 @@
           <tr>
             <td>
               <audio controls>
-                id="{{ widget.full }}__recording__{{ recording_id }}" 
+                id="{{ widget.full }}__recording__{{ recording_id }}"
                 <source src="{{ recording }}" type="audio/wav">
               </audio>
             </td>
@@ -75,11 +75,11 @@
         {% endfor %}
       </table>
     {% endif %}
-  </div>  
+  </div>
   <div class="spacer"></div>
   <div>
     {% from 'macros.twig' import confirm_buttons %}
-      {{ confirm_buttons( slot, widget.full, 
+      {{ confirm_buttons( slot, widget.full,
         ['submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
   </div>
   <div id="{{ widget.full }}__note_dialog"></div>

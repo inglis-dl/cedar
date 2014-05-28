@@ -1,7 +1,7 @@
 <?php
 /**
  * recording.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */

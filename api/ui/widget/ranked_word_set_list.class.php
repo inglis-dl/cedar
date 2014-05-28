@@ -1,7 +1,7 @@
 <?php
 /**
  * ranked_word_set_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the ranked_word_set list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,15 +37,15 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
-    
+
     $word_class_name = lib::get_class_name( 'database\word' );
 
     $this->add_column( 'rank', 'string', 'Rank', true );
 
     $this->languages = $word_class_name::get_enum_values( 'language' );
     foreach( $this->languages as $language )
-    {   
-      $this->add_column( 'word_' . $language, 'string', 'Word (' . 
+    {
+      $this->add_column( 'word_' . $language, 'string', 'Word (' .
         ($language == "en" ? 'English' : 'French')  . ')', false );
     }
 
@@ -54,17 +54,17 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
     // or do this in the parent "test" class
     //$this->set_addable()
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function setup()
   {
     parent::setup();
-    
+
     foreach( $this->get_record_list() as $record )
     {
       $row_array[ 'rank' ] = $record->rank;
@@ -81,7 +81,7 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
 
   /**
    * The languages.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

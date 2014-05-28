@@ -1,6 +1,6 @@
 {##
  # test_entry_confirmation_adjudicate.twig
- # 
+ #
  # Adjudicate a confirmation type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -14,14 +14,14 @@
   <script type="text/javascript">
 
     var table_selector = "#{{ widget.full }}__adjudicate_table";
-    
+
     function configure_ui() {
       var disable = false;
       if( 0 < $( table_selector + " div.radio__adjudicate" ).length ) {
         disable =
           0 == $( table_selector + ' div.radio__adjudicate input:radio:checked' ).length;
       }
-      $( "#{{ parent.full }}_submit" ).button( { disabled : disable } );        
+      $( "#{{ parent.full }}_submit" ).button( { disabled : disable } );
     }
 
     $( function () {
@@ -40,7 +40,7 @@
         // get the progenitor column's data
         var id = $(this).prop( "id" ).split( "__" )[0];
         var confirmation = $( table_selector + ' input:radio[name="' + id + '"]:checked' ).val();
-        
+
         // push the edit
         var columns = new Object();
         columns['confirmation'] = confirmation;
@@ -49,10 +49,10 @@
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           $( table_selector + ' input:radio[name="adjudicate"]' ).removeProp( "checked" );
-          $( table_selector + ' input:radio[name="adjudicate"][value="' + 
+          $( table_selector + ' input:radio[name="adjudicate"][value="' +
             confirmation +'"]' ).prop( "checked", true );
           configure_ui();
-        }  
+        }
       } );// end confirmation radio input change
 
       $( table_selector + ' input:radio[id$="__status__accept"]' ).change( function() {
@@ -69,7 +69,7 @@
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $target_select = $( table_selector +
             ' [id="' + $(this).prop( "name" ).replace( "accept", "adjudicate" ) + '"]' );
-          $target_select.val( $source_select.val() );          
+          $target_select.val( $source_select.val() );
         }
       } );// end status radio input change
 
@@ -94,7 +94,7 @@
 {% endblock javascript %}
 
 {% block widget %}
-    
+
   <div class="spacer"></div>
   <caption style="text-align: left;"><strong>{{ instruction }}</strong></caption>
   <div class="spacer"></div>
@@ -111,7 +111,7 @@
     <tbody>
       <tr>
         <td class="heading">Confirmation</td>
-        <td>          
+        <td>
           <div class="radio__source">
             <input type="radio"
               id="{{ entry_data.id_1 }}__yes"
@@ -139,7 +139,7 @@
                 name="{{ entry_data.id_3 }}"
                 value="accept"/>
               <label for="{{ entry_data.id_1 }}__accept">Accept</label>
-            </div>  
+            </div>
           </td>
         {% else %}
           <td></td>
@@ -172,7 +172,7 @@
                 name="{{ entry_data.id_3 }}"
                 value="accept"/>
               <label for="{{ entry_data.id_2 }}__accept">Accept</label>
-            </div>    
+            </div>
           </td>
           <td>
             <div class="radio__adjudicate">
@@ -181,7 +181,7 @@
                 name="adjudicate"
                 value="1"/>
               <label for="{{ entry_data.id_3 }}__yes">Yes</label>
-            </div>  
+            </div>
           </td>
           <td>
             <div class="radio__adjudicate">
@@ -192,7 +192,7 @@
               <label for="{{ entry_data.id_3 }}__no">No</label>
             </div>
           </td>
-        {% else %}  
+        {% else %}
           <td></td><td colspan="2"></td>
         {% endif %}
       </tr>

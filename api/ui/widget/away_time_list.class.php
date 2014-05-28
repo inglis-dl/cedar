@@ -1,7 +1,7 @@
 <?php
 /**
  * away_time_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class away_time_list extends \cenozo\ui\widget\site_restricted_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the away time list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class away_time_list extends \cenozo\ui\widget\site_restricted_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,22 +37,22 @@ class away_time_list extends \cenozo\ui\widget\site_restricted_list
   protected function prepare()
   {
     parent::prepare();
-    
+
     $this->add_column( 'user.name', 'string', 'User', true );
     $this->add_column( 'start_datetime', 'datetime', 'Start', true );
     $this->add_column( 'end_datetime', 'datetime', 'End', true );
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function setup()
   {
     parent::setup();
-    
+
     foreach( $this->get_record_list() as $record )
     {
       // assemble the row for this record

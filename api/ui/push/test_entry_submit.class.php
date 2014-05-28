@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_submit.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class test_entry_submit extends \cenozo\ui\push\base_record
     parent::__construct( 'test_entry', 'submit', $args );
   }
 
-  /** 
+  /**
    * Validate the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -45,21 +45,21 @@ class test_entry_submit extends \cenozo\ui\push\base_record
         'Tried to submit an incomplete adjudication.', __METHOD__ );
   }
 
-  /** 
+  /**
    * Finishes the operation with any post-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
    */
-  protected function finish() 
+  protected function finish()
   {
     parent::finish();
 
     // an adjudicate test entry has been submitted
     // get one of the assignments of the original test entry based
     // on participant id
-    $assignment_class_name = lib::get_class_name( 'database\assignment' ); 
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $db_adjudicate_test_entry = $this->get_record();

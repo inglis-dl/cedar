@@ -1,7 +1,7 @@
 <?php
 /**
  * ranked_word_set.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -12,9 +12,9 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * ranked_word_set: record
  */
-class ranked_word_set extends \cenozo\database\has_rank 
+class ranked_word_set extends \cenozo\database\has_rank
 {
-  /** 
+  /**
    * Get a word from this ranked word set by language.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @var string $language the enum language code (default english)
@@ -28,7 +28,7 @@ class ranked_word_set extends \cenozo\database\has_rank
     return lib::create( 'database\word', $this->$word_id );
   }
 
-  /** 
+  /**
    * The type of record which the record has a rank for.
    * @var string
    * @access protected

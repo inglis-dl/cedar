@@ -1,7 +1,7 @@
 <?php
 /**
  * user_time.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -19,7 +19,7 @@ class user_time extends \cenozo\database\record
    * given dates.  This table is a cache of information from the activity table, so this method
    * writes entries to the table when they are missing.  Afterwards they are read directly from
    * the table to save processing time.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\user $db_user
    * @param database\role $db_role

@@ -1,6 +1,6 @@
 {##
  # test_entry_ranked_word_transcribe.twig
- # 
+ #
  # Transcribe a ranked word test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -45,7 +45,7 @@
         $( "#{{ widget.full }}_add" ).button( { disabled : disable } );
 
         // disable the Reset button if there is nothing to reset
-        $( "#{{ parent.full }}_reset" ).button( 
+        $( "#{{ parent.full }}_reset" ).button(
           { disabled : 0 == numYes && 0 == numNo && 0 == numVariant } );
 
         do_text = (typeof do_text == 'undefined') ? true : do_text;
@@ -59,7 +59,7 @@
               else {
                 if( $(this).prop( "id" ).split( "__" )[1] === "candidate" ) {
                   var id = "#" + $(this).prop( "id" ).replace( "candidate", "variant" );
-                  disable = !$( id ).prop( "checked" );              
+                  disable = !$( id ).prop( "checked" );
                 }
               }
               $(this).prop( "disabled", disable );
@@ -134,7 +134,7 @@
             columns["ranked_word_set_id"] = $(this).prop( "name" );
           }
           args.columns = columns;
-          
+
           // push edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
 
@@ -155,17 +155,17 @@
                   text_selector.autocomplete( "option", "source", source );
                 }
               }
-            }           
-            
+            }
+
             // re-enable all radio and variant text inputs
             $( table_selector + " input:radio" ).each( function() {
               $(this).prop( "disabled", false );
               if( $(this).val() === "variant" ) {
-                var text_id = table_selector + ' input:text[id="' + 
+                var text_id = table_selector + ' input:text[id="' +
                   $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
                 if( 0 < $( text_id ).val().length ) {
                   $( text_id ).prop( "disabled", false );
-                }  
+                }
               }
             } );
 
@@ -178,11 +178,11 @@
             $(this).focus();
           }
         }
-      } );// end text input change  
+      } );// end text input change
     }
 
     $( function () {
-      
+
       update_input_list();
       configure_ui();
 
@@ -197,10 +197,10 @@
         columns["test_entry_id"] = {{ parent.id }};
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
-          slot_refresh( {{ slot }} );      
+          slot_refresh( {{ slot }} );
         }
       } ); // end Add button click
-       
+
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
       // which radio button was selected
@@ -216,7 +216,7 @@
         args.columns = columns;
         var do_text = true;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          var text_id = 
+          var text_id =
             table_selector + ' input:text[id="' + args.id + '__candidate"]';
           $( text_id ).removeClass( "candidate primary intrusion variant" );
           if( selection === "variant" ) {
@@ -241,7 +241,7 @@
 {% endblock javascript %}
 
 {% block widget %}
-  
+
   <div class="spacer"></div>
 
   <table id="{{ widget.full }}__entry_table">
@@ -258,7 +258,7 @@
 
     <tbody>
     {% for entry in entry_data %}
-      
+
         {% if entry.ranked_word_set_word is defined %}
         <tr class="ranked_word">
           <td class="heading">{{ entry.ranked_word_set_word }}</td>
@@ -331,7 +331,7 @@
       </tr>
       {% endif %}
 
-    </tbody> 
+    </tbody>
   </table>
 
   <div id="{{ widget.full }}__variant_dialog"></div>

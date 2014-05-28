@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_view.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
@@ -52,10 +52,10 @@ class test_entry_view extends \cenozo\ui\widget\base_view
 
     // create the test_entry_transcribe sub widget
     if(  lib::create( 'business\session' )->get_role()->name != 'administrator' )
-      throw lib::create( 'exception\runtime', 
-        'Only administrators can view transcriptions within a test_entry_view', __METHOD__ );    
+      throw lib::create( 'exception\runtime',
+        'Only administrators can view transcriptions within a test_entry_view', __METHOD__ );
 
-    $this->test_entry_transcribe = lib::create( 'ui\widget\test_entry_transcribe', 
+    $this->test_entry_transcribe = lib::create( 'ui\widget\test_entry_transcribe',
       array( 'test_entry_transcribe' => array( 'id' => $this->get_argument( 'id' ) ) ) );
     $this->test_entry_transcribe->set_parent( $this );
     $this->test_entry_transcribe->set_validate_access( false );
@@ -65,7 +65,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -82,7 +82,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     // set the view's items
     $this->set_item( 'uid', $db_participant->uid );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name );
-    $this->set_item( 'language', 
+    $this->set_item( 'language',
       is_null( $db_participant->language ) ? 'en' : $db_participant->language );
     $this->set_item( 'user.name', $db_assignment->get_user()->name );
     $this->set_item( 'test_id', $db_test->name );
@@ -95,10 +95,10 @@ class test_entry_view extends \cenozo\ui\widget\base_view
       $this->test_entry_transcribe->process();
       $this->set_variable( 'test_entry_transcribe', $this->test_entry_transcribe->get_variables() );
     }
-    catch( \cenozo\exception\permission $e ) {}   
+    catch( \cenozo\exception\permission $e ) {}
   }
 
-  /** 
+  /**
    * The test_entry_transcribe widget.
    * @var test_entry_transcribe
    * @access protected

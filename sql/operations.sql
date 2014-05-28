@@ -108,7 +108,7 @@ VALUES( "widget", "test", "add_ranked_word_set", true, "A form to create a ranke
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test", "delete_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, primary, 
+VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, primary,
 intrusion or variant." );
 
 -- test_entry

@@ -2,7 +2,7 @@ SELECT "Adding new operations" AS "";
 
 -- test
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
-VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, 
+VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate,
 primary, intrusion or variant." );
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )

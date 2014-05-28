@@ -1,6 +1,6 @@
 {##
  # test_entry_alpha_numeric_transcribe.twig
- # 
+ #
  # Transcribe a alpha_numeric type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -13,7 +13,7 @@
 
   <script type="text/javascript">
 
-    var table_selector = "#{{ widget.full }}__entry_table"; 
+    var table_selector = "#{{ widget.full }}__entry_table";
 
     function configure_ui() {
 
@@ -41,7 +41,7 @@
           } else {
             if( !$(this).prop( "disabled" ) ) lastEmpty = $(this);
             if( $(this).parent().hasClass( "added" ) ) numEmptyAdded++;
-          }            
+          }
           numInput++;
         } );
 
@@ -54,13 +54,13 @@
 
         // only enable the add button when all inputs are filled
         $( "#{{ widget.full }}_add" ).button( { disabled : numFilled != numInput } );
-        
+
         if( null !== lastEmpty && numFilled != numInput ) {
           lastEmpty.focus();
         } else {
           $( table_selector + " input:text" ).last().blur();
         }
-      }      
+      }
     }
 
     function update_input_list() {
@@ -76,7 +76,7 @@
           alert( "Blank entries are not permitted" );
           configure_ui();
           return false;
-        }  
+        }
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop("id").split("__")[0];
@@ -88,7 +88,7 @@
           args.id = "";
           columns["rank"] = rank;
           columns["test_entry_id"] = {{ parent.id }};
-        }  
+        }
         columns["word_candidate"] = candidate;
         args.columns = columns;
 
@@ -120,12 +120,12 @@
         text: false,
         icons: { primary: "ui-icon-plusthick" }
         } )
-      .click( function() {        
-        // add a text input to the end of the table one row before the 
+      .click( function() {
+        // add a text input to the end of the table one row before the
         // one containing the Add button
         $td_selector = $( table_selector + " td" ).not( '.button' );
         var rank = $td_selector.length + 1;
-        var html = '<td class="added"><input type="text" style="width:20%" id="0__' + 
+        var html = '<td class="added"><input type="text" style="width:20%" id="0__' +
           rank + '"/></td>';
         // the number of entries in a typical row
         var maxTd = $( table_selector + " tr:first td" ).length;
@@ -178,14 +178,14 @@
       {% set kmax = i+numcell-1 %}
       {% if kmax > imax %}
         {% set kmax = imax %}
-      {% endif %}  
+      {% endif %}
       {% for k in i..kmax %}
 
         {% set value = '' %}
         {% if entry_data[k].word_id is defined %}
           {% set value = entry_data[k].word %}
         {% endif %}
-        {% set status = entry_data[k].word_id ? "word" : "empty" %} 
+        {% set status = entry_data[k].word_id ? "word" : "empty" %}
 
           <td>
             <input type="text"
@@ -195,7 +195,7 @@
              {% if editable == 0  %}
                { readonly }
              {% endif %}
-             {% if status == 'empty'  %} 
+             {% if status == 'empty'  %}
                {% if kprev == 'false' %}
                  { disabled }
                {% endif %}
@@ -203,12 +203,12 @@
              {% elseif status == 'word' %}
                {% set kprev = 'true' %}
              {% endif %}
-               
+
              value="{{ value }}"/>
           </td>
 
         {% endfor %}
-        
+
       </tr>
 
     {% endfor %}

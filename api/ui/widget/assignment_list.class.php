@@ -1,7 +1,7 @@
 <?php
 /**
  * assignment_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the assignment list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,7 +37,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
-    
+
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
 
@@ -62,10 +62,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $this->get_restrict_state_name( $restrict_state_id ) ) );
     }
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -112,7 +112,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         $test_entry_mod->limit( 1 );
         $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
         if( false !== $db_test_entry )
-        {  
+        {
           $test_entry_id = $db_test_entry->id;
           $allow_transcribe = true;
           $allow_transcribe_operation = $allow_transcribe;
@@ -176,20 +176,20 @@ class assignment_list extends \cenozo\ui\widget\base_list
     // define whether or not test_entry transcribing or adjudicating is allowed
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'transcribe' );
     $this->set_variable( 'allow_transcribe',
-      ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
+      ( lib::create( 'business\session' )->is_allowed( $db_operation ) &&
         $allow_transcribe_operation ) );
 
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );
     $this->set_variable( 'allow_adjudicate',
-      ( lib::create( 'business\session' )->is_allowed( $db_operation ) && 
+      ( lib::create( 'business\session' )->is_allowed( $db_operation ) &&
         $allow_adjudicate_operation ) );
   }
 
 
-  /** 
+  /**
    * Overrides the parent class method to restrict by user_id and test_entry
    * completed status, if necessary
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return int
@@ -209,7 +209,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( isset( $restrict_state_id ) && 
+      if( isset( $restrict_state_id ) &&
           $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
@@ -217,7 +217,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
           $modifier->where( 'end_datetime', '!=', NULL );
-        }  
+        }
         else
         {
           // Open
@@ -229,10 +229,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
     return parent::determine_record_count( $modifier );
   }
 
-  /** 
+  /**
    * Overrides the parent class method to restrict by user_id and test_entry
    * completed status, if necessary
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return array( record )
@@ -254,7 +254,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( isset( $restrict_state_id ) && 
+      if( isset( $restrict_state_id ) &&
           $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
@@ -262,7 +262,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
           $modifier->where( 'end_datetime', '!=', NULL );
-        }  
+        }
         else
         {
           // Open
@@ -285,7 +285,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     return $this->allow_restrict_state;
   }
 
-  /** 
+  /**
    * Set whether to include a drop down to restrict the list by state
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean $enable
@@ -296,22 +296,22 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $this->allow_restrict_state = $enable;
   }
 
-  /** 
+  /**
    * Whether to include a drop down to restrict the list by state
    * @var boolean
    * @access protected
    */
   protected $allow_restrict_state = true;
 
-  /** 
+  /**
    * The associative array of restrictable states
    * @var array
    * @access protected
    */
-  protected $state_list = array( 
+  protected $state_list = array(
     1 => 'Closed', 2 => 'No restriction' );
 
-  /** 
+  /**
    * Get a restrict state name from its id
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean $enable

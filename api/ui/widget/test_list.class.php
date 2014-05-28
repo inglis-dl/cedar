@@ -1,7 +1,7 @@
 <?php
 /**
  * test_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class test_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the test list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class test_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -41,7 +41,7 @@ class test_list extends \cenozo\ui\widget\base_list
     $test_class_name = lib::get_class_name( 'database\test' );
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'dictionary_id', '=', NULL );
-    $allow_primary_sort = 
+    $allow_primary_sort =
       $test_class_name::count( $modifier ) != $test_class_name::count();
 
     $this->add_column( 'rank', 'constant', 'Order', true );
@@ -56,17 +56,17 @@ class test_list extends \cenozo\ui\widget\base_list
     $this->set_variable( 'sort_column', 'rank' );
     $this->set_variable( 'sort_desc', false );
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function setup()
   {
     parent::setup();
-    
+
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
 
     $dictionary_list = array();
@@ -77,14 +77,14 @@ class test_list extends \cenozo\ui\widget\base_list
     {
       // assemble the row for this record
       $this->add_row( $db_test->id,
-        array( 
+        array(
           'rank' => $db_test->rank,
           'name' => $db_test->name,
           'strict' => ( $db_test->strict ? 'yes' : 'no' ),
           'rank_words' => ( $db_test->rank_words ? 'yes' : 'no' ),
           'dictionary_id' =>  ( is_null( $db_test->dictionary_id ) ? '(none)' :
              $dictionary_list[ $db_test->dictionary_id ] ),
-           'variant_dictionary_id' => ( is_null( $db_test->variant_dictionary_id ) ? 
+           'variant_dictionary_id' => ( is_null( $db_test->variant_dictionary_id ) ?
              ( $db_test->strict ? 'N/A' : '(none)' ) :
              $dictionary_list[ $db_test->variant_dictionary_id ] ),
            'intrusion_dictionary_id' => ( is_null( $db_test->intrusion_dictionary_id ) ?

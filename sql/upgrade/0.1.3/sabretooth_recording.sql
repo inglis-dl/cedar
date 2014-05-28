@@ -3,11 +3,11 @@ DELIMITER //
 CREATE PROCEDURE patch_sabretooth_recording()
   BEGIN
 
-    SET @sabretooth = REPLACE( DATABASE(), 'cedar', 'sabretooth' ); 
+    SET @sabretooth = REPLACE( DATABASE(), 'cedar', 'sabretooth' );
 
-    SELECT "Adding new sabretooth_recording view" AS ""; 
+    SELECT "Adding new sabretooth_recording view" AS "";
 
-    SET @test = ( 
+    SET @test = (
       SELECT COUNT(*)
       FROM information_schema.VIEWS
       WHERE TABLE_SCHEMA = DATABASE()
@@ -22,10 +22,10 @@ CREATE PROCEDURE patch_sabretooth_recording()
       PREPARE statement FROM @sql;
       EXECUTE statement;
       DEALLOCATE PREPARE statement;
-     
-    END IF; 
+
+    END IF;
   END //
 DELIMITER ;
 
 CALL patch_sabretooth_recording();
-DROP PROCEDURE IF EXISTS patch_sabretooth_recording;       
+DROP PROCEDURE IF EXISTS patch_sabretooth_recording;

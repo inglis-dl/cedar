@@ -1,7 +1,7 @@
 <?php
 /**
  * typist_begin_break.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -26,10 +26,10 @@ class typist_begin_break extends \cenozo\ui\push
   {
     parent::__construct( 'typist', 'begin_break', $args );
   }
-  
+
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

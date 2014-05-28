@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_adjudicate.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -25,9 +25,9 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     parent::__construct( 'test_entry', 'adjudicate', $args );
   }
 
-  /** 
+  /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -44,8 +44,8 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_adjudicate
-    $this->test_entry_widget = lib::create( 
-      'ui\widget\test_entry_' . $db_test->get_test_type()->name . '_adjudicate', 
+    $this->test_entry_widget = lib::create(
+      'ui\widget\test_entry_' . $db_test->get_test_type()->name . '_adjudicate',
         $this->arguments );
 
     $this->test_entry_widget->set_parent( $this );
@@ -55,18 +55,18 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     {
       $modifier = lib::create('database\modifier');
       $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
-    }     
-    
+    }
+
     $test_count = $test_class_name::count( $modifier );
 
     $heading = sprintf( 'test %d / %d for %s',
       $db_test->rank, $test_count, $db_participant->uid );
-    $this->set_heading( $heading );      
+    $this->set_heading( $heading );
   }
 
-  /** 
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -89,17 +89,17 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     // set the dictionary id's needed for text autocomplete
     if( $test_type_name == 'classification' || $test_type_name == 'ranked_word' )
-    {   
+    {
       $db_dictionary = $db_test->get_dictionary();
-      if( !is_null( $db_dictionary ) ) 
+      if( !is_null( $db_dictionary ) )
         $this->set_variable( 'dictionary_id', $db_dictionary->id );
 
       $db_variant_dictionary = $db_test->get_variant_dictionary();
-      if( !is_null( $db_variant_dictionary ) ) 
+      if( !is_null( $db_variant_dictionary ) )
         $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
-     
+
       $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
-      if( !is_null( $db_intrusion_dictionary ) ) 
+      if( !is_null( $db_intrusion_dictionary ) )
         $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
     }
 
@@ -111,7 +111,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $this->set_variable( 'language', $language );
 
     if( $db_participant->get_cohort()->name == 'tracking' )
-    {   
+    {
       $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
       $sabretooth_manager->set_user( $setting_manager->get_setting( 'sabretooth', 'user' ) );
@@ -125,15 +125,15 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
       $recording_data = array();
       if( !is_null( $recording_list ) &&
-          1 == $recording_list->success && 0 < count( $recording_list->data ) ) 
-      {   
+          1 == $recording_list->success && 0 < count( $recording_list->data ) )
+      {
         foreach( $recording_list->data as $data )
-        {   
+        {
           $url = SABRETOOTH_URL . '/' . $data->url;
           // has to be this servers domain not localhost
           $recording_data[] = str_replace( 'localhost', $_SERVER['SERVER_NAME'], $url );
-        }   
-      }   
+        }
+      }
       $this->set_variable( 'recording_data', $recording_data );
     }
 
@@ -156,7 +156,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     if( false === $db_sibling_test_entry )
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
-      
+
     $this->set_variable( 'test_entry_id_2', $db_sibling_test_entry->id );
     $this->set_variable( 'user_2', $db_sibling_assignment->get_user()->name );
 
@@ -167,17 +167,17 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $db_prev_test_entry = $db_test_entry->get_previous( true );
     $db_next_test_entry = $db_test_entry->get_next( true );
 
-    $this->set_variable( 'prev_test_entry_id', 
+    $this->set_variable( 'prev_test_entry_id',
       is_null( $db_prev_test_entry ) ? 0 : $db_prev_test_entry->id );
 
-    $this->set_variable( 'next_test_entry_id', 
+    $this->set_variable( 'next_test_entry_id',
       is_null( $db_next_test_entry ) ? 0 : $db_next_test_entry->id );
 
-    try 
-    {   
+    try
+    {
       $this->test_entry_widget->process();
       $this->set_variable( 'test_entry_args', $this->test_entry_widget->get_variables() );
-    }   
+    }
     catch( \cenozo\exception\permission $e ) {}
 
     // assignment_manager creates the adjudicate entry
@@ -185,7 +185,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       array( 'test_id', 'participant_id' ),
       array( $db_test_entry->get_test()->id,
              $db_test_entry->get_assignment()->get_participant()->id ) );
-    $this->set_variable( 'adjudicate_entry_id', $db_adjudicate_test_entry->id );         
+    $this->set_variable( 'adjudicate_entry_id', $db_adjudicate_test_entry->id );
   }
 
   /**

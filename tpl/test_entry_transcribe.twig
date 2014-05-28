@@ -1,6 +1,6 @@
 {##
  # test_entry_transcribe.twig
- # 
+ #
  # Extends the base_record template for transcribing recordings.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
@@ -22,7 +22,7 @@
         false
       );
     }
-  
+
     $( function () {
 
       // go on break button
@@ -47,7 +47,7 @@
             $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
             $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
           }
-        }  
+        }
       } ); // end Audio Status change
 
       $( "#{{ widget.full }}__participant_status" ).change( function() {
@@ -63,7 +63,7 @@
           }
         }
       } ); // end Participant Status change
-      
+
       $("#{{ widget.full }}_quit").click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end quit click
@@ -86,7 +86,7 @@
               args.note = note;
               args.category = "{{ widget.subject }}";
               args.category_id = {{ id }};
-              
+
               if( ajax_push( "note", "new", args ) ) {
                 $dialog.dialog( "close" );
 
@@ -240,7 +240,7 @@
       {% from 'macros.twig' import confirm_buttons %}
         {{ confirm_buttons( slot, widget.full,
           ['defer', 'reset', 'prev', 'next', 'quit'], '', 'right', true ) }}
-    {% endif %}     
+    {% endif %}
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>

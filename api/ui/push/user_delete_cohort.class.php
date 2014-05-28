@@ -1,7 +1,7 @@
 <?php
 /**
  * user_delete_cohort.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -29,7 +29,7 @@ class user_delete_cohort extends \cenozo\ui\push\base_record
 
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

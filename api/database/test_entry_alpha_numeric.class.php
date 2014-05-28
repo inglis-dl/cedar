@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_alpha_numeric.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,9 +14,9 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test_entry_alpha_numeric extends \cenozo\database\has_rank
 {
-  /** 
+  /**
    * Compare test_entry_alpha_numeric list.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @param array (database\test_entry_alpha_numeric) $rhs_list
@@ -24,13 +24,13 @@ class test_entry_alpha_numeric extends \cenozo\database\has_rank
    * @return bool true if identical
    */
   public static function compare( $rhs_list, $lhs_list )
-  { 
+  {
     reset( $rhs_list );
     reset( $lhs_list );
     while( !is_null( key( $rhs_list ) ) && !is_null( key ( $lhs_list ) ) )
     {
-      $rhs_list_obj = current( $rhs_list ); 
-      $lhs_list_obj = current( $lhs_list ); 
+      $rhs_list_obj = current( $rhs_list );
+      $lhs_list_obj = current( $lhs_list );
       if( $rhs_list_obj->rank != $lhs_list_obj->rank ||
           $rhs_list_obj->word_id != $lhs_list_obj->word_id ) return false;
       next( $rhs_list );
@@ -39,7 +39,7 @@ class test_entry_alpha_numeric extends \cenozo\database\has_rank
     return true;
   }
 
-  /** 
+  /**
    * The type of record which the record has a rank for.
    * @var string
    * @access protected
