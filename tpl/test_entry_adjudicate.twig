@@ -17,8 +17,8 @@
       $( "#{{ widget.full }}_submit" ).click( function() {
         // submit the adjudication
         if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ adjudicate_entry_id }} } ) ) {
-          $( "#{{ widget.full }}_Submit" ).button( { disabled : true } );
-          $( "#{{ widget.full }}_Next" ).trigger( "click" );
+          $( "#{{ widget.full }}_submit" ).button( { disabled : true } );
+          $( "#{{ widget.full }}_next" ).trigger( "click" );
         }
       } );// end Submit button click
 
