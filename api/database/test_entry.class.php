@@ -56,13 +56,25 @@ class test_entry extends \cenozo\database\has_note
       }
       else
       {
-        $db_prev_test = $test_class_name::get_unique_record( 'rank', $rank );
-        if( !is_null( $db_prev_test ) )
-          $db_prev_test_entry = static::get_unique_record(
-            array( 'test_id', 'assignment_id' ),
-            array( $db_prev_test->id, $this->assignment_id ) );
+        $found = false;
+        do
+        {
+          $db_prev_test = $test_class_name::get_unique_record( 'rank', $rank-- );
+          if( !is_null( $db_prev_test ) )
+          {
+            $db_test_entry = static::get_unique_record(
+              array( 'test_id', 'assignment_id' ),
+              array( $db_prev_test->id, $this->assignment_id ) );
+            if( $db_test_entry->audio_status != 'unusable' && 
+                $db_test_entry->audio_status != 'unavailable' &&
+                $db_test_entry->participant_statue != 'refused' )
+            {
+              $db_prev_test_entry = $db_test_entry;
+              $found = true;
+            }
+          }
+        } while( !$found && 0 < $rank );      
       }
-
     }
     return $db_prev_test_entry;
   }
@@ -110,11 +122,24 @@ class test_entry extends \cenozo\database\has_note
       }
       else
       {
-        $db_next_test = $test_class_name::get_unique_record( 'rank', $rank );
-        if( !is_null( $db_next_test ) )
-          $db_next_test_entry = static::get_unique_record(
-            array( 'test_id', 'assignment_id' ),
-            array( $db_next_test->id, $this->assignment_id ) );
+        $found = false;
+        do
+        {
+          $db_next_test = $test_class_name::get_unique_record( 'rank', $rank++ );
+          if( !is_null( $db_prev_test ) )
+          {
+            $db_test_entry = static::get_unique_record(
+              array( 'test_id', 'assignment_id' ),
+              array( $db_next_test->id, $this->assignment_id ) );
+            if( $db_test_entry->audio_status != 'unusable' && 
+                $db_test_entry->audio_status != 'unavailable' &&
+                $db_test_entry->participant_statue != 'refused' )
+            {
+              $db_next_test_entry = $db_test_entry;
+              $found = true;
+            }
+          }
+        } while( !$found && $rank <= $max_rank );
       }
     }
     return $db_next_test_entry;

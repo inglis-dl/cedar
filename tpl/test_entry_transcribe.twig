@@ -46,6 +46,9 @@
             $( "#{{ widget.full }}_next" ).button( { disabled : false } );
             $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
             $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
+          } else if( 'unavailable' == state ) {
+            $( "#{{ widget.full }}__audio_status" ).prop( "disabled", true );
+            $( "#{{ widget.full }}__participant_status" ).prop( "disabled", true );
           }
         }
       } ); // end Audio Status change
@@ -60,6 +63,8 @@
             $( "#{{ widget.full }}_next" ).button( { disabled : false } );
             $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
             $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
+            $( "#{{ widget.full }}__audio_status" ).prop( "disabled", true );
+            $( "#{{ widget.full }}__participant_status" ).prop( "disabled", true );
           }
         }
       } ); // end Participant Status change
