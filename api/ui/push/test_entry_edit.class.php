@@ -75,8 +75,20 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
-    // check if the audio or participant status mandates a test_entry completion
     $assignment_manager = lib::create( 'business\assignment_manager' );
-    $assignment_manager::complete_test_entry( $this->get_record() );
+    $db_test_entry = $this->get_record();
+
+    $columns = $this->get_argument( 'columns' );
+    if( ( array_key_exists( 'participant_status', $columns ) &&
+          'refused' == $columns['participant_status'] ) ||
+        ( array_key_exists( 'audio_status', $columns ) &&
+          ( 'unavailable' == $columns['audio_status']  ||
+            'unusable'    == $columns['audio_status'] ) ) )
+    {
+      $db_test_entry->clear();
+      $assignment_manager::initialize_test_entry( $db_test_entry );
+    }   
+
+    $assignment_manager::complete_test_entry( $db_test_entry );
   }
 }

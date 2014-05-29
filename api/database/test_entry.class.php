@@ -281,4 +281,18 @@ class test_entry extends \cenozo\database\has_note
     }
     return false === $db_test_entry ? NULL : $db_test_entry;
   }
+
+  /**
+   * Clear this test_entry by deleting and recreating all daughter table entries.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>   
+   * @access public
+   */
+  public function clear()
+  {
+    $sql = sprintf( 'DELETE FROM test_entry_'.
+      $this->get_test()->get_test_type()->name .
+      ' WHERE test_entry_id = %d', $this->id );
+    static::db()->execute( $sql );
+  }
 }
