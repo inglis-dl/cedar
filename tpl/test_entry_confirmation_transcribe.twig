@@ -28,7 +28,10 @@
         } );
       } else {
         // only enable the next button when there is at least one entry filled
-        var disable = 0 == $( table_selector + ' input[type="radio"]:checked' ).length;
+        var has_null_status =
+          'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
+        var disable =
+          0 == $( table_selector + ' input[type="radio"]:checked' ).length && has_null_status;
         $("#{{ parent.full }}_next").button( { disabled : disable } );
 
         // disable the Reset button if there is nothing to reset

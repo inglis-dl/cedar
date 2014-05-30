@@ -34,6 +34,8 @@
         var numInput = 0;
         var lastEmpty = null;
         var numEmptyAdded = 0;
+        var has_null_status =
+          'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         $( table_selector + " input:text" ).each( function() {
           if( 0 < $(this).val().length ) {
@@ -47,10 +49,10 @@
 
         // only enable the next button when there is at least one entry filled
         // additionally, disable if there are any empty added fields
-        $( "#{{ parent.full }}_next" ).button( { disabled : 0 == numFilled || 0 < numEmptyAdded } );
+        $( "#{{ parent.full }}_next" ).button( { disabled : ( has_null_status && 0 == numFilled ) || 0 < numEmptyAdded } );
 
         // disable the Reset button if there is nothing to reset
-        $( "#{{ parent.full }}_reset" ).button( { disabled : 0 == numFilled } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : has_null_status && 0 == numFilled } );
 
         // only enable the add button when all inputs are filled
         $( "#{{ widget.full }}_add" ).button( { disabled : numFilled != numInput } );

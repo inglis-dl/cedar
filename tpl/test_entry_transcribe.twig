@@ -28,7 +28,7 @@
       var participant_state = $( "#{{ widget.full }}__participant_status option:selected" ).val();
       disable = audio_state == 'unusable' || audio_state == 'unavailable' ||
                 participant_state == 'refused';
-      if( {{ deferred }} ) disable = true;          
+      if( {{ deferred }} ) disable = true;
       $( "#{{ widget.full }}__audio_status" ).prop( "disabled", disable );
       $( "#{{ widget.full }}__participant_status" ).prop( "disabled", disable );
     }
@@ -55,16 +55,14 @@
             } else {
               state = 'NULL';
               $( audio_select + ' option:selected' ).val( 'NULL' );
-            }        
+            }
             columns['audio_status'] = 'NULL' == state ? '' : state;
             var args = new Object();
             args.id = {{ id }};
             args.columns = columns;
             if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-              if( push ) {
-                slot_refresh( {{ slot }} );
-              }
-              configure();              
+              configure();
+              slot_refresh( {{ slot }} );
             }
           } );
         } else {
@@ -72,10 +70,8 @@
           args.columns = { audio_status : 'NULL' == state ? '' : state };
           args.id = {{ id }};
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-            if( 'unusable' == state ) {
-              slot_refresh( {{ slot }} );
-            }
             configure();
+            slot_refresh( {{ slot }} );
           }
         }
       } ); // end Audio Status change
@@ -86,10 +82,8 @@
         args.id = {{ id }};
         args.columns = { participant_status : 'NULL' == state ? '' : state };
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          if( 'refused' == state ) {
-            slot_refresh( {{ slot }} );
-          }
           configure();
+          slot_refresh( {{ slot }} );
         }
       } ); // end Participant Status change
 

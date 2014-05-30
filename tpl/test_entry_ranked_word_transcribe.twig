@@ -30,6 +30,7 @@
         var numNo = $( table_selector + ' input:radio[value="no"]:checked' ).length;
         var numVariant = $( table_selector + ' input:radio[value="variant"]:checked' ).length;
         var numEmptyIntrusion = $( table_selector + ' input:text[id$="intrusion"][value=""]' ).length;
+        var has_null_status = 'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         // count number of items with value "yes"
         // count number of items with value "no"
@@ -38,17 +39,13 @@
 
         // disable the next and add buttons if the ranked word entries are incomplete
         // or if there are empty intrusion fields
-        var disable = ( numYes + numNo + numVariant ) != numRadio || 0 < numEmptyIntrusion;
+        var disable = ( ( numYes + numNo + numVariant ) != numRadio && has_null_status ) || 0 < numEmptyIntrusion;
         $( "#{{ parent.full }}_next" ).button( { disabled : disable } );
         $( "#{{ widget.full }}_add" ).button( { disabled : disable } );
 
         // disable the reset button if there is nothing to reset
         $( "#{{ parent.full }}_reset" ).button(
-          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant } );
-         
-        // TODO: if the audio and participant status fields are NULL, and disable is true
-        // then the test_entry is not completed and something needs to be entered.
-        // Develop UI logic to account for completed state and audio / participant status.
+          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant && has_null_status } );
 
         do_text = (typeof do_text == 'undefined') ? true : do_text;
         if( do_text ) {
@@ -174,10 +171,23 @@
             configure_ui();
 
           } else {
-            alert( "Entry was not accepted, try again." );
             $(this).val( "" );
             $(this).attr( "value", "" );
-            $(this).focus();
+            // re-enable all radio and variant text inputs
+            $( table_selector + " input:radio" ).each( function() {
+              $(this).prop( "disabled", false );
+              if( $(this).val() === "variant" ) {
+                var text_id = table_selector + ' input:text[id="' +
+                  $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
+                if( 0 < $( text_id ).val().length ) {
+                  $( text_id ).prop( "disabled", false );
+                }
+              }
+            } );
+            var radio_id = table_selector + ' input:radio[id="' + args.id + '__no"]';
+            $( radio_id ).focus();
+            $( radio_id ).prop( "checked", true );
+            $( radio_id ).change();
           }
         }
       } );// end text input change
