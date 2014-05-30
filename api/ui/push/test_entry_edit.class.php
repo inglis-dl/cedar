@@ -65,7 +65,7 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
     }
   }
 
-  /** 
+  /**
    * This method executes the operation's purpose.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -86,7 +86,7 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
             'unusable'    == $columns['audio_status'] ) ) )
     {
       $db_test_entry->initialize( false );
-    }   
+    }
 
     $assignment_manager::complete_test_entry( $db_test_entry );
   }

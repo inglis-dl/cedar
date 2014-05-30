@@ -275,7 +275,7 @@ class test_entry extends \cenozo\database\has_note
       if( !is_null( $db_sibling_assignment ) )
       {
         if( is_null( $modifier ) )
-        {    
+        {
           $modifier = lib::create( 'database\modifier' );
         }
         $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
