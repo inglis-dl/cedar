@@ -64,6 +64,13 @@
               $(this).prop( "disabled", disable );
           } );
         }
+
+        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
+            'refused' == "{{ participant_status }}" ) {
+          $( table_selector + " input" ).each( function() {
+            $(this).prop( "disabled", true );
+          } );
+        }
       }
     }
 

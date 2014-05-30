@@ -36,6 +36,13 @@
 
         // disable the Reset button if there is nothing to reset
         $( "#{{ parent.full }}_reset" ).button( { disabled : disable } );
+
+        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
+            'refused' == "{{ participant_status }}" ) {
+          $( table_selector + " input" ).each( function() {
+            $(this).prop( "disabled", true );
+          } );
+        }
       }
     }
 
