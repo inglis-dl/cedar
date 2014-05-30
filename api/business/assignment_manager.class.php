@@ -315,8 +315,8 @@ class assignment_manager extends \cenozo\singleton
       $entry_data[ 'id_1' ] = $a->id;
       $entry_data[ 'id_2' ] = $b->id;
       $entry_data[ 'id_3' ] = $c->id;
-      $entry_data[ 'confirmation_1' ] = $a->confirmation;
-      $entry_data[ 'confirmation_2' ] = $b->confirmation;
+      $entry_data[ 'confirmation_1' ] = is_null( $a->confirmation ) ? '' : $a->confirmation;
+      $entry_data[ 'confirmation_2' ] = is_null( $b->confirmation ) ? '' : $b->confirmation;
       $entry_data[ 'adjudicate' ] = $a->confirmation != $b->confirmation;
     }
     else

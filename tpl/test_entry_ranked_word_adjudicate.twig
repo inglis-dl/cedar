@@ -16,8 +16,13 @@
     var table_selector = "#{{ widget.full }}__adjudicate_table";
 
     function configure_ui() {
-      var disable = false;
-      if( 0 < $( table_selector + ' input:checkbox[value="all"]' ).length ) {
+      var disable_submit = false;
+      var has_non_status_fields =
+        0 < $( table_selector + ' input:checkbox[value="all"]' ).length;
+      var has_status_fields =
+        0 < $( table_selector + ' select[id$="adjudicate"]' ).length;
+
+      if( has_non_status_fields ) {
         // check the non-intrusion entries
         var numTotal =
           $( table_selector + ' input:radio[name$="adjudicate"]' ).length / 3;
@@ -28,25 +33,42 @@
         var numVariant =
           $( table_selector + ' input:radio[value="variant"][name$="adjudicate"]:checked' ).length;
 
-        var disable = ( numYes + numNo + numVariant ) != numTotal;
+        disable_submit = ( numYes + numNo + numVariant ) != numTotal;
 
         // check the intrusion entries
-        if( !disable ) {
-          $( table_selector + ' input:text[id$="intrusion"]').each( function() {
+        if( !disable_submit ) {
+          $( table_selector + ' input:text[id$="intrusion"]' ).each( function() {
             var id_1 = '#' + $(this).prop( "name" ).split( "__" )[0] +
               "__intrusion__accept";
             var id_2 = '#' + $(this).prop( "name" ).split( "__" )[1] +
               "__intrusion__accept";
             if( ! ( $( id_1 ).prop( "checked" ) || $( id_2 ).prop( "checked" ) ) &&
                 0 == $(this).val().length ) {
-              disable = true;
+              disable_submit = true;
               return false;
             }
           } );
         }
+
+        if( has_status_fields ) {
+          var disable_non_status_fields = false;
+          $( table_selector + ' select[id$="adjudicate"]' ).each( function() {
+            var state = $(this).val();
+            if( state == "unavailable" || state == "unusable" || state == "refused" ) {
+              disable_non_status_fields = true;
+              disable_submit = false;
+              return false;
+            }
+          } );
+          $( table_selector + ' input:radio[name$="adjudicate"]' ).prop( "disabled", disable_non_status_fields );
+          $( table_selector + ' input:text[id$="intrusion"]' ).prop( "disabled", disable_non_status_fields );
+          $( table_selector + ' input:checkbox[value="all"]' ).prop( "disabled", disable_non_status_fields );
+          $( table_selector + ' input:text[id$="candidate"]' ).prop( "disabled", disable_non_status_fields );
+          $( table_selector + ' input:radio[value="accept"]' ).prop( "disabled", disable_non_status_fields );
+        }
       }
 
-      $( "#{{ parent.full }}_submit" ).button( { disabled : disable } );
+      $( "#{{ parent.full }}_submit" ).button( { disabled : disable_submit } );
     }
 
     // overrides the default autocomplete filter function to search only from the beginning
@@ -313,10 +335,11 @@
           $target_select = $( table_selector +
             ' [id="' + $(this).prop( "name" ).replace( "accept", "adjudicate" ) + '"]' );
           $target_select.val( $source_select.val() );
+          slot_refresh( {{ slot }} );
         }
       } );// end status radio input change
 
-      $( table_selector + ' [id$="__status__adjudicate"]').change( function() {
+      $( table_selector + ' select[id$="adjudicate"]').change( function() {
         var id = $(this).prop( "id" ).split( "__" )[0];
         var type = $(this).prop( "id" ).split( "__" )[1];
         var state = $(this).val();
@@ -328,6 +351,7 @@
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $( table_selector +
              ' input:radio[id$="' + type + '__status__accept"]' ).prop( 'checked', false );
+          slot_refresh( {{ slot }} );
         }
       } ); // end adjudicate select change
 

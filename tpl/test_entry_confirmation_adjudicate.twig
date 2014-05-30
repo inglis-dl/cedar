@@ -16,12 +16,32 @@
     var table_selector = "#{{ widget.full }}__adjudicate_table";
 
     function configure_ui() {
-      var disable = false;
-      if( 0 < $( table_selector + " div.radio__adjudicate" ).length ) {
-        disable =
+      var disable_submit = false;
+      var has_non_status_fields =
+        0 < $( table_selector + ' div.radio__adjudicate' ).length;
+      var has_status_fields =
+        0 < $( table_selector + ' select[id$="adjudicate"]' ).length;
+
+      if( has_non_status_fields ) {
+        disable_submit =
           0 == $( table_selector + ' div.radio__adjudicate input:radio:checked' ).length;
+
+        if( has_status_fields ) {
+          var disable_non_status_fields = false;
+          $( table_selector + ' select[id$="adjudicate"]' ).each( function() {
+            var state = $(this).val();
+            if( state == "unavailable" || state == "unusable" || state == "refused" ) {
+              disable_non_status_fields = true;
+              disable_submit = false;
+              return false;
+            }
+          } );
+          $( table_selector + ' div.radio__adjudicate input:radio' ).prop( "disabled", disable_non_status_fields );
+          $( table_selector + ' input:radio[value="accept"]' ).prop( "disabled", disable_non_status_fields );
+        }
       }
-      $( "#{{ parent.full }}_submit" ).button( { disabled : disable } );
+
+      $( "#{{ parent.full }}_submit" ).button( { disabled : disable_submit } );
     }
 
     $( function () {
@@ -70,6 +90,7 @@
           $target_select = $( table_selector +
             ' [id="' + $(this).prop( "name" ).replace( "accept", "adjudicate" ) + '"]' );
           $target_select.val( $source_select.val() );
+          slot_refresh( {{ slot }} );
         }
       } );// end status radio input change
 
@@ -85,6 +106,7 @@
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $( table_selector +
              ' input:radio[id$="' + type + '__status__accept"]' ).prop( 'checked', false );
+          slot_refresh( {{ slot }} );   
         }
       } ); // end adjudicate select change
 
