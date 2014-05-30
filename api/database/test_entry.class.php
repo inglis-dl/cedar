@@ -261,10 +261,11 @@ class test_entry extends \cenozo\database\has_note
    * Get the sibling of this test_entry
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param database\modifier $modifier Modifications to the selection.
    * @return db_test_entry (NULL if no sibling)
    * @access public
    */
-  public function get_sibling_test_entry()
+  public function get_sibling_test_entry( $modifier = NULL )
   {
     $db_test_entry = false;
     if( !is_null( $this->assignment_id ) )
@@ -273,7 +274,10 @@ class test_entry extends \cenozo\database\has_note
       $db_sibling_assignment = $this->get_assignment()->get_sibling_assignment();
       if( !is_null( $db_sibling_assignment ) )
       {
-        $modifier = lib::create( 'database\modifier' );
+        if( is_null( $modifier ) )
+        {    
+          $modifier = lib::create( 'database\modifier' );
+        }
         $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
         $modifier->where( 'test_id', '=', $this->test_id );
         $db_test_entry = current( static::select( $modifier ) );
@@ -283,16 +287,87 @@ class test_entry extends \cenozo\database\has_note
   }
 
   /**
-   * Clear this test_entry by deleting and recreating all daughter table entries.
+   * Initialize this test_entry by deleting and recreating all daughter table entries.
    *
-   * @author Dean Inglis <inglisd@mcmaster.ca>   
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param boolean reset_default Reset column values to their default state at creation.
    * @access public
    */
-  public function clear()
+  public function initialize( $reset_default = true )
   {
-    $sql = sprintf( 'DELETE FROM test_entry_'.
-      $this->get_test()->get_test_type()->name .
-      ' WHERE test_entry_id = %d', $this->id );
+    $word_class_name = lib::get_class_name( 'database\word' );
+
+    if( $reset_default )
+    {
+      $this->completed = false;
+      $this->deferred = false;
+      $this->adjudicate = NULL;
+      $this->audio_status = NULL;
+      $this->participant_status = NULL;
+      $this->save();
+    }
+
+    $db_test = $this->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
+    $entry_class_name = 'test_entry_' . $test_type_name;
+
+    $sql = sprintf(
+             'DELETE FROM %s '.
+             'WHERE test_entry_id = %d', $entry_class_name, $this->id );
     static::db()->execute( $sql );
+
+    $db_assignment = $this->get_assignment();
+    // if null db_assignment then this is an ajudication
+    if( is_null( $db_assignment ) )
+      $db_participant = $this->get_participant();
+    else
+      $db_participant = $db_assignment->get_participant();
+
+    $language = $db_participant->language;
+    $language = is_null( $language ) ? 'en' : $language;
+
+    if( $test_type_name == 'ranked_word' )
+    {
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->order( 'rank' );
+      foreach( $db_test->get_ranked_word_set_list( $modifier ) as $db_ranked_word_set )
+      {
+        $db_test_entry_ranked_word = lib::create( 'database\\'. $entry_class_name );
+        $db_test_entry_ranked_word->test_entry_id = $this->id;
+        $db_test_entry_ranked_word->ranked_word_set_id = $db_ranked_word_set->id;
+        $db_test_entry_ranked_word->save();
+      }
+    }
+    else if( $test_type_name == 'confirmation' )
+    {
+      $db_test_entry_confirmation = lib::create( 'database\\'. $entry_class_name );
+      $db_test_entry_confirmation->test_entry_id = $this->id;
+      $db_test_entry_confirmation->save();
+    }
+    else if( $test_type_name == 'classification' )
+    {
+      $setting_manager = lib::create( 'business\setting_manager' );
+      $max_rank = $setting_manager->get_setting( 'interface', 'classification_max_rank' );
+      for( $rank = 1; $rank <= $max_rank; $rank++ )
+      {
+        $db_test_entry_classification = lib::create( 'database\\'. $entry_class_name );
+        $db_test_entry_classification->test_entry_id = $this->id;
+        $db_test_entry_classification->rank = $rank;
+        $db_test_entry_classification->save();
+      }
+    }
+    else if( $test_type_name == 'alpha_numeric' )
+    {
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'language', '=', $language );
+      $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
+      for( $rank = 1; $rank <= $word_count; $rank++ )
+      {
+        $db_test_entry_alpha_numeric = lib::create( 'database\\'. $entry_class_name );
+        $db_test_entry_alpha_numeric->test_entry_id = $this->id;
+        $db_test_entry_alpha_numeric->rank = $rank;
+        $db_test_entry_alpha_numeric->save();
+      }
+    }
   }
 }

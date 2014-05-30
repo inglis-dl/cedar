@@ -45,47 +45,25 @@ class assignment_manager extends \cenozo\singleton
         'is closed and cannot be initialized', __METHOD__ );
 
     $test_class_name = lib::get_class_name( 'database\test' );
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-    $test_entry_note_class_name = lib::get_class_name( 'database\test_entry_note' );
-
-    $db_participant = $db_assignment->get_participant();
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
 
     // delete test_entry daughter record(s)
     if( !is_null( $db_test_entry ) )
     {
-      $db_test_entry->audio_status = NULL;
-      $db_test_entry->participant_status = NULL;
-      $db_test_entry->completed = false;
-      $db_test_entry->adjudicate = NULL;
-      $db_test_entry->deferred = false;
-      $db_test_entry->save();
+      $db_test_entry->initialize();
 
-      $db_test_entry->clear();
-
-      // initialize new daughter entries
-      static::initialize_test_entry( $db_test_entry );
-
-      // get sibling assignment, reset test_entry adjudicate value from 1 to NULL
-      $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-      if( !is_null( $db_sibling_assignment ) )
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'adjudicate', '=', true );
+      $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry( $modifier );
+      if( !is_null( $db_sibling_test_entry ) )
       {
-        $modifier = lib::create( 'database\modifier' );
-        $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
-        $modifier->where( 'adjudicate', '=', true );
-        $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
-        $db_sibling_test_entry = current( $test_entry_class_name::select( $modifier ) );
-        if( false !== $db_sibling_test_entry )
-        {
-          $db_sibling_test_entry->adjudicate = NULL;
-          $db_sibling_test_entry->save();
-        }
+        $db_sibling_test_entry->adjudicate = NULL;
+        $db_sibling_test_entry->save();
       }
     }
     else
     {
       $test_mod = NULL;
+      $db_participant = $db_assignment->get_participant();
       if( $db_participant->get_cohort()->name == 'tracking' )
       {
         $test_mod = lib::create( 'database\modifier' );
@@ -100,77 +78,7 @@ class assignment_manager extends \cenozo\singleton
         $db_test_entry->assignment_id = $db_assignment->id;
         $db_test_entry->save();
         // create daughter entry record(s)
-        static::initialize_test_entry( $db_test_entry );
-      }
-    }
-  }
-
-  /**
-   * Initialize a test_entry.
-   *
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param  database\test_entry $db_test_entry
-   * @access public
-   */
-  public static function initialize_test_entry( $db_test_entry )
-  {
-    $word_class_name = lib::get_class_name( 'database\word' );
-
-    $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
-    $entry_class_name = 'test_entry_' . $test_type_name;
-
-    $db_assignment = $db_test_entry->get_assignment();
-    // if null db_assignment then db_test_entry is an ajudication
-    if( is_null( $db_assignment ) )
-      $db_participant = $db_test_entry->get_participant();
-    else
-      $db_participant = $db_assignment->get_participant();
-
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
-
-    if( $test_type_name == 'ranked_word' )
-    {
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->order( 'rank' );
-      foreach( $db_test->get_ranked_word_set_list( $modifier ) as $db_ranked_word_set )
-      {
-        $db_test_entry_ranked_word = lib::create( 'database\\'. $entry_class_name );
-        $db_test_entry_ranked_word->ranked_word_set_id = $db_ranked_word_set->id;
-        $db_test_entry_ranked_word->test_entry_id = $db_test_entry->id;
-        $db_test_entry_ranked_word->save();
-      }
-    }
-    else if( $test_type_name == 'confirmation' )
-    {
-      $db_test_entry_confirmation = lib::create( 'database\\'. $entry_class_name );
-      $db_test_entry_confirmation->test_entry_id = $db_test_entry->id;
-      $db_test_entry_confirmation->save();
-    }
-    else if( $test_type_name == 'classification' )
-    {
-      $setting_manager = lib::create( 'business\setting_manager' );
-      $max_rank = $setting_manager->get_setting( 'interface', 'classification_max_rank' );
-      for( $rank = 1; $rank <= $max_rank; $rank++ )
-      {
-        $db_test_entry_classification = lib::create( 'database\\'. $entry_class_name );
-        $db_test_entry_classification->test_entry_id = $db_test_entry->id;
-        $db_test_entry_classification->rank = $rank;
-        $db_test_entry_classification->save();
-      }
-    }
-    else if( $test_type_name == 'alpha_numeric' )
-    {
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'language', '=', $language );
-      $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
-      for( $rank = 1; $rank <= $word_count; $rank++ )
-      {
-        $db_test_entry_alpha_numeric = lib::create( 'database\\'. $entry_class_name );
-        $db_test_entry_alpha_numeric->test_entry_id = $db_test_entry->id;
-        $db_test_entry_alpha_numeric->rank = $rank;
-        $db_test_entry_alpha_numeric->save();
+        $db_test_entry->initialize( false );
       }
     }
   }
@@ -223,7 +131,7 @@ class assignment_manager extends \cenozo\singleton
               // delete test_entry daughter record(s)
               $sql = sprintf( 'DELETE FROM test_entry_'.
                 $db_test->get_test_type()->name .
-                ' WHERE test_entry_id = %d', $db_test_entry->id );
+                ' WHERE test_entry_id = %d', $db_adjudicate_test_entry->id );
               $test_entry_class_name::db()->execute( $sql );
               $db_adjudicate_test_entry->delete();
             }
@@ -343,7 +251,7 @@ class assignment_manager extends \cenozo\singleton
       $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
       $db_adjudicate_test_entry->test_id = $db_test->id;
       $db_adjudicate_test_entry->save();
-      static::initialize_test_entry( $db_adjudicate_test_entry );
+      $db_adjudicate_test_entry->initialize( false );
     }
 
     $audio_status_list = $test_entry_class_name::get_enum_values( 'audio_status' );

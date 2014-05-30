@@ -85,8 +85,7 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
           ( 'unavailable' == $columns['audio_status']  ||
             'unusable'    == $columns['audio_status'] ) ) )
     {
-      $db_test_entry->clear();
-      $assignment_manager::initialize_test_entry( $db_test_entry );
+      $db_test_entry->initialize( false );
     }   
 
     $assignment_manager::complete_test_entry( $db_test_entry );
