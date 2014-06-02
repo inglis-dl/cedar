@@ -121,7 +121,7 @@
       //hijack all the non-accept radio buttons so that
       //a non-greyed out appearance can be maintained instead
       //of assigning the disabled attribute
-      $( table_selector + ' div.radio__source input:radio' ).click( function( e ) {
+      $( table_selector + ' div.radio__source' ).click( function( e ) {
         e.preventDefault();
         return false;
       });
@@ -393,39 +393,45 @@
         {% if entry.ranked_word_set_word is defined %}
           <td class="heading" style="text-align:center">{{ entry.ranked_word_set_word }}</td>
           <td>
-            <input type="radio"
-              id="{{ entry.id_1 }}__yes"
-              name="{{ entry.id_1 }}"
-              value="yes"
-              {% if entry.selection_1 is defined %}
-                {{ entry.selection_1 == 'yes' ? "checked" : "" }}
-              {% endif %}/>
+            <div class="radio__source">
+              <input type="radio"
+                id="{{ entry.id_1 }}__yes"
+                name="{{ entry.id_1 }}"
+                value="yes"
+                {% if entry.selection_1 is defined %}
+                  {{ entry.selection_1 == 'yes' ? "checked" : "" }}
+                {% endif %}/>
+            </div>    
           </td>
           <td>
-            <input type="radio"
-              id="{{ entry.id_1 }}__no"
-              name="{{ entry.id_1 }}"
-              value="no"
-              {% if entry.selection_1 is defined %}
-                {{ entry.selection_1 == 'no' ? "checked" : "" }}
-              {% endif %}/>
+            <div class="radio__source">
+              <input type="radio"
+                id="{{ entry.id_1 }}__no"
+                name="{{ entry.id_1 }}"
+                value="no"
+                {% if entry.selection_1 is defined %}
+                  {{ entry.selection_1 == 'no' ? "checked" : "" }}
+                {% endif %}/>
+            </div>    
           </td>
           <td style="white-space: nowrap">
-            <input type="radio"
-              id="{{ entry.id_1 }}__variant"
-              name="{{ entry.id_1 }}"
-              value="variant"
-              {% if entry.selection_1 is defined %}
-                {{ entry.selection_1 == 'variant' ? "checked" : "" }}
-              {% endif %}/>
-            <input type="text"
-              id="{{ entry.id_1 }}__candidate"
-              {% if entry.word_id_1 is defined %}
-                value="{{ entry.word_1 }}"
-                class="{{ entry.classification_1 }}"
-              {% endif %}
-              readonly
-              disabled/>
+            <div class="radio__source">
+              <input type="radio"
+                id="{{ entry.id_1 }}__variant"
+                name="{{ entry.id_1 }}"
+                value="variant"
+                {% if entry.selection_1 is defined %}
+                  {{ entry.selection_1 == 'variant' ? "checked" : "" }}
+                {% endif %}/>
+              <input type="text"
+                id="{{ entry.id_1 }}__candidate"
+                {% if entry.word_id_1 is defined %}
+                  value="{{ entry.word_1 }}"
+                  class="{{ entry.classification_1 }}"
+                {% endif %}
+                readonly
+                disabled/>
+            </div>    
           </td>
           {% if entry.adjudicate|default(false) %}
           {% set disable_all_checkbox = false %}
@@ -442,39 +448,45 @@
             <td></td>
           {% endif %}
           <td>
-            <input type="radio"
-              id="{{ entry.id_2 }}__yes"
-              name="{{ entry.id_2 }}"
-              value="yes"
-              {% if entry.selection_2 is defined %}
-                {{ entry.selection_2 == 'yes' ? "checked" : "" }}
-              {% endif %}/>
+            <div class="radio__source">
+              <input type="radio"
+                id="{{ entry.id_2 }}__yes"
+                name="{{ entry.id_2 }}"
+                value="yes"
+                {% if entry.selection_2 is defined %}
+                  {{ entry.selection_2 == 'yes' ? "checked" : "" }}
+                {% endif %}/>
+            </div>    
           </td>
           <td>
-            <input type="radio"
-              id="{{ entry.id_2 }}__no"
-              name="{{ entry.id_2 }}"
-              value="no"
-              {% if entry.selection_2 is defined %}
-                {{ entry.selection_2 == 'no' ? "checked" : "" }}
-              {% endif %}/>
+            <div class="radio__source">
+              <input type="radio"
+                id="{{ entry.id_2 }}__no"
+                name="{{ entry.id_2 }}"
+                value="no"
+                {% if entry.selection_2 is defined %}
+                  {{ entry.selection_2 == 'no' ? "checked" : "" }}
+                {% endif %}/>
+            </div>    
           </td>
           <td style="white-space: nowrap">
-            <input type="radio"
-              id="{{ entry.id_2 }}__variant"
-              name="{{ entry.id_2 }}"
-              value="variant"
-              {% if entry.selection_2 is defined %}
-                {{ entry.selection_2 == 'variant' ? "checked" : "" }}
-              {% endif %}/>
-            <input type="text"
-              id="{{ entry.id_2 }}__candidate"
-              {% if entry.word_id_2 is defined %}
-                value="{{ entry.word_2 }}"
-                class="{{ entry.classification_2 }}"
-              {% endif %}
-              readonly
-              disabled/>
+            <div class="radio__source">
+              <input type="radio"
+                id="{{ entry.id_2 }}__variant"
+                name="{{ entry.id_2 }}"
+                value="variant"
+                {% if entry.selection_2 is defined %}
+                  {{ entry.selection_2 == 'variant' ? "checked" : "" }}
+                {% endif %}/>
+              <input type="text"
+                id="{{ entry.id_2 }}__candidate"
+                {% if entry.word_id_2 is defined %}
+                  value="{{ entry.word_2 }}"
+                  class="{{ entry.classification_2 }}"
+                {% endif %}
+                readonly
+                disabled/>
+            </div>    
           </td>
           {% if entry.adjudicate|default(false) %}
           <td bgcolor=#B1F3B1>
