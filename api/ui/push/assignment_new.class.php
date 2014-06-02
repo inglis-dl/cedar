@@ -57,12 +57,13 @@ class assignment_new extends \cenozo\ui\push\base_new
 
       $db_participant = $assignment_class_name::get_next_available_participant( $db_user );
 
-      $session->release_semaphore();
-
       // throw a notice if no participant was found
       if( is_null( $db_participant ) )
+      {
+        $session->release_semaphore();
         throw lib::create( 'exception\notice',
           'There are currently no participants available for processing.', __METHOD__ );
+      }
 
       $columns['user_id'] = $db_user->id;
       $columns['participant_id'] = $db_participant->id;
@@ -86,5 +87,8 @@ class assignment_new extends \cenozo\ui\push\base_new
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::initialize_assignment( $this->get_record() );
+
+    $session = lib::create( 'business\session' );
+    $session->release_semaphore();
   }
 }
