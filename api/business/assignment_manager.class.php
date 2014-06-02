@@ -55,6 +55,11 @@ class assignment_manager extends \cenozo\singleton
     // delete test_entry daughter record(s)
     if( !is_null( $db_test_entry ) )
     {
+      $db_test_entry->completed = false;
+      $db_test_entry->deferred = false;
+      $db_test_entry->adjudicate = NULL;
+      $db_test_entry->save();
+
       $sql = sprintf( 'DELETE FROM test_entry_'.
         $db_test_entry->get_test()->get_test_type()->name .
         ' WHERE test_entry_id = %d', $db_test_entry->id );
