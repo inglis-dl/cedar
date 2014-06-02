@@ -308,16 +308,22 @@ class assignment_manager extends \cenozo\singleton
 
     if( $test_type_name == 'confirmation' )
     {
-      $a = current( $db_test_entry->$get_list_function() );
-      $b = current( $db_sibling_test_entry->$get_list_function() );
-      $c = current(  $db_adjudicate_test_entry->$get_list_function() );
+      $obj_list = array(
+        current( $db_test_entry->$get_list_function() ),
+        current( $db_sibling_test_entry->$get_list_function() ),
+        current(  $db_adjudicate_test_entry->$get_list_function() ) );
 
-      $entry_data[ 'id_1' ] = $a->id;
-      $entry_data[ 'id_2' ] = $b->id;
-      $entry_data[ 'id_3' ] = $c->id;
-      $entry_data[ 'confirmation_1' ] = is_null( $a->confirmation ) ? '' : $a->confirmation;
-      $entry_data[ 'confirmation_2' ] = is_null( $b->confirmation ) ? '' : $b->confirmation;
-      $entry_data[ 'adjudicate' ] = $a->confirmation != $b->confirmation;
+      for( $i = 1; $i <= 3; $i++ )
+      {
+        $obj = current( $obj_list );
+        $entry_data[ 'id_' . $i ] = $obj->id;
+        $entry_data[ 'confirmation_' . $i ] =
+          is_null( $obj->confirmation ) ? '' : $obj->confirmation;
+        next( $obj_list );
+      }
+      reset( $obj_list );
+      $entry_data[ 'adjudicate' ] =
+        current( $obj_list )->confirmation != next( $obj_list )->confirmation;
     }
     else
     {
@@ -374,10 +380,12 @@ class assignment_manager extends \cenozo\singleton
           $id_1 = '';
           $id_2 = '';
           $id_3 = $c_obj->id;
-          $word_id_1 = '';
-          $word_id_2 = '';
           $word_1 = '';
+          $word_id_1 = '';
           $word_2 = '';
+          $word_id_2 = '';
+          $word_3 = '';
+          $word_id_3 = '';
           $adjudicate = false;
 
           // unequal number of list elements case
@@ -432,6 +440,13 @@ class assignment_manager extends \cenozo\singleton
             }
           }
 
+          if( !is_null( $c_obj->word_id ) )
+          {
+            $db_word = lib::create( 'database\word', $c_obj->word_id );
+            $word_id_3 = $db_word->id;
+            $word_3 = $db_word->word;
+          }
+
           $row = array(
                    'id_1' => $id_1,
                    'id_2' => $id_2,
@@ -441,30 +456,26 @@ class assignment_manager extends \cenozo\singleton
                    'word_1' => $word_1,
                    'word_id_2' => $word_id_2,
                    'word_2' => $word_2,
-                   'adjudicate' => $adjudicate );
+                   'adjudicate' => $adjudicate,
+                   'word_id_3' => $word_id_3,
+                   'word_3' => $word_3 );
 
           // get word classfications
           if( $test_type_name == 'classification' )
           {
-            $classification_1 = '';
-            $classification_2 = '';
-            if( $word_id_1 !== '' )
+            for( $i = 1; $i <= 3; $i++ )
             {
-              $db_word = lib::create( 'database\word', $word_id_1 );
-              $dictionary_id = $db_word->dictionary_id;
-              $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
+              $classification_i = '';
+              $word_id_i = "word_id_$i";
+              if( $$word_id_i !== '' )
+              {
+                $db_word = lib::create( 'database\word', $$word_id_i );
+                $dictionary_id = $db_word->dictionary_id;
+                $classification_i = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              }
+              $row[ 'classification_' . $i ] = $classification_i;
             }
-            if( $word_id_2 !== '' )
-            {
-              $db_word = lib::create( 'database\word', $word_id_2 );
-              $dictionary_id = $db_word->dictionary_id;
-              $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
-                $classification[ $dictionary_id ] : '';
-            }
-
-            $row['classification_1'] = $classification_1;
-            $row['classification_2'] = $classification_2;
           }
 
           $entry_data[] = $row;
@@ -525,12 +536,16 @@ class assignment_manager extends \cenozo\singleton
           $id_3 = $c_obj->id;
           $word_id_1 = '';
           $word_id_2 = '';
+          $word_id_3 = '';
           $word_1 = '';
           $word_2 = '';
+          $word_3 = '';
           $classification_1 = '';
           $classification_2 = '';
+          $classification_3 = '';
           $selection_1 = '';
           $selection_2 = '';
+          $selection_3 = '';
           $ranked_word_set_id = '';
           $ranked_word_set_word = '';
           $adjudicate = false;
@@ -624,6 +639,18 @@ class assignment_manager extends \cenozo\singleton
             }
           }
 
+          if( !is_null( $c_obj->word_id ) )
+          {
+            $db_word = lib::create( 'database\word', $c_obj->word_id );
+            $word_id_3 = $db_word->id;
+            $word_3 = $db_word->word;
+            $dictionary_id = $db_word->dictionary_id;
+            $classification_3 = array_key_exists( $dictionary_id, $classification ) ?
+              $classification[ $dictionary_id ] : '';
+          }
+          if( !is_null( $c_obj->selection ) )  $selection_3 = $c_obj->selection;
+
+
           $entry_data[] = array(
                    'id_1' => $id_1,
                    'id_2' => $id_2,
@@ -632,12 +659,16 @@ class assignment_manager extends \cenozo\singleton
                    'ranked_word_set_word' => $ranked_word_set_word,
                    'selection_1' => $selection_1,
                    'selection_2' => $selection_2,
+                   'selection_3' => $selection_3,
                    'word_id_1' => $word_id_1,
                    'word_1' => $word_1,
                    'classification_1' => $classification_1,
                    'word_id_2' => $word_id_2,
                    'word_2' => $word_2,
                    'classification_2' => $classification_2,
+                   'word_id_3' => $word_id_3,
+                   'word_3' => $word_3,
+                   'classification_3' => $classification_3,
                    'adjudicate' => $adjudicate );
 
           next( $a );

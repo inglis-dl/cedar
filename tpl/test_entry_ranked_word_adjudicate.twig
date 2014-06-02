@@ -397,24 +397,30 @@
               id="{{ entry.id_1 }}__yes"
               name="{{ entry.id_1 }}"
               value="yes"
-              {{ entry.selection_1 == 'yes' ? "checked" : "" }}/>
+              {% if entry.selection_1 is defined %}
+                {{ entry.selection_1 == 'yes' ? "checked" : "" }}
+              {% endif %}/>
           </td>
           <td>
             <input type="radio"
               id="{{ entry.id_1 }}__no"
               name="{{ entry.id_1 }}"
               value="no"
-              {{ entry.selection_1 == 'no' ? "checked" : "" }}/>
+              {% if entry.selection_1 is defined %}
+                {{ entry.selection_1 == 'no' ? "checked" : "" }}
+              {% endif %}/>
           </td>
           <td style="white-space: nowrap">
             <input type="radio"
               id="{{ entry.id_1 }}__variant"
               name="{{ entry.id_1 }}"
               value="variant"
-              {{ entry.selection_1 == 'variant' ? "checked" : "" }}/>
+              {% if entry.selection_1 is defined %}
+                {{ entry.selection_1 == 'variant' ? "checked" : "" }}
+              {% endif %}/>
             <input type="text"
               id="{{ entry.id_1 }}__candidate"
-              {% if entry.word_1 is defined %}
+              {% if entry.word_id_1 is defined %}
                 value="{{ entry.word_1 }}"
                 class="{{ entry.classification_1 }}"
               {% endif %}
@@ -440,24 +446,30 @@
               id="{{ entry.id_2 }}__yes"
               name="{{ entry.id_2 }}"
               value="yes"
-              {{ entry.selection_2 == 'yes' ? "checked" : "" }}/>
+              {% if entry.selection_2 is defined %}
+                {{ entry.selection_2 == 'yes' ? "checked" : "" }}
+              {% endif %}/>
           </td>
           <td>
             <input type="radio"
               id="{{ entry.id_2 }}__no"
               name="{{ entry.id_2 }}"
               value="no"
-              {{ entry.selection_2 == 'no' ? "checked" : "" }}/>
+              {% if entry.selection_2 is defined %}
+                {{ entry.selection_2 == 'no' ? "checked" : "" }}
+              {% endif %}/>
           </td>
           <td style="white-space: nowrap">
             <input type="radio"
               id="{{ entry.id_2 }}__variant"
               name="{{ entry.id_2 }}"
               value="variant"
-              {{ entry.selection_2 == 'variant' ? "checked" : "" }}/>
+              {% if entry.selection_2 is defined %}
+                {{ entry.selection_2 == 'variant' ? "checked" : "" }}
+              {% endif %}/>
             <input type="text"
               id="{{ entry.id_2 }}__candidate"
-              {% if entry.word_2 is defined %}
+              {% if entry.word_id_2 is defined %}
                 value="{{ entry.word_2 }}"
                 class="{{ entry.classification_2 }}"
               {% endif %}
@@ -479,7 +491,10 @@
                 <input type="radio"
                   id="{{ entry.id_3 }}__yes"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                  value="yes"/>
+                  value="yes"
+                  {% if entry.selection_3 is defined %}
+                    {{ entry.selection_3 == 'yes' ? "checked" : "" }}
+                  {% endif %}/>
               </div>
             </td>
             <td>
@@ -487,7 +502,10 @@
                 <input type="radio"
                   id="{{ entry.id_3 }}__no"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                  value="no"/>
+                  value="no"
+                  {% if entry.selection_3 is defined %}
+                    {{ entry.selection_3 == 'no' ? "checked" : "" }}
+                  {% endif %}/>
               </div>
             </td>
             <td style="white-space: nowrap">
@@ -495,11 +513,23 @@
                 <input type="radio"
                   id="{{ entry.id_3 }}__variant"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                  value="variant"/>
+                  value="variant"
+                  {% if entry.selection_3 is defined %}
+                    {{ entry.selection_3 == 'variant' ? "checked" : "" }}
+                  {% endif %}/>
                 <input type="text"
                   id="{{ entry.id_3 }}__candidate"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
-                  disabled/>
+                  {% if entry.selection_3 is defined %}
+                    {% if entry.selection_3 == 'variant' %}
+                      {% if entry.word_id_3 is defined %}
+                        value="{{ entry.word_3 }}"
+                        class="{{ entry.classification_3 }}"
+                      {% endif %}
+                    {% endif %}
+                  {% else %}
+                    { disabled }
+                  {% endif %}/>
               </div>
             </td>
           {% else %}
@@ -512,7 +542,7 @@
             <input type="text"
               id="{{ entry.id_1 }}__intrusion__source"
               readonly
-              {% if entry.word_1 is defined %}
+              {% if entry.word_id_1 is defined %}
                 value="{{ entry.word_1 }}"
                 class="{{ entry.classification_1 }}"
               {% endif %}/>
@@ -536,7 +566,7 @@
             <input type="text"
               id="{{ entry.id_2 }}__intrusion__source"
               readonly
-              {% if entry.word_2 is defined %}
+              {% if entry.word_id_2 is defined %}
                 value="{{ entry.word_2 }}"
                 class="{{ entry.classification_2 }}"
               {% endif %}/>
@@ -557,7 +587,12 @@
                 <input type="text"
                   id="{{ entry.id_3 }}__intrusion"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__intrusion"
-                  disabled/>
+                  {% if entry.word_id_3 is defined %}
+                    value="{{ entry.word_3 }}"
+                    class="{{ entry.classification_3 }}"
+                  {% else %}
+                    { disabled }
+                  {% endif %}/>
               </div>
             </td>
           {% else %}

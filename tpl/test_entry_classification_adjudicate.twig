@@ -329,10 +329,16 @@
               <input type="text"
                 id="{{ entry.id_3 }}__adjudicate"
                 name="{{ entry.id_1 }}__{{ entry.id_2 }}"
-                disabled/>
+                {% if entry.word_id_3 is defined %}
+                  value="{{ entry.word_3 }}"
+                  class="{{ entry.classification_3 }}"
+                {% else %}
+                  { disabled }
+                {% endif %} />
               <input type="checkbox"
                 id="{{ entry.id_3 }}__blank"
                 name="{{ entry.id_3 }}"
+                {{ entry.word_3 == "" ? "checked" : "" }}
                 readonly
                 disabled
                 value="blank"/>

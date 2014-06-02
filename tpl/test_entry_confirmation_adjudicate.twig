@@ -51,7 +51,7 @@
       //hijack all the non-accept radio buttons so that
       //a non-greyed out appearance can be maintained instead
       //of assigning the disabled attribute
-      $( table_selector + ' div.radio__source input:radio' ).click( function( e ) {
+      $( table_selector + ' div.radio__source, div.radio__adjudicate' ).click( function( e ) {
         e.preventDefault();
         return false;
       } );
@@ -106,7 +106,7 @@
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $( table_selector +
              ' input:radio[id$="' + type + '__status__accept"]' ).prop( 'checked', false );
-          slot_refresh( {{ slot }} );   
+          slot_refresh( {{ slot }} );
         }
       } ); // end adjudicate select change
 
@@ -201,7 +201,8 @@
               <input type="radio"
                 id="{{ entry_data.id_3 }}__yes"
                 name="adjudicate"
-                value="1"/>
+                value="1"
+                {{ entry_data.confirmation_3 == '1' ? "checked" : "" }}/>
               <label for="{{ entry_data.id_3 }}__yes">Yes</label>
             </div>
           </td>
@@ -210,7 +211,8 @@
               <input type="radio"
                 id="{{ entry_data.id_3 }}__no"
                 name="adjudicate"
-                value="0"/>
+                value="0"
+                {{ entry_data.confirmation_3 == '0' ? "checked" : "" }}/>
               <label for="{{ entry_data.id_3 }}__no">No</label>
             </div>
           </td>

@@ -228,7 +228,7 @@
           <input type="text"
             style="width:10%; text-align:center"
             id="{{ entry.id_1 }}__candidate"
-            {% if entry.word_1 is defined %}
+            {% if entry.word_id_1 is defined %}
               value="{{ entry.word_1 }}"
             {% endif %}
             readonly/>
@@ -251,7 +251,7 @@
           <input type="text"
             style="width:10%; text-align:center"
             id="{{ entry.id_2 }}__candidate"
-            {% if entry.word_2 is defined %}
+            {% if entry.word_id_2 is defined %}
               value="{{ entry.word_2 }}"
             {% endif %}
             readonly/>
@@ -272,10 +272,15 @@
                 id="{{ entry.id_3 }}__adjudicate"
                 style="width:10%; text-align:center"
                 name="{{ entry.id_1 }}__{{ entry.id_2 }}"
-                disabled/>
+                {% if entry.word_id_3 is defined %}
+                  value="{{ entry.word_3 }}"
+                {% else %}
+                  { disabled }
+                {% endif %} />
               <input type="checkbox"
                 id="{{ entry.id_3 }}__blank"
                 name="{{ entry.id_3 }}"
+                {{ entry.word_3 == "" ? "checked" : "" }}
                 readonly
                 disabled
                 value="blank"/>
