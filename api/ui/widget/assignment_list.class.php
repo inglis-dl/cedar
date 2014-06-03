@@ -163,9 +163,9 @@ class assignment_list extends \cenozo\ui\widget\base_list
                'test_entry_total_deferred.deferred' => $deferred_count,
                'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
                'test_entry_total_completed.completed' =>  $completed_count,
-               'allow_transcribe' => $allow_transcribe,
-               'allow_adjudicate' => $allow_adjudicate,
-               'test_entry_id' => $test_entry_id ) );
+               'allow_transcribe' => $allow_transcribe ? 1 : 0,
+               'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
+               'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id ) );
     }
 
     if( $this->allow_restrict_state )
@@ -185,7 +185,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
       ( lib::create( 'business\session' )->is_allowed( $db_operation ) &&
         $allow_adjudicate_operation ) );
   }
-
 
   /**
    * Overrides the parent class method to restrict by user_id and test_entry

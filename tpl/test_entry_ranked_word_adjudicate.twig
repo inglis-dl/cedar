@@ -60,11 +60,13 @@
               return false;
             }
           } );
-          $( table_selector + ' input:radio[name$="adjudicate"]' ).prop( "disabled", disable_non_status_fields );
-          $( table_selector + ' input:text[id$="intrusion"]' ).prop( "disabled", disable_non_status_fields );
-          $( table_selector + ' input:checkbox[value="all"]' ).prop( "disabled", disable_non_status_fields );
-          $( table_selector + ' input:text[id$="candidate"]' ).prop( "disabled", disable_non_status_fields );
-          $( table_selector + ' input:radio[value="accept"]' ).prop( "disabled", disable_non_status_fields );
+          if( disable_non_status_fields ) {          
+            $( table_selector + ' input:radio[name$="adjudicate"]' ).prop( "disabled", true );
+            $( table_selector + ' input:text[id$="intrusion"]' ).prop( "disabled", true );
+            $( table_selector + ' input:checkbox[value="all"]' ).prop( "disabled", true );
+            $( table_selector + ' input:text[id$="candidate"]' ).prop( "disabled", true );
+            $( table_selector + ' input:radio[value="accept"]' ).prop( "disabled", true );
+          }
         }
       }
 
@@ -134,9 +136,8 @@
           var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
 
           var args = new Object();
-          var columns = new Object();
           args.id = $(this).prop( "name" ).split( "__" )[2];
-          args.columns = columns;
+          var columns = new Object();
           var candidate = null;
 
           if( is_intrusion ) {
@@ -158,7 +159,7 @@
             var radio_id =
               $( table_selector + ' input:radio[name="' + entry_id + '"]:checked').prop( "id" );
             var target_text_id = '#' +
-              $( table_selector + ' input:text[name="'+ args.id + '__candidate"]' ).prop( "id" );
+              $( table_selector + ' input:text[id="'+ args.id + '__candidate"]' ).prop( "id" );
             $( target_text_id ).removeClass( "candidate primary intrusion variant" );
             var source_radio_id = '#' + radio_id;
             var selection = $( source_radio_id ).prop( "value" );
@@ -182,10 +183,12 @@
             $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );
           }
 
-          // push the edits
-          ajax_push( "{{ widget.subject }}", "edit", args );
+          args.columns = columns;
 
-          configure_ui();
+          // push the edits
+          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            configure_ui();
+          }  
       } )
       .click( function () {
 
@@ -254,6 +257,9 @@
         var columns = new Object();
         args.id = $(this).prop( "id" ).split( "__" )[0];
         columns["word_candidate"] = candidate;
+        if( !is_intrusion ) {
+          columns["selection"] = 'variant';
+        }  
         args.columns = columns;
 
         // if this is an intrusion, allow an empty input
@@ -532,16 +538,17 @@
                 <input type="text"
                   id="{{ entry.id_3 }}__candidate"
                   name="{{ entry.id_1 }}__{{ entry.id_2 }}__adjudicate"
+                  {% set disable = true %}
                   {% if entry.selection_3 is defined %}
                     {% if entry.selection_3 == 'variant' %}
                       {% if entry.word_id_3 is defined %}
                         value="{{ entry.word_3 }}"
                         class="{{ entry.classification_3 }}"
+                        {% set disable = false %}
                       {% endif %}
                     {% endif %}
-                  {% else %}
-                    { disabled }
-                  {% endif %}/>
+                  {% endif %}
+                  {{ disable ? "disabled" : "" }}/>
               </div>
             </td>
           {% else %}

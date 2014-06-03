@@ -151,7 +151,7 @@
             var classification = ajax_pull( "test", "classify_word", args );
             if( undefined != classification ) {
                $(this).addClass( classification );
-              // if a intrusion, check and add the word if not in the autocomplete source
+              // if an intrusion, check and add the word if not in the autocomplete source
               if( classification == 'intrusion' ) {
                 var text_selector = $( table_selector + ' input:text[id$="intrusion"]' );
                 var source = text_selector.autocomplete( "option", "source" );
