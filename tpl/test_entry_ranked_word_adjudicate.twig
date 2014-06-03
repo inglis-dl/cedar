@@ -60,7 +60,7 @@
               return false;
             }
           } );
-          if( disable_non_status_fields ) {          
+          if( disable_non_status_fields ) {
             $( table_selector + ' input:radio[name$="adjudicate"]' ).prop( "disabled", true );
             $( table_selector + ' input:text[id$="intrusion"]' ).prop( "disabled", true );
             $( table_selector + ' input:checkbox[value="all"]' ).prop( "disabled", true );
@@ -188,7 +188,7 @@
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
             configure_ui();
-          }  
+          }
       } )
       .click( function () {
 
@@ -259,7 +259,7 @@
         columns["word_candidate"] = candidate;
         if( !is_intrusion ) {
           columns["selection"] = 'variant';
-        }  
+        }
         args.columns = columns;
 
         // if this is an intrusion, allow an empty input
@@ -407,7 +407,7 @@
                 {% if entry.selection_1 is defined %}
                   {{ entry.selection_1 == 'yes' ? "checked" : "" }}
                 {% endif %}/>
-            </div>    
+            </div>
           </td>
           <td>
             <div class="radio__source">
@@ -418,7 +418,7 @@
                 {% if entry.selection_1 is defined %}
                   {{ entry.selection_1 == 'no' ? "checked" : "" }}
                 {% endif %}/>
-            </div>    
+            </div>
           </td>
           <td style="white-space: nowrap">
             <div class="radio__source">
@@ -437,7 +437,7 @@
                 {% endif %}
                 readonly
                 disabled/>
-            </div>    
+            </div>
           </td>
           {% if entry.adjudicate|default(false) %}
           {% set disable_all_checkbox = false %}
@@ -462,7 +462,7 @@
                 {% if entry.selection_2 is defined %}
                   {{ entry.selection_2 == 'yes' ? "checked" : "" }}
                 {% endif %}/>
-            </div>    
+            </div>
           </td>
           <td>
             <div class="radio__source">
@@ -473,7 +473,7 @@
                 {% if entry.selection_2 is defined %}
                   {{ entry.selection_2 == 'no' ? "checked" : "" }}
                 {% endif %}/>
-            </div>    
+            </div>
           </td>
           <td style="white-space: nowrap">
             <div class="radio__source">
@@ -492,7 +492,7 @@
                 {% endif %}
                 readonly
                 disabled/>
-            </div>    
+            </div>
           </td>
           {% if entry.adjudicate|default(false) %}
           <td bgcolor=#B1F3B1>
