@@ -28,7 +28,7 @@
 
         if( has_status_fields ) {
           var disable_non_status_fields = false;
-          $( table_selector + ' select[id$="status"]' ).each( function() {
+          $( table_selector + ' select[id$="status__adjudicate"]' ).each( function() {
             var state = $(this).val();
             if( state == "unavailable" || state == "unusable" || state == "refused" ) {
               disable_non_status_fields = true;
