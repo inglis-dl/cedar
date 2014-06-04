@@ -107,6 +107,7 @@ class assignment_manager extends \cenozo\singleton
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', true );
         $modifier->where( 'deferred', '=', false );
+        $modifier->where( 'adjudicate', '!=', false );
         $complete = true;
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
