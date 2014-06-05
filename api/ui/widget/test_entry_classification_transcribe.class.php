@@ -40,7 +40,7 @@ class test_entry_classification_transcribe extends base_transcribe
     $db_test = $db_test_entry->get_test();
     $db_participant = $db_test_entry->get_assignment()->get_participant();
 
-    $language = $db_participant->language;
+    $language = $db_participant->get_language()->code;
     $language = is_null( $language ) ? 'en' : $language;
 
     $modifier = lib::create( 'database\modifier' );

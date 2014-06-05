@@ -1,7 +1,7 @@
 <?php
 /**
  * test.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,11 +14,11 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test extends \cenozo\database\has_rank
 {
-  /** 
+  /**
    * Get the variant dictionary.
    * This method is required because there is no variant_dictionary table,
    * only a dictionary table.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @return record() db_dictionary or NULL
@@ -29,11 +29,11 @@ class test extends \cenozo\database\has_rank
            lib::create( 'database\dictionary', $this->variant_dictionary_id );
   }
 
-  /** 
+  /**
    * Get the intrusion dictionary.
    * This method is required because there is no intrusion_dictionary table,
    * only a dictionary table.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @return record() db_dictionary or NULL
@@ -44,11 +44,11 @@ class test extends \cenozo\database\has_rank
            lib::create( 'database\dictionary', $this->intrusion_dictionary_id );
   }
 
-  /** 
+  /**
    * Get the mispelled dictionary.
    * This method is required because there is no mispelled_dictionary table,
    * only a dictionary table.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @return record() db_dictionary or NULL
@@ -59,19 +59,19 @@ class test extends \cenozo\database\has_rank
            lib::create( 'database\dictionary', $this->mispelled_dictionary_id );
   }
 
-  /** 
+  /**
    * Classify a word based on test's dictionary membership.
-   * All tests must have a primary dictionary assigned. Non-strict tests 
+   * All tests must have a primary dictionary assigned. Non-strict tests
    * must also have variant and intrusion dictionaries assigned.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @throws exception\runtime
    * @param string $word A non-empty word.
-   * @param string $language The language of the word.
+   * @param database\language $db_language The language of the word.
    * @return array()  classification={candidate, primary, intrusion, variant, mispelled}, db_word
    */
-  public function get_word_classification( $word, $language = 'any' )
+  public function get_word_classification( $word, $db_language = NULL )
   {
     // all tests must have a primary dictionary assigned
     // non-strict tests must also have variant and intrusion dictionaries assigned
@@ -88,13 +88,12 @@ class test extends \cenozo\database\has_rank
     $data = array();
     $data['classification'] = 'candidate';
     $data['word'] = NULL;
-    $data['language'] = NULL;
 
     $base_mod = lib::create( 'database\modifier' );
-    if( 'any' != $language ) $base_mod->where( 'language', '=', $language );
+    if( !is_null( $db_language ) ) $base_mod->where( 'language_id', '=', $db_language->id );
     $base_mod->where( 'word', '=', $word );
     $base_mod->limit( 1 );
-    
+
     // check for mispelled words first
     if( !is_null( $this->mispelled_dictionary_id ) )
     {
@@ -105,7 +104,6 @@ class test extends \cenozo\database\has_rank
       {
         $data['classification'] = 'mispelled';
         $data['word'] = $db_word;
-        $data['language'] = $db_word->language;
         return $data;
       }
     }
@@ -117,7 +115,6 @@ class test extends \cenozo\database\has_rank
     {
       $data['classification'] = 'primary';
       $data['word'] = $db_word;
-      $data['language'] = $db_word->language;
     }
     else
     {
@@ -130,7 +127,6 @@ class test extends \cenozo\database\has_rank
         {
           $data['classification'] = 'intrusion';
           $data['word'] = $db_word;
-          $data['language'] = $db_word->language;
         }
         else
         {
@@ -141,10 +137,9 @@ class test extends \cenozo\database\has_rank
           {
             $data['classification'] = 'variant';
             $data['word'] = $db_word;
-            $data['language'] = $db_word->language;
           }
-        }        
-      } 
+        }
+      }
     }
 
     return $data;

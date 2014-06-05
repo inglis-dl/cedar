@@ -1,7 +1,7 @@
 <?php
 /**
  * assignment_manager.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,15 +16,15 @@ class assignment_manager extends \cenozo\singleton
 {
   /**
    * Constructor.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function __construct()
   {
   }
-   
-  /** 
+
+  /**
    * Initialize an assignment.  All existing test_entry records are deleted
    * and new test_entry records are created.
    * Only assigments that have never been adjudicated or finished can be initialized.
@@ -49,8 +49,6 @@ class assignment_manager extends \cenozo\singleton
     $test_entry_note_class_name = lib::get_class_name( 'database\test_entry_note' );
 
     $db_participant = $db_assignment->get_participant();
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
 
     // delete test_entry daughter record(s)
     if( !is_null( $db_test_entry ) )
@@ -60,9 +58,9 @@ class assignment_manager extends \cenozo\singleton
         ' WHERE test_entry_id = %d', $db_test_entry->id );
       $test_entry_class_name::db()->execute( $sql );
 
-      // initialize new daughter entries 
+      // initialize new daughter entries
       static::initialize_test_entry( $db_test_entry );
-      
+
       // get sibling assignment, reset test_entry adjudicate value from 1 to NULL
       $db_sibling_assignment = $db_assignment->get_sibling_assignment();
       if( !is_null( $db_sibling_assignment ) )
@@ -90,7 +88,7 @@ class assignment_manager extends \cenozo\singleton
 
       // create test_entry record(s)
       foreach( $test_class_name::select( $test_mod ) as $db_test )
-      { 
+      {
         $db_test_entry = lib::create( 'database\test_entry' );
         $db_test_entry->test_id = $db_test->id;
         $db_test_entry->assignment_id = $db_assignment->id;
@@ -101,7 +99,7 @@ class assignment_manager extends \cenozo\singleton
     }
   }
 
-  /** 
+  /**
    * Initialize a test_entry.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -123,8 +121,9 @@ class assignment_manager extends \cenozo\singleton
     else
       $db_participant = $db_assignment->get_participant();
 
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
     if( $test_type_name == 'ranked_word' )
     {
@@ -159,7 +158,7 @@ class assignment_manager extends \cenozo\singleton
     else if( $test_type_name == 'alpha_numeric' )
     {
       $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'language', '=', $language );
+      $modifier->where( 'language_id', '=', $db_language->id );
       $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
       for( $rank = 1; $rank <= $word_count; $rank++ )
       {
@@ -174,7 +173,7 @@ class assignment_manager extends \cenozo\singleton
   /**
    * Update an assigment and its sibling assignment end_datetime
    * based on their test_entry complete, deferred and adjudicate status's.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param  database\assignment $db_assignment
    * @access public
@@ -186,7 +185,7 @@ class assignment_manager extends \cenozo\singleton
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
 
     if( $db_assignment->all_tests_complete() )
-    {      
+    {
       if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
       {
         // go through all the tests and look for differences
@@ -216,7 +215,7 @@ class assignment_manager extends \cenozo\singleton
               array( $db_test->id, $db_assignment->get_participant()->id ) );
             if( !is_null( $db_adjudicate_test_entry ) )
             {
-              // delete test_entry daughter record(s)              
+              // delete test_entry daughter record(s)
               $sql = sprintf( 'DELETE FROM test_entry_'.
                 $db_test->get_test_type()->name .
                 ' WHERE test_entry_id = %d', $db_test_entry->id );
@@ -234,7 +233,7 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_assignment->end_datetime = $end_datetime;
           $db_assignment->save();
           $db_sibling_assignment->save();
-        } 
+        }
         else
         {
           if( !is_null( $db_assignment->end_datetime ) ||
@@ -243,12 +242,12 @@ class assignment_manager extends \cenozo\singleton
             $db_assignment->end_datetime = NULL;
             $db_sibling_assignment->end_datetime = NULL;
             $db_assignment->save();
-            $db_sibling_assignment->save();              
+            $db_sibling_assignment->save();
           }
         }
       }
-    } 
-    else 
+    }
+    else
     {
       if( !is_null( $db_assignment->end_datetime ) )
       {
@@ -260,14 +259,14 @@ class assignment_manager extends \cenozo\singleton
         $db_sibling_assignment->end_datetime = NULL;
         $db_sibling_assignment->save();
       }
-    }    
+    }
   }
 
   /**
    * Update test_entry, its assigment, its sibling assignment and its sibling
    * assignment's test_entry based on its complete status.  This method is
    * typically called whenever a daughter table entry is edited.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param  database\test_entry $db_test_entry
    * @access public
@@ -282,12 +281,12 @@ class assignment_manager extends \cenozo\singleton
     {
       // check if the assignment can be completed
       if( $db_test_entry->completed && !$db_test_entry->deferred )
-      {   
+      {
         $db_assignment = $db_test_entry->get_assignment();
-        
+
         // the assignment will determine the adjudicate status
         static::complete_assignment( $db_assignment );
-      }   
+      }
     }
   }
 
@@ -296,9 +295,9 @@ class assignment_manager extends \cenozo\singleton
    * independent of any assignment, but linked to the progenitor test_entry's by
    * their assignment's common participant id.  The test_entry is initialized and
    * populated with data common to both progenitors, reserving uninitialized daughter entries
-   * for the adjudication.  The progenitor data generated by this method is presented at the 
+   * for the adjudication.  The progenitor data generated by this method is presented at the
    * UI layer for adjudication by an administrator.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param  database\test_entry $db_test_entry
    * @throws exception\runtime
@@ -307,18 +306,20 @@ class assignment_manager extends \cenozo\singleton
    */
   public static function get_adjudicate_data( $db_test_entry )
   {
+    $ranked_word_set_has_language_class_name =
+      lib::get_class_name( 'database\ranked_word_set_has_language' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
-   
+
     if( $db_test_entry->adjudicate != true ||
        !$db_test_entry->completed ||
         $db_test_entry->deferred )
       throw lib::create( 'exception\runtime', 'Invalid test entry', __METHOD__ );
-      
+
     $adjudicate_data = NULL;
-    
+
     // get the sibling entry
     $db_assignment = $db_test_entry->get_assignment();
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
@@ -354,13 +355,13 @@ class assignment_manager extends \cenozo\singleton
         $audio_status_list = $test_entry_class_name::get_enum_values( 'audio_status' );
         $audio_status_list = array_combine( $audio_status_list, $audio_status_list );
         $audio_status_list = array_reverse( $audio_status_list, true );
-        $audio_status_list['NULL'] = ''; 
+        $audio_status_list['NULL'] = '';
         $audio_status_list = array_reverse( $audio_status_list, true );
 
         $participant_status_list = $test_entry_class_name::get_enum_values( 'participant_status' );
         $participant_status_list = array_combine( $participant_status_list, $participant_status_list );
         $participant_status_list = array_reverse( $participant_status_list, true );
-        $participant_status_list['NULL'] = ''; 
+        $participant_status_list['NULL'] = '';
         $participant_status_list = array_reverse( $participant_status_list, true );
 
         // only classification tests (FAS and AFT) require prompt status
@@ -371,10 +372,10 @@ class assignment_manager extends \cenozo\singleton
         }
 
         $status_data = array();
-        $status_data[] = array( 
+        $status_data[] = array(
           'status_label' => 'Audio Status',
           'status_type' => 'audio',
-          'id_1' => $db_test_entry->id, 
+          'id_1' => $db_test_entry->id,
           'id_2' => $db_sibling_test_entry->id,
           'id_3' => $db_adjudicate_test_entry->id,
           'status_1' =>
@@ -386,10 +387,10 @@ class assignment_manager extends \cenozo\singleton
           'status_list' => $audio_status_list,
           'adjudicate' => $db_test_entry->audio_status != $db_sibling_test_entry->audio_status );
 
-        $status_data[] = array( 
+        $status_data[] = array(
           'status_label' => 'Participant Status',
           'status_type' => 'participant',
-          'id_1' => $db_test_entry->id, 
+          'id_1' => $db_test_entry->id,
           'id_2' => $db_sibling_test_entry->id,
           'id_3' => $db_adjudicate_test_entry->id,
           'status_1' =>
@@ -402,7 +403,7 @@ class assignment_manager extends \cenozo\singleton
           'adjudicate' => $db_test_entry->participant_status != $db_sibling_test_entry->participant_status );
 
         $entry_data = array();
-         
+
         if( $test_type_name == 'confirmation' )
         {
           $a = current( $db_test_entry->$get_list_function() );
@@ -418,14 +419,11 @@ class assignment_manager extends \cenozo\singleton
         }
         else
         {
-          $language = $db_test_entry->get_assignment()->get_participant()->language;
-          $language = is_null( $language ) ? 'en' : $language;
-
-          $classification = array_combine( 
-            array( $db_test->dictionary_id, 
-                   $db_test->intrusion_dictionary_id, 
+          $classification = array_combine(
+            array( $db_test->dictionary_id,
+                   $db_test->intrusion_dictionary_id,
                    $db_test->variant_dictionary_id ),
-            array( 'primary', 'intrusion', 'variant' ) ); 
+            array( 'primary', 'intrusion', 'variant' ) );
 
           if( $test_type_name == 'alpha_numeric' || $test_type_name == 'classification' )
           {
@@ -437,7 +435,7 @@ class assignment_manager extends \cenozo\singleton
 
             // get the max ranked entry that has something entered
             $max_rank_modifier = lib::create( 'database\modifier' );
-            $max_rank_modifier->where( 'test_entry_id', 'IN', 
+            $max_rank_modifier->where( 'test_entry_id', 'IN',
               array( $db_test_entry->id, $db_sibling_test_entry->id ) );
             $max_rank_modifier->where( 'word_id', '!=', NULL );
             $max_rank_modifier->order_desc( 'rank' );
@@ -458,7 +456,7 @@ class assignment_manager extends \cenozo\singleton
               $db_entry->rank = $rank;
               $db_entry->save();
             }
-            reset( $c ); 
+            reset( $c );
 
             $rank = 1;
             $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
@@ -550,16 +548,16 @@ class assignment_manager extends \cenozo\singleton
                 {
                   $db_word = lib::create( 'database\word', $word_id_1 );
                   $dictionary_id = $db_word->dictionary_id;
-                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                     $classification[ $dictionary_id ] : '';
-                }    
+                }
                 if( $word_id_2 !== '' )
                 {
                   $db_word = lib::create( 'database\word', $word_id_2 );
                   $dictionary_id = $db_word->dictionary_id;
-                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                     $classification[ $dictionary_id ] : '';
-                }    
+                }
 
                 $row['classification_1'] = $classification_1;
                 $row['classification_2'] = $classification_2;
@@ -574,7 +572,9 @@ class assignment_manager extends \cenozo\singleton
           }
           else if( $test_type_name == 'ranked_word' )
           {
-            $ranked_word_id = 'word_' . $language . '_id';
+            $db_language = $db_test_entry->get_assignment()->get_participant()->get_language();
+            if( is_null( $db_language ) )
+              $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
             $rank_modifier = lib::create( 'database\modifier' );
             $rank_modifier->order( 'ranked_word_set.rank' );
@@ -639,7 +639,7 @@ class assignment_manager extends \cenozo\singleton
                 $adjudicate = true;
                 $id_2 = $b_obj->id;
                 $selection_2 = is_null( $b_obj->selection ) ? '' : $b_obj->selection;
-                $ranked_word_set_id = is_null( $b_obj->ranked_word_set_id ) ? '' : 
+                $ranked_word_set_id = is_null( $b_obj->ranked_word_set_id ) ? '' :
                   $b_obj->ranked_word_set_id;
                 if( !is_null( $b_obj->word_id ) )
                 {
@@ -647,7 +647,7 @@ class assignment_manager extends \cenozo\singleton
                   $word_2 = $db_word->word;
                   $word_id_2 = $db_word->id;
                   $dictionary_id = $db_word->dictionary_id;
-                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                     $classification[ $dictionary_id ] : '';
                 }
               }
@@ -657,7 +657,7 @@ class assignment_manager extends \cenozo\singleton
                 $adjudicate = true;
                 $id_1 = $a_obj->id;
                 $selection_1 = is_null( $a_obj->selection ) ? '' : $a_obj->selection;
-                $ranked_word_set_id = is_null( $a_obj->ranked_word_set_id ) ? '' : 
+                $ranked_word_set_id = is_null( $a_obj->ranked_word_set_id ) ? '' :
                   $a_obj->ranked_word_set_id;
                 if( !is_null( $a_obj->word_id ) )
                 {
@@ -665,7 +665,7 @@ class assignment_manager extends \cenozo\singleton
                   $word_1 = $db_word->word;
                   $word_id_1 = $db_word->id;
                   $dictionary_id = $db_word->dictionary_id;
-                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                     $classification[ $dictionary_id ] : '';
                 }
               }
@@ -679,14 +679,11 @@ class assignment_manager extends \cenozo\singleton
                 if( !is_null( $a_obj->ranked_word_set_id ) && !is_null( $b_obj->ranked_word_set_id ) )
                 {
                   if( $a_obj->ranked_word_set_id != $b_obj->ranked_word_set_id )
-                    throw lib::create( 'exception\runtime', 
+                    throw lib::create( 'exception\runtime',
                       'Invalid test entry ranked word pair', __METHOD__ );
 
-                  $db_ranked_word_set = $a_obj->get_ranked_word_set();
-                  $db_ranked_word_set_word =
-                    lib::create( 'database\word', $db_ranked_word_set->$ranked_word_id );
-                  $ranked_word_set_word = $db_ranked_word_set_word->word;
-                  $ranked_word_set_id = $db_ranked_word_set->id;
+                  $ranked_word_set_word = $a_obj->get_word( $db_language );
+                  $ranked_word_set_id = $a_obj->get_ranked_word_set()->id;
                 }
 
                 $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
@@ -707,7 +704,7 @@ class assignment_manager extends \cenozo\singleton
                   $word_id_1 = $db_word->id;
                   $word_1 = $db_word->word;
                   $dictionary_id = $db_word->dictionary_id;
-                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                     $classification[ $dictionary_id ] : '';
                 }
 
@@ -717,7 +714,7 @@ class assignment_manager extends \cenozo\singleton
                   $word_id_2 = $db_word->id;
                   $word_2 = $db_word->word;
                   $dictionary_id = $db_word->dictionary_id;
-                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ? 
+                  $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                     $classification[ $dictionary_id ] : '';
                 }
               }
@@ -744,14 +741,14 @@ class assignment_manager extends \cenozo\singleton
             }
           }
         }
-        $adjudicate_data = array( 'entry_data' => $entry_data, 'status_data' => $status_data );  
-      } 
-    } 
+        $adjudicate_data = array( 'entry_data' => $entry_data, 'status_data' => $status_data );
+      }
+    }
 
     if( is_null( $adjudicate_data ) )
-      throw lib::create( 'exception\runtime', 
-        'Adjudication is not required for one or more entries for the '. 
-        $db_test_entry->get_test()->name . ' test pertaining to participant UID '. 
+      throw lib::create( 'exception\runtime',
+        'Adjudication is not required for one or more entries for the '.
+        $db_test_entry->get_test()->name . ' test pertaining to participant UID '.
         $db_test_entry->get_assignment()->get_participant()->uid, __METHOD__ );
 
     return $adjudicate_data;

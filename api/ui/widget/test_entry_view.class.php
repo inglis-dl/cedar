@@ -83,7 +83,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->set_item( 'uid', $db_participant->uid );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name );
     $this->set_item( 'language', 
-      is_null( $db_participant->language ) ? 'en' : $db_participant->language );
+      is_null( $db_participant->get_language()->code ) ? 'en' : $db_participant->get_language()->code );
     $this->set_item( 'user.name', $db_assignment->get_user()->name );
     $this->set_item( 'test_id', $db_test->name );
     $this->set_item( 'deferred', $db_test_entry->deferred  );

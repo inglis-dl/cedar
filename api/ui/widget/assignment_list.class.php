@@ -91,7 +91,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
 
       $db_participant = $db_assignment->get_participant();
-      $language = $db_participant->language;
+      $language = $db_participant->get_language()->code;
 
       $allow_transcribe = false;
       $allow_adjudicate = false;

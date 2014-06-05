@@ -20,7 +20,7 @@ CREATE PROCEDURE patch_word()
       AND TABLE_NAME = "word"
       AND COLUMN_NAME = "language" );
 
-    IF @test = 0 THEN
+    IF @test = 1 THEN
 
       ALTER TABLE word
       ADD COLUMN language_id INT UNSIGNED NOT NULL AFTER dictionary_id;

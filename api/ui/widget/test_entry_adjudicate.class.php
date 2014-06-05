@@ -107,7 +107,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $db_participant = $db_assignment->get_participant();
     $this->set_variable( 'participant_id', $db_assignment->get_participant()->id );
 
-    $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
+    $language = is_null( $db_participant->get_language()->code ) ? 'any' : $db_participant->get_language()->code;
     $this->set_variable( 'language', $language );
 
     if( $db_participant->get_cohort()->name == 'tracking' )

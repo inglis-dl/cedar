@@ -56,7 +56,7 @@ class test_entry_new extends \cenozo\ui\push\base_new
       throw lib::create( 'exception\runtime',
         'Test entry requires a valid participant', __METHOD__ );
 
-    $language = $db_participant->language;
+    $language = $db_participant->get_language()->code;
     $language = is_null( $language ) ? 'en' : $language;
 
     // create default test_entry sub tables

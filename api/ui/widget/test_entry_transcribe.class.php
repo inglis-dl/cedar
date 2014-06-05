@@ -142,7 +142,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     // allow bilingual responses for FAS tests if both the typist and the participant speak french
     $db_participant = $db_test_entry->get_assignment()->get_participant();
-    $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
+    $language = is_null( $db_participant->get_language()->code ) ? 'any' : $db_participant->get_language()->code;
     if( $is_FAS && $language == 'fr' && $db_user->language == 'fr' ) $language = 'any';
     $this->set_variable( 'language', $language );    
     

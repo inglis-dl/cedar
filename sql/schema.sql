@@ -854,22 +854,15 @@ DROP VIEW IF EXISTS `cedar`.`ranked_word_word_total` ;
 DROP TABLE IF EXISTS `cedar`.`ranked_word_word_total`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `ranked_word_word_total` AS
-SELECT w.id AS word_id, COUNT(terw.id) + (COUNT(rws1.id) + COUNT( rws2.id)) DIV 2 AS total, w.dictionary_id AS dictionary_id FROM word w
+SELECT w.id AS word_id, COUNT(terw.id) + COUNT(terw1.id) AS total, w.dictionary_id AS dictionary_id FROM word w
 LEFT JOIN test_entry_ranked_word terw ON terw.word_id=w.id
+LEFT JOIN ranked_word_set_has_language AS rwshl ON rwshl.word_id=w.id
+LEFT JOIN ranked_word_set AS rws ON rws.id=rwshl.ranked_word_set_id
+LEFT JOIN test_entry_ranked_word AS terw1 ON terw1.ranked_word_set_id=rws.id 
 LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
 LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
 LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
 LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
-LEFT JOIN ranked_word_set_has_language AS rwshl1 ON rwshl1.word_id=w.id
-LEFT JOIN language AS l1 ON l1.id = rwshl1.language_id
-AND l1.code = "en"
-LEFT JOIN ranked_word_set AS rws1 ON rws1.id = rwshl1.ranked_word_set_id
-LEFT JOIN ranked_word_set_has_language AS rwshl2 ON rwshl2.word_id=w.id
-LEFT JOIN language AS l2 ON l2.id = rwshl2.language_id
-AND l2.code = "fr"
-LEFT JOIN ranked_word_set AS rws2 ON rws2.id = rwshl2.ranked_word_set_id
-LEFT JOIN test_entry_ranked_word AS terw1 ON terw1.ranked_word_set_id=rws1.id
-LEFT JOIN test_entry_ranked_word AS terw2 ON terw2.ranked_word_set_id=rws2.id
 GROUP BY w.id;
 
 -- -----------------------------------------------------
