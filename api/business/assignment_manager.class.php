@@ -107,18 +107,26 @@ class assignment_manager extends \cenozo\singleton
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', true );
         $modifier->where( 'deferred', '=', false );
-        $modifier->where( 'adjudicate', '!=', false );
         $complete = true;
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
           if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
-            $db_test_entry->adjudicate = true;
-            $db_test_entry->save();
-            $db_sibling_test_entry->adjudicate = true;
-            $db_sibling_test_entry->save();
-            $complete = false;
+            if( is_null( $db_test_entry->adjudicate ) &&
+                is_null( $db_sibling_test_entry->adjudicate ) )
+            {
+              $db_test_entry->adjudicate = true;
+              $db_test_entry->save();
+              $db_sibling_test_entry->adjudicate = true;
+              $db_sibling_test_entry->save();
+              $complete = false;
+            }
+            else if( $db_test_entry->adjudicate == false &&
+                     $db_sibling_test_entry->adjudicate == false )
+            {
+              $complete = false;
+            }
           }
           else
           {
