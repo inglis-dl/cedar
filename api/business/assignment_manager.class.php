@@ -122,8 +122,8 @@ class assignment_manager extends \cenozo\singleton
               $db_sibling_test_entry->save();
               $complete = false;
             }
-            else if( $db_test_entry->adjudicate == false &&
-                     $db_sibling_test_entry->adjudicate == false )
+            else if( $db_test_entry->adjudicate == true &&
+                     $db_sibling_test_entry->adjudicate == true )
             {
               $complete = false;
             }
