@@ -33,10 +33,11 @@ class ranked_word_set extends \cenozo\database\has_rank
     $modifier->where( 'language_id', '=', $db_language->id );
     $modifier->where( 'ranked_word_set_id', '=', $this->id );
     $modifier->limit( 1 );
-
     $db_ranked_word_set_has_language = current(
       $ranked_word_set_has_language_class_name::select( $modifier ) );
-    return $db_ranked_word_set_has_language->get_word();
+
+    return false !== $db_ranked_word_set_has_language ?
+                     $db_ranked_word_set_has_language->get_word() : NULL;
   }
 
   /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * ranked_word_set_view.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,35 +29,31 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function prepare()
   {
     parent::prepare();
-    
-    $word_class_name = lib::get_class_name( 'database\word' );
+
+    $language_class_name = lib::get_class_name( 'database\language' );
 
     // view items to the view
     $this->add_item( 'rank', 'enum', 'Rank' );
 
-    $this->languages = $word_class_name::get_enum_values( 'language' );
-    foreach( $this->languages as $language )
+    $language_mod = lib::create( 'database\modifier' );
+    $language_mod->where( 'active', '=', true );
+    $this->language_list = $language_class_name::select( $language_mod );
+    foreach( $this->language_list as $db_language )
     {
-      $description = 'Unknown';
-      if( $language == 'en' )
-        $description = 'English';
-      elseif ( $language == 'fr' )
-        $description = 'French';
-
-      $this->add_item( 'word_' . $language . '_id', 'enum', 'Word (' . $description  . ')' );
+      $this->add_item( 'word_' . $db_language->code, 'enum', 'Word (' . $db_language->name . ')' );
     }
   }
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -68,31 +64,29 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
 
     $word_class_name = lib::get_class_name( 'database\word' );
 
-    $record = $this->get_record();
-    $db_test = $record->get_test();
+    $db_ranked_word_set = $this->get_record();
+    $db_test = $db_ranked_word_set->get_test();
     $db_dictionary = $db_test->get_dictionary();
-    $words = array();
+    $word_list = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
     if( 0 < $dictionary_word_count &&
-        0 == ( $dictionary_word_count % count( $this->languages ) ) )
+        0 == ( $dictionary_word_count % count( $this->language_list ) ) )
     {
-      foreach( $this->languages as $language )
+      foreach( $this->language_list as $db_language )
       {
         $modifier = lib::create( 'database\modifier' );
-        $modifier->where( 'word.dictionary_id', '=', $db_dictionary->id );
-        $modifier->where( 'word.language', '=', $language );
+        $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
+        $modifier->where( 'language_id', '=', $db_language->id );
         foreach( $word_class_name::select( $modifier ) as $db_word )
         {
-          $words[$language][$db_word->id] = $db_word->word;
+          $word_list[ $db_language->id ][ $db_word->id ] = $db_word->word;
         }
       }
     }
     else
-    {
       throw lib::create( 'exception\notice',
-        'The primary dictionary must contain at least one word of each language.', 
-         __METHOD__ );        
-    }
+        'The primary dictionary must contain at least one word of each language.',
+         __METHOD__ );
 
     $num_ranks = $db_test->get_ranked_word_set_count();
     $ranks = array();
@@ -100,21 +94,22 @@ class ranked_word_set_view extends \cenozo\ui\widget\base_view
     $ranks = array_combine( $ranks, $ranks );
 
     // set the view's items
-    $this->set_item( 'rank', $record->rank, true, $ranks );
+    $this->set_item( 'rank', $db_ranked_word_set->rank, true, $ranks );
 
-    foreach( $this->languages as $language )
+    foreach( $this->language_list as $db_language )
     {
-      $word_list = $words[$language]; 
-      $word_id = 'word_' . $language . '_id';
-      $this->set_item( $word_id, $record->$word_id, true, $word_list );
+      $word_list = $word_list[ $db_language->id ];
+      $db_word = $db_ranked_word_set->get_word( $db_language );
+      $this->set_item( 'word_' . $db_language->code,
+        is_null( $db_word ) ? '' : $db_word->id, true, $word_list );
     }
   }
 
-  /** 
+  /**
    * The languages.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = NULL;
+  protected $language_list = NULL;
 }

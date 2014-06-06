@@ -80,7 +80,7 @@
     function get_variant_text_complete() {
       var args = new Object();
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      args["language"] = "{{ language }}";
+      args["language_id"] = {{ language_id }};
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
@@ -88,7 +88,7 @@
     function get_intrusion_text_complete() {
       var args = new Object();
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-      args["language"] = "{{ language }}";
+      args["language_id"] = {{ language_id }};
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
@@ -140,7 +140,7 @@
 
             // determine what type of word this is
             args.id = {{ test_id }};
-            args["language"] = "{{ language }}";
+            args["language_id"] = {{ language_id }};
             args["word_candidate"] = candidate;
             var classification = ajax_pull( "test", "classify_word", args );
             if( undefined != classification ) {

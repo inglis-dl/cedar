@@ -1,7 +1,7 @@
 <?php
 /**
  * ranked_word_set_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the ranked_word_set list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,53 +37,50 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
-    
-    $word_class_name = lib::get_class_name( 'database\word' );
+
+    $language_class_name = lib::get_class_name( 'database\language' );
 
     $this->add_column( 'rank', 'string', 'Rank', true );
 
     $this->languages = $word_class_name::get_enum_values( 'language' );
-    foreach( $this->languages as $language )
-    {   
-      $this->add_column( 'word_' . $language, 'string', 'Word (' . 
-        ($language == "en" ? 'English' : 'French')  . ')', false );
-    }
 
-    //TODO consider disabling the add button at the bottom of the list
-    // once all the words in the primary dictionary have been used up
-    // or do this in the parent "test" class
-    //$this->set_addable()
+    $language_mod = lib::create( 'database\modifier' );
+    $language_mod->where( 'active', '=', true );
+    $this->language_list = $language_class_name::select( $language_mod );
+    foreach( $this->language_list as $db_language )
+    {
+      $this->add_item( 'word_' . $db_language->code, 'enum', 'Word (' . $db_language->name . ')' );
+    }
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function setup()
   {
     parent::setup();
-    
-    foreach( $this->get_record_list() as $record )
+
+    foreach( $this->get_record_list() as $db_ranked_word_set )
     {
-      $row_array[ 'rank' ] = $record->rank;
-      foreach( $this->languages as $language )
+      $row_array[ 'rank' ] = $db_ranked_word_set->rank;
+      foreach( $this->language_list as $db_language )
       {
-        $word_id = 'word_' . $language . '_id';
-        $db_word = lib::create( 'database\word', $record->$word_id );
-        $row_array[ 'word_' . $language ] = $db_word ? $db_word->word : '';
+        $db_word = $db_ranked_word_set->get_word( $db_language );
+        $row_array[ 'word_' . $db_language->code ] = is_null( $db_word ) ? '' : $db_word->word;
       }
 
-      $this->add_row( $record->id, $row_array );
+      $this->add_row( $db_ranked_word_set->id, $row_array );
     }
   }
 
   /**
    * The languages.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = NULL;
+  protected $language_list = NULL;
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_report.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -11,14 +11,14 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * pull: dictionary report
- * 
+ *
  * Generate a report file containing the list of words in a dictionary.
  */
 class dictionary_report extends \cenozo\ui\pull\base_report
 {
   /**
    * Constructor
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args Pull arguments.
    * @access public
@@ -30,7 +30,7 @@ class dictionary_report extends \cenozo\ui\pull\base_report
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -63,16 +63,15 @@ class dictionary_report extends \cenozo\ui\pull\base_report
 
     // loop through all the words
     $word_mod = lib::create( 'database\modifier' );
-    $word_mod->where( 'word.dictionary_id', '=', $db_dictionary->id );
-    $word_mod->order( 'word.language' );
+    $word_mod->where( 'dictionary_id', '=', $db_dictionary->id );
     $contents = array();
     foreach( $word_class_name::select( $word_mod ) as $db_word )
     {
-      $contents[] = array( $db_word->word, $db_word->language );
+      $contents[] = array( $db_word->word, $db_word->get_language()->code );
     }
 
     $word_count = $db_dictionary->get_word_count();
-    $this->add_title( strtoupper( $db_dictionary->name ) . 
+    $this->add_title( strtoupper( $db_dictionary->name ) .
                       ' Dictionary ( ' . $word_count . ' entries )' );
 
     // create the content and header arrays using the data

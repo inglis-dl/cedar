@@ -28,7 +28,7 @@ class word_list extends \cenozo\ui\pull
 
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -37,7 +37,7 @@ class word_list extends \cenozo\ui\pull
     parent::execute();
 
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
-    
+
     $this->data = array();
     $dictionary = array();
     $dictionary['dictionary_id'] = $this->get_argument( 'dictionary_id', NULL );
@@ -45,13 +45,19 @@ class word_list extends \cenozo\ui\pull
     $dictionary['intrusion_dictionary_id'] = $this->get_argument( 'intrusion_dictionary_id', NULL );
     $dictionary = array_filter( $dictionary );
 
-    $language = $this->get_argument( 'language', 'any' );
+    $language_id = $this->get_argument( 'language_id', 0 );
+    $db_language = NULL;
+    if( !is_null( $language_id ) )
+    {
+      $db_language = $language_class_name::get_unique_record( 'id', $language_id );
+    }
+
     $words_only = $this->get_argument( 'words_only', false );
 
     $modifier = lib::create( 'database\modifier' );
 
     $first = true;
-    $do_where_bracket = ( 1 < count( $dictionary ) ) && ( 'any' != $language );
+    $do_where_bracket = ( 1 < count( $dictionary ) ) && ( !is_null( $db_language ) );
     if( $do_where_bracket )
     {
       $modifier->where_bracket( true );
@@ -73,7 +79,10 @@ class word_list extends \cenozo\ui\pull
       $modifier->where_bracket( false );
     }
 
-    if( 'any' != $language ) $modifier->where( 'language', '=', $language );
+    if( !is_null( $db_language ) )
+    {
+      $modifier->where( 'language_id', '=', $db_language->id );
+    }
     if( $words_only )
     {
       $this->data = $dictionary_class_name::get_word_list_words( $modifier );
@@ -83,16 +92,16 @@ class word_list extends \cenozo\ui\pull
       $this->data = $dictionary_class_name::get_word_list( $modifier );
     }
   }
-  
-  /** 
+
+  /**
    * Data returned in JSON format.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @return string
    * @access public
    */
   public function get_data_type()
-  { 
+  {
     return "json";
   }
 }
