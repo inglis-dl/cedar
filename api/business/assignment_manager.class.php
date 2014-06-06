@@ -320,8 +320,17 @@ class assignment_manager extends \cenozo\singleton
       $obj_list = array(
         current( $db_test_entry->$get_list_function() ),
         current( $db_sibling_test_entry->$get_list_function() ),
-        current(  $db_adjudicate_test_entry->$get_list_function() ) );
+        current( $db_adjudicate_test_entry->$get_list_function() ) );
 
+      $adjudicate = current( $obj_list )->confirmation != next( $obj_list )->confirmation;
+      if( !$adjudicate )
+      {
+        $confirmation = current( $obj_list )->confirmation;
+        end( $obj_list )->confirmation = $confirmation;
+        end( $obj_list )->save();
+      }
+
+      reset( $obj_list );
       for( $i = 1; $i <= 3; $i++ )
       {
         $obj = current( $obj_list );
@@ -330,9 +339,8 @@ class assignment_manager extends \cenozo\singleton
           is_null( $obj->confirmation ) ? '' : $obj->confirmation;
         next( $obj_list );
       }
-      reset( $obj_list );
-      $entry_data[ 'adjudicate' ] =
-        current( $obj_list )->confirmation != next( $obj_list )->confirmation;
+
+      $entry_data[ 'adjudicate' ] = $adjudicate;
     }
     else
     {
