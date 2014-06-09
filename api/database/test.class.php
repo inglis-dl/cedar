@@ -1,7 +1,7 @@
 <?php
 /**
  * test.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,11 +14,11 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test extends \cenozo\database\has_rank
 {
-  /** 
+  /**
    * Get the variant dictionary.
    * This method is required because there is no variant_dictionary table,
    * only a dictionary table.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @return record() db_dictionary or NULL
@@ -29,11 +29,11 @@ class test extends \cenozo\database\has_rank
            lib::create( 'database\dictionary', $this->variant_dictionary_id );
   }
 
-  /** 
+  /**
    * Get the intrusion dictionary.
    * This method is required because there is no intrusion_dictionary table,
    * only a dictionary table.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @return record() db_dictionary or NULL
@@ -44,11 +44,11 @@ class test extends \cenozo\database\has_rank
            lib::create( 'database\dictionary', $this->intrusion_dictionary_id );
   }
 
-  /** 
+  /**
    * Get the mispelled dictionary.
    * This method is required because there is no mispelled_dictionary table,
    * only a dictionary table.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @return record() db_dictionary or NULL
@@ -59,11 +59,11 @@ class test extends \cenozo\database\has_rank
            lib::create( 'database\dictionary', $this->mispelled_dictionary_id );
   }
 
-  /** 
+  /**
    * Classify a word based on test's dictionary membership.
-   * All tests must have a primary dictionary assigned. Non-strict tests 
+   * All tests must have a primary dictionary assigned. Non-strict tests
    * must also have variant and intrusion dictionaries assigned.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @throws exception\runtime
@@ -94,7 +94,7 @@ class test extends \cenozo\database\has_rank
     if( 'any' != $language ) $base_mod->where( 'language', '=', $language );
     $base_mod->where( 'word', '=', $word );
     $base_mod->limit( 1 );
-    
+
     // check for mispelled words first
     if( !is_null( $this->mispelled_dictionary_id ) )
     {
@@ -143,8 +143,8 @@ class test extends \cenozo\database\has_rank
             $data['word'] = $db_word;
             $data['language'] = $db_word->language;
           }
-        }        
-      } 
+        }
+      }
     }
 
     return $data;

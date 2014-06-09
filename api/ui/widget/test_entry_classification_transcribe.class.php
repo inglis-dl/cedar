@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_classification_transcribe.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,7 +14,7 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test_entry_classification_transcribe extends base_transcribe
 {
-  /** 
+  /**
    * Constructor.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -25,9 +25,9 @@ class test_entry_classification_transcribe extends base_transcribe
     parent::__construct( 'test_entry_classification', $args );
   }
 
-  /** 
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
@@ -46,7 +46,7 @@ class test_entry_classification_transcribe extends base_transcribe
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
     $entry_data = array();
-    foreach( $db_test_entry->get_test_entry_classification_list( $modifier ) as 
+    foreach( $db_test_entry->get_test_entry_classification_list( $modifier ) as
              $db_test_entry_classification )
     {
       $db_word = $db_test_entry_classification->get_word();
@@ -59,7 +59,7 @@ class test_entry_classification_transcribe extends base_transcribe
         $word = $db_word->word;
         $classification = $data['classification'];
       }
-      
+
       $row = array(
                'id' => $db_test_entry_classification->id,
                'rank' => $db_test_entry_classification->rank,
@@ -67,7 +67,7 @@ class test_entry_classification_transcribe extends base_transcribe
                'word' => $word,
                'classification' => $classification  );
 
-      $entry_data[] = $row;              
+      $entry_data[] = $row;
     }
 
     $this->set_variable( 'entry_data', $entry_data );

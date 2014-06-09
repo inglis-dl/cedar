@@ -1,7 +1,7 @@
 <?php
 /**
  * away_time_new.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -29,7 +29,7 @@ class away_time_new extends \cenozo\ui\push\base_new
 
   /**
    * Validate the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -77,7 +77,7 @@ class away_time_new extends \cenozo\ui\push\base_new
   /**
    * Delete any user_time for the day the of the away time so that it is re-calculated
    * next time it is needed.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

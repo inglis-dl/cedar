@@ -1,7 +1,7 @@
 <?php
 /**
  * word_view.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class word_view extends \cenozo\ui\widget\base_view
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class word_view extends \cenozo\ui\widget\base_view
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,7 +37,7 @@ class word_view extends \cenozo\ui\widget\base_view
   protected function prepare()
   {
     parent::prepare();
-    
+
     // add items to the view
     $this->add_item( 'word', 'string', 'Word' );
     $this->add_item( 'language', 'enum', 'Language' );
@@ -48,7 +48,7 @@ class word_view extends \cenozo\ui\widget\base_view
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

@@ -32,7 +32,7 @@ class test_entry_alpha_numeric_new extends \cenozo\ui\push\base_new
       $modifier->where( 'test_entry_id', '=', $args['columns']['test_entry_id'] );
       $args['columns']['rank'] = $test_entry_alpha_numeric_class_name::count( $modifier ) + 1;
     }
-  
+
     parent::__construct( 'test_entry_alpha_numeric', $args );
   }
 }

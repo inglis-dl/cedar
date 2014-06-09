@@ -1,7 +1,7 @@
 <?php
 /**
  * cohort_view.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class cohort_view extends \cenozo\ui\widget\cohort_view
 {
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -31,7 +31,7 @@ class cohort_view extends \cenozo\ui\widget\cohort_view
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

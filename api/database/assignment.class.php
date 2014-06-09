@@ -1,7 +1,7 @@
 <?php
 /**
  * assignment.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,9 +14,9 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class assignment extends \cenozo\database\record
 {
-  /** 
+  /**
    * Get the number of deferred test_entry records for this assignment.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @return integer
@@ -30,13 +30,13 @@ class assignment extends \cenozo\database\record
         'Tried to get deferred count for an assignment with no id', __METHOD__ );
     }
     return static::db()->get_one(
-      sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s', 
+      sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s',
                $this->id ) );
   }
 
-  /** 
+  /**
    * Get the number of completed test_entry records for this assignment.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @return integer
@@ -50,13 +50,13 @@ class assignment extends \cenozo\database\record
         'Tried to get completed count for an assignment with no id', __METHOD__ );
     }
     return static::db()->get_one(
-      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s', 
+      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
                $this->id ) );
   }
 
-  /** 
+  /**
    * Get the number of adjudicate test_entry records for this assignment.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @return integer
@@ -70,13 +70,13 @@ class assignment extends \cenozo\database\record
         'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
     }
     return static::db()->get_one(
-      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s', 
+      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
                $this->id ) );
   }
 
-  /** 
+  /**
    * Get the next available participant id to create an assignment for.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param  record db_user A user requesting a participant for a new assignment
    * @return string (NULL if none available)
@@ -133,7 +133,7 @@ class assignment extends \cenozo\database\record
         $modifier->get_sql() );
 
        $id = static::db()->get_one( $sql );
-    } 
+    }
 
     // stub until comprehensive recordings are worked out
     if( is_null( $id ) && $has_comprehensive )
@@ -143,9 +143,9 @@ class assignment extends \cenozo\database\record
     return is_null( $id ) ? $id : lib::create( 'database\participant', $id );
   }
 
-  /** 
+  /**
    * Get the sibling of this assignment.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @return record (NULL if no sibling)
    * @access public
@@ -160,7 +160,7 @@ class assignment extends \cenozo\database\record
     return false === $db_assignment ? NULL : $db_assignment;
   }
 
-  /** 
+  /**
    * Returns whether all tests constituting this assignment are complete.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string the role for which completeness is to be determined
@@ -176,7 +176,7 @@ class assignment extends \cenozo\database\record
 
 /*
    TODO: check for performance improvements
-    $sql = sprintf( 
+    $sql = sprintf(
       'SELECT '.
       '( '.
         '( '.
@@ -194,6 +194,6 @@ class assignment extends \cenozo\database\record
       ')', $this->id );
 
     return 0 == static::db()->get_one( $sql );
-*/    
+*/
   }
 }

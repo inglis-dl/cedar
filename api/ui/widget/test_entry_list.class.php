@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the test_entry list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,7 +37,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
-    
+
     $operation_class_name = lib::get_class_name( 'database\operation' );
 
     $this->add_column( 'test.rank', 'constant', 'Order', true );
@@ -54,15 +54,15 @@ class test_entry_list extends \cenozo\ui\widget\base_list
     {
       $this->adjudicate_allowed = true;
       $this->add_column( 'adjudicate', 'boolean', 'Adjudicate', true );
-    }  
+    }
 
     // TODO consider adding the typist(s) name assigned to the test and their email
     // contact info
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -82,11 +82,11 @@ class test_entry_list extends \cenozo\ui\widget\base_list
                'note_count' => $record->get_note_count() );
       if( $this->adjudicate_allowed )
         $columns['adjudicate'] = $record->adjudicate;
-      $this->add_row( $record->id, $columns );   
+      $this->add_row( $record->id, $columns );
     }
   }
 
-  /** 
+  /**
    * Are adjudications allowed.
    * @var adjudicate_allowed
    * @access protected

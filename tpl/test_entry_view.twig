@@ -1,6 +1,6 @@
 {##
  # test_entry_view.twig
- # 
+ #
  # View test_entry details.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -8,7 +8,7 @@
 {% extends "base_view.twig" %}
 
 {% block record %}
-  
+
   {{ parent() }}
 
   {% include "test_entry_transcribe.twig" with test_entry_transcribe %}
@@ -16,7 +16,7 @@
 
 {% block actions %}
   {% from 'macros.twig' import note_widget %}
-  
+
   <tr><td colspan="2"><hr class="ui-widget ui-widget-content"></td></tr>
   <tr>
     <td class="heading"><span class="title">Actions:</span></td>

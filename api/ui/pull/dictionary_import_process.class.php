@@ -29,7 +29,7 @@ class dictionary_import_process extends \cenozo\ui\pull
 
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -39,7 +39,7 @@ class dictionary_import_process extends \cenozo\ui\pull
 
     $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
     $word_class_name = lib::get_class_name( 'database\word' );
-    
+
     $md5 = $this->get_argument( 'md5' );
     $dictionary_id = $this->get_argument( 'dictionary_id' );
 
@@ -75,7 +75,7 @@ class dictionary_import_process extends \cenozo\ui\pull
     foreach( preg_split( '/[\n\r]+/', $file_data ) as $line )
     {
       $row++;
-      
+
       $row_entry = array_filter( str_getcsv( $line ) );
       $row_entry_count = count( $row_entry );
 
@@ -205,16 +205,16 @@ class dictionary_import_process extends \cenozo\ui\pull
     }
     $db_dictionary_import->save();
   }
-  
-  /** 
+
+  /**
    * Data returned in JSON format.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @return string
    * @access public
    */
   public function get_data_type()
-  { 
+  {
     return "json";
   }
 }

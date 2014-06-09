@@ -1,4 +1,4 @@
-SELECT "Adding new assignment_total view" AS ""; 
+SELECT "Adding new assignment_total view" AS "";
 
 CREATE OR REPLACE VIEW assignment_total AS
 SELECT assignment.id AS assignment_id,

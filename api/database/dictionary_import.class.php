@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_import.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -92,10 +92,10 @@ class dictionary_import extends \cenozo\database\record
             $column_name,
             $database_class_name::format_string( $this->data_value[ $column_name ] ),
             $modifier->get_sql() ) );
-          $this->data_changed[ $column_name ] = false;  
+          $this->data_changed[ $column_name ] = false;
         }
       }
-    }  
+    }
   }
 
   /**
@@ -103,7 +103,7 @@ class dictionary_import extends \cenozo\database\record
    * @var boolean $data_changed
    * @access protected
    */
-  protected $data_changed = array( 'data' => false, 
+  protected $data_changed = array( 'data' => false,
                                    'serialization' => false );
 
   /**

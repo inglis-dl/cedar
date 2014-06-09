@@ -1,7 +1,7 @@
 <?php
 /**
  * typist_end_break.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -26,10 +26,10 @@ class typist_end_break extends \cenozo\ui\push
   {
     parent::__construct( 'typist', 'end_break', $args );
   }
-  
+
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -48,14 +48,14 @@ class typist_end_break extends \cenozo\ui\push
     $modifier->where( 'role_id', '=', $db_role->id );
     $modifier->where( 'end_datetime', '=', NULL );
     $away_time_list = $db_user->get_away_time_list( $modifier );
-    
+
     // report an error of there isn't exactly 1 one open away time
     if( 1 != count( $away_time_list ) )
       log::alert( sprintf(
         'When attempting to close away time, user "%s" has %d instead of 1 open away times!',
         $db_user->name,
         count( $away_time_list ) ) );
-    
+
     foreach( $away_time_list as $db_away_time )
     {
       $date_obj = util::get_datetime_object();

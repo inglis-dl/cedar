@@ -1,7 +1,7 @@
 <?php
 /**
  * user_view.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class user_view extends \cenozo\ui\widget\user_view
 {
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -32,7 +32,7 @@ class user_view extends \cenozo\ui\widget\user_view
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -50,7 +50,7 @@ class user_view extends \cenozo\ui\widget\user_view
 
   /**
    * Overrides the cohort list widget's method.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return int
@@ -67,7 +67,7 @@ class user_view extends \cenozo\ui\widget\user_view
 
   /**
    * Overrides the cohort list widget's method.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return array( record )

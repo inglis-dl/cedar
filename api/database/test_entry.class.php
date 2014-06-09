@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,9 +14,9 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test_entry extends \cenozo\database\has_note
 {
-  /** 
+  /**
    * Get the previous record according to test rank.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean defines whether to get the next entry when adjudicating
    * @return database\test_entry (NULL if unsuccessful)
@@ -57,19 +57,19 @@ class test_entry extends \cenozo\database\has_note
       else
       {
         $db_prev_test = $test_class_name::get_unique_record( 'rank', $rank );
-        if( !is_null( $db_prev_test ) ) 
-          $db_prev_test_entry = static::get_unique_record( 
+        if( !is_null( $db_prev_test ) )
+          $db_prev_test_entry = static::get_unique_record(
             array( 'test_id', 'assignment_id' ),
             array( $db_prev_test->id, $this->assignment_id ) );
-      }    
+      }
 
     }
     return $db_prev_test_entry;
   }
 
-  /** 
+  /**
    * Get the next record according to test rank.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param boolean defines whether to get the next entry when adjudicating
    * @return database\test_entry (NULL if unsuccessful)
@@ -111,19 +111,19 @@ class test_entry extends \cenozo\database\has_note
       else
       {
         $db_next_test = $test_class_name::get_unique_record( 'rank', $rank );
-        if( !is_null( $db_next_test ) ) 
-          $db_next_test_entry = static::get_unique_record( 
+        if( !is_null( $db_next_test ) )
+          $db_next_test_entry = static::get_unique_record(
             array( 'test_id', 'assignment_id' ),
             array( $db_next_test->id, $this->assignment_id ) );
-      }    
+      }
     }
     return $db_next_test_entry;
   }
 
-  /** 
+  /**
    * Determine the completed status of this test entry.
-   * NOTE: completeness test must be implemented for each test type. 
-   * 
+   * NOTE: completeness test must be implemented for each test type.
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    * @throws exception\runtime
@@ -143,7 +143,7 @@ class test_entry extends \cenozo\database\has_note
     // - confirmation: confirmation column is not null
     // - classification: one word_id column not null
     // - alpha_numeric: one word_id column not null
-    // - ranked_word: all primary dictionary words have valid selection responses with 
+    // - ranked_word: all primary dictionary words have valid selection responses with
     // variant and intrusion responses having a not null word_id
 
     $base_mod = lib::create( 'database\modifier' );
@@ -162,24 +162,24 @@ class test_entry extends \cenozo\database\has_note
     {
       // custom query for ranked_word test type
       $id_string = $database_class_name::format_string( $this->id );
-      $sql = sprintf( 
+      $sql = sprintf(
         'SELECT '.
         '( '.
           '( SELECT MAX(rank) FROM ranked_word_set ) - '.
           '( '.
             'SELECT COUNT(*) FROM test_entry_ranked_word '.
             'WHERE test_entry_id = %s '.
-            'AND selection IS NOT NULL '. 
-          ') '. 
+            'AND selection IS NOT NULL '.
+          ') '.
         ')',
         $id_string );
-      
+
       $completed = 0 == static::db()->get_one( $sql );
 
       // check that intrusions are filled in for non-adjucate entries
       if( $completed && is_null( $this->participant_id ) )
       {
-        $sql = sprintf( 
+        $sql = sprintf(
           'SELECT COUNT(*) FROM test_entry_ranked_word '.
           'WHERE test_entry_id = %s '.
           'AND selection IS NULL '.
@@ -187,7 +187,7 @@ class test_entry extends \cenozo\database\has_note
           'AND ranked_word_set_id IS NULL',
           $id_string );
 
-        $completed = 0 == static::db()->get_one( $sql ); 
+        $completed = 0 == static::db()->get_one( $sql );
       }
     }
     else
@@ -197,10 +197,10 @@ class test_entry extends \cenozo\database\has_note
     return $completed;
   }
 
-  /** 
+  /**
    * Compare this test_entry with another.
    * The other test_entry should be from the sibling assignment.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @param database\test_entry $db_test_entry
@@ -215,13 +215,13 @@ class test_entry extends \cenozo\database\has_note
 
     $lhs_list = $this->$get_list_function();
     $rhs_list = $db_test_entry->$get_list_function();
-   
+
     return $entry_class_name::compare( $lhs_list, $rhs_list );
   }
 
-  /** 
+  /**
    * Get the sibling of this test_entry
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @return db_test_entry (NULL if no sibling)
    * @access public
@@ -240,7 +240,7 @@ class test_entry extends \cenozo\database\has_note
         $modifier->where( 'test_id', '=', $this->test_id );
         $db_test_entry = current( static::select( $modifier ) );
       }
-    } 
+    }
     return false === $db_test_entry ? NULL : $db_test_entry;
   }
 }

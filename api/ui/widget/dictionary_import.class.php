@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_import.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class dictionary_import extends \cenozo\ui\widget\base_record
     parent::__construct( 'dictionary', 'import', $args );
   }
 
-  /** 
+  /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -39,9 +39,9 @@ class dictionary_import extends \cenozo\ui\widget\base_record
     parent::prepare();
   }
 
-  /** 
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

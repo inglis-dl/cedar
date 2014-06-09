@@ -1,6 +1,6 @@
 {##
  # test_entry_confirmation_adjudicate.twig
- # 
+ #
  # Adjudicate a confirmation type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -14,11 +14,11 @@
   <script type="text/javascript">
 
     var table_selector = "#{{ widget.full }}__entry_table";
-    
+
     function configure_ui() {
-      var disable = 
+      var disable =
         0 == $( table_selector + ' input:radio[value="accept"]:checked' ).length;
-      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );        
+      $( "#{{ parent.full }}_Submit" ).button( { disabled : disable } );
     }
 
     $( function () {
@@ -37,14 +37,14 @@
         // get the progenitor column's data
         var id = $(this).prop( "id" ).split( "__" )[0];
         var confirmation = $( table_selector + ' input:radio[id^="' + id + '"]:checked' ).val();
-        
+
         $( table_selector + ' input:radio[name="adjudicate"]' ).removeProp( "checked" );
-        $( table_selector + ' input:radio[name="adjudicate"][value="' + 
+        $( table_selector + ' input:radio[name="adjudicate"][value="' +
           confirmation +'"]' ).prop( "checked", true );
 
         // push the edit
         var args = new Object();
-        args.id =  $( table_selector + 
+        args.id =  $( table_selector +
           ' input:radio[name="adjudicate"]:checked' ).prop( "id" ).split( "__" )[0];
         var columns = new Object();
         columns['confirmation'] = confirmation;
@@ -62,7 +62,7 @@
 {% endblock javascript %}
 
 {% block widget %}
-    
+
   <div class="spacer"></div>
 
   {% if entry_data.id_1 is defined and entry_data.id_2 is defined %}
@@ -71,7 +71,7 @@
 
     <div class="spacer"></div>
 
-    <table id="{{ widget.full }}__entry_table" 
+    <table id="{{ widget.full }}__entry_table"
            border="1">
 
       <thead>
@@ -81,7 +81,7 @@
           <th colspan="3">Adjudication</th>
         </tr>
       </thead>
-      
+
       <tbody>
 
           <tr>

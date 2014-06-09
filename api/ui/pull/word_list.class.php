@@ -28,7 +28,7 @@ class word_list extends \cenozo\ui\pull
 
   /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -37,7 +37,7 @@ class word_list extends \cenozo\ui\pull
     parent::execute();
 
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
-    
+
     $this->data = array();
     $dictionary = array();
     $dictionary['dictionary_id'] = $this->get_argument( 'dictionary_id', NULL );
@@ -83,16 +83,16 @@ class word_list extends \cenozo\ui\pull
       $this->data = $dictionary_class_name::get_word_list( $modifier );
     }
   }
-  
-  /** 
+
+  /**
    * Data returned in JSON format.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @return string
    * @access public
    */
   public function get_data_type()
-  { 
+  {
     return "json";
   }
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * base_adjudicate.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -15,7 +15,7 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 abstract class base_adjudicate extends \cenozo\ui\widget
 {
-  /** 
+  /**
    * Constructor.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string $subject The test entry type being transcribed.
@@ -29,7 +29,7 @@ abstract class base_adjudicate extends \cenozo\ui\widget
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
@@ -37,10 +37,10 @@ abstract class base_adjudicate extends \cenozo\ui\widget
   protected function prepare()
   {
     parent::prepare();
-  
-    if( is_null( $this->parent ) ) 
+
+    if( is_null( $this->parent ) )
       throw lib::create( 'exception\runtime', 'This class must have a parent', __METHOD__ );
-   
+
     $db_test_entry = $this->parent->get_record();
     $heading = $db_test_entry->get_test()->name . ' test adjudicate form';
 
@@ -50,9 +50,9 @@ abstract class base_adjudicate extends \cenozo\ui\widget
     $this->set_heading( $heading );
   }
 
-  /** 
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
@@ -64,7 +64,7 @@ abstract class base_adjudicate extends \cenozo\ui\widget
     $db_test_entry = $this->parent->get_record();
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
-    $this->set_variable( 'entry_data', 
+    $this->set_variable( 'entry_data',
       $assignment_manager::get_adjudicate_data( $db_test_entry ) );
   }
 }

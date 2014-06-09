@@ -1,7 +1,7 @@
 <?php
 /**
  * word_edit.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class word_edit extends \cenozo\ui\push\base_edit
     parent::__construct( 'word', $args );
   }
 
-  /** 
+  /**
    * Validate the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -50,7 +50,7 @@ class word_edit extends \cenozo\ui\push\base_edit
       if( empty( $word ) )
         throw lib::create( 'exception\notice',
           'Empty word entries are not allowed.', __METHOD__ );
-      
+
       foreach( $word as $value )
       {
         if( !$word_class_name::is_valid_word( $value ) )

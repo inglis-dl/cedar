@@ -1,7 +1,7 @@
 <?php
 /**
  * away_time.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */

@@ -1,6 +1,6 @@
 {##
  # test_entry_transcribe.twig
- # 
+ #
  # Extends the base_record template for transcribing recordings.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
@@ -22,7 +22,7 @@
         false
       );
     }
-  
+
     $( function () {
 
       // go on break button
@@ -39,7 +39,7 @@
         args.id = {{ id }};
         ajax_push( "{{ widget.subject }}", "edit", args );
       } ); // end Audio Fault click
-      
+
       $("#{{ widget.full }}_Quit").click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click
@@ -62,7 +62,7 @@
               args.note = note;
               args.category = "{{ widget.subject }}";
               args.category_id = {{ id }};
-              
+
               if( ajax_push( "note", "new", args ) ) {
                 $dialog.dialog( "close" );
 
@@ -99,8 +99,8 @@
         {% if 0 == prev_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
         {% else %}
-          slot_load( {{ slot }}, 
-            "{{ widget.subject }}", "{{ widget.name }}", 
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
             { id : {{ prev_test_entry_id}} } );
         {% endif %}
       } ).button( { disabled : 1 == {{ rank }} } ); // end Prev click
@@ -108,9 +108,9 @@
       $( "#{{ widget.full }}_Next" ).click( function() {
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
-        {% else %}  
-          slot_load( {{ slot }}, 
-            "{{ widget.subject }}", "{{ widget.name }}", 
+        {% else %}
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
             { id : {{ next_test_entry_id }} } );
         {% endif %}
       } ); // end Next click
@@ -119,7 +119,7 @@
         if( ajax_push( "{{ widget.subject }}", "reset", { "id": {{ id }} } ) ) {
           slot_refresh( {{ slot }} );
         }
-      } ); // end Reset click  
+      } ); // end Reset click
 
 
     } );
@@ -132,8 +132,8 @@
   <div class="spacer"></div>
 
   <div>
-    {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}      
-  </div>  
+    {% include [ 'test_entry_', test_type, '_transcribe.twig']|join with test_entry_args %}
+  </div>
 
   <div class="spacer"></div>
 
@@ -170,7 +170,7 @@
       {% from 'macros.twig' import confirm_buttons %}
         {{ confirm_buttons( slot, widget.full,
           ['Defer', 'Reset', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-     
+
       {% from 'macros.twig' import note_widget %}
       {{ note_widget( widget.full, "test_entry", id, false, "Notes" ) }}
 

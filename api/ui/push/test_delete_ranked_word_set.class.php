@@ -1,7 +1,7 @@
 <?php
 /**
  * test_delete_ranked_word_set.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */

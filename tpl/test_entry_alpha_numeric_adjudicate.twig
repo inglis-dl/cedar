@@ -1,6 +1,6 @@
 {##
  # test_entry_alpha_numeric_adjudicate.twig
- # 
+ #
  # Adjudicate an alpha_numeric type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -24,7 +24,7 @@
             0 == $(this).val().length ) {
           var blank_id = '#' + $(this).prop( "id" ).replace( "adjudicate", "blank" );
           if( ! $( blank_id ).prop( "checked" ) ) {
-            disable = true;            
+            disable = true;
             return false;
           }
         }
@@ -39,7 +39,7 @@
 
       // find and handle radio input change events:
       // copy the progenitor to the text input for adjudicate entry
-      $( table_selector + ' input:radio[value="accept"]' ).change( 
+      $( table_selector + ' input:radio[value="accept"]' ).change(
         function() {
           var entry_id = $(this).prop( "id" ).split( "__" )[0];
           var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
@@ -60,7 +60,7 @@
             columns["word_id"] = '';
           } else {
             columns["word_candidate"] = candidate;
-          }  
+          }
           args.columns = columns;
 
           // push the edits
@@ -92,7 +92,7 @@
         $(this).val( candidate );
         // update the value to present state
         $(this).attr( "value", candidate );
-       
+
         var args = new Object();
         var columns = new Object();
         args.id = $(this).prop( "id" ).split( "__" )[0];
@@ -100,10 +100,10 @@
           columns["word_id"] = '';
         } else {
           columns["word_candidate"] = candidate;
-        }  
+        }
         args.columns = columns;
 
-        // flag to determine the Submit button enable state 
+        // flag to determine the Submit button enable state
         var blank_id = '#' + $(this).prop( "id" ).replace( "adjudicate", "blank" );
         $( blank_id ).prop( "checked", 0 == candidate.length );
 
@@ -134,11 +134,11 @@
         } else {
           // uncheck all the radio items and clear the adjudicate text inputs
           $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
-          $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' ); 
-          $text_selector.prop( "disabled", true );  
+          $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' );
+          $text_selector.prop( "disabled", true );
           // update previous and present state of value
-          $text_selector.val( "" );  
-          $text_selector.attr( "value", "" );  
+          $text_selector.val( "" );
+          $text_selector.attr( "value", "" );
         }
 
         configure_ui();
@@ -236,7 +236,7 @@
                     disabled
                     value="blank"/>
                 </div>
-               </td> 
+               </td>
             {% else %}
               <td></td><td></td>
             {% endif %}

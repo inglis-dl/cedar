@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_classification_edit.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     parent::__construct( 'test_entry_classification', $args );
   }
 
-  /** 
+  /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -41,22 +41,22 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     {
       // skip the parent method
       $grand_parent = get_parent_class( get_parent_class( get_class() ) );
-      $grand_parent::prepare(); 
-      $columns = $this->get_argument( 'columns' );      
+      $grand_parent::prepare();
+      $columns = $this->get_argument( 'columns' );
       $class_name = lib::get_class_name( 'database\test_entry_classification' );
-      $this->set_record( $class_name::get_unique_record( 
-        array( 'test_entry_id', 'rank' ),  
+      $this->set_record( $class_name::get_unique_record(
+        array( 'test_entry_id', 'rank' ),
         array( $columns['test_entry_id'], $columns['rank'] ) ) );
-    }      
+    }
     else
     {
       parent::prepare();
     }
   }
 
-  /** 
+  /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    * @throws exception\notice
@@ -72,14 +72,14 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     $db_test_entry = $db_test_entry_classification->get_test_entry();
 
     $columns = $this->get_argument( 'columns' );
-    $word_candidate = 
+    $word_candidate =
       array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
       $columns['word_candidate'] : NULL;
-    
+
     if( !is_null( $word_candidate ) )
     {
       // is this a valid word?
-      if( !$word_class_name::is_valid_word( $word_candidate ) ) 
+      if( !$word_class_name::is_valid_word( $word_candidate ) )
         throw lib::create( 'exception\notice',
           '"'. $word_candidate . '" is not a valid word entry.', __METHOD__ );
 
@@ -93,7 +93,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         if( is_null( $db_assignment ) )
           $language = $db_test_entry->get_participant()->language;
         else
-          $language = $db_assignment->get_participant()->language;      
+          $language = $db_assignment->get_participant()->language;
         $language = is_null( $language ) ? 'en' : $language;
       }
 
@@ -122,7 +122,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           $is_intrusion = false;
           // any words that begin with 'f' or 'ph' are intrusions
           if( preg_match( '/FAS (f words)/', $db_test->name ) &&
-              !( false === strpos( 'f', $word_candidate ) || 
+              !( false === strpos( 'f', $word_candidate ) ||
                  false === strpos( 'ph', $word_candidate ) ) )
           {
             $is_intrusion = true;
@@ -135,17 +135,17 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           }
           // any words begin with 's' or 'c' are intrusions
           else if( preg_match( '/FAS (s words)/', $db_test->name ) &&
-                   !( false === strpos( 's', $word_candidate ) || 
+                   !( false === strpos( 's', $word_candidate ) ||
                       false === strpos( 'c', $word_candidate ) ) )
           {
             $is_intrusion = true;
           }
 
           if( $is_intrusion )
-          { 
+          {
             // get the test's intrusion dictionary and add it as an intrusion
             $db_dictionary = $db_test->get_intrusion_dictionary();
-            if( is_null( $db_dictionary ) ) 
+            if( is_null( $db_dictionary ) )
               throw lib::create( 'exception\notice',
                 'Trying to add the word "'. $word_candidate .
                 '" to a non-existant intrusion dictionary.  Assign an intrusion dictionary for the '.

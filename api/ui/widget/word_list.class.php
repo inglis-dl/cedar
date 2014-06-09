@@ -1,7 +1,7 @@
 <?php
 /**
  * word_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class word_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the word list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class word_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,7 +37,7 @@ class word_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
-    
+
     $this->add_column( 'word', 'string', 'Word', true );
     $this->add_column( 'language', 'string', 'Language', true );
 
@@ -54,13 +54,13 @@ class word_list extends \cenozo\ui\widget\base_list
     $modifier->or_where( 'mispelled_dictionary_id', '=', $dictionary_id );
     $db_test = current( $test_class_name::select( $modifier ) );
     $this->word_total_column = $db_test->get_test_type()->name . '_word_total.total';
-    
+
     $this->add_column( $this->word_total_column, 'number', 'Usage', true );
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

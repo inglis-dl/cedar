@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_transcribe.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -25,9 +25,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     parent::__construct( 'test_entry', 'transcribe', $args );
   }
 
-  /** 
+  /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -44,7 +44,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     // create the test_entry sub widget
     // example: widget class test_entry_ranked_word_transcribe
-    $this->test_entry_widget = lib::create( 
+    $this->test_entry_widget = lib::create(
       'ui\widget\test_entry_' . $db_test->get_test_type()->name . '_transcribe', $this->arguments );
     $this->test_entry_widget->set_parent( $this );
     $this->test_entry_widget->set_validate_access( $this->editable  );
@@ -54,18 +54,18 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     {
       $modifier = lib::create('database\modifier');
       $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
-    }     
-    
+    }
+
     $test_count = $test_class_name::count( $modifier );
 
     $heading = sprintf( 'test %d / %d for %s',
       $db_test->rank, $test_count, $db_participant->uid );
-    $this->set_heading( $heading );      
+    $this->set_heading( $heading );
   }
 
-  /** 
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -106,21 +106,21 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $db_variant_dictionary = $db_test->get_variant_dictionary();
       if( !is_null( $db_variant_dictionary ) )
         $this->set_variable( 'variant_dictionary_id', $db_variant_dictionary->id );
-      
+
       $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
       if( !is_null( $db_intrusion_dictionary ) )
         $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
-    }  
+    }
 
     // allow bilingual responses for FAS tests if both the typist and the participant speak french
     $db_participant = $db_test_entry->get_assignment()->get_participant();
     $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
     if( $is_FAS && $language == 'fr' && $db_user->language == 'fr' ) $language = 'any';
-    $this->set_variable( 'language', $language );    
-    
+    $this->set_variable( 'language', $language );
+
     // get the audio files from sabretooth
     if( $db_participant->get_cohort()->name == 'tracking' )
-    {   
+    {
       $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
       $sabretooth_manager->set_user( $setting_manager->get_setting( 'sabretooth', 'user' ) );
@@ -133,7 +133,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $args['participant_id'] = $db_participant->id;
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
       $recording_data = array();
-      if( !is_null( $recording_list ) && 
+      if( !is_null( $recording_list ) &&
           1 == $recording_list->success && 0 < count( $recording_list->data ) )
       {
         foreach( $recording_list->data as $data )
@@ -145,29 +145,29 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       }
       $this->set_variable( 'recording_data', $recording_data );
     }
- 
+
     // find the ids of the prev and next test_entrys
     $db_prev_test_entry = $db_test_entry->get_previous();
     $db_next_test_entry = $db_test_entry->get_next();
 
-    $this->set_variable( 'prev_test_entry_id', 
+    $this->set_variable( 'prev_test_entry_id',
       is_null( $db_prev_test_entry ) ? 0 : $db_prev_test_entry->id );
 
-    $this->set_variable( 'next_test_entry_id', 
+    $this->set_variable( 'next_test_entry_id',
       is_null( $db_next_test_entry ) ? 0 : $db_next_test_entry->id );
 
     $this->set_variable( 'editable', $this->editable ? 1 : 0 );
     $this->set_variable( 'actionable', $this->actionable ? 1 : 0 );
-    
-    try 
-    {   
+
+    try
+    {
       $this->test_entry_widget->process();
       $this->set_variable( 'test_entry_args', $this->test_entry_widget->get_variables() );
-    }   
+    }
     catch( \cenozo\exception\permission $e ) {}
   }
 
-  /** 
+  /**
    * Determines whether the record can be edited.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
@@ -177,7 +177,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     return $this->editable;
   }
 
-  /** 
+  /**
    * Determines whether the action buttons are enabled.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
@@ -187,7 +187,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     return $this->actionable;
   }
 
-  /** 
+  /**
    * Set whether the record can be edited.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
@@ -197,7 +197,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->editable = $enable;
   }
 
-  /** 
+  /**
    * Set whether the action buttons are enabled.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
