@@ -107,7 +107,7 @@ class assignment_manager extends \cenozo\singleton
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', true );
         $modifier->where( 'deferred', '=', false );
-        $complete = true;
+        $completed = true;
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
@@ -120,12 +120,12 @@ class assignment_manager extends \cenozo\singleton
               $db_test_entry->save();
               $db_sibling_test_entry->adjudicate = true;
               $db_sibling_test_entry->save();
-              $complete = false;
+              $completed = false;
             }
             else if( $db_test_entry->adjudicate == true &&
                      $db_sibling_test_entry->adjudicate == true )
             {
-              $complete = false;
+              $completed = false;
             }
           }
           else
@@ -144,10 +144,21 @@ class assignment_manager extends \cenozo\singleton
               $test_entry_class_name::db()->execute( $sql );
               $db_adjudicate_test_entry->delete();
             }
+
+            if( !is_null( $db_test_entry->adjudicate ) )
+            {
+              $db_test_entry->adjudicate = NULL;
+              $db_test_entry->save();
+            }
+            if( !is_null( $db_sibling_test_entry->adjudicate ) )
+            {
+              $db_sibling_test_entry->adjudicate = NULL;
+              $db_sibling_test_entry->save();
+            }
           }
         }
 
-        if( $complete )
+        if( $completed )
         {
           // both assignments are now complete: set their end datetimes
           $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
