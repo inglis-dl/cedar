@@ -34,7 +34,7 @@ class test_entry_classification extends \cenozo\database\has_rank
       next( $rhs_list );
       next( $lhs_list );
     }
-    return count( $rhs_list ) != count( $lhs_list );
+    return count( $rhs_list ) == count( $lhs_list );
   }
 
   /**

@@ -36,7 +36,7 @@ class test_entry_alpha_numeric extends \cenozo\database\has_rank
       next( $rhs_list );
       next( $lhs_list );
     }
-    return true;
+    return count( $rhs_list ) == count( $lhs_list );
   }
 
   /**
