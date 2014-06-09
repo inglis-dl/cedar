@@ -63,6 +63,13 @@
                      { "restrict_state_id": state_id } );
         } );
       } );
+
+      // reload page if language selector is changed
+      $( "#{{ widget.full }}__restrict_language" ).change( function() {
+        var language = $( "#{{ widget.full }}__restrict_language option:selected" ).val();
+        slot_load( {{ slot }}, "{{ widget.subject }}", "{{ widget.name }}",
+                   { "restrict_language": language } );
+      } );
     {% endif %}
 
   </script>
@@ -71,19 +78,33 @@
 
 {% block prelist %}
 
-  {% if state_list is defined %}
-    {% set restrict_state_id = restrict_state_id|default(0) %}
-    <label for="{{ widget.full }}__restrict_state_id">Restrict to condition:</label>
-    <select id="{{ widget.full }}__restrict_state_id" class="ui-state-default"
-            style="margin-top:4px;margin-bottom:4px;">
-      <option {% if "" == restrict_state_id %}selected{% endif %}
-              value = "">Open</option>
-      {% for id, name in state_list %}
-        <option {% if id == restrict_state_id %}selected{% endif %}
-                value = "{{ id }}">{{ name }}</option>
-      {% endfor %}
-    </select>
-  {% endif %}
+  <div style="padding-top: 4px; padding-bottom: 4px;">
+    {% if state_list is defined %}
+      <span class="spacer">
+        {% set restrict_state_id = restrict_state_id|default(0) %}
+        Restrict to condition:
+        <select id="{{ widget.full }}__restrict_state_id" class="ui-state-default">
+          <option {% if "" == restrict_state_id %}selected{% endif %}
+                  value = "">Open</option>
+          {% for id, name in state_list %}
+            <option {% if id == restrict_state_id %}selected{% endif %}
+                    value = "{{ id }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </span>
+      
+      <span>
+        Restrict to language:
+        <select id="{{ widget.full }}__restrict_language" class="ui-state-default">
+          {% for language in languages %}
+            <option {% if language == restrict_language %}selected{% endif %}
+                    value="{{ language }}">{{ language }}</option>
+          {% endfor %}
+        </select>
+      </span>
+    {% endif %}
+  </div>
+
   {{ parent() }}
 
 {% endblock prelist %}
