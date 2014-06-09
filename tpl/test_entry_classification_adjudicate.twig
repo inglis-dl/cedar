@@ -117,15 +117,17 @@
               args["language"] = "{{ language }}";
               args["word_candidate"] = candidate;
               var classification = ajax_pull( "test", "classify_word", args );
-              $(this).addClass( classification );
+              $( target_text_id ).addClass( classification );
             }
             configure_ui();
           } else {
             alert( "Entry was not accepted, try again." );
-            // clear the text entry and re-focus
-            $(this).val( "" );
-            $(this).attr( "value", "" );
-            $(this).focus();
+            // clear the text entry
+            $( target_text_id ).val( "" );
+            $( target_text_id ).attr( "value", "" );
+            $( target_text_id ).focus( );
+            $( this ).prop( "checked", false );
+            $( this ).trigger( "click" );
           }
         } )
       .click( function () {
