@@ -65,24 +65,24 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $this->set_heading( sprintf( '%s %s, restricted to %s %s assignments',
             $this->get_subject(),
             $this->get_name(),
-            $this->get_restrict_state_name( $restrict_state_id ), 
+            $this->get_restrict_state_name( $restrict_state_id ),
             $restrict_language == 'fr' ? 'French' : 'English' ) );
-         }   
-         else   
+         }
+         else
          {
           $this->set_heading( sprintf( '%s %s, restricted to %s assignments',
             $this->get_subject(),
             $this->get_name(),
             $this->get_restrict_state_name( $restrict_state_id ) ) );
-         }   
+         }
       }
       else if( $restrict_on_language )
-      { 
+      {
         $this->set_heading( sprintf( '%s %s, restricted to %s assignments',
           $this->get_subject(),
           $this->get_name(),
           $restrict_language == 'fr' ? 'French' : 'English' ) );
-      }      
+      }
     }
   }
 
@@ -205,17 +205,19 @@ class assignment_list extends \cenozo\ui\widget\base_list
         }
       }
 
-      $this->add_row( $db_assignment->id,
-        array( 'start_datetime' => $db_assignment->start_datetime,
-               'participant.uid' => $db_participant->uid,
-               'cohort.name' => $db_participant->get_cohort()->name,
-               'user.name' => $db_assignment->get_user()->name,
-               'test_entry_total_deferred.deferred' => $deferred_count,
-               'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
-               'test_entry_total_completed.completed' =>  $completed_count,
-               'allow_transcribe' => $allow_transcribe ? 1 : 0,
-               'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
-               'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id ) );
+      $row = array(
+        'start_datetime' => $db_assignment->start_datetime,
+        'participant.uid' => $db_participant->uid,
+        'cohort.name' => $db_participant->get_cohort()->name,
+        'user.name' => $db_assignment->get_user()->name,
+        'test_entry_total_deferred.deferred' => $deferred_count,
+        'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
+        'test_entry_total_completed.completed' =>  $completed_count,
+        'allow_transcribe' => $allow_transcribe ? 1 : 0,
+        'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
+        'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id );
+
+      $this->add_row( $db_assignment->id, $row );
     }
 
     if( $this->allow_restrict_state )
