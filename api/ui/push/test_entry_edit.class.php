@@ -79,6 +79,7 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
     $db_test_entry = $this->get_record();
 
     $columns = $this->get_argument( 'columns' );
+    $complete_test = true;
     if( ( array_key_exists( 'participant_status', $columns ) &&
           'refused' == $columns['participant_status'] ) ||
         ( array_key_exists( 'audio_status', $columns ) &&
@@ -88,6 +89,13 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
       $db_test_entry->initialize( false );
     }
 
-    $assignment_manager::complete_test_entry( $db_test_entry );
+    if( array_key_exists( 'completed', $columns ) &&
+        ( $db_test_entry->audio_status       != 'unavailable' &&
+          $db_test_entry->audio_status       != 'unusable' &&
+          $db_test_entry->participant_status != 'refused' ) )
+      $complete_test = $columns['completed'];
+
+    if( $complete_test )
+      $assignment_manager::complete_test_entry( $db_test_entry );
   }
 }
