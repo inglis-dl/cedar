@@ -18,10 +18,9 @@
     function configure_ui( do_text ) {
 
       if( {{ deferred }} || !{{ editable }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", true );
-        $( "#{{ parent.full }}_Defer" ).button( { disabled :  true } );
-        $( "#{{ parent.full }}_Reset" ).button( { disabled : true } );
-        $( "#{{ widget.full }}_Add" ).button( { disabled : true } );
+        $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
+        $( "#{{ widget.full }}_add" ).button( { disabled : true } );
         $( table_selector + " input" ).each( function() {
           $(this).prop( "disabled", true );
         } );
@@ -31,21 +30,22 @@
         var numNo = $( table_selector + ' input:radio[value="no"]:checked' ).length;
         var numVariant = $( table_selector + ' input:radio[value="variant"]:checked' ).length;
         var numEmptyIntrusion = $( table_selector + ' input:text[id$="intrusion"][value=""]' ).length;
+        var has_null_status = 'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         // count number of items with value "yes"
         // count number of items with value "no"
         // count number of items with value "variant"
         // total yes + no + variant == total radio / 3 => enable next button
 
-        // disable the Next and Add buttons if the ranked word entries are incomplete
+        // disable the next and add buttons if the ranked word entries are incomplete
         // or if there are empty intrusion fields
-        var disable = ( numYes + numNo + numVariant ) != numRadio || 0 < numEmptyIntrusion;
-        $( "#{{ parent.full }}_Next" ).button( { disabled : disable } );
-        $( "#{{ widget.full }}_Add" ).button( { disabled : disable } );
+        var disable = ( ( numYes + numNo + numVariant ) != numRadio && has_null_status ) || 0 < numEmptyIntrusion;
+        $( "#{{ parent.full }}_next" ).button( { disabled : disable } );
+        $( "#{{ widget.full }}_add" ).button( { disabled : disable } );
 
-        // disable the Reset button if there is nothing to reset
-        $( "#{{ parent.full }}_Reset" ).button(
-          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant } );
+        // disable the reset button if there is nothing to reset
+        $( "#{{ parent.full }}_reset" ).button(
+          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant && has_null_status } );
 
         do_text = (typeof do_text == 'undefined') ? true : do_text;
         if( do_text ) {
@@ -62,6 +62,13 @@
                 }
               }
               $(this).prop( "disabled", disable );
+          } );
+        }
+
+        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
+            'refused' == "{{ participant_status }}" ) {
+          $( table_selector + " input" ).each( function() {
+            $(this).prop( "disabled", true );
           } );
         }
       }
@@ -144,7 +151,7 @@
             var classification = ajax_pull( "test", "classify_word", args );
             if( undefined != classification ) {
                $(this).addClass( classification );
-              // if a intrusion, check and add the word if not in the autocomplete source
+              // if an intrusion, check and add the word if not in the autocomplete source
               if( classification == 'intrusion' ) {
                 var text_selector = $( table_selector + ' input:text[id$="intrusion"]' );
                 var source = text_selector.autocomplete( "option", "source" );
@@ -171,10 +178,23 @@
             configure_ui();
 
           } else {
-            alert( "Entry was not accepted, try again." );
             $(this).val( "" );
             $(this).attr( "value", "" );
-            $(this).focus();
+            // re-enable all radio and variant text inputs
+            $( table_selector + " input:radio" ).each( function() {
+              $(this).prop( "disabled", false );
+              if( $(this).val() === "variant" ) {
+                var text_id = table_selector + ' input:text[id="' +
+                  $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
+                if( 0 < $( text_id ).val().length ) {
+                  $( text_id ).prop( "disabled", false );
+                }
+              }
+            } );
+            var radio_id = table_selector + ' input:radio[id="' + args.id + '__no"]';
+            $( radio_id ).focus();
+            $( radio_id ).prop( "checked", true );
+            $( radio_id ).change();
           }
         }
       } );// end text input change
@@ -186,7 +206,7 @@
       configure_ui();
 
       // note that only non-strict tests can have new entries added for intrusions
-      $( "#{{ widget.full }}_Add" ).button( {
+      $( "#{{ widget.full }}_add" ).button( {
         text: false,
         icons: { primary: "ui-icon-plusthick" }
         } )
@@ -325,7 +345,7 @@
             <button class="{{ widget.full }}__add_entry"
               style="float:right"
               disabled
-              id="{{ widget.full }}_Add">Add</button>
+              id="{{ widget.full }}_add">Add</button>
          </td>
       </tr>
       {% endif %}

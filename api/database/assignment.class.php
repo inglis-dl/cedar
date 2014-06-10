@@ -105,17 +105,21 @@ class assignment extends \cenozo\database\record
 
     if( $has_tracking )
     {
+      $session = lib::create( 'business\session' );
+
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'participant.active', '=', true );
       $modifier->where( 'user_assignment.id', '=', NULL );
       $modifier->where( 'cohort.name', '=', 'tracking' );
       $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
+      $modifier->where( 'participant_site.site_id', '=', $session->get_site()->id );
       if( $language != 'any' )
         $modifier->where( 'participant.language', '=', $language );
       $modifier->group( 'participant.id' );
 
       $sql = sprintf(
         'SELECT participant.id FROM participant '.
+        'JOIN participant_site ON participant_site.participant_id = participant.id '.
         'JOIN cohort ON cohort.id = participant.cohort_id '.
         'JOIN event ON event.participant_id = participant.id '.
         'JOIN event_type ON event_type.id = event.event_type_id '.
@@ -132,7 +136,7 @@ class assignment extends \cenozo\database\record
         $database_class_name::format_string( $db_user->id ),
         $modifier->get_sql() );
 
-       $id = static::db()->get_one( $sql );
+      $id = static::db()->get_one( $sql );
     }
 
     // stub until comprehensive recordings are worked out

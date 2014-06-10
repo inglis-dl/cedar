@@ -19,10 +19,11 @@
 
       // disable elements based on deferred status
       if( {{ deferred }} || !{{ editable }} ) {
-        $( "#{{ parent.full }}__audio_fault" ).prop( "disabled", true );
-        $( "#{{ parent.full }}_Defer" ).button( { "disabled": true } );
-        $( "#{{ parent.full }}_Reset" ).button( { "disabled": true } );
-        $( "#{{ widget.full }}_Add" ).button( { "disabled": true } );
+        $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
+        $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
+        $( "#{{ parent.full }}_defer" ).button( { "disabled": true } );
+        $( "#{{ parent.full }}_reset" ).button( { "disabled": true } );
+        $( "#{{ widget.full }}_add" ).button( { "disabled": true } );
         $( table_selector + " input:text" ).each( function() {
           $(this).prop( "disabled", true );
         } );
@@ -33,6 +34,8 @@
         var numInput = 0;
         var lastEmpty = null;
         var numEmptyAdded = 0;
+        var has_null_status =
+          'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         $( table_selector + " input:text" ).each( function() {
           if( 0 < $(this).val().length ) {
@@ -46,18 +49,25 @@
 
         // only enable the next button when there is at least one entry filled
         // additionally, disable if there are any empty added fields
-        $( "#{{ parent.full }}_Next" ).button( { disabled : 0 == numFilled || 0 < numEmptyAdded } );
+        $( "#{{ parent.full }}_next" ).button( { disabled : ( has_null_status && 0 == numFilled ) || 0 < numEmptyAdded } );
 
         // disable the Reset button if there is nothing to reset
-        $( "#{{ parent.full }}_Reset" ).button( { disabled : 0 == numFilled } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : has_null_status && 0 == numFilled } );
 
         // only enable the add button when all inputs are filled
-        $( "#{{ widget.full }}_Add" ).button( { disabled : numFilled != numInput } );
+        $( "#{{ widget.full }}_add" ).button( { disabled : numFilled != numInput } );
 
         if( null !== lastEmpty && numFilled != numInput ) {
           lastEmpty.focus();
         } else {
           $( table_selector + " input:text" ).last().blur();
+        }
+
+        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
+            'refused' == "{{ participant_status }}" ) {
+          $( table_selector + " input" ).each( function() {
+            $(this).prop( "disabled", true );
+          } );
         }
       }
     }
@@ -168,7 +178,7 @@
       update_input_list();
       configure_ui();
 
-      $( "#{{ widget.full }}_Add" ).button( {
+      $( "#{{ widget.full }}_add" ).button( {
         text: false,
         icons: { primary: "ui-icon-plusthick" }
         } )
@@ -274,7 +284,7 @@
         <td colspan="{{ numcell }}" class="button">
           <button class="{{ widget.full }}__add_entry"
             style="float:right"
-            id="{{ widget.full }}_Add">Add</button>
+            id="{{ widget.full }}_add">Add</button>
         </td>
       </tr>
       {% endif %}

@@ -85,7 +85,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
       // allow bilingual responses for FAS classification tests
       $db_test = $db_test_entry->get_test();
-      $language = 'en';
+      $language = 'any';
       $is_FAS = preg_match( '/FAS/', $db_test->name );
       if( !$is_FAS )
       {

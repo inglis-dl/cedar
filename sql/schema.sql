@@ -353,6 +353,8 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `test_id` INT UNSIGNED NOT NULL,
   `assignment_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'NULL id signifies adjudicate entry',
   `participant_id` INT UNSIGNED NULL DEFAULT NULL,
+  `audio_status` ENUM('salvageable','unusable','unavailable') NULL DEFAULT NULL,
+  `participant_status` ENUM('suspected prompt','prompted','refused') NULL DEFAULT NULL,
   `audio_fault` TINYINT(1) NOT NULL DEFAULT 0,
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
   `deferred` TINYINT(1) NOT NULL DEFAULT 0,
