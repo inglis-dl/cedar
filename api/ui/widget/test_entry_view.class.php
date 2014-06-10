@@ -41,11 +41,13 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     parent::prepare();
 
     // add items to the view
-    $this->add_item( 'uid', 'constant', 'UId' );
+    $this->add_item( 'participant.uid', 'constant', 'UID' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
     $this->add_item( 'language', 'constant', 'Language' );
     $this->add_item( 'user.name', 'constant', 'Typist' );
-    $this->add_item( 'test_id', 'constant', 'Test' );
+    $this->add_item( 'test.name', 'constant', 'Test' );
+    $this->add_item( 'audio_status', 'enum', 'Audio Status' );
+    $this->add_item( 'participant_status', 'enum', 'Participant Status' );
     $this->add_item( 'deferred', 'boolean', 'Deferred' );
     $this->add_item( 'completed', 'boolean', 'Completed' );
     $this->add_item( 'adjudicate', 'constant', 'Adjudicate' );
@@ -80,12 +82,37 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $db_test = $db_test_entry->get_test();
     $db_participant = $db_assignment->get_participant();
     // set the view's items
-    $this->set_item( 'uid', $db_participant->uid );
+    $this->set_item( 'participant.uid', $db_participant->uid );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name );
     $this->set_item( 'language',
       is_null( $db_participant->language ) ? 'en' : $db_participant->language );
     $this->set_item( 'user.name', $db_assignment->get_user()->name );
-    $this->set_item( 'test_id', $db_test->name );
+    $this->set_item( 'test.name', $db_test->name );
+
+    $audio_status_list = $test_entry_class_name::get_enum_values( 'audio_status' );
+    $audio_status_list = array_combine( $audio_status_list, $audio_status_list );
+    $audio_status_list = array_reverse( $audio_status_list, true );
+    $audio_status_list['NULL'] = '';
+    $audio_status_list = array_reverse( $audio_status_list, true );
+    $this->set_item( 'audio_status',
+      $db_test_entry->audio_status, true, $audio_status_list );
+
+    $participant_status_list = $test_entry_class_name::get_enum_values( 'participant_status' );
+    $participant_status_list = array_combine( $participant_status_list, $participant_status_list );
+    $participant_status_list = array_reverse( $participant_status_list, true );
+    $participant_status_list['NULL'] = '';
+    $participant_status_list = array_reverse( $participant_status_list, true );
+
+    // only classification tests (FAS and AFT) require prompt status
+    if( $db_test->get_test_type()->name != 'classification' )
+    {
+      unset( $participant_status_list['suspected prompt'],
+             $participant_status_list['prompted'] );
+    }
+
+    $this->set_item( 'participant_status',
+      $db_test_entry->participant_status, true, $participant_status_list );
+
     $this->set_item( 'deferred', $db_test_entry->deferred  );
     $this->set_item( 'completed', $db_test_entry->completed );
     $this->set_item( 'adjudicate', $db_test_entry->adjudicate ? 'Yes' : 'No' );
