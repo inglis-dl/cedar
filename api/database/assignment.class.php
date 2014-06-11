@@ -114,7 +114,7 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
       $modifier->where( 'participant_site.site_id', '=', $session->get_site()->id );
       if( $language != 'any' )
-        $modifier->where( 'participant.language', '=', $language );
+        $modifier->where( 'IFNULL(participant.language,"en")', '=', $language );
       $modifier->group( 'participant.id' );
 
       $sql = sprintf(
