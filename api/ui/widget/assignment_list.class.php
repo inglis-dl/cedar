@@ -96,6 +96,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
 
+    $language_class_name = lib::get_class_name( 'database\language' );
     $operation_class_name = lib::get_class_name( 'database\operation' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
     $test_class_name = lib::get_class_name( 'database\test' );
@@ -112,28 +113,15 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $modifier = NULL;
     if( $this->allow_restrict_state )
     {
-      $languages = array( 'any' );
-      foreach( $participant_class_name::get_enum_values( 'language' ) as $language )
-        $languages[] = $language;
+      $language_mod = lib::create( 'database\modifier' );
+      $language_mod->where( 'active', '=', true );
+      $languages = array( 'any' => 'any' );
+      foreach( $language_class_name::select( $language_mod ) as $db_language )
+        $languages[$db_language->id] = $db_language->name;
       $this->set_variable( 'languages', $languages );
 
-      $restrict_language = $this->get_argument( 'restrict_language', 'any' );
-      $this->set_variable( 'restrict_language', $restrict_language );
-
-      $modifier = lib::create( 'database\modifier' );
-      // restrict by language
-      if( 'any' != $restrict_language )
-      {
-        // english is default, so if the language is english allow null values
-        if( 'en' == $restrict_language )
-        {
-          $modifier->where_bracket( true );
-          $modifier->where( 'participant.language', '=', $restrict_language );
-          $modifier->or_where( 'participant.language', '=', NULL );
-          $modifier->where_bracket( false );
-        }
-        else $modifier->where( 'participant.language', '=', $restrict_language );
-      }
+      $restrict_language_id = $this->get_argument( 'restrict_language_id', 'any' );
+      $this->set_variable( 'restrict_language_id', $restrict_language_id );
     }
 
     foreach( $this->get_record_list( $modifier ) as $db_assignment )
@@ -243,6 +231,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
    */
   public function determine_record_count( $modifier = NULL )
   {
+    $database_class_name = lib::get_class_name( 'database\database' );
+
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
@@ -271,20 +261,15 @@ class assignment_list extends \cenozo\ui\widget\base_list
         }
       }
 
-      $restrict_language = $this->get_argument( 'restrict_language', 'any' );
+      $restrict_language_id = $this->get_argument( 'restrict_language_id', 'any' );
       // restrict by language
-      if( 'any' != $restrict_language )
+      if( 'any' != $restrict_language_id )
       {
-        // english is default, so if the language is english allow null values
-        if( 'en' == $restrict_language )
-        {
-          if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-          $modifier->where_bracket( true );
-          $modifier->where( 'participant.language', '=', $restrict_language );
-          $modifier->or_where( 'participant.language', '=', NULL );
-          $modifier->where_bracket( false );
-        }
-        else $modifier->where( 'participant.language', '=', $restrict_language );
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+        $column = sprintf( 'IFNULL( participant.language_id, %s )',
+                           $database_class_name::format_string(
+                             $session->get_service()->language_id ) );
+        $modifier->where( $column, '=', $restrict_language_id );
       }
     }
 
@@ -332,20 +317,15 @@ class assignment_list extends \cenozo\ui\widget\base_list
         }
       }
 
-      $restrict_language = $this->get_argument( 'restrict_language', 'any' );
+      $restrict_language_id = $this->get_argument( 'restrict_language_id', 'any' );
       // restrict by language
-      if( 'any' != $restrict_language )
+      if( 'any' != $restrict_language_id )
       {
-        // english is default, so if the language is english allow null values
-        if( 'en' == $restrict_language )
-        {
-          if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-          $modifier->where_bracket( true );
-          $modifier->where( 'participant.language', '=', $restrict_language );
-          $modifier->or_where( 'participant.language', '=', NULL );
-          $modifier->where_bracket( false );
-        }
-        else $modifier->where( 'participant.language', '=', $restrict_language );
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+        $column = sprintf( 'IFNULL( participant.language_id, %s )',
+                           $database_class_name::format_string(
+                             $session->get_service()->language_id ) );
+        $modifier->where( $column, '=', $restrict_language_id );
       }
     }
 
