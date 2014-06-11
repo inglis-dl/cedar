@@ -105,18 +105,20 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     if( !is_null( $word_candidate ) )
     {
       $db_dictionary = $db_test_entry->get_test()->get_dictionary();
-      $language = NULL;
+      $db_language = NULL;
       $db_assignment = $db_test_entry->get_assignment();
       if( is_null( $db_assignment ) )
-        $language = $db_test_entry->get_participant()->language;
+        $db_language = $db_test_entry->get_participant()->get_language();
       else
-        $language = $db_assignment->get_participant()->language;
-      $language = is_null( $language ) ? 'en' : $language;
+        $db_language = $db_assignment->get_participant()->get_language();
+
+      if( is_null( $db_language ) )
+        $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
       // does the word candidate exist in the primary dictionary?
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
-      $modifier->where( 'language', '=', $language );
+      $modifier->where( 'language_id', '=', $db_language->id );
       $modifier->where( 'word', '=', $word_candidate );
       $modifier->limit( 1 );
 
@@ -135,15 +137,13 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
         $db_new_word = lib::create( 'database\word' );
         $db_new_word->dictionary_id = $db_dictionary->id;
         $db_new_word->word = $word_candidate;
-        $db_new_word->language = $language;
+        $db_new_word->language_id = $db_language->id;
         $db_new_word->save();
         $db_test_entry_alpha_numeric->word_id = $word_class_name::db()->insert_id();
       }
     }
     else
-    {
       $db_test_entry_alpha_numeric->word_id = NULL;
-    }
 
     $db_test_entry_alpha_numeric->save();
 

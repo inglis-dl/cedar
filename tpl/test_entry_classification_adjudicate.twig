@@ -72,7 +72,7 @@
       args["dictionary_id"] = {{ dictionary_id }};
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      args["language"] = "{{ language }}";
+      args["language_id"] = {{ language_id }};
       args["words_only"] = 1;
       return ajax_pull( "word", "list", args );
     }
@@ -114,7 +114,7 @@
             if( 0 != candidate.length ) {
               var args = new Object();
               args.id = {{ test_id }};
-              args["language"] = "{{ language }}";
+              args["language_id"] = {{ language_id }};
               args["word_candidate"] = candidate;
               var classification = ajax_pull( "test", "classify_word", args );
               $( target_text_id ).addClass( classification );
@@ -178,7 +178,7 @@
           if( 0 != candidate.length ) {
             var args = new Object();
             args.id = {{ test_id }};
-            args["language"] = "{{ language }}";
+            args["language_id"] = {{ language_id }};
             args["word_candidate"] = candidate;
             var classification = ajax_pull( "test", "classify_word", args );
             $(this).addClass( classification );

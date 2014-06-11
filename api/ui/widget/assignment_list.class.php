@@ -181,9 +181,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $test_entry_mod->where( 'adjudicate', '=', true );
           $test_entry_mod->where( 'deferred', '=', false );
           $test_entry_mod->where( 'completed', '=', true );
-          $test_entry_mod->order( 'test.rank' );
-          $test_entry_mod->limit( 1 );
-
           $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
           if( false !== $db_test_entry )
           {
@@ -192,10 +189,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
             $sibling_mod->where( 'adjudicate', '=', true );
             $sibling_mod->where( 'deferred', '=', false );
             $sibling_mod->where( 'completed', '=', true );
-            $sibling_mod->where( 'assignment_id', '=', $db_sibling_assignment->id );
-            $sibling_mod->where( 'test_id', '=', $db_test_entry->test_id );
-            $db_sibling_test_entry = current( $test_entry_class_name::select( $sibling_mod ) );
-            if( false !== $db_sibling_test_entry )
+            if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) )
             {
               $test_entry_id = $db_test_entry->id;
               $allow_adjudicate = true;

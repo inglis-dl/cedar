@@ -42,9 +42,10 @@ class test_entry_view extends \cenozo\ui\widget\base_view
 
     // add items to the view
     $this->add_item( 'participant.uid', 'constant', 'UID' );
-    $this->add_item( 'cohort', 'constant', 'Cohort' );
-    $this->add_item( 'language', 'constant', 'Language' );
+    $this->add_item( 'cohort.name', 'constant', 'Cohort' );
+    $this->add_item( 'language.name', 'constant', 'Language' );
     $this->add_item( 'user.name', 'constant', 'Typist' );
+    $this->add_item( 'test.name', 'constant', 'Test' );
     $this->add_item( 'test.name', 'constant', 'Test' );
     $this->add_item( 'audio_status', 'enum', 'Audio Status' );
     $this->add_item( 'participant_status', 'enum', 'Participant Status' );
@@ -81,11 +82,15 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $db_assignment = $db_test_entry->get_assignment();
     $db_test = $db_test_entry->get_test();
     $db_participant = $db_assignment->get_participant();
+
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
+
     // set the view's items
     $this->set_item( 'participant.uid', $db_participant->uid );
-    $this->set_item( 'cohort', $db_participant->get_cohort()->name );
-    $this->set_item( 'language',
-      is_null( $db_participant->language ) ? 'en' : $db_participant->language );
+    $this->set_item( 'cohort.name', $db_participant->get_cohort()->name );
+    $this->set_item( 'language.name', $db_language->name );
     $this->set_item( 'user.name', $db_assignment->get_user()->name );
     $this->set_item( 'test.name', $db_test->name );
 
@@ -115,7 +120,8 @@ class test_entry_view extends \cenozo\ui\widget\base_view
 
     $this->set_item( 'deferred', $db_test_entry->deferred  );
     $this->set_item( 'completed', $db_test_entry->completed );
-    $this->set_item( 'adjudicate', $db_test_entry->adjudicate ? 'Yes' : 'No' );
+    $this->set_item( 'adjudicate',
+      is_null( $db_test_entry->adjudicate ) || $db_test_entry->adjudicate == false ? 'No' : 'Yes' );
 
     try
     {

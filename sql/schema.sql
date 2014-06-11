@@ -181,29 +181,6 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `cedar`.`recording`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `cedar`.`recording` ;
-
-CREATE TABLE IF NOT EXISTS `cedar`.`recording` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `update_timestamp` TIMESTAMP NOT NULL,
-  `create_timestamp` TIMESTAMP NOT NULL,
-  `participant_id` INT UNSIGNED NOT NULL,
-  `file_name` VARCHAR(45) NOT NULL,
-  `language` ENUM('any','en','fr') NOT NULL DEFAULT 'en',
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `uq_file_name` (`file_name` ASC),
-  INDEX `fk_participant_id` (`participant_id` ASC),
-  CONSTRAINT `fk_recording_participant_id`
-    FOREIGN KEY (`participant_id`)
-    REFERENCES `cenozo`.`participant` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `cedar`.`dictionary`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `cedar`.`dictionary` ;
@@ -229,14 +206,20 @@ CREATE TABLE IF NOT EXISTS `cedar`.`word` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `dictionary_id` INT UNSIGNED NOT NULL,
-  `language` ENUM('en','fr') NOT NULL DEFAULT 'en',
+  `language_id` INT UNSIGNED NOT NULL,
   `word` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_dictionary_id` (`dictionary_id` ASC),
-  UNIQUE INDEX `uq_dictionary_id_language_word` (`word` ASC, `dictionary_id` ASC, `language` ASC),
+  UNIQUE INDEX `uq_word_dictionary_id_language_id` (`word` ASC, `dictionary_id` ASC, `language_id` ASC),
+  INDEX `fk_language_id` (`language_id` ASC),
   CONSTRAINT `fk_word_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_word_language_id`
+    FOREIGN KEY (`language_id`)
+    REFERENCES `cenozo`.`language` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -441,27 +424,13 @@ CREATE TABLE IF NOT EXISTS `cedar`.`ranked_word_set` (
   `update_timestamp` TIMESTAMP NOT NULL,
   `create_timestamp` TIMESTAMP NOT NULL,
   `test_id` INT UNSIGNED NOT NULL,
-  `word_en_id` INT UNSIGNED NOT NULL,
-  `word_fr_id` INT UNSIGNED NOT NULL,
   `rank` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
-  INDEX `fk_word_en_id` (`word_en_id` ASC),
-  INDEX `fk_word_fr_id` (`word_fr_id` ASC),
   UNIQUE INDEX `uq_test_id_rank` (`test_id` ASC, `rank` ASC),
   CONSTRAINT `fk_ranked_word_set_test_id`
     FOREIGN KEY (`test_id`)
     REFERENCES `cedar`.`test` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_ranked_word_set_word_en_id`
-    FOREIGN KEY (`word_en_id`)
-    REFERENCES `cedar`.`word` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_ranked_word_set_word_fr_id`
-    FOREIGN KEY (`word_fr_id`)
-    REFERENCES `cedar`.`word` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -691,6 +660,37 @@ CREATE TABLE IF NOT EXISTS `cedar`.`user_time` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+
+-- -----------------------------------------------------
+-- Table `cedar`.`ranked_word_set_has_language`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`ranked_word_set_has_language` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`ranked_word_set_has_language` (
+  `ranked_word_set_id` INT UNSIGNED NOT NULL,
+  `language_id` INT UNSIGNED NOT NULL,
+  `word_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`ranked_word_set_id`, `language_id`),
+  INDEX `fk_language_id` (`language_id` ASC),
+  INDEX `fk_ranked_word_set_id` (`ranked_word_set_id` ASC),
+  INDEX `fk_word_id` (`word_id` ASC),
+  CONSTRAINT `fk_ranked_word_set_has_language_ranked_word_set_id`
+    FOREIGN KEY (`ranked_word_set_id`)
+    REFERENCES `cedar`.`ranked_word_set` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_ranked_word_set_has_language_language_id`
+    FOREIGN KEY (`language_id`)
+    REFERENCES `cenozo`.`language` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_ranked_word_set_has_language_word_id`
+    FOREIGN KEY (`word_id`)
+    REFERENCES `cedar`.`word` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
 USE `cedar` ;
 
 -- -----------------------------------------------------
@@ -854,16 +854,15 @@ DROP VIEW IF EXISTS `cedar`.`ranked_word_word_total` ;
 DROP TABLE IF EXISTS `cedar`.`ranked_word_word_total`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `ranked_word_word_total` AS
-SELECT w.id AS word_id, COUNT(terw.id) + (COUNT(rws1.id) + COUNT( rws2.id)) DIV 2 AS total, w.dictionary_id AS dictionary_id FROM word w
+SELECT w.id AS word_id, COUNT(terw.id) + COUNT(terw1.id) AS total, w.dictionary_id AS dictionary_id FROM word w
 LEFT JOIN test_entry_ranked_word terw ON terw.word_id=w.id
+LEFT JOIN ranked_word_set_has_language AS rwshl ON rwshl.word_id=w.id
+LEFT JOIN ranked_word_set AS rws ON rws.id=rwshl.ranked_word_set_id
+LEFT JOIN test_entry_ranked_word AS terw1 ON terw1.ranked_word_set_id=rws.id 
 LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
 LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
 LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
 LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
-LEFT JOIN ranked_word_set AS rws1 ON rws1.word_en_id=w.id
-LEFT JOIN ranked_word_set AS rws2 ON rws2.word_fr_id=w.id
-LEFT JOIN test_entry_ranked_word AS terw1 ON terw1.ranked_word_set_id=rws1.id
-LEFT JOIN test_entry_ranked_word AS terw2 ON terw2.ranked_word_set_id=rws2.id
 GROUP BY w.id;
 
 -- -----------------------------------------------------

@@ -103,12 +103,14 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
         $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
     }
 
-    $language = 'any';
     $db_participant = $db_assignment->get_participant();
-    $this->set_variable( 'participant_id', $db_assignment->get_participant()->id );
+    $this->set_variable( 'participant_id', $db_participant->id );
 
-    $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
-    $this->set_variable( 'language', $language );
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
+
+    $this->set_variable( 'language_id', $db_language->id );
 
     if( $db_participant->get_cohort()->name == 'tracking' )
     {

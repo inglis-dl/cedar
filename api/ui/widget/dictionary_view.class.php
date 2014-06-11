@@ -38,23 +38,19 @@ class dictionary_view extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
 
+    $language_class_name = lib::get_class_name( 'database\language' );
     $operation_class_name = lib::get_class_name( 'database\operation' );
-    $word_class_name = lib::get_class_name( 'database\word' );
 
     // create an associative array with everything we want to display about the dictionary
     $this->add_item( 'name', 'string', 'Name' );
 
-    $this->languages = $word_class_name::get_enum_values( 'language' );
-    foreach( $this->languages as $language )
-    {
-      $description = 'unknown language';
-      if( $language == 'en' )
-        $description = 'English';
-      elseif ( $language == 'fr' )
-        $description = 'French';
+    $language_mod = lib::create( 'database\modifier' );
+    $language_mod->where( 'active', '=', true );
 
-      $description = 'Number of ' . $description . ' words';
-      $this->add_item( 'words_' . $language, 'constant', $description );
+    foreach( $language_class_name::select( $language_mod ) as $db_language )
+    {
+      $description = 'Number of ' . $db_language->name . ' words';
+      $this->add_item( 'words_' . $db_language->code, 'constant', $description );
     }
     $this->add_item( 'description', 'text', 'Description' );
 
@@ -81,15 +77,19 @@ class dictionary_view extends \cenozo\ui\widget\base_view
   {
     parent::setup();
 
+    $language_class_name = lib::get_class_name( 'database\language' );
+    $language_mod = lib::create( 'database\modifier' );
+    $language_mod->where( 'active', '=', true );
+
     // set the view's items
     $db_dictionary = $this->get_record();
     $this->set_item( 'name', $db_dictionary->name, true );
 
-    foreach( $this->languages as $language )
+    foreach( $language_class_name::select( $language_mod ) as $db_language )
     {
       $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'language','=', $language );
-      $this->set_item( 'words_' . $language, $db_dictionary->get_word_count( $modifier ) );
+      $modifier->where( 'word.language_id','=', $db_language->id );
+      $this->set_item( 'words_' . $db_language->code, $db_dictionary->get_word_count( $modifier ) );
     }
 
     $this->set_item( 'description', $db_dictionary->description );
@@ -109,13 +109,4 @@ class dictionary_view extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $word_list = NULL;
-
-  /**
-   * The languages.
-   *
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @access protected
-   */
-  protected $languages = NULL;
-
 }

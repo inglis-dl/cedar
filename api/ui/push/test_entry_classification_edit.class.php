@@ -67,6 +67,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     parent::execute();
 
     $word_class_name = lib::get_class_name( 'database\word' );
+    $session = lib::create( 'business\session' );
 
     $db_test_entry_classification = $this->get_record();
     $db_test_entry = $db_test_entry_classification->get_test_entry();
@@ -85,19 +86,23 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
       // allow bilingual responses for FAS classification tests
       $db_test = $db_test_entry->get_test();
-      $language = 'any';
+      $db_language = NULL;
       $is_FAS = preg_match( '/FAS/', $db_test->name );
       if( !$is_FAS )
       {
         $db_assignment = $db_test_entry->get_assignment();
         if( is_null( $db_assignment ) )
-          $language = $db_test_entry->get_participant()->language;
+          $db_language = $db_test_entry->get_participant()->get_language();
         else
-          $language = $db_assignment->get_participant()->language;
-        $language = is_null( $language ) ? 'en' : $language;
+          $db_language = $db_assignment->get_participant()->get_language();
+
+        if( is_null( $db_language ) )
+        {
+          $db_language = $session->get_service()->get_language();
+        }
       }
 
-      $data = $db_test->get_word_classification( $word_candidate, $language );
+      $data = $db_test->get_word_classification( $word_candidate, $db_language );
       $classification = $data['classification'];
       $db_word = $data['word'];
 
@@ -166,15 +171,14 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
         // now the dictionary has been determined
 
-        // TODO: the language is either that of the participant or english, since this is a new
-        // word that has never been added to a dictionary.  The only way to be certain of
-        // which language is to be assigned is to pass it from the UI layer: consider adding
-        // a drop down list of languages to select from beside text entry fields
-
         $db_new_word = lib::create( 'database\word' );
         $db_new_word->dictionary_id = $db_dictionary->id;
         $db_new_word->word = $word_candidate;
-        $db_new_word->language = $language;
+        if( is_null( $db_language ) )
+        {
+          $db_language = $session->get_service()->get_language();
+        }
+        $db_new_word->language_id = $db_language->id;
         $db_new_word->save();
         $db_test_entry_classification->word_id = $word_class_name::db()->insert_id();
       }

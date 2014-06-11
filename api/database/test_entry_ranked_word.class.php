@@ -36,4 +36,33 @@ class test_entry_ranked_word extends \cenozo\database\record
     }
     return count( $rhs_list ) == count( $lhs_list );
   }
+
+  /**
+   * Get the word for this record.  The word returned depends on the
+   * state of the word_id, selection, and ranked_word_set_id columns.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   * @param database\language $db_language The language of the primary ranked word.
+   * @return database\word $db_word NULL if not found
+   */
+  public function get_word( $db_language = NULL )
+  {
+    $db_word = NULL;
+    if( is_null( $db_language ) )
+    {
+      if( !is_null( $this->word_id ) &&
+          ( ( is_null( $this->selection ) && is_null( $this->ranked_word_set_id ) ) ||
+            'variant' == $this->selection ) )
+      {
+        $db_word = $this->get_word();
+      }
+    }
+    else
+    {
+      if( !is_null( $this->ranked_word_set_id ) )
+        $db_word = $this->get_ranked_word_set()->get_word( $db_language );
+    }
+    return $db_word;
+  }
 }

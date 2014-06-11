@@ -264,6 +264,8 @@ class test_entry extends \cenozo\database\has_note
    * @param database\modifier $modifier Modifications to the selection.
    * @return db_test_entry (NULL if no sibling)
    * @access public
+   * @param database\modifier Modifier to refine the selection
+   * @return database\test_entry (NULL if no sibling)
    */
   public function get_sibling_test_entry( $modifier = NULL )
   {

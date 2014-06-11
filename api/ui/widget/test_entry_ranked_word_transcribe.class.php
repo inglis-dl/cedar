@@ -39,9 +39,9 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     $db_test = $db_test_entry->get_test();
     $db_participant = $db_test_entry->get_assignment()->get_participant();
 
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
-    $word_id = 'word_' . $language . '_id';
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'ranked_word_set.rank' );
@@ -50,8 +50,8 @@ class test_entry_ranked_word_transcribe extends base_transcribe
              $db_test_entry_ranked_word )
     {
       $db_ranked_word_set = $db_test_entry_ranked_word->get_ranked_word_set();
-      $db_ranked_word_set_word = is_null( $db_ranked_word_set ) ? NULL :
-        lib::create( 'database\word', $db_ranked_word_set->$word_id );
+      $db_ranked_word_set_word =
+        is_null( $db_ranked_word_set ) ? NULL : $db_ranked_word_set->get_word( $db_language );
 
       $selection = $db_test_entry_ranked_word->selection;
       $db_word = $db_test_entry_ranked_word->get_word();
@@ -77,6 +77,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
           'selection' => is_null( $selection ) ? '' : $selection,
           'classification' => $classification );
     }
+
     // now get the intrusions
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'ranked_word_set_id', '=', NULL );
