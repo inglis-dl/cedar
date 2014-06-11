@@ -1,7 +1,7 @@
 <?php
 /**
  * assignment_new.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class assignment_new extends \cenozo\ui\push\base_new
     parent::__construct( 'assignment', $args );
   }
 
-  /** 
+  /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -41,11 +41,11 @@ class assignment_new extends \cenozo\ui\push\base_new
 
     $columns = $this->get_argument( 'columns', array() );
     if( empty( $columns ) )
-    {  
+    {
       $this->arguments['columns'] = $columns;
     }
-     
-    if( ( !array_key_exists( 'user_id', $columns ) || 0 == strlen( $columns['user_id'] ) ) || 
+
+    if( ( !array_key_exists( 'user_id', $columns ) || 0 == strlen( $columns['user_id'] ) ) ||
         ( !array_key_exists( 'participant_id', $columns ) ||
           0 == strlen( $columns['participant_id'] ) ) )
     {
@@ -57,25 +57,26 @@ class assignment_new extends \cenozo\ui\push\base_new
 
       $db_participant = $assignment_class_name::get_next_available_participant( $db_user );
 
-      $session->release_semaphore();
-
       // throw a notice if no participant was found
-      if( is_null( $db_participant ) ) 
+      if( is_null( $db_participant ) )
+      {
+        $session->release_semaphore();
         throw lib::create( 'exception\notice',
           'There are currently no participants available for processing.', __METHOD__ );
-       
+      }
+
       $columns['user_id'] = $db_user->id;
       $columns['participant_id'] = $db_participant->id;
       $columns['cohort_name'] = $db_participant->get_cohort()->name;
       $this->arguments['columns'] = $columns;
-    }        
-        
+    }
+
     parent::prepare();
   }
 
-  /** 
+  /**
    * Finishes the operation with any post-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
@@ -86,5 +87,8 @@ class assignment_new extends \cenozo\ui\push\base_new
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::initialize_assignment( $this->get_record() );
+
+    $session = lib::create( 'business\session' );
+    $session->release_semaphore();
   }
 }

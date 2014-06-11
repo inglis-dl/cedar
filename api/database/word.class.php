@@ -1,7 +1,7 @@
 <?php
 /**
  * word.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,9 +14,9 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class word extends \cenozo\database\record
 {
-  /** 
+  /**
    * Check whether the word contains disallowed characters
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @return boolean true if valid word
    * @access protected
@@ -32,14 +32,14 @@ class word extends \cenozo\database\record
       foreach( $word_list as $word )
       {
         if( !preg_match( '/^[A-Za-z\pL\-\']+$/', $word ) ) return false;
-      }  
+      }
       return true;
-    }  
+    }
   }
 
-  /** 
+  /**
    * Get the test_entry daughter table usage count for this word.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @return integer
@@ -47,8 +47,8 @@ class word extends \cenozo\database\record
    */
   public function get_usage_count()
   {
-    if( is_null( $this->id ) ) 
-    {   
+    if( is_null( $this->id ) )
+    {
       throw lib::create( 'exception\runtime',
         'Tried to get a usage count for a word with no id', __METHOD__ );
     }

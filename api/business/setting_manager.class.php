@@ -1,7 +1,7 @@
 <?php
 /**
  * setting_manager.class.php
- * 
+ *
  * @author Patrick Emond <emondpd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class setting_manager extends \cenozo\business\setting_manager
 {
   /**
    * Constructor.
-   * 
+   *
    * @author Patrick Emond <emondpd@mcmaster.ca>
    * @throws exception\argument
    * @access protected
@@ -34,7 +34,7 @@ class setting_manager extends \cenozo\business\setting_manager
       if( !array_key_exists( $category, $static_settings ) )
         throw lib::create( 'exception\argument',
           'static_settings['.$category.']', NULL, __METHOD__ );
-      
+
       $this->static_settings[$category] = $static_settings[$category];
     }
   }

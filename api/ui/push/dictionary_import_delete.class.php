@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_import_delete.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */

@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_new.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -29,7 +29,7 @@ class dictionary_new extends \cenozo\ui\push\base_new
 
   /**
    * Validate the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected

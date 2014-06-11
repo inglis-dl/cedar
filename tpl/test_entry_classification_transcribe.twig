@@ -1,6 +1,6 @@
 {##
  # test_entry_classfication_transcribe.twig
- # 
+ #
  # Transcribe a classification type test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -14,7 +14,7 @@
   <script type="text/javascript">
 
     var table_selector = "#{{ widget.full }}__entry_table";
-  
+
     function configure_ui() {
 
       // disable elements based on deferred status
@@ -34,31 +34,40 @@
         var numInput = 0;
         var lastEmpty = null;
         var numEmptyAdded = 0;
+        var has_null_status =
+          'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         $( table_selector + " input:text" ).each( function() {
           if( 0 < $(this).val().length ) {
             numFilled++;
           } else {
             if( !$(this).prop( "disabled" ) ) lastEmpty = $(this);
-            if( $(this).parent().hasClass( "added" ) ) numEmptyAdded++; 
-          }            
+            if( $(this).parent().hasClass( "added" ) ) numEmptyAdded++;
+          }
           numInput++;
         } );
 
         // only enable the next button when there is at least one entry filled
         // additionally, disable if there are any empty added fields
-        $( "#{{ parent.full }}_next" ).button( { disabled : 0 == numFilled || 0 < numEmptyAdded } );
+        $( "#{{ parent.full }}_next" ).button( { disabled : ( has_null_status && 0 == numFilled ) || 0 < numEmptyAdded } );
 
         // disable the Reset button if there is nothing to reset
-        $( "#{{ parent.full }}_reset" ).button( { disabled : 0 == numFilled } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : has_null_status && 0 == numFilled } );
 
         // only enable the add button when all inputs are filled
         $( "#{{ widget.full }}_add" ).button( { disabled : numFilled != numInput } );
-        
+
         if( null !== lastEmpty && numFilled != numInput ) {
           lastEmpty.focus();
         } else {
           $( table_selector + " input:text" ).last().blur();
+        }
+
+        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
+            'refused' == "{{ participant_status }}" ) {
+          $( table_selector + " input" ).each( function() {
+            $(this).prop( "disabled", true );
+          } );
         }
       }
     }
@@ -116,12 +125,12 @@
         // test if this is from an Added text input
         // if it is, the subject's edit class will use the uniqueness of
         // test_entry_id and rank to find the record to edit
-        var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );        
+        var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
         if( 0 == args.id ) {
           args.id = "";
           columns["rank"] = rank;
           columns["test_entry_id"] = {{ parent.id }};
-        }  
+        }
         columns["word_candidate"] = candidate;
         args.columns = columns;
 
@@ -143,12 +152,12 @@
                 source.sort();
                 $input_list.autocomplete( "option", "source", source );
               }
-            }  
+            }
           }
 
           // enable the next empty input
           var next_rank_id = "__" + ( rank + 1 );
-          $( table_selector + ' input:text[id$="' + 
+          $( table_selector + ' input:text[id$="' +
             next_rank_id + '"]' ).prop( "disabled", false );
 
           configure_ui();
@@ -197,12 +206,12 @@
         // create a new classification test entry
         var args = new Object();
         var columns =  new Object();
-        columns["test_entry_id"] = {{ parent.id }};          
+        columns["test_entry_id"] = {{ parent.id }};
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
           update_input_list();
           configure_ui();
-        }                          
+        }
       } );// end Add button click
 
     } );
@@ -223,8 +232,8 @@
     {% set imax = entry_data|length-1 %}
     {% if numcell > imax %}
       {% set numcell = imax %}
-    {% endif %}  
-    
+    {% endif %}
+
     {% for i in range(0, imax, numcell) %}
 
       <tr>
@@ -232,7 +241,7 @@
       {% set kmax = i+numcell-1 %}
       {% if kmax > imax %}
         {% set kmax = imax %}
-      {% endif %}  
+      {% endif %}
       {% for k in i..kmax %}
 
         {% set value = '' %}
@@ -246,13 +255,13 @@
            id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
            {% if entry_data[k].classification is defined %}
              class="{{ entry_data[k].classification }}"
-           {% endif %}  
-           
+           {% endif %}
+
            {% if editable == 0 %}
              { readonly }
            {% endif %}
 
-           {% if status == 'empty'  %} 
+           {% if status == 'empty'  %}
              {% if kprev == 'false' %}
                { disabled }
              {% endif %}
@@ -260,7 +269,7 @@
            {% elseif status == 'word' %}
                {% set kprev = 'true' %}
            {% endif %}
-           
+
            value="{{ value }}"/>
         </td>
 
@@ -276,7 +285,7 @@
           <button class="{{ widget.full }}__add_entry"
             style="float:right"
             id="{{ widget.full }}_add">Add</button>
-        </td>     
+        </td>
       </tr>
       {% endif %}
 

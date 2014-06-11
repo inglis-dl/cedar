@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_confirmation_transcribe.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,7 +14,7 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test_entry_confirmation_transcribe extends base_transcribe
 {
-  /** 
+  /**
    * Constructor.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -25,9 +25,9 @@ class test_entry_confirmation_transcribe extends base_transcribe
     parent::__construct( 'test_entry_confirmation', $args );
   }
 
-  /** 
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -51,15 +51,15 @@ class test_entry_confirmation_transcribe extends base_transcribe
         "count from 1 to 20, from 1, 2, 3, 4 and so on?";
     }
 
-    $db_test_entry_confirmation = 
+    $db_test_entry_confirmation =
       $test_entry_confirmation_class_name::get_unique_record( 'test_entry_id', $db_test_entry->id );
 
-    $entry_data = 
+    $entry_data =
       array( 'id' => $db_test_entry_confirmation->id,
              'confirmation' => is_null( $db_test_entry_confirmation->confirmation ) ? '' :
                                         $db_test_entry_confirmation->confirmation,
              'instruction' => $instruction );
 
-    $this->set_variable( 'entry_data', $entry_data );                     
+    $this->set_variable( 'entry_data', $entry_data );
   }
 }

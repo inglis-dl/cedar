@@ -1,6 +1,6 @@
 {##
  # test_entry_confirmation_transcribe.twig
- # 
+ #
  # Transcribe a confirmation test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -28,11 +28,21 @@
         } );
       } else {
         // only enable the next button when there is at least one entry filled
-        var disable = 0 == $( table_selector + ' input[type="radio"]:checked' ).length;
+        var has_null_status =
+          'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
+        var disable =
+          0 == $( table_selector + ' input[type="radio"]:checked' ).length && has_null_status;
         $("#{{ parent.full }}_next").button( { disabled : disable } );
 
         // disable the Reset button if there is nothing to reset
         $( "#{{ parent.full }}_reset" ).button( { disabled : disable } );
+
+        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
+            'refused' == "{{ participant_status }}" ) {
+          $( table_selector + " input" ).each( function() {
+            $(this).prop( "disabled", true );
+          } );
+        }
       }
     }
 
@@ -58,7 +68,7 @@
 {% endblock javascript %}
 
 {% block widget %}
-    
+
   <div class="spacer"></div>
 
   <caption style="text-align: left;"><strong>{{ entry_data.instruction }}</strong></caption>
@@ -66,7 +76,7 @@
   <div class="spacer"></div>
 
   <table id="{{ widget.full }}__entry_table" style="width:20%">
-      
+
     <thead>
       <tr>
         <th>Yes</th>

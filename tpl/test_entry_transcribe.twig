@@ -1,6 +1,6 @@
 {##
  # test_entry_transcribe.twig
- # 
+ #
  # Extends the base_record template for transcribing recordings.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
@@ -22,7 +22,17 @@
         false
       );
     }
-  
+
+    function configure() {
+      var audio_state = $( "#{{ widget.full }}__audio_status option:selected" ).val();
+      var participant_state = $( "#{{ widget.full }}__participant_status option:selected" ).val();
+      disable = audio_state == 'unusable' || audio_state == 'unavailable' ||
+                participant_state == 'refused';
+      if( {{ deferred }} ) disable = true;
+      $( "#{{ widget.full }}__audio_status" ).prop( "disabled", disable );
+      $( "#{{ widget.full }}__participant_status" ).prop( "disabled", disable );
+    }
+
     $( function () {
 
       // go on break button
@@ -36,39 +46,52 @@
       $( "#{{ widget.full }}__audio_status" ).change( function() {
         var state = $( "#{{ widget.full }}__audio_status option:selected" ).val();
         if( 'unavailable' == state ) {
-          $( "#{{ widget.full }}_defer" ).click();
-        }
-        var args = new Object();
-        args.columns = { audio_status : 'NULL' == state ? '' : state };
-        args.id = {{ id }};
-        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          if( 'unusable' == state ) {
-            $( "#{{ widget.full }}_next" ).button( { disabled : false } );
-            $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
-            $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
+          $( "#{{ widget.full }}_defer" ).trigger( "click", function( push = false) {
+            var audio_select = "#{{ widget.full }}__audio_status";
+            var columns = new Object();
+            var state = $( audio_select + ' option:selected' ).val();
+            if( push ) {
+              columns['deferred'] = 1;
+            } else {
+              state = 'NULL';
+              $( audio_select + ' option:selected' ).val( 'NULL' );
+            }
+            columns['audio_status'] = 'NULL' == state ? '' : state;
+            var args = new Object();
+            args.id = {{ id }};
+            args.columns = columns;
+            if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+              configure();
+              slot_refresh( {{ slot }} );
+            }
+          } );
+        } else {
+          var args = new Object();
+          args.columns = { audio_status : 'NULL' == state ? '' : state };
+          args.id = {{ id }};
+          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            configure();
+            slot_refresh( {{ slot }} );
           }
-        }  
+        }
       } ); // end Audio Status change
 
       $( "#{{ widget.full }}__participant_status" ).change( function() {
         var state = $( "#{{ widget.full }}__participant_status option:selected" ).val();
         var args = new Object();
-        args.columns = { participant_status : 'NULL' == state ? '' : state };
         args.id = {{ id }};
+        args.columns = { participant_status : 'NULL' == state ? '' : state };
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          if( 'refused' == state ) {
-            $( "#{{ widget.full }}_next" ).button( { disabled : false } );
-            $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
-            $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
-          }
+          configure();
+          slot_refresh( {{ slot }} );
         }
       } ); // end Participant Status change
-      
+
       $("#{{ widget.full }}_quit").click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end quit click
 
-      $( "#{{ widget.full }}_defer" ).click( function() {
+      $( "#{{ widget.full }}_defer" ).click( function( e, callback ) {
 
         $dialog = $( "#{{ widget.full }}__note_dialog" );
         var buttons = new Object;
@@ -77,24 +100,23 @@
           if( 0 == note.length ) {
             error_dialog( "Error", "You cannot leave a blank note." );
           } else {
-            var args = new Object();
-            args.columns = { deferred : 1 };
-            args.id = {{ id }};
-            if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            args = new Object();
+            args.note = note;
+            args.category = "{{ widget.subject }}";
+            args.category_id = {{ id }};
 
-              args = new Object();
-              args.note = note;
-              args.category = "{{ widget.subject }}";
-              args.category_id = {{ id }};
-              
-              if( ajax_push( "note", "new", args ) ) {
-                $dialog.dialog( "close" );
+            if( ajax_push( "note", "new", args ) ) {
+              $dialog.dialog( "close" );
 
-                $( "#{{ widget.full }}_next" ).button( { disabled : false } );
-                $( "#{{ widget.full }}_reset" ).button( { disabled : true } );
-                $( "#{{ widget.full }}_defer" ).button( { disabled : true } );
-
-                slot_refresh( {{ slot }} );
+              if( typeof callback === "function" ) {
+                callback( true );
+              } else {
+                var args = new Object();
+                args.columns = { deferred : 1 };
+                args.id = {{ id }};
+                if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+                  slot_refresh( {{ slot }} );
+                }
               }
             }
           }
@@ -106,8 +128,7 @@
             error_dialog( "Error",
               "You cannot leave a blank note when setting audio status as unavaiable." +
               "Resetting audio state to the default unset state." );
-            $audio_select.val( 'NULL' );
-            $audio_select.change();
+            if( typeof callback === "function" ) callback();
           }
           $dialog.dialog( "close" );
         };
@@ -198,7 +219,7 @@
         <select id="{{ widget.full }}__audio_status"
           class="ui-state-default"
           style="width: 100%"
-          {% if editable == 0 %}
+          {% if editable == 0 or deferred == 1 %}
             { disabled }
           {% endif %}>
           {% for status_id, status in audio_status_list %}
@@ -215,7 +236,7 @@
         <select id="{{ widget.full }}__participant_status"
           class="ui-state-default"
           style="width: 100%"
-          {% if editable == 0 %}
+          {% if editable == 0 or deferred == 1 %}
             { disabled }
           {% endif %}>
           {% for status_id, status in participant_status_list %}
@@ -240,7 +261,7 @@
       {% from 'macros.twig' import confirm_buttons %}
         {{ confirm_buttons( slot, widget.full,
           ['defer', 'reset', 'prev', 'next', 'quit'], '', 'right', true ) }}
-    {% endif %}     
+    {% endif %}
   </div>
 
   <div id="{{ widget.full }}__note_dialog"></div>

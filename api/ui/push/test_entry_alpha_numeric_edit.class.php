@@ -113,10 +113,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
         $db_language = $db_assignment->get_participant()->get_language();
 
       if( is_null( $db_language ) )
-      {
-        $session = lib::create( 'business\session' );
-        $db_language = $session->get_service()->get_language();
-      }
+        $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
       // does the word candidate exist in the primary dictionary?
       $modifier = lib::create( 'database\modifier' );
@@ -146,9 +143,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       }
     }
     else
-    {
       $db_test_entry_alpha_numeric->word_id = NULL;
-    }
 
     $db_test_entry_alpha_numeric->save();
 

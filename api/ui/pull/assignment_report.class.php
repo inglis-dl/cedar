@@ -1,7 +1,7 @@
 <?php
 /**
  * assignment_report.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -11,14 +11,14 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * Consent form report data.
- * 
+ *
  * @abstract
  */
 class assignment_report extends \cenozo\ui\pull\base_report
 {
   /**
    * Constructor
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string $subject The subject to retrieve the primary information from.
    * @param array $args Pull arguments.
@@ -38,10 +38,10 @@ class assignment_report extends \cenozo\ui\pull\base_report
   {
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $event_type_class_name = lib::get_class_name( 'database\event_type' );
-    $participant_class_name = lib::get_class_name( 'database\participant' ); 
+    $participant_class_name = lib::get_class_name( 'database\participant' );
     $cohort_class_name = lib::get_class_name( 'database\cohort' );
     $role_class_name = lib::get_class_name( 'database\role' );
-    $site_class_name = lib::get_class_name( 'database\site' );   
+    $site_class_name = lib::get_class_name( 'database\site' );
     $user_class_name = lib::get_class_name( 'database\user' );
 
     $restrict_start_date = $this->get_argument( 'restrict_start_date' );
@@ -55,7 +55,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
     if( $restrict_site_id )
       $site_mod->where( 'id', '=', $restrict_site_id );
 
-    // get the total number of possible participants in each cohort 
+    // get the total number of possible participants in each cohort
     // with completed baseline interviews
     $base_cati_mod = lib::create( 'database\modifier' );
     $base_cati_mod->where( 'event.event_type_id', '=',
@@ -107,7 +107,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
     {
       $assignment_mod = lib::create( 'database\modifier' );
       $assignment_mod->order( 'start_datetime' );
-      $assignment_mod->limit( 1 );        
+      $assignment_mod->limit( 1 );
       $db_assignment = current( $assignment_class_name::select( $assignment_mod ) );
       if( false !== $db_assignment )
         $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
@@ -128,7 +128,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj->format( 'Y' ),
       $end_datetime_obj->format( 'n' ),
       2 );
-    
+
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
 
     $site_list = $site_class_name::select( $site_mod );
@@ -153,7 +153,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       // skip if no users at this site
       if( 0 == count( $id_list ) )
       {
-        $this->add_table( $title, $header, array( '--','--', 0, '0', 0, '0' ), $footer );        
+        $this->add_table( $title, $header, array( '--','--', 0, '0', 0, '0' ), $footer );
         continue;
       }
 
@@ -175,7 +175,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $complete_mod->where( 'user_id', 'IN', $id_list );
         $complete_mod->where( 'end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $complete_mod->where( 'end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-          
+
         $complete_list = array_fill_keys( array_keys( $cohort_list ), array() );
         foreach( $assignment_class_name::select( $complete_mod ) as $db_assignment )
         {
@@ -186,7 +186,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
           if( array_key_exists( $db_participant->id, $complete_list[$cohort_name] ) )
           {
             $complete_list[$cohort_name][$db_participant->id]++;
-          }  
+          }
           else
           {
             $complete_list[$cohort_name][$db_participant->id] = 1;
@@ -203,10 +203,10 @@ class assignment_report extends \cenozo\ui\pull\base_report
             array_count_values( array_values( $complete_list[$cohort_name] ) );
 
           // number completed by two typists
-          $num_complete = 
+          $num_complete =
             array_key_exists( '2', $complete_values ) ? $complete_values['2'] : 0;
           // number completed by one typist
-          $num_partial = 
+          $num_partial =
             array_key_exists( '1', $complete_values ) ? $complete_values['1'] : 0;
 
           // number started but not completed
@@ -231,7 +231,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
           if( !array_key_exists( $key, $summary_content ) )
           {
             $summary_content[ $key ] = $row;
-          }  
+          }
           else
           {
             for( $i = 2; $i < count( $row ); $i++ )
@@ -248,7 +248,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $this->add_table( 'Summary (All Sites)',
         $header, array_values( $summary_content ), $footer );
     }
-    
+
     $status_heading =  array( 'Cohort', 'Closed', 'Remaining' );
     $status_content = array();
     $status_footer =  array( '--', 'sum()', 'sum()' );

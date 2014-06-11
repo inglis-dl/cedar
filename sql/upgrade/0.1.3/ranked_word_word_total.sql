@@ -3,9 +3,9 @@ DELIMITER //
 CREATE PROCEDURE patch_ranked_word_word_total()
   BEGIN
 
-    SELECT "Adding new ranked_word_word_total view" AS ""; 
+    SELECT "Adding new ranked_word_word_total view" AS "";
 
-    SET @test = ( 
+    SET @test = (
       SELECT COUNT(*)
       FROM information_schema.VIEWS
       WHERE TABLE_SCHEMA = DATABASE()
@@ -28,10 +28,10 @@ CREATE PROCEDURE patch_ranked_word_word_total()
       PREPARE statement FROM @sql;
       EXECUTE statement;
       DEALLOCATE PREPARE statement;
-     
-    END IF; 
+
+    END IF;
   END //
 DELIMITER ;
 
 CALL patch_ranked_word_word_total();
-DROP PROCEDURE IF EXISTS patch_ranked_word_word_total;       
+DROP PROCEDURE IF EXISTS patch_ranked_word_word_total;

@@ -55,11 +55,34 @@ class assignment_list extends \cenozo\ui\widget\base_list
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
-      if( $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
-        $this->set_heading( sprintf( '%s %s, restricted to %s',
+      $restrict_language = $this->get_argument( 'restrict_language', 'any' );
+      $restrict_on_state = $restrict_state_id != array_search( 'No restriction', $this->state_list );
+      $restrict_on_language = $restrict_language != 'any';
+      if( $restrict_on_state )
+      {
+        if( $restrict_on_language )
+        {
+          $this->set_heading( sprintf( '%s %s, restricted to %s %s assignments',
+            $this->get_subject(),
+            $this->get_name(),
+            $this->get_restrict_state_name( $restrict_state_id ),
+            $restrict_language == 'fr' ? 'French' : 'English' ) );
+         }
+         else
+         {
+          $this->set_heading( sprintf( '%s %s, restricted to %s assignments',
+            $this->get_subject(),
+            $this->get_name(),
+            $this->get_restrict_state_name( $restrict_state_id ) ) );
+         }
+      }
+      else if( $restrict_on_language )
+      {
+        $this->set_heading( sprintf( '%s %s, restricted to %s assignments',
           $this->get_subject(),
           $this->get_name(),
-          $this->get_restrict_state_name( $restrict_state_id ) ) );
+          $restrict_language == 'fr' ? 'French' : 'English' ) );
+      }
     }
   }
 
@@ -74,6 +97,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     parent::setup();
 
     $operation_class_name = lib::get_class_name( 'database\operation' );
+    $participant_class_name = lib::get_class_name( 'database\participant' );
     $test_class_name = lib::get_class_name( 'database\test' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
@@ -85,7 +109,34 @@ class assignment_list extends \cenozo\ui\widget\base_list
     // allow test_entry adjudicate via a adjudicate button on assignment rows
     $allow_adjudicate_operation = false;
 
-    foreach( $this->get_record_list() as $db_assignment )
+    $modifier = NULL;
+    if( $this->allow_restrict_state )
+    {
+      $languages = array( 'any' );
+      foreach( $participant_class_name::get_enum_values( 'language' ) as $language )
+        $languages[] = $language;
+      $this->set_variable( 'languages', $languages );
+
+      $restrict_language = $this->get_argument( 'restrict_language', 'any' );
+      $this->set_variable( 'restrict_language', $restrict_language );
+
+      $modifier = lib::create( 'database\modifier' );
+      // restrict by language
+      if( 'any' != $restrict_language )
+      {
+        // english is default, so if the language is english allow null values
+        if( 'en' == $restrict_language )
+        {
+          $modifier->where_bracket( true );
+          $modifier->where( 'participant.language', '=', $restrict_language );
+          $modifier->or_where( 'participant.language', '=', NULL );
+          $modifier->where_bracket( false );
+        }
+        else $modifier->where( 'participant.language', '=', $restrict_language );
+      }
+    }
+
+    foreach( $this->get_record_list( $modifier ) as $db_assignment )
     {
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
@@ -107,6 +158,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
       {
         $test_entry_mod = clone $base_mod;
         $test_entry_mod->where( 'completed', '=', false );
+        $test_entry_mod->where( 'deferred', '=', false );
         $test_entry_mod->order( 'test.rank' );
         $test_entry_mod->limit( 1 );
         $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
@@ -118,7 +170,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
         }
       }
       else if( $db_role->name == 'administrator' && $db_assignment->all_tests_complete() &&
-               $adjudicate_count > 0 )
+               0 < $adjudicate_count )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
         if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() &&
@@ -147,17 +199,19 @@ class assignment_list extends \cenozo\ui\widget\base_list
         }
       }
 
-      $this->add_row( $db_assignment->id,
-        array( 'start_datetime' => $db_assignment->start_datetime,
-               'participant.uid' => $db_participant->uid,
-               'cohort.name' => $db_participant->get_cohort()->name,
-               'user.name' => $db_assignment->get_user()->name,
-               'test_entry_total_deferred.deferred' => $deferred_count,
-               'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
-               'test_entry_total_completed.completed' =>  $completed_count,
-               'allow_transcribe' => $allow_transcribe,
-               'allow_adjudicate' => $allow_adjudicate,
-               'test_entry_id' => $test_entry_id ) );
+      $row = array(
+        'start_datetime' => $db_assignment->start_datetime,
+        'participant.uid' => $db_participant->uid,
+        'cohort.name' => $db_participant->get_cohort()->name,
+        'user.name' => $db_assignment->get_user()->name,
+        'test_entry_total_deferred.deferred' => $deferred_count,
+        'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
+        'test_entry_total_completed.completed' =>  $completed_count,
+        'allow_transcribe' => $allow_transcribe ? 1 : 0,
+        'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
+        'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id );
+
+      $this->add_row( $db_assignment->id, $row );
     }
 
     if( $this->allow_restrict_state )
@@ -216,6 +270,22 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $modifier->where( 'end_datetime', '=', NULL );
         }
       }
+
+      $restrict_language = $this->get_argument( 'restrict_language', 'any' );
+      // restrict by language
+      if( 'any' != $restrict_language )
+      {
+        // english is default, so if the language is english allow null values
+        if( 'en' == $restrict_language )
+        {
+          if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+          $modifier->where_bracket( true );
+          $modifier->where( 'participant.language', '=', $restrict_language );
+          $modifier->or_where( 'participant.language', '=', NULL );
+          $modifier->where_bracket( false );
+        }
+        else $modifier->where( 'participant.language', '=', $restrict_language );
+      }
     }
 
     return parent::determine_record_count( $modifier );
@@ -260,6 +330,22 @@ class assignment_list extends \cenozo\ui\widget\base_list
           // Open
           $modifier->where( 'end_datetime', '=', NULL );
         }
+      }
+
+      $restrict_language = $this->get_argument( 'restrict_language', 'any' );
+      // restrict by language
+      if( 'any' != $restrict_language )
+      {
+        // english is default, so if the language is english allow null values
+        if( 'en' == $restrict_language )
+        {
+          if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+          $modifier->where_bracket( true );
+          $modifier->where( 'participant.language', '=', $restrict_language );
+          $modifier->or_where( 'participant.language', '=', NULL );
+          $modifier->where_bracket( false );
+        }
+        else $modifier->where( 'participant.language', '=', $restrict_language );
       }
     }
 

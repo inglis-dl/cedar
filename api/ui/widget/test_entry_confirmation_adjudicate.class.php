@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_confirmation_adjudicate.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -14,7 +14,7 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class test_entry_confirmation_adjudicate extends base_adjudicate
 {
-  /** 
+  /**
    * Constructor.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -25,9 +25,9 @@ class test_entry_confirmation_adjudicate extends base_adjudicate
     parent::__construct( 'test_entry_confirmation', $args );
   }
 
-  /** 
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

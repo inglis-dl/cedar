@@ -50,7 +50,7 @@ CREATE PROCEDURE patch_service()
       SET @sql = CONCAT(
         "UPDATE ", @cenozo, ".service ",
         "JOIN ", @cenozo, ".event_type ",
-        "ON event_type.name = CONCAT( 'released to ', service.name ) ", 
+        "ON event_type.name = CONCAT( 'released to ', service.name ) ",
         "SET release_event_type_id = event_type.id" );
       PREPARE statement FROM @sql;
       EXECUTE statement;

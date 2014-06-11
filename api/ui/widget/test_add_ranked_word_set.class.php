@@ -1,7 +1,7 @@
 <?php
 /**
  * test_add_ranked_word_set.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class test_add_ranked_word_set extends \cenozo\ui\widget\base_add_record
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string $name The name of the ranked_word_set.

@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class dictionary_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the dictionary list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class dictionary_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,21 +37,21 @@ class dictionary_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
-    
+
     $this->add_column( 'name', 'string', 'Name', true );
     $this->add_column( 'words', 'number', 'Words', false );
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function setup()
   {
     parent::setup();
-    
+
     foreach( $this->get_record_list() as $record )
     {
       // assemble the row for this record

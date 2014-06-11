@@ -1,7 +1,7 @@
 <?php
 /**
  * productivity_report.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -11,14 +11,14 @@ use cenozo\lib, cenozo\log, cedar\util;
 
 /**
  * pull: productivity report
- * 
+ *
  * Generate a report file containing typist productivity info
  */
 class productivity_report extends \cenozo\ui\pull\base_report
 {
   /**
    * Constructor
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string $subject The subject to retrieve the primary information from.
    * @param array $args Pull arguments.
@@ -50,15 +50,15 @@ class productivity_report extends \cenozo\ui\pull\base_report
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
     $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
     $site_mod = lib::create( 'database\modifier' );
-    if( $restrict_site_id ) 
+    if( $restrict_site_id )
       $site_mod->where( 'id', '=', $restrict_site_id );
-    
+
     $restrict_start_date = $this->get_argument( 'restrict_start_date' );
     $restrict_end_date = $this->get_argument( 'restrict_end_date' );
     $now_datetime_obj = util::get_datetime_object();
     $start_datetime_obj = NULL;
     $end_datetime_obj = NULL;
-    
+
     if( $restrict_start_date )
     {
       $start_datetime_obj = util::get_datetime_object( $restrict_start_date );
@@ -81,7 +81,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
     // determine whether we are running the report for a single date or not
     $single_date = ( !is_null( $start_datetime_obj ) &&
                      !is_null( $end_datetime_obj ) &&
-                     $start_datetime_obj == $end_datetime_obj ) || 
+                     $start_datetime_obj == $end_datetime_obj ) ||
                    ( !is_null( $start_datetime_obj ) &&
                      $start_datetime_obj == $now_datetime_obj );
 
@@ -120,7 +120,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
           $assignment_mod->where( 'start_datetime', '>=',
             $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
         }
-        else if( $restrict_start_date && !$restrict_end_date ) 
+        else if( $restrict_start_date && !$restrict_end_date )
         {
           $activity_mod->where( 'datetime', '>=',
             $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
@@ -144,7 +144,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
         // if there was no time spent then ignore this user
         if( 0 == $total_time ) continue;
-        
+
         // Determine the number of completed assignments and their average length.
         //////////////////////////////////////////////////////////////////////////
         $num_complete    = 0;
@@ -183,19 +183,19 @@ class productivity_report extends \cenozo\ui\pull\base_report
                 // if they match, then this user sourced the entries meaning the companion
                 // user was in error
                 if( !$db_test_entry->compare( $db_adjudicate_test_entry ) ) $num_adjudicate++;
-              }              
+              }
             } // end loop on test entries
           }
           else
           {
             $num_incomplete++;
-          }  
+          }
 
         } // end loop on assignments
 
         // if there were no completed assignments then ignore this user
         if( 0 == ( $num_complete + $num_incomplete ) ) continue;
-        
+
         // Now we can use all the information gathered above to fill in the contents of the table.
         ///////////////////////////////////////////////////////////////////////////////////////////
         if( $single_date )
@@ -209,7 +209,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
             $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
           $day_activity_mod->where( 'datetime', '<=',
             $start_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
-          
+
           $min_datetime_obj = $activity_class_name::get_min_datetime( $day_activity_mod );
           $max_datetime_obj = $activity_class_name::get_max_datetime( $day_activity_mod );
 
@@ -241,7 +241,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
             0 < $total_time ?
               sprintf( '%0.2f', ( $num_complete + $num_incomplete ) / $total_time ) : '' );
         }
- 
+
         $grand_total_defer      += $num_defer;
         $grand_total_adjudicate += $num_adjudicate;
         $grand_total_complete   += $num_complete;
@@ -249,7 +249,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $grand_total_time       += $total_time;
       }
 
-      $average_complete_PH = 0 < $grand_total_time ? sprintf( '%0.2f', 
+      $average_complete_PH = 0 < $grand_total_time ? sprintf( '%0.2f',
         $grand_total_complete / $grand_total_time ) : 'N/A';
       $average_assignment_PH = 0 < $grand_total_time ? sprintf( '%0.2f',
         ( $grand_total_complete +  $grand_total_incomplete ) / $grand_total_time ) : 'N/A';

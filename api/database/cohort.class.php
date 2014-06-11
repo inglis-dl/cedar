@@ -1,7 +1,7 @@
 <?php
 /**
  * cohort.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */

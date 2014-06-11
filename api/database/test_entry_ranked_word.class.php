@@ -34,7 +34,7 @@ class test_entry_ranked_word extends \cenozo\database\record
       next( $rhs_list );
       next( $lhs_list );
     }
-    return count( $rhs_list ) != count( $lhs_list );
+    return count( $rhs_list ) == count( $lhs_list );
   }
 
   /**

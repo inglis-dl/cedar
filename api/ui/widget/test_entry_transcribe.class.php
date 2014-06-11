@@ -93,9 +93,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $audio_status_list = array_reverse( $audio_status_list, true );
     $audio_status_list['NULL'] = '';
     $audio_status_list = array_reverse( $audio_status_list, true );
+    $audio_status = array_search( $db_test_entry->audio_status, $audio_status_list );
 
-    $this->set_variable( 'audio_status',
-      array_search( $db_test_entry->audio_status, $audio_status_list ) );
+    $this->set_variable( 'audio_status', $audio_status );
     $this->set_variable(  'audio_status_list', $audio_status_list );
 
     $participant_status_list = $test_entry_class_name::get_enum_values( 'participant_status' );
@@ -111,8 +111,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
              $participant_status_list['prompted'] );
     }
 
-    $this->set_variable( 'participant_status',
-      array_search( $db_test_entry->participant_status, $participant_status_list ) );
+    $participant_status =
+      array_search( $db_test_entry->participant_status, $participant_status_list );
+    $this->set_variable( 'participant_status', $participant_status );
     $this->set_variable(  'participant_status_list', $participant_status_list );
 
     $this->set_variable( 'deferred', $db_test_entry->deferred );
@@ -142,7 +143,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     // allow bilingual responses for FAS tests if both the typist and the participant speak french
     $db_participant = $db_test_entry->get_assignment()->get_participant();
-
     $db_language = $db_participant->get_language();
     if( is_null( $db_language ) )
     {
