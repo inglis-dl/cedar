@@ -166,8 +166,8 @@ class assignment extends \cenozo\database\record
 
   /**
    * Returns whether all tests constituting this assignment are complete.
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param string the role for which completeness is to be determined
    * @return boolean
    * @access public
    */
@@ -185,15 +185,15 @@ class assignment extends \cenozo\database\record
       '( '.
         '( '.
           'SELECT COUNT(*) FROM test_entry '.
-          'JOIN assignment ON assignment.id=test_entry.assigment_id '.
+          'JOIN assignment ON assignment.id = test_entry.assigment_id '.
           'WHERE assignment.id = %s '.
         ') - '.
         '( '.
           'SELECT COUNT(*) FROM test_entry '.
-          'JOIN assignment ON assignment.id=test_entry.assigment_id '.
+          'JOIN assignment ON assignment.id = test_entry.assigment_id '.
           'WHERE assignment.id = %s '.
-          'AND deferred = 0 '.
-          'AND completed = 1 '.
+          'AND deferred = false '.
+          'AND completed = true '.
         ') '.
       ')', $this->id );
 
