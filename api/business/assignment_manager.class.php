@@ -212,13 +212,21 @@ class assignment_manager extends \cenozo\singleton
     // no further processing is required for an adjudicate entry
     if( is_null( $db_test_entry->participant_id ) )
     {
+      $db_assignment = $db_test_entry->get_assignment();
+
       // check if the assignment can be completed
       if( $db_test_entry->completed && !$db_test_entry->deferred )
       {
-        $db_assignment = $db_test_entry->get_assignment();
-
         // the assignment will determine the adjudicate status
         static::complete_assignment( $db_assignment );
+      }
+      else
+      {
+        if( !is_null( $db_assignment->end_datetime ) )
+        {
+          $db_assignment->end_datetime = NULL;
+          $db_assignment->save();
+        }
       }
     }
   }
