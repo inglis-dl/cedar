@@ -25,13 +25,13 @@ class assignment extends \cenozo\database\record
   public function get_deferred_count()
   {
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get deferred count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s',
-               $this->id ) );
+               $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -45,13 +45,13 @@ class assignment extends \cenozo\database\record
   public function get_completed_count()
   {
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get completed count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
-               $this->id ) );
+               $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -65,13 +65,13 @@ class assignment extends \cenozo\database\record
   public function get_adjudicate_count()
   {
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
-               $this->id ) );
+               $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -84,8 +84,8 @@ class assignment extends \cenozo\database\record
    */
   public static function get_next_available_participant( $db_user )
   {
-    $participant_class_name = lib::get_class_name( 'database\participant' );
     $database_class_name = lib::get_class_name( 'database\database' );
+    $participant_class_name = lib::get_class_name( 'database\participant' );
 
     $has_tracking = false;
     $has_comprehensive = false;
