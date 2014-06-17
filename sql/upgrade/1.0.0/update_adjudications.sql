@@ -118,12 +118,12 @@ CREATE PROCEDURE update_adjudications()
           SELECT t1.ranked_word_set_id, t1.word_id, t1.selection, tmp2.participant_id, te1.test_id, t1.test_entry_id FROM test_entry_ranked_word t1
           JOIN test_entry te1 ON te1.id=t1.test_entry_id
           JOIN tmp2 ON tmp2.assignment_id=te1.assignment_id
-          WHERE t1.selection IS not NULL
+          WHERE t1.selection IS NOT NULL
           UNION ALL
           SELECT t2.ranked_word_set_id, t2.word_id, t2.selection, tmp3.participant_id, te2.test_id, t2.test_entry_id FROM test_entry_ranked_word t2
           JOIN test_entry te2 ON te2.id=t2.test_entry_id
           JOIN tmp3 ON tmp3.assignment_id=te2.assignment_id
-          WHERE t2.selection IS not NULL
+          WHERE t2.selection IS NOT NULL
         ) t GROUP BY ranked_word_set_id, word_id, selection, participant_id, test_id HAVING COUNT(*)=1
       ) t2 GROUP BY test_entry_id;
 
