@@ -387,8 +387,9 @@ class assignment_manager extends \cenozo\singleton
 
         // this record should never be empty if we got this far in the process
         if( false === $db_max_rank_entry )
-         throw lib::create( 'exception\runtime',
-           'Invalid max ranked test entry', __METHOD__ );
+        {
+          $db_max_rank_entry = count( $a ) > count( $b ) ? clone $a : clone $b;
+        }
 
         //create additional entries if necessary
         $c_obj = end( $c );
