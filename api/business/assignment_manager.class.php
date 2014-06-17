@@ -113,18 +113,15 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
           if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
-            if( is_null( $db_test_entry->adjudicate ) &&
-                is_null( $db_sibling_test_entry->adjudicate ) )
+            if( ( is_null( $db_test_entry->adjudicate ) ||
+                  is_null( $db_sibling_test_entry->adjudicate ) ) ||
+                 ( $db_test_entry->adjudicate == true ||
+                   $db_sibling_test_entry->adjudicate == true ) )
             {
               $db_test_entry->adjudicate = true;
               $db_test_entry->save();
               $db_sibling_test_entry->adjudicate = true;
               $db_sibling_test_entry->save();
-              $completed = false;
-            }
-            else if( $db_test_entry->adjudicate == true &&
-                     $db_sibling_test_entry->adjudicate == true )
-            {
               $completed = false;
             }
           }
@@ -212,13 +209,21 @@ class assignment_manager extends \cenozo\singleton
     // no further processing is required for an adjudicate entry
     if( is_null( $db_test_entry->participant_id ) )
     {
+      $db_assignment = $db_test_entry->get_assignment();
+
       // check if the assignment can be completed
       if( $db_test_entry->completed && !$db_test_entry->deferred )
       {
-        $db_assignment = $db_test_entry->get_assignment();
-
         // the assignment will determine the adjudicate status
         static::complete_assignment( $db_assignment );
+      }
+      else
+      {
+        if( !is_null( $db_assignment->end_datetime ) )
+        {
+          $db_assignment->end_datetime = NULL;
+          $db_assignment->save();
+        }
       }
     }
   }
