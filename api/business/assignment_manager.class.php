@@ -385,10 +385,11 @@ class assignment_manager extends \cenozo\singleton
         $max_rank_modifier->limit( 1 );
         $db_max_rank_entry = current( $entry_class_name::select( $max_rank_modifier ) );
 
-        // this record should never be empty if we got this far in the process
         if( false === $db_max_rank_entry )
         {
-          $db_max_rank_entry = count( $a ) > count( $b ) ? clone $a : clone $b;
+          $db_max_rank_entry = count( $a ) > count( $b ) ? end( $a ) : end( $b );
+          reset( $a );
+          reset( $b );
         }
 
         //create additional entries if necessary
