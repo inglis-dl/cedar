@@ -93,6 +93,7 @@ class assignment_manager extends \cenozo\singleton
    */
   public static function complete_assignment( $db_assignment )
   {
+    $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
@@ -103,6 +104,9 @@ class assignment_manager extends \cenozo\singleton
       {
         // go through all the tests and look for differences
         // get all the assignment's tests
+        $session = lib::create( 'business\session' );
+        $session->acquire_semaphore();
+
         $modifier = lib::create( 'database\modifier' );
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', true );
@@ -135,10 +139,13 @@ class assignment_manager extends \cenozo\singleton
             if( !is_null( $db_adjudicate_test_entry ) )
             {
               // delete test_entry daughter record(s)
-              $sql = sprintf( 'DELETE FROM test_entry_'.
-                $db_test->get_test_type()->name .
-                ' WHERE test_entry_id = %d', $db_adjudicate_test_entry->id );
+              $sql = sprintf(
+                'DELETE FROM test_entry_'. $db_test->get_test_type()->name .
+                ' WHERE test_entry_id = %s',
+                $database_class_name::format_string( $db_adjudicate_test_entry->id ) );
+
               $test_entry_class_name::db()->execute( $sql );
+
               $db_adjudicate_test_entry->delete();
             }
 
@@ -154,6 +161,7 @@ class assignment_manager extends \cenozo\singleton
             }
           }
         }
+        $session->release_semaphore();
 
         if( $completed )
         {
