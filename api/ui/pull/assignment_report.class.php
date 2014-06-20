@@ -140,18 +140,12 @@ class assignment_report extends \cenozo\ui\pull\base_report
     {
       $title = $db_site->name . ' Assignments';
 
-      // get all the typists from this site
-      $id_list = array();
       $user_mod = lib::create( 'database\modifier' );
       $user_mod->where( 'access.role_id', '=', $db_role->id );
       $user_mod->where( 'access.site_id', '=', $db_site->id );
-      foreach( $user_class_name::select( $user_mod ) as $db_user )
-      {
-        $id_list[] = $db_user->id;
-      }
 
-      // skip if no users at this site
-      if( 0 == count( $id_list ) )
+      // skip if no typists at this site
+      if( 0 == $user_class_name::count( $user_mod ) )
       {
         $this->add_table( $title, $header, array( '--','--', 0, '0', 0, '0' ), $footer );
         continue;
@@ -171,52 +165,57 @@ class assignment_report extends \cenozo\ui\pull\base_report
           array( $from_datetime_obj->format( 'Y' ), $from_datetime_obj->format( 'F' ) );
 
         $complete_mod = lib::create( 'database\modifier' );
-        // get all adjudicated and completed assignments for this site's users
-        $complete_mod->where( 'user_id', 'IN', $id_list );
-        $complete_mod->where( 'end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
-        $complete_mod->where( 'end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-
-        $complete_list = array_fill_keys( array_keys( $cohort_list ), array() );
-        foreach( $assignment_class_name::select( $complete_mod ) as $db_assignment )
-        {
-          // which cohort does this assignment pertain to?
-          $db_participant = $db_assignment->get_participant();
-          $cohort_name = $db_participant->get_cohort()->name;
-
-          if( array_key_exists( $db_participant->id, $complete_list[$cohort_name] ) )
-          {
-            $complete_list[$cohort_name][$db_participant->id]++;
-          }
-          else
-          {
-            $complete_list[$cohort_name][$db_participant->id] = 1;
-          }
-        }
+        $complete_mod->where( 'access.site_id', '=', $db_site->id );
+        $complete_mod->where( 'assignment.end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
+        $complete_mod->where( 'assignment.end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
 
         $in_progress_mod = lib::create( 'database\modifier' );
-        $in_progress_mod->where( 'user_id', 'IN', $id_list );
-        $in_progress_mod->where( 'start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
-        $in_progress_mod->where( 'end_datetime', '=', NULL );
+        $in_progress_mod->where( 'access.site_id', '=', $db_site->id );
+        $in_progress_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+
         foreach( $cohort_list as $cohort_name => $cohort_id )
         {
-          $complete_values =
-            array_count_values( array_values( $complete_list[$cohort_name] ) );
+          // completed assignments with a sibling
+          $complete_2_mod = clone $complete_mod;
+          $complete_2_mod->where( 'participant.cohort_id', '=', $cohort_id );
+          $complete_2_mod->group( 'assignment.id' );
+          $complete_2_mod->having( 'COUNT(participant_id)', '=', 2 );
 
-          // number completed by two typists
-          $num_complete =
-            array_key_exists( '2', $complete_values ) ? $complete_values['2'] : 0;
-          // number completed by one typist
-          $num_partial =
-            array_key_exists( '1', $complete_values ) ? $complete_values['1'] : 0;
+          $sql = sprintf(
+            'SELECT COUNT( participant_id ) FROM assignment '.
+            'JOIN access ON access.user_id = assignment.user_id '.
+            'JOIN participant ON participant.id = assignment.participant_id %s',
+             $complete_2_mod->get_sql() );
 
-          // number started but not completed
-          $modifier = clone $in_progress_mod;
-          $modifier->where( 'participant.cohort_id', '=', $cohort_id );
-          $num_started = 0;
-          foreach( $assignment_class_name::select( $modifier ) as $db_assignment )
-          {
-            if( !$db_assignment->all_tests_complete() ) $num_started++;
-          }
+          $num_complete = count( $assignment_class_name::db()->get_all( $sql ) );
+
+          // completed assignments without a sibling
+          $complete_1_mod = clone $complete_mod;
+          $complete_1_mod->where( 'participant.cohort_id', '=', $cohort_id );
+          $complete_1_mod->group( 'assignment.id' );
+          $complete_1_mod->having( 'COUNT(participant_id)', '=', 1 );
+
+          $sql = sprintf(
+            'SELECT COUNT( participant_id ) FROM assignment '.
+            'JOIN access ON access.user_id = assignment.user_id '.
+            'JOIN participant ON participant.id = assignment.participant_id %s',
+             $complete_1_mod->get_sql() );
+
+          $num_partial = count( $assignment_class_name::db()->get_all( $sql ) );
+
+          // assignments started
+          $complete_0_mod = clone $in_progress_mod;
+          $complete_0_mod->where( 'participant.cohort_id', '=', $cohort_id );
+          $complete_0_mod->group( 'assignment.id' );
+
+          $sql = sprintf(
+            'SELECT COUNT( participant_id ) FROM assignment '.
+            'JOIN access ON access.user_id = assignment.user_id '.
+            'JOIN participant ON participant.id = assignment.participant_id %s',
+             $complete_0_mod->get_sql() );
+
+          $num_started = count( $assignment_class_name::db()->get_all( $sql ) );
 
           $row[] = $num_complete;
           $row[] = $num_partial + $num_started;
