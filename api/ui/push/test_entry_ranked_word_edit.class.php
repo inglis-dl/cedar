@@ -41,6 +41,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
+    $session = lib::create( 'business\session' );
     $word_class_name = lib::get_class_name( 'database\word' );
 
     $db_test_entry_ranked_word = $this->get_record();
@@ -51,6 +52,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
       array_key_exists( 'word_candidate', $columns ) && $columns['word_candidate'] !== '' ?
       $columns['word_candidate'] : NULL;
 
+    $session->acquire_semaphore();
     if( !is_null( $word_candidate ) )
     {
       $db_test = $db_test_entry->get_test();
@@ -137,6 +139,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
       $db_test_entry_ranked_word->save();
     }
+    $session->release_semaphore();
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_test_entry( $db_test_entry );

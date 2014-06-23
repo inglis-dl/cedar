@@ -104,6 +104,9 @@ class assignment_manager extends \cenozo\singleton
       {
         // go through all the tests and look for differences
         // get all the assignment's tests
+        $session = lib::create( 'business\session' );
+        $session->acquire_semaphore();
+
         $modifier = lib::create( 'database\modifier' );
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', true );
@@ -137,8 +140,7 @@ class assignment_manager extends \cenozo\singleton
             {
               // delete test_entry daughter record(s)
               $sql = sprintf(
-                'DELETE FROM test_entry_'.
-                $db_test->get_test_type()->name .
+                'DELETE FROM test_entry_'. $db_test->get_test_type()->name .
                 ' WHERE test_entry_id = %s',
                 $database_class_name::format_string( $db_adjudicate_test_entry->id ) );
 
@@ -159,6 +161,7 @@ class assignment_manager extends \cenozo\singleton
             }
           }
         }
+        $session->release_semaphore();
 
         if( $completed )
         {
@@ -387,10 +390,12 @@ class assignment_manager extends \cenozo\singleton
         $max_rank_modifier->limit( 1 );
         $db_max_rank_entry = current( $entry_class_name::select( $max_rank_modifier ) );
 
-        // this record should never be empty if we got this far in the process
         if( false === $db_max_rank_entry )
-         throw lib::create( 'exception\runtime',
-           'Invalid max ranked test entry', __METHOD__ );
+        {
+          $db_max_rank_entry = count( $a ) > count( $b ) ? end( $a ) : end( $b );
+          reset( $a );
+          reset( $b );
+        }
 
         //create additional entries if necessary
         $c_obj = end( $c );

@@ -75,6 +75,8 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
   {
     parent::execute();
 
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $db_test_entry = $this->get_record();
 
@@ -87,6 +89,17 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
             'unusable'    == $columns['audio_status'] ) ) )
     {
       $db_test_entry->initialize( false );
+      // if this record is the progenitor of an adjudicate entry
+      // reset the adjudictate entry
+      if( !is_null( $db_test_entry->assignment_id ) )
+      {
+        $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
+          array( 'test_id', 'participant_id' ),
+          array( $db_test_entry->get_test()->id,
+                 $db_test_entry->get_assignment()->get_participant()->id ) );
+        if( !is_null( $db_adjudicate_test_entry ) )
+          $db_adjudicate_test_entry->initialize();
+      }
     }
 
     if( array_key_exists( 'completed', $columns ) &&
