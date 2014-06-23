@@ -158,7 +158,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
       'AND t2.assignment_id=assignment.id', $temp_user_mod->get_sql() );
 
     $assignment_class_name::db()->execute( $sql );
-    $sql = 'ALTER TABLE temp_user ADD INDEX dk_user_id (user_id)';
+    $sql = 'ALTER TABLE temp_user ADD INDEX dk_user_id (user_id), ADD INDEX dk_test_id (test_id)';
     $assignment_class_name::db()->execute( $sql );
 
     // create a table for every site included in the report
