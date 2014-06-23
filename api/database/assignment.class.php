@@ -26,10 +26,10 @@ class assignment extends \cenozo\database\record
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get deferred count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );
@@ -47,10 +47,10 @@ class assignment extends \cenozo\database\record
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get completed count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );
@@ -68,10 +68,10 @@ class assignment extends \cenozo\database\record
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );

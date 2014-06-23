@@ -315,9 +315,10 @@ class test_entry extends \cenozo\database\has_note
     $entry_class_name = 'test_entry_' . $test_type_name;
 
     $sql = sprintf(
-             'DELETE FROM %s '.
-             'WHERE test_entry_id = %s', $entry_class_name,
-             $database_class_name::format_string( $this->id ) );
+      'DELETE FROM %s '.
+      'WHERE test_entry_id = %s',
+      $entry_class_name,
+      $database_class_name::format_string( $this->id ) );
     static::db()->execute( $sql );
 
     $db_assignment = $this->get_assignment();
