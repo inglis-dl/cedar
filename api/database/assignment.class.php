@@ -24,6 +24,7 @@ class assignment extends \cenozo\database\record
    */
   public function get_deferred_count()
   {
+    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
     {
       throw lib::create( 'exception\runtime',
@@ -31,7 +32,7 @@ class assignment extends \cenozo\database\record
     }
     return static::db()->get_one(
       sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s',
-               $this->id ) );
+               $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -44,6 +45,7 @@ class assignment extends \cenozo\database\record
    */
   public function get_completed_count()
   {
+    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
     {
       throw lib::create( 'exception\runtime',
@@ -51,7 +53,7 @@ class assignment extends \cenozo\database\record
     }
     return static::db()->get_one(
       sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
-               $this->id ) );
+               $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -64,6 +66,7 @@ class assignment extends \cenozo\database\record
    */
   public function get_adjudicate_count()
   {
+    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
     {
       throw lib::create( 'exception\runtime',
@@ -71,7 +74,7 @@ class assignment extends \cenozo\database\record
     }
     return static::db()->get_one(
       sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
-               $this->id ) );
+               $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -84,8 +87,8 @@ class assignment extends \cenozo\database\record
    */
   public static function get_next_available_participant( $db_user )
   {
-    $participant_class_name = lib::get_class_name( 'database\participant' );
     $database_class_name = lib::get_class_name( 'database\database' );
+    $participant_class_name = lib::get_class_name( 'database\participant' );
 
     $has_tracking = false;
     $has_comprehensive = false;
@@ -180,31 +183,31 @@ class assignment extends \cenozo\database\record
    */
   public function all_tests_complete()
   {
-    $complete_mod = lib::create( 'database\modifier' );
-    $complete_mod->where( 'deferred', '=', false );
-    $complete_mod->where( 'completed', '=', true );
-    return $this->get_test_entry_count() == $this->get_test_entry_count( $complete_mod );
-
-/*
-   TODO: check for performance improvements
+  /*
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'deferred', '=', false );
+    $modifier->where( 'completed', '=', true );
+    return $this->get_test_entry_count() == $this->get_test_entry_count( $modifier );
+  */
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $id_string = $database_class_name::format_string( $this->id );
     $sql = sprintf(
       'SELECT '.
       '( '.
         '( '.
           'SELECT COUNT(*) FROM test_entry '.
-          'JOIN assignment ON assignment.id = test_entry.assigment_id '.
+          'JOIN assignment ON assignment.id = test_entry.assignment_id '.
           'WHERE assignment.id = %s '.
         ') - '.
         '( '.
           'SELECT COUNT(*) FROM test_entry '.
-          'JOIN assignment ON assignment.id = test_entry.assigment_id '.
+          'JOIN assignment ON assignment.id = test_entry.assignment_id '.
           'WHERE assignment.id = %s '.
           'AND deferred = false '.
           'AND completed = true '.
         ') '.
-      ')', $this->id );
+      ')', $id_string, $id_string );
 
     return 0 == static::db()->get_one( $sql );
-*/
   }
 }

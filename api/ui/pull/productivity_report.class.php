@@ -36,12 +36,14 @@ class productivity_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
-    $role_class_name = lib::get_class_name( 'database\role' );
-    $site_class_name = lib::get_class_name( 'database\site' );
-    $user_class_name = lib::get_class_name( 'database\user' );
     $activity_class_name = lib::get_class_name( 'database\activity' );
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $role_class_name = lib::get_class_name( 'database\role' );
+    $site_class_name = lib::get_class_name( 'database\site' );
+    $test_class_name = lib::get_class_name( 'database\test' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+    $user_class_name = lib::get_class_name( 'database\user' );
     $user_time_class_name = lib::get_class_name( 'database\user_time' );
 
     // determine whether or not to round time to 15 minute increments
@@ -85,6 +87,80 @@ class productivity_report extends \cenozo\ui\pull\base_report
                    ( !is_null( $start_datetime_obj ) &&
                      $start_datetime_obj == $now_datetime_obj );
 
+    $base_activity_mod = lib::create( 'database\modifier' );
+    $base_activity_mod->where( 'activity.role_id', '=', $db_role->id );
+    $base_activity_mod->where( 'operation.subject', '!=', 'self' );
+
+    $base_assignment_mod = lib::create( 'database\modifier' );
+
+    if( $restrict_start_date && $restrict_end_date )
+    {
+      $base_activity_mod->where( 'datetime', '>=',
+        $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
+      $base_activity_mod->where( 'datetime', '<=',
+        $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
+      $base_assignment_mod->where( 'start_datetime', '>=',
+        $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
+    }
+    else if( $restrict_start_date && !$restrict_end_date )
+    {
+      $base_activity_mod->where( 'datetime', '>=',
+        $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
+      $base_assignment_mod->where( 'start_datetime', '>=',
+        $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
+    }
+    else if( !$restrict_start_date && $restrict_end_date )
+    {
+      $base_activity_mod->where( 'datetime', '<=',
+        $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
+      $base_assignment_mod->where( 'start_datetime', '<=',
+        $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
+    }
+
+    $base_day_activity_mod = lib::create( 'database\modifier' );
+    if( $single_date )
+    {
+      $base_day_activity_mod->where( 'activity.role_id', '=', $db_role->id );
+      $base_day_activity_mod->where( 'operation.subject', '!=', 'self' );
+      $base_day_activity_mod->where( 'datetime', '>=',
+        $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
+      $base_day_activity_mod->where( 'datetime', '<=',
+        $start_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
+    }
+
+    $sql_comparators = array();
+    foreach( $test_class_name::select() as $db_test )
+    {
+      $table_name = 'test_entry_' . $db_test->get_test_type()->name;
+      $table_class_name = lib::get_class_name( 'database\\' . $table_name );
+      $column_names =
+        $table_class_name::db()->get_column_names( $table_class_name::get_table_name() );
+      unset( $column_names[ array_search( 'id', $column_names ) ] );
+      unset( $column_names[ array_search( 'test_entry_id', $column_names ) ] );
+      $sql_comparators[ $db_test->id ][ $table_name ] = array_values( $column_names );
+    }
+
+    $temp_user_mod = clone $base_assignment_mod;
+    $temp_user_mod->where( 'assignment.end_datetime', '!=', NULL );
+    $sql = sprintf(
+      'CREATE TEMPORARY TABLE temp_user '.
+      'SELECT t1.id AS adjudicate_entry_id, '.
+      't1.test_id AS test_id, '.
+      't1.audio_status AS adjudicate_audio_status, '.
+      't1.participant_status AS adjudicate_participant_status, '.
+      't2.id AS progenitor_entry_id, '.
+      't2.audio_status AS progenitor_audio_status, '.
+      't2.participant_status AS progenitor_participant_status, '.
+      'assignment.user_id '.
+      'FROM assignment '.
+      'JOIN test_entry t1 ON t1.participant_id=assignment.participant_id '.
+      'LEFT JOIN test_entry t2 ON t2.test_id=t1.test_id %s '.
+      'AND t2.assignment_id=assignment.id', $temp_user_mod->get_sql() );
+
+    $assignment_class_name::db()->execute( $sql );
+    $sql = 'ALTER TABLE temp_user ADD INDEX dk_user_id (user_id), ADD INDEX dk_test_id (test_id)';
+    $assignment_class_name::db()->execute( $sql );
+
     // create a table for every site included in the report
     foreach( $site_class_name::select( $site_mod ) as $db_site )
     {
@@ -94,7 +170,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
       $grand_total_complete = 0;
       $grand_total_incomplete = 0;
       $grand_total_adjudicate = 0;
-      $grand_total_defer = 0;
 
       $user_mod = lib::create( 'database\modifier' );
       $user_mod->where( 'access.site_id', '=', $db_site->id );
@@ -102,38 +177,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
       foreach( $user_class_name::select( $user_mod ) as $db_user )
       {
         // ensure the typist has min/max time for this date range
-        $activity_mod = lib::create( 'database\modifier' );
+        $activity_mod = clone $base_activity_mod;
         $activity_mod->where( 'activity.user_id', '=', $db_user->id );
         $activity_mod->where( 'activity.site_id', '=', $db_site->id );
-        $activity_mod->where( 'activity.role_id', '=', $db_role->id );
-        $activity_mod->where( 'operation.subject', '!=', 'self' );
-
-        $assignment_mod = lib::create( 'database\modifier' );
-        $assignment_mod->where( 'user_id', '=', $db_user->id );
-
-        if( $restrict_start_date && $restrict_end_date )
-        {
-          $activity_mod->where( 'datetime', '>=',
-            $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
-          $activity_mod->where( 'datetime', '<=',
-            $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
-          $assignment_mod->where( 'start_datetime', '>=',
-            $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
-        }
-        else if( $restrict_start_date && !$restrict_end_date )
-        {
-          $activity_mod->where( 'datetime', '>=',
-            $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
-          $assignment_mod->where( 'start_datetime', '>=',
-            $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
-        }
-        else if( !$restrict_start_date && $restrict_end_date )
-        {
-          $activity_mod->where( 'datetime', '<=',
-            $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
-          $assignment_mod->where( 'start_datetime', '<=',
-            $end_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
-        }
 
         // if there is no activity then skip this user
         if( 0 == $activity_class_name::count( $activity_mod ) ) continue;
@@ -150,72 +196,101 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $num_complete    = 0;
         $num_incomplete  = 0;
         $num_adjudicate  = 0;
-        $num_defer       = 0;
         $assignment_time = 0;
-        foreach( $db_user->get_assignment_list( $assignment_mod ) as $db_assignment )
+
+        $assignment_mod = clone $base_assignment_mod;
+        $assignment_mod->where( 'assignment.user_id', '=', $db_user->id );
+        $assignment_mod->group( 'assignment.id' );
+
+        $sql = sprintf(
+          'SELECT COUNT(*) FROM ( '.
+          'SELECT '.
+          'IF( COUNT( test_entry.id ) - '.
+          'SUM( IF(  test_entry.deferred = false, '.
+          'IF( test_entry.completed = true , 1, 0 ), 0  ) ), "complete", "incomplete") '.
+          'AS complete_status '.
+          'FROM assignment '.
+          'LEFT JOIN test_entry ON assignment.id=test_entry.assignment_id %s '.
+          'HAVING complete_status="incomplete" ) AS tmp', $assignment_mod->get_sql() );
+
+        $num_complete = $assignment_class_name::db()->get_one( $sql );
+
+        $sql = str_replace( 'complete_status="incomplete', 'complete_status="complete', $sql );
+
+        $num_incomplete = $assignment_class_name::db()->get_one( $sql );
+
+        $sql = sprintf(
+          'SELECT * FROM temp_user '.
+          'WHERE user_id=%s',
+          $database_class_name::format_string( $db_user->id ) );
+
+        $num_adjudicate = 0;
+        foreach( $assignment_class_name::db()->get_all( $sql ) as $data )
         {
-          // are all of the assignment's tests complete?
-          if( $db_assignment->all_tests_complete() )
+          if( ( $data[ 'adjudicate_audio_status' ] != $data[ 'progenitor_audio_status' ] ) ||
+              ( $data[ 'adjudicate_participant_status' ] != $data[ 'progenitor_participant_status' ] ) )
           {
-            $num_complete++;
-
-            // each test_entry deferral must have a note created by the user
-            $test_entry_mod = lib::create( 'database\modifier' );
-            $test_entry_mod->where( 'assignment_id', '=', $db_assignment->id );
-            $test_entry_mod->where( 'test_entry_note.user_id', '=', $db_user->id );
-            if( 0 < $test_entry_class_name::count( $test_entry_mod ) ) $num_defer++;
-
-            // count the adjudicate submissions
-            $test_entry_mod = lib::create( 'database\modifier' );
-            $test_entry_mod->where( 'assignment_id', '=', NULL );
-            $test_entry_mod->where( 'participant_id', '=', $db_assignment->participant_id );
-            foreach( $test_entry_class_name::select( $test_entry_mod ) as $db_adjudicate_test_entry )
-            {
-              // this is the adjudicated test entry submitted by an administrator
-              // get the test entries from the test transcribed by the current user
-              // and compare them
-
-              $db_test_entry = $test_entry_class_name::get_unique_record(
-                array( 'assignment_id', 'test_id' ),
-                array( $db_assignment->id, $db_adjudicate_test_entry->test_id ) );
-              if( !is_null( $db_test_entry ) )
-              {
-                // if they match, then this user sourced the entries meaning the companion
-                // user was in error
-                if( !$db_test_entry->compare( $db_adjudicate_test_entry ) ) $num_adjudicate++;
-              }
-            } // end loop on test entries
+            $num_adjudicate++;
           }
           else
           {
-            $num_incomplete++;
+            $test_id = $data[ 'test_id' ];
+            $table_name = current( array_keys( $sql_comparators[ $test_id ] ) );
+            $table_columns = current( array_values( $sql_comparators[ $test_id ] ) );
+            $sql_pre = 'SELECT COUNT(*) FROM ( SELECT ';
+            $sql_columns1 = 'SELECT ';
+            $sql_columns2 = 'SELECT ';
+            $sql_post = ') temp GROUP BY ';
+            $last = end( $table_columns );
+            foreach( $table_columns as $column )
+            {
+              if( $last == $column )
+              {
+                $sql_columns1 = $sql_columns1 . 't1.'. $column;
+                $sql_columns2 = $sql_columns2 . 't2.'. $column;
+                $sql_post = $sql_post . $column;
+              }
+              else
+              {
+                $sql_columns1 = $sql_columns1 . 't1.'. $column . ', ';
+                $sql_columns2 = $sql_columns2 . 't2.'. $column . ', ';
+                $sql_post = $sql_post . $column . ', ';
+              }
+              $sql_pre = $sql_pre . $column . ', ';
+            }
+
+            $sql_pre = $sql_pre . ' COUNT(*) AS c FROM (';
+            $sql_post = $sql_post . ' HAVING c=1 ) temp2';
+
+            $sql_columns1 = $sql_columns1 . ' FROM '. $table_name . ' t1 ' .
+              sprintf( 'WHERE t1.test_entry_id=%s',
+              $database_class_name::format_string( $data['progenitor_entry_id'] ) );
+            $sql_columns2 = $sql_columns2 . ' FROM '. $table_name . ' t2 ' .
+              sprintf( 'WHERE t2.test_entry_id=%s',
+              $database_class_name::format_string( $data['adjudicate_entry_id'] ) );
+
+            $sql = $sql_pre . $sql_columns1 . ' UNION ALL ' . $sql_columns2 . $sql_post;
+
+            if( 0 < $assignment_class_name::db()->get_one( $sql ) ) $num_adjudicate++;
           }
+        }
 
-        } // end loop on assignments
-
-        // if there were no completed assignments then ignore this user
-        if( 0 == ( $num_complete + $num_incomplete ) ) continue;
+        // if there were no assignments then ignore this user
+        if( 0 == ( $num_complete + $num_incomplete + $num_adjudicate ) ) continue;
 
         // Now we can use all the information gathered above to fill in the contents of the table.
         ///////////////////////////////////////////////////////////////////////////////////////////
         if( $single_date )
         {
-          $day_activity_mod = lib::create( 'database\modifier' );
+          $day_activity_mod = clone $base_day_activity_mod;
           $day_activity_mod->where( 'activity.user_id', '=', $db_user->id );
           $day_activity_mod->where( 'activity.site_id', '=', $db_site->id );
-          $day_activity_mod->where( 'activity.role_id', '=', $db_role->id );
-          $day_activity_mod->where( 'operation.subject', '!=', 'self' );
-          $day_activity_mod->where( 'datetime', '>=',
-            $start_datetime_obj->format( 'Y-m-d' ).' 0:00:00' );
-          $day_activity_mod->where( 'datetime', '<=',
-            $start_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
 
           $min_datetime_obj = $activity_class_name::get_min_datetime( $day_activity_mod );
           $max_datetime_obj = $activity_class_name::get_max_datetime( $day_activity_mod );
 
           $contents[] = array(
             $db_user->name,
-            $num_defer,
             $num_adjudicate,
             $num_complete,
             $num_incomplete,
@@ -231,7 +306,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
         {
           $contents[] = array(
             $db_user->name,
-            $num_defer,
             $num_adjudicate,
             $num_complete,
             $num_incomplete,
@@ -242,7 +316,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
               sprintf( '%0.2f', ( $num_complete + $num_incomplete ) / $total_time ) : '' );
         }
 
-        $grand_total_defer      += $num_defer;
         $grand_total_adjudicate += $num_adjudicate;
         $grand_total_complete   += $num_complete;
         $grand_total_incomplete += $num_incomplete;
@@ -258,7 +331,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
       {
         $header = array(
           "Typist",
-          "Defer",
           "Adjudicate",
           "Complete",
           "Incomplete",
@@ -273,7 +345,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
           "sum()",
           "sum()",
           "sum()",
-          "sum()",
           "--",
           "--",
           "sum()",
@@ -284,7 +355,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
       {
         $header = array(
           "Typist",
-          "Defer",
           "Adjudicate",
           "Complete",
           "Incomplete",
@@ -294,7 +364,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
         $footer = array(
           "Total",
-          "sum()",
           "sum()",
           "sum()",
           "sum()",
