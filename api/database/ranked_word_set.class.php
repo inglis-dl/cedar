@@ -26,18 +26,16 @@ class ranked_word_set extends \cenozo\database\has_rank
       throw lib::create( 'exception\notice',
         'A language must be specified to retrieve a word from a ranked word set',  __METHOD__ );
 
-    $ranked_word_set_has_language_class_name =
-      lib::get_class_name( 'database\ranked_word_set_has_language' );
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $sql = sprintf(
+      'SELECT word_id FROM ranked_word_set_has_language '.
+      'WHERE language_id=%s '.
+      'AND ranked_word_set_id=%s',
+      $database_class_name::format_string( $db_language->id ),
+      $database_class_name::format_string( $this->id ) );
+    $id = static::db()->get_one( $sql );
 
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'language_id', '=', $db_language->id );
-    $modifier->where( 'ranked_word_set_id', '=', $this->id );
-    $modifier->limit( 1 );
-    $db_ranked_word_set_has_language = current(
-      $ranked_word_set_has_language_class_name::select( $modifier ) );
-
-    return false !== $db_ranked_word_set_has_language ?
-                     $db_ranked_word_set_has_language->get_word() : NULL;
+    return is_null( $id ) ? $id : lib::create( 'database\word', $id );
   }
 
   /**
