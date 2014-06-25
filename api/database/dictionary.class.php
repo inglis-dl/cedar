@@ -28,7 +28,7 @@ class dictionary extends \cenozo\database\record
     if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
 
     return static::db()->get_col( sprintf(
-      'SELECT word.word FROM word %s',
+      'SELECT word FROM word %s',
       $modifier->get_sql() ) );
   }
 }

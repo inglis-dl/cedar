@@ -37,6 +37,7 @@ class word_list extends \cenozo\ui\pull
     parent::execute();
 
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
+    $language_class_name = lib::get_class_name( 'database\language' );
 
     $this->data = array();
     $dictionary = array();
@@ -47,9 +48,9 @@ class word_list extends \cenozo\ui\pull
 
     $language_id = $this->get_argument( 'language_id', 0 );
     $db_language = NULL;
-    if( !is_null( $language_id ) )
+    if( 0 < $language_id )
     {
-      $db_language = $language_class_name::get_unique_record( 'id', $language_id );
+      $db_language = lib::create( 'database\language', $language_id );
     }
 
     $words_only = $this->get_argument( 'words_only', false );
