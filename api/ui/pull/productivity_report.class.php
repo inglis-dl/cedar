@@ -173,10 +173,10 @@ class productivity_report extends \cenozo\ui\pull\base_report
       'SUM( IF( test_entry.deferred = false, '.
       'IF( test_entry.completed = true , 1, 0 ), 0 ) ) ) = 0, 1, 0 ) AS complete_status '.
       'FROM assignment '.
-      'LEFT JOIN test_entry ON assignment.id=test_entry.assignment_id '.
+      'LEFT JOIN test_entry ON assignment.id=test_entry.assignment_id %s'.
       'GROUP BY assignment.id '.
       ') AS tmp '.
-      'GROUP BY user_id ' );
+      'GROUP BY user_id ', $base_assignment_mod->get_sql() );
 
     $assignment_class_name::db()->execute( $sql );
     $sql = 'ALTER TABLE temp_user_complete ADD INDEX dk_user_id (user_id)';
