@@ -128,7 +128,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $start_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
     }
 
-    $sql_comparators = array();
+    $sql_queries = array();
     foreach( $test_class_name::select() as $db_test )
     {
       $table_name = 'test_entry_' . $db_test->get_test_type()->name;
@@ -137,7 +137,39 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $table_class_name::db()->get_column_names( $table_class_name::get_table_name() );
       unset( $column_names[ array_search( 'id', $column_names ) ] );
       unset( $column_names[ array_search( 'test_entry_id', $column_names ) ] );
-      $sql_comparators[ $db_test->id ][ $table_name ] = array_values( $column_names );
+
+      $sql_pre = 'SELECT COUNT(*) FROM ( SELECT ';
+      $sql_columns1 = 'SELECT ';
+      $sql_columns2 = 'SELECT ';
+      $sql_post = ') temp GROUP BY ';
+      $last = end( $column_names );
+      foreach( $column_names as $column )
+      {
+        if( $last == $column )
+        {
+          $sql_columns1 = $sql_columns1 . 't1.'. $column;
+          $sql_columns2 = $sql_columns2 . 't2.'. $column;
+          $sql_post = $sql_post . $column;
+        }
+        else
+        {
+          $sql_columns1 = $sql_columns1 . 't1.'. $column . ', ';
+          $sql_columns2 = $sql_columns2 . 't2.'. $column . ', ';
+          $sql_post = $sql_post . $column . ', ';
+        }
+        $sql_pre = $sql_pre . $column . ', ';
+      }
+
+      $sql_pre = $sql_pre . ' COUNT(*) AS c FROM (';
+      $sql_post = $sql_post . ' HAVING c=1 ) temp2';
+
+      $sql_columns1 = $sql_columns1 . ' FROM '. $table_name . ' t1 ' .
+        'WHERE t1.test_entry_id=%s';
+      $sql_columns2 = $sql_columns2 . ' FROM '. $table_name . ' t2 ' .
+        'WHERE t2.test_entry_id=%s';
+
+      $sql_queries[ $db_test->id ] =
+        $sql_pre . $sql_columns1 . ' UNION ALL ' . $sql_columns2 . $sql_post;
     }
 
     $temp_user_mod = clone $base_assignment_mod;
@@ -242,42 +274,10 @@ class productivity_report extends \cenozo\ui\pull\base_report
           }
           else
           {
-            $test_id = $data[ 'test_id' ];
-            $table_name = current( array_keys( $sql_comparators[ $test_id ] ) );
-            $table_columns = current( array_values( $sql_comparators[ $test_id ] ) );
-            $sql_pre = 'SELECT COUNT(*) FROM ( SELECT ';
-            $sql_columns1 = 'SELECT ';
-            $sql_columns2 = 'SELECT ';
-            $sql_post = ') temp GROUP BY ';
-            $last = end( $table_columns );
-            foreach( $table_columns as $column )
-            {
-              if( $last == $column )
-              {
-                $sql_columns1 = $sql_columns1 . 't1.'. $column;
-                $sql_columns2 = $sql_columns2 . 't2.'. $column;
-                $sql_post = $sql_post . $column;
-              }
-              else
-              {
-                $sql_columns1 = $sql_columns1 . 't1.'. $column . ', ';
-                $sql_columns2 = $sql_columns2 . 't2.'. $column . ', ';
-                $sql_post = $sql_post . $column . ', ';
-              }
-              $sql_pre = $sql_pre . $column . ', ';
-            }
-
-            $sql_pre = $sql_pre . ' COUNT(*) AS c FROM (';
-            $sql_post = $sql_post . ' HAVING c=1 ) temp2';
-
-            $sql_columns1 = $sql_columns1 . ' FROM '. $table_name . ' t1 ' .
-              sprintf( 'WHERE t1.test_entry_id=%s',
-              $database_class_name::format_string( $data['progenitor_entry_id'] ) );
-            $sql_columns2 = $sql_columns2 . ' FROM '. $table_name . ' t2 ' .
-              sprintf( 'WHERE t2.test_entry_id=%s',
+            $sql = sprintf(
+              $sql_queries[ $data[ 'test_id' ] ],
+              $database_class_name::format_string( $data['progenitor_entry_id'] ),
               $database_class_name::format_string( $data['adjudicate_entry_id'] ) );
-
-            $sql = $sql_pre . $sql_columns1 . ' UNION ALL ' . $sql_columns2 . $sql_post;
 
             if( 0 < $assignment_class_name::db()->get_one( $sql ) ) $num_adjudicate++;
           }
