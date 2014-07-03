@@ -105,12 +105,6 @@ class assignment extends \cenozo\database\record
     foreach( $db_user->get_language_list() as $db_language )
       $language_id_list[] = $db_language->id;
 
-    if( 0 == count( $language_id_list ) )
-      throw lib::create( 'exception\notice',
-        'There must be one or more languages assigned to user: '. $db_user->name,
-          __METHOD__ );
-
-    $db_service_language = $session->get_service()->get_language();
     $id = NULL;
 
     if( $has_tracking )
@@ -123,8 +117,12 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'cohort.name', '=', 'tracking' );
       $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
       $modifier->where( 'participant_site.site_id', '=', $session->get_site()->id );
-      $modifier->where( 'IFNULL( participant.language_id, '.
-        $db_service_language->id . ' )', 'IN', $language_id_list );
+      if( 0 < count( $language_id_list ) )
+      {
+        $db_service_language = $session->get_service()->get_language();
+        $modifier->where( 'IFNULL( participant.language_id, '.
+          $db_service_language->id . ' )', 'IN', $language_id_list );
+      }
       $modifier->group( 'participant.id' );
 
       $sql = sprintf(
