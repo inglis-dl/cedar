@@ -171,7 +171,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
 
         $in_progress_mod = lib::create( 'database\modifier' );
         $in_progress_mod->where( 'access.site_id', '=', $db_site->id );
-        $in_progress_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $in_progress_mod->where( 'assignment.create_timestamp', '<', $to_datetime_obj->format( 'Y-m-d' ) );
         $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
 
         foreach( $cohort_list as $cohort_name => $cohort_id )
