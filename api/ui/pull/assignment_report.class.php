@@ -36,10 +36,11 @@ class assignment_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
+    $activity_class_name = lib::get_class_name( 'database\activity' );
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $cohort_class_name = lib::get_class_name( 'database\cohort' );
     $event_type_class_name = lib::get_class_name( 'database\event_type' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
-    $cohort_class_name = lib::get_class_name( 'database\cohort' );
     $role_class_name = lib::get_class_name( 'database\role' );
     $site_class_name = lib::get_class_name( 'database\site' );
     $user_class_name = lib::get_class_name( 'database\user' );
@@ -105,12 +106,15 @@ class assignment_report extends \cenozo\ui\pull\base_report
     // if there is no start date then start with the earliest created assignment
     if( is_null( $start_datetime_obj ) )
     {
-      $assignment_mod = lib::create( 'database\modifier' );
-      $assignment_mod->order( 'start_datetime' );
-      $assignment_mod->limit( 1 );
-      $db_assignment = current( $assignment_class_name::select( $assignment_mod ) );
-      if( false !== $db_assignment )
-        $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
+      $first_assignment_mod = lib::create( 'database\modifier' );
+      $first_assignment_mod->where( 'operation.type', '=', 'push' );
+      $first_assignment_mod->where( 'operation.name', '=', 'new' );
+      $first_assignment_mod->where( 'operation.subject', '=', 'assignment' );
+      $first_assignment_mod->order( 'activity.datetime' );
+      $first_assignment_mod->limit( 1 );
+      $db_activity = current( $activity_class_name::select( $first_assignment_mod ) );
+      if( false !== $db_activity )
+        $start_datetime_obj = util::get_datetime_object( $db_activity->datetime );
     }
 
     if( is_null( $end_datetime_obj ) )
@@ -134,6 +138,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $site_list = $site_class_name::select( $site_mod );
     $do_summary_table = 1 < count( $site_list );
     $summary_content = array();
+    $interval = new \DateInterval( 'P1M' );
 
     // now create a table for every site included in the report
     foreach( $site_list as $db_site )
@@ -152,7 +157,6 @@ class assignment_report extends \cenozo\ui\pull\base_report
       }
 
       $content = array();
-      $interval = new \DateInterval( 'P1M' );
       for( $from_datetime_obj = clone $start_datetime_obj;
            $from_datetime_obj < $end_datetime_obj;
            $from_datetime_obj->add( $interval ) )
@@ -183,13 +187,13 @@ class assignment_report extends \cenozo\ui\pull\base_report
           $complete_2_mod->having( 'COUNT(participant_id)', '=', 2 );
 
           $sql = sprintf(
+            'SELECT COUNT(*) FROM ( '.
             'SELECT COUNT( participant_id ) FROM assignment '.
             'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s',
-             $complete_2_mod->get_sql() );
+            'JOIN participant ON participant.id = assignment.participant_id %s '.
+            ') tmp', $complete_2_mod->get_sql() );
 
-          $num_complete = count( $assignment_class_name::db()->get_all( $sql ) );
-
+          $num_complete = $assignment_class_name::db()->get_one( $sql );
           // completed assignments without a sibling
           $complete_1_mod = clone $complete_mod;
           $complete_1_mod->where( 'participant.cohort_id', '=', $cohort_id );
@@ -197,12 +201,13 @@ class assignment_report extends \cenozo\ui\pull\base_report
           $complete_1_mod->having( 'COUNT(participant_id)', '=', 1 );
 
           $sql = sprintf(
+            'SELECT COUNT(*) FROM ( '.
             'SELECT COUNT( participant_id ) FROM assignment '.
             'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s',
-             $complete_1_mod->get_sql() );
+            'JOIN participant ON participant.id = assignment.participant_id %s '.
+            ') tmp', $complete_1_mod->get_sql() );
 
-          $num_partial = count( $assignment_class_name::db()->get_all( $sql ) );
+          $num_partial = $assignment_class_name::db()->get_one( $sql );
 
           // assignments started
           $complete_0_mod = clone $in_progress_mod;
@@ -210,12 +215,13 @@ class assignment_report extends \cenozo\ui\pull\base_report
           $complete_0_mod->group( 'assignment.id' );
 
           $sql = sprintf(
-            'SELECT COUNT( participant_id ) FROM assignment '.
+            'SELECT SUM(count) FROM ( '.
+            'SELECT COUNT( participant_id ) AS count FROM assignment '.
             'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s',
-             $complete_0_mod->get_sql() );
+            'JOIN participant ON participant.id = assignment.participant_id %s '.
+            ') tmp', $complete_0_mod->get_sql() );
 
-          $num_started = count( $assignment_class_name::db()->get_all( $sql ) );
+          $num_started = $assignment_class_name::db()->get_one( $sql );
 
           $row[] = $num_complete;
           $row[] = $num_partial + $num_started;
