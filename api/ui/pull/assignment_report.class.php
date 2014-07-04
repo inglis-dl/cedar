@@ -186,6 +186,8 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $in_progress_mod->where( 'assignment.create_timestamp', '<', $to_datetime_obj->format( 'Y-m-d' ) );
         $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
 
+        //TODO: join to assignment and partcipant table to restrict new assignment
+        // counts to the correct cohort
         $started_mod = clone $assignment_started_mod;
         $started_mod->where( 'site_id', '=', $db_site->id );
         $started_mod->where( 'datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
