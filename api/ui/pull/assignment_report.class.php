@@ -150,6 +150,20 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $summary_content = array();
     $interval = new \DateInterval( 'P1M' );
 
+    $sql_closed =
+      'SELECT COUNT(*) FROM ( '.
+      'SELECT COUNT( participant_id ) AS participant_count FROM assignment '.
+      'JOIN access ON access.user_id = assignment.user_id '.
+      'JOIN participant ON participant.id = assignment.participant_id %s '.
+      ') tmp';
+
+    $sql_open =
+      'SELECT COUNT(*) FROM ( '.
+      'SELECT assignment.* FROM assignment '.
+      'JOIN access ON access.user_id = assignment.user_id '.
+      'JOIN participant ON participant.id = assignment.participant_id %s '.
+      ') tmp ';
+
     // now create a table for every site included in the report
     foreach( $site_list as $db_site )
     {
@@ -187,28 +201,24 @@ class assignment_report extends \cenozo\ui\pull\base_report
 
         $in_progress_mod = lib::create( 'database\modifier' );
         $in_progress_mod->where( 'access.site_id', '=', $db_site->id );
-        $in_progress_mod->where( 'assignment.create_timestamp', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $in_progress_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
         $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
         $in_progress_mod->group( 'assignment.id' );
 
         $created_mod = lib::create( 'database\modifier' );
         $created_mod->where( 'access.site_id', '=', $db_site->id );
-        $created_mod->where( 'assignment.create_timestamp', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
-        $created_mod->where( 'assignment.create_timestamp', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $created_mod->where( 'assignment.start_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
+        $created_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $created_mod->group( 'assignment.id' );
 
         foreach( $cohort_list as $cohort_name => $cohort_id )
         {
           // completed assignments with a sibling
           $complete_2_mod = clone $complete_mod;
           $complete_2_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_2_mod->having( 'COUNT(participant_id)', '=', 2 );
+          $complete_2_mod->having( 'participant_count', '=', 2 );
 
-          $sql = sprintf(
-            'SELECT COUNT(*) FROM ( '.
-            'SELECT COUNT( participant_id ) AS count FROM assignment '.
-            'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s '.
-            ') tmp', $complete_2_mod->get_sql() );
+          $sql = sprintf( $sql_closed, $complete_2_mod->get_sql() );
 
           $num_participant_complete = $assignment_class_name::db()->get_one( $sql );
 
@@ -217,14 +227,9 @@ class assignment_report extends \cenozo\ui\pull\base_report
           // completed assignments without a sibling
           $complete_1_mod = clone $complete_mod;
           $complete_1_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_1_mod->having( 'COUNT(participant_id)', '=', 1 );
+          $complete_1_mod->having( 'participant_count', '=', 1 );
 
-          $sql = sprintf(
-            'SELECT COUNT(*) FROM ( '.
-            'SELECT COUNT( participant_id ) AS count FROM assignment '.
-            'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s '.
-            ') tmp', $complete_1_mod->get_sql() );
+          $sql = sprintf( $sql_closed, $complete_1_mod->get_sql() );
 
           $num_participant_partial = $assignment_class_name::db()->get_one( $sql );
 
@@ -234,27 +239,23 @@ class assignment_report extends \cenozo\ui\pull\base_report
           $complete_0_mod = clone $in_progress_mod;
           $complete_0_mod->where( 'participant.cohort_id', '=', $cohort_id );
 
-          $sql = sprintf(
-            'SELECT COUNT(*) FROM ( '.
-            'SELECT COUNT( participant_id ) AS count FROM assignment '.
-            'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s '.
-            ') tmp', $complete_0_mod->get_sql() );
+          $sql = sprintf( $sql_open, $complete_0_mod->get_sql() );
 
-          $num_participant_started = $assignment_class_name::db()->get_one( $sql );
-
-          $sql = str_replace( 'COUNT(*)', 'SUM( count )', $sql );
           $num_assignment_in_progress = $assignment_class_name::db()->get_one( $sql );
+
+          $sql = $sql . 'GROUP BY participant_id';
+          $num_participant_started = $assignment_class_name::db()->get_one( $sql );
 
           // assignments created
           $assignment_created_mod = clone $created_mod;
           $assignment_created_mod->where( 'participant.cohort_id', '=', $cohort_id );
 
           $sql = sprintf(
+            'SELECT COUNT(*) FROM ( '.
             'SELECT COUNT(*) FROM assignment '.
             'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s ',
-            $assignment_created_mod->get_sql() );
+            'JOIN participant ON participant.id = assignment.participant_id %s '.
+            ') tmp', $assignment_created_mod->get_sql() );
 
           $num_assignment_started = $assignment_class_name::db()->get_one( $sql );
 
