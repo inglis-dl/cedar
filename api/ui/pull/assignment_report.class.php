@@ -40,6 +40,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $cohort_class_name = lib::get_class_name( 'database\cohort' );
     $event_type_class_name = lib::get_class_name( 'database\event_type' );
+    $operation_class_name = lib::get_class_name( 'database\operation' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
     $role_class_name = lib::get_class_name( 'database\role' );
     $site_class_name = lib::get_class_name( 'database\site' );
@@ -110,15 +111,19 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj = clone $temp_datetime_obj;
     }
 
-    $assignment_started_mod = lib::create( 'database\modifier' );
-    $assignment_started_mod->where( 'operation.type', '=', 'push' );
-    $assignment_started_mod->where( 'operation.name', '=', 'new' );
-    $assignment_started_mod->where( 'operation.subject', '=', 'assignment' );
+    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
+    $db_operation =  $operation_class_name::get_unique_record(
+      array( 'type', 'name', 'subject' ),
+      array( 'push', 'new', 'assignment' ) );
+
+    $base_started_mod = lib::create( 'database\modifier' );
+    $base_started_mod->where( 'activity.operation_id', '=', $db_operation->id );
+    $base_started_mod->where( 'activity.role_id', '=', $db_role->id );
 
     // if there is no start date then start with the earliest created assignment
     if( is_null( $start_datetime_obj ) )
     {
-      $first_assignment_mod = clone $assignment_started_mod;
+      $first_assignment_mod = clone $base_started_mod;
       $first_assignment_mod->order( 'activity.datetime' );
       $first_assignment_mod->limit( 1 );
       $db_activity = current( $activity_class_name::select( $first_assignment_mod ) );
@@ -139,8 +144,6 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj->format( 'Y' ),
       $end_datetime_obj->format( 'n' ),
       2 );
-
-    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
 
     $site_list = $site_class_name::select( $site_mod );
     $do_summary_table = 1 < count( $site_list );
@@ -180,25 +183,24 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $complete_mod->where( 'access.site_id', '=', $db_site->id );
         $complete_mod->where( 'assignment.end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $complete_mod->where( 'assignment.end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $complete_mod->group( 'assignment.id' );
 
         $in_progress_mod = lib::create( 'database\modifier' );
         $in_progress_mod->where( 'access.site_id', '=', $db_site->id );
         $in_progress_mod->where( 'assignment.create_timestamp', '<', $to_datetime_obj->format( 'Y-m-d' ) );
         $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+        $in_progress_mod->group( 'assignment.id' );
 
-        //TODO: join to assignment and partcipant table to restrict new assignment
-        // counts to the correct cohort
-        $started_mod = clone $assignment_started_mod;
-        $started_mod->where( 'site_id', '=', $db_site->id );
-        $started_mod->where( 'datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
-        $started_mod->where( 'datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $assignment_started_mod = clone $base_started_mod;
+        $assignment_started_mod->where( 'activity.site_id', '=', $db_site->id );
+        $assignment_started_mod->where( 'activity.datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
+        $assignment_started_mod->where( 'activity.datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
 
         foreach( $cohort_list as $cohort_name => $cohort_id )
         {
           // completed assignments with a sibling
           $complete_2_mod = clone $complete_mod;
           $complete_2_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_2_mod->group( 'assignment.id' );
           $complete_2_mod->having( 'COUNT(participant_id)', '=', 2 );
 
           $sql = sprintf(
@@ -215,7 +217,6 @@ class assignment_report extends \cenozo\ui\pull\base_report
           // completed assignments without a sibling
           $complete_1_mod = clone $complete_mod;
           $complete_1_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_1_mod->group( 'assignment.id' );
           $complete_1_mod->having( 'COUNT(participant_id)', '=', 1 );
 
           $sql = sprintf(
@@ -229,10 +230,9 @@ class assignment_report extends \cenozo\ui\pull\base_report
 
           $num_assignment_complete += $num_participant_partial;
 
-          // assignments started
+          // assignments in progress
           $complete_0_mod = clone $in_progress_mod;
           $complete_0_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_0_mod->group( 'assignment.id' );
 
           $sql = sprintf(
             'SELECT COUNT(*) FROM ( '.
@@ -246,7 +246,17 @@ class assignment_report extends \cenozo\ui\pull\base_report
           $sql = str_replace( 'COUNT(*)', 'SUM( count )', $sql );
           $num_assignment_in_progress = $assignment_class_name::db()->get_one( $sql );
 
-          $num_assignment_started = $activity_class_name::count( $started_mod );
+          // assignments created
+          $started_mod = clone $assignment_started_mod;
+          $started_mod->where( 'participant.cohort_id', '=', $cohort_id );
+
+          $sql = sprintf(
+            'SELECT COUNT(DISTINCT assignment.id) FROM activity '.
+            'JOIN assignment ON activity.user_id = assignment.user_id '.
+            'JOIN participant ON participant.id = assignment.participant_id %s ',
+            $started_mod->get_sql() );
+
+          $num_assignment_started = $assignment_class_name::db()->get_one( $sql );
 
           $row[] = $num_participant_complete;
           $row[] = $num_participant_partial + $num_participant_started;
