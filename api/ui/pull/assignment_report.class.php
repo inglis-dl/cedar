@@ -191,10 +191,10 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
         $in_progress_mod->group( 'assignment.id' );
 
-        $assignment_started_mod = clone $base_started_mod;
-        $assignment_started_mod->where( 'activity.site_id', '=', $db_site->id );
-        $assignment_started_mod->where( 'activity.datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
-        $assignment_started_mod->where( 'activity.datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $created_mod = lib::create( 'database\modifier' );
+        $created_mod->where( 'access.site_id', '=', $db_site->id );
+        $created_mod->where( 'assignment.create_timestamp', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
+        $created_mod->where( 'assignment.create_timestamp', '<', $to_datetime_obj->format( 'Y-m-d' ) );
 
         foreach( $cohort_list as $cohort_name => $cohort_id )
         {
@@ -247,14 +247,14 @@ class assignment_report extends \cenozo\ui\pull\base_report
           $num_assignment_in_progress = $assignment_class_name::db()->get_one( $sql );
 
           // assignments created
-          $started_mod = clone $assignment_started_mod;
-          $started_mod->where( 'participant.cohort_id', '=', $cohort_id );
+          $assignment_created_mod = clone $created_mod;
+          $assignment_created_mod->where( 'participant.cohort_id', '=', $cohort_id );
 
           $sql = sprintf(
-            'SELECT COUNT(DISTINCT assignment.id) FROM activity '.
-            'JOIN assignment ON activity.user_id = assignment.user_id '.
+            'SELECT COUNT(*) FROM assignment '.
+            'JOIN access ON access.user_id = assignment.user_id '.
             'JOIN participant ON participant.id = assignment.participant_id %s ',
-            $started_mod->get_sql() );
+            $assignment_created_mod->get_sql() );
 
           $num_assignment_started = $assignment_class_name::db()->get_one( $sql );
 
