@@ -36,10 +36,12 @@ class assignment_report extends \cenozo\ui\pull\base_report
    */
   protected function build()
   {
+    $activity_class_name = lib::get_class_name( 'database\activity' );
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
-    $event_type_class_name = lib::get_class_name( 'database\event_type' );
-    $participant_class_name = lib::get_class_name( 'database\participant' );
     $cohort_class_name = lib::get_class_name( 'database\cohort' );
+    $event_type_class_name = lib::get_class_name( 'database\event_type' );
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+    $participant_class_name = lib::get_class_name( 'database\participant' );
     $role_class_name = lib::get_class_name( 'database\role' );
     $site_class_name = lib::get_class_name( 'database\site' );
     $user_class_name = lib::get_class_name( 'database\user' );
@@ -66,20 +68,27 @@ class assignment_report extends \cenozo\ui\pull\base_report
        $event_type_class_name::get_unique_record( 'name', 'completed (Baseline Site)' )->id );
 
     $cohort_list = array();
-    $total_complete = array();
+    $total_participant_complete = array();
     $header = array( 'Year', 'Month' );
+    $footer = array( '--', '--' );
     foreach( $cohort_class_name::select() as $db_cohort )
     {
       $cohort_list[$db_cohort->name] = $db_cohort->id;
-      $total_complete[$db_cohort->name] = 0;
-      $header[] = ucwords( $db_cohort->name ) . ' Closed';
-      $header[] = ucwords( $db_cohort->name ) . ' Open';
+      $total_participant_complete[$db_cohort->name] = 0;
+      $header[] = ucwords( $db_cohort->name ) . ' Closed (Participants)';
+      $footer[] = 'sum()';
+      $header[] = ucwords( $db_cohort->name ) . ' Open (Participants)';
+      $footer[] = '--';
+      $header[] = ucwords( $db_cohort->name ) . ' Closed (Assignments)';
+      $footer[] = 'sum()';
+      $header[] = ucwords( $db_cohort->name ) . ' Open (Assignments)';
+      $footer[] = '--';
+      $header[] = ucwords( $db_cohort->name ) . ' Started (Assignments)';
+      $footer[] = '--';
     }
 
     $total_available['tracking']      = $participant_class_name::count( $base_cati_mod );
     $total_available['comprehensive'] = $participant_class_name::count( $base_comp_mod );
-
-    $footer = array( '--', '--', 'sum()', '--', 'sum()', '--' );
 
     // validate the dates
     if( $restrict_start_date )
@@ -102,21 +111,28 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj = clone $temp_datetime_obj;
     }
 
+    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
+    $db_operation =  $operation_class_name::get_unique_record(
+      array( 'type', 'name', 'subject' ),
+      array( 'push', 'new', 'assignment' ) );
+
+    $base_started_mod = lib::create( 'database\modifier' );
+    $base_started_mod->where( 'activity.operation_id', '=', $db_operation->id );
+    $base_started_mod->where( 'activity.role_id', '=', $db_role->id );
+
     // if there is no start date then start with the earliest created assignment
     if( is_null( $start_datetime_obj ) )
     {
-      $assignment_mod = lib::create( 'database\modifier' );
-      $assignment_mod->order( 'start_datetime' );
-      $assignment_mod->limit( 1 );
-      $db_assignment = current( $assignment_class_name::select( $assignment_mod ) );
-      if( false !== $db_assignment )
-        $start_datetime_obj = util::get_datetime_object( $db_assignment->start_datetime );
+      $first_assignment_mod = clone $base_started_mod;
+      $first_assignment_mod->order( 'activity.datetime' );
+      $first_assignment_mod->limit( 1 );
+      $db_activity = current( $activity_class_name::select( $first_assignment_mod ) );
+      if( false !== $db_activity )
+        $start_datetime_obj = util::get_datetime_object( $db_activity->datetime );
     }
 
     if( is_null( $end_datetime_obj ) )
-    {
       $end_datetime_obj = clone $now_datetime_obj;
-    }
 
     // we only care about what months have been selected, set days of month appropriately
     // such that the for loop below will include the start and end date's months
@@ -129,16 +145,29 @@ class assignment_report extends \cenozo\ui\pull\base_report
       $end_datetime_obj->format( 'n' ),
       2 );
 
-    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
-
     $site_list = $site_class_name::select( $site_mod );
     $do_summary_table = 1 < count( $site_list );
     $summary_content = array();
+    $interval = new \DateInterval( 'P1M' );
+
+    $sql_closed =
+      'SELECT COUNT(*) FROM ( '.
+      'SELECT COUNT( participant_id ) AS participant_count FROM assignment '.
+      'JOIN access ON access.user_id = assignment.user_id '.
+      'JOIN participant ON participant.id = assignment.participant_id %s '.
+      ') tmp';
+
+    $sql_open =
+      'SELECT COUNT(*) FROM ( '.
+      'SELECT assignment.* FROM assignment '.
+      'JOIN access ON access.user_id = assignment.user_id '.
+      'JOIN participant ON participant.id = assignment.participant_id %s '.
+      ') tmp ';
 
     // now create a table for every site included in the report
     foreach( $site_list as $db_site )
     {
-      $title = $db_site->name . ' Assignments';
+      $title = $db_site->name;
 
       $user_mod = lib::create( 'database\modifier' );
       $user_mod->where( 'access.role_id', '=', $db_role->id );
@@ -147,12 +176,12 @@ class assignment_report extends \cenozo\ui\pull\base_report
       // skip if no typists at this site
       if( 0 == $user_class_name::count( $user_mod ) )
       {
-        $this->add_table( $title, $header, array( '--','--', 0, '0', 0, '0' ), $footer );
+        $this->add_table(
+          $title, $header, array( '--','--', 0, '0', 0, '0', '0', 0, '0', 0, '0', '0' ), $footer );
         continue;
       }
 
       $content = array();
-      $interval = new \DateInterval( 'P1M' );
       for( $from_datetime_obj = clone $start_datetime_obj;
            $from_datetime_obj < $end_datetime_obj;
            $from_datetime_obj->add( $interval ) )
@@ -168,64 +197,82 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $complete_mod->where( 'access.site_id', '=', $db_site->id );
         $complete_mod->where( 'assignment.end_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
         $complete_mod->where( 'assignment.end_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $complete_mod->group( 'assignment.id' );
 
         $in_progress_mod = lib::create( 'database\modifier' );
         $in_progress_mod->where( 'access.site_id', '=', $db_site->id );
         $in_progress_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
         $in_progress_mod->where( 'assignment.end_datetime', '=', NULL );
+        $in_progress_mod->group( 'assignment.id' );
+
+        $created_mod = lib::create( 'database\modifier' );
+        $created_mod->where( 'access.site_id', '=', $db_site->id );
+        $created_mod->where( 'assignment.start_datetime', '>=', $from_datetime_obj->format( 'Y-m-d' ) );
+        $created_mod->where( 'assignment.start_datetime', '<', $to_datetime_obj->format( 'Y-m-d' ) );
+        $created_mod->group( 'assignment.id' );
 
         foreach( $cohort_list as $cohort_name => $cohort_id )
         {
           // completed assignments with a sibling
           $complete_2_mod = clone $complete_mod;
           $complete_2_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_2_mod->group( 'assignment.id' );
-          $complete_2_mod->having( 'COUNT(participant_id)', '=', 2 );
+          $complete_2_mod->having( 'participant_count', '=', 2 );
 
-          $sql = sprintf(
-            'SELECT COUNT( participant_id ) FROM assignment '.
-            'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s',
-             $complete_2_mod->get_sql() );
+          $sql = sprintf( $sql_closed, $complete_2_mod->get_sql() );
 
-          $num_complete = count( $assignment_class_name::db()->get_all( $sql ) );
+          $num_participant_complete = $assignment_class_name::db()->get_one( $sql );
+
+          $num_assignment_complete = $num_participant_complete * 2;
 
           // completed assignments without a sibling
           $complete_1_mod = clone $complete_mod;
           $complete_1_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_1_mod->group( 'assignment.id' );
-          $complete_1_mod->having( 'COUNT(participant_id)', '=', 1 );
+          $complete_1_mod->having( 'participant_count', '=', 1 );
 
-          $sql = sprintf(
-            'SELECT COUNT( participant_id ) FROM assignment '.
-            'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s',
-             $complete_1_mod->get_sql() );
+          $sql = sprintf( $sql_closed, $complete_1_mod->get_sql() );
 
-          $num_partial = count( $assignment_class_name::db()->get_all( $sql ) );
+          $num_participant_partial = $assignment_class_name::db()->get_one( $sql );
 
-          // assignments started
+          $num_assignment_complete += $num_participant_partial;
+
+          // assignments in progress
           $complete_0_mod = clone $in_progress_mod;
           $complete_0_mod->where( 'participant.cohort_id', '=', $cohort_id );
-          $complete_0_mod->group( 'assignment.id' );
+
+          $sql = sprintf( $sql_open, $complete_0_mod->get_sql() );
+
+          $num_assignment_in_progress = $assignment_class_name::db()->get_one( $sql );
+
+          $sql = $sql . 'GROUP BY participant_id';
+          $num_participant_started = $assignment_class_name::db()->get_one( $sql );
+
+          // assignments created
+          $assignment_created_mod = clone $created_mod;
+          $assignment_created_mod->where( 'participant.cohort_id', '=', $cohort_id );
 
           $sql = sprintf(
-            'SELECT COUNT( participant_id ) FROM assignment '.
+            'SELECT COUNT(*) FROM ( '.
+            'SELECT COUNT(*) FROM assignment '.
             'JOIN access ON access.user_id = assignment.user_id '.
-            'JOIN participant ON participant.id = assignment.participant_id %s',
-             $complete_0_mod->get_sql() );
+            'JOIN participant ON participant.id = assignment.participant_id %s '.
+            ') tmp', $assignment_created_mod->get_sql() );
 
-          $num_started = count( $assignment_class_name::db()->get_all( $sql ) );
+          $num_assignment_started = $assignment_class_name::db()->get_one( $sql );
 
-          $row[] = $num_complete;
-          $row[] = $num_partial + $num_started;
-          $total_complete[ $cohort_name ] += $num_complete;
+          $row[] = $num_participant_complete;
+          $row[] = $num_participant_partial + $num_participant_started;
+          $row[] = $num_assignment_complete;
+          $row[] = is_null( $num_assignment_in_progress ) ? 0 : $num_assignment_in_progress;
+          $row[] = is_null( $num_assignment_started ) ? 0 : $num_assignment_started;
+
+          $total_participant_complete[$cohort_name] += $num_participant_complete;
         }
 
         $content[] = $row;
 
         if( $do_summary_table )
         {
+          // generate a key YearMonth from first two row elements
           $key = implode( array_slice( $row, 0, 2 ) );
           if( !array_key_exists( $key, $summary_content ) )
           {
@@ -248,7 +295,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
         $header, array_values( $summary_content ), $footer );
     }
 
-    $status_heading =  array( 'Cohort', 'Closed', 'Remaining' );
+    $status_heading =  array( 'Cohort', 'Closed (Participants)', 'Remaining (Participants)' );
     $status_content = array();
     $status_footer =  array( '--', 'sum()', 'sum()' );
 
@@ -256,8 +303,8 @@ class assignment_report extends \cenozo\ui\pull\base_report
     {
       $status_content[] =
         array( ucwords( $cohort_name ),
-               $total_complete[$cohort_name],
-               $total_available[$cohort_name] - $total_complete[$cohort_name] );
+               $total_participant_complete[$cohort_name],
+               $total_available[$cohort_name] - $total_participant_complete[$cohort_name] );
     }
 
     $this->add_table( 'Status (All Sites)',
