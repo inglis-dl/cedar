@@ -264,6 +264,8 @@ class test_entry extends \cenozo\database\has_note
    * @param database\modifier $modifier Modifications to the selection.
    * @return db_test_entry (NULL if no sibling)
    * @access public
+   * @param database\modifier Modifier to refine the selection
+   * @return database\test_entry (NULL if no sibling)
    */
   public function get_sibling_test_entry( $modifier = NULL )
   {
@@ -313,9 +315,10 @@ class test_entry extends \cenozo\database\has_note
     $entry_class_name = 'test_entry_' . $test_type_name;
 
     $sql = sprintf(
-             'DELETE FROM %s '.
-             'WHERE test_entry_id = %s', $entry_class_name,
-             $database_class_name::format_string( $this->id ) );
+      'DELETE FROM %s '.
+      'WHERE test_entry_id = %s',
+      $entry_class_name,
+      $database_class_name::format_string( $this->id ) );
     static::db()->execute( $sql );
 
     $db_assignment = $this->get_assignment();
@@ -325,8 +328,9 @@ class test_entry extends \cenozo\database\has_note
     else
       $db_participant = $db_assignment->get_participant();
 
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
     if( $test_type_name == 'ranked_word' )
     {
@@ -361,7 +365,7 @@ class test_entry extends \cenozo\database\has_note
     else if( $test_type_name == 'alpha_numeric' )
     {
       $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'language', '=', $language );
+      $modifier->where( 'language_id', '=', $db_language->id );
       $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
       for( $rank = 1; $rank <= $word_count; $rank++ )
       {

@@ -56,15 +56,20 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     if( !is_null( $word_candidate ) )
     {
       $db_test = $db_test_entry->get_test();
-      $language = NULL;
+      $db_language = NULL;
       $db_assignment = $db_test_entry->get_assignment();
       if( is_null( $db_assignment ) )
-        $language = $db_test_entry->get_participant()->language;
+        $db_language = $db_test_entry->get_participant()->get_language();
       else
-        $language = $db_assignment->get_participant()->language;
-      $language = is_null( $language ) ? 'en' : $language;
+        $db_language = $db_assignment->get_participant()->get_language();
 
-      $data = $db_test->get_word_classification( $word_candidate, $language );
+      if( is_null( $db_language ) )
+      {
+        $session = lib::create( 'business\session' );
+        $db_language = $session->get_service()->get_language();
+      }
+
+      $data = $db_test->get_word_classification( $word_candidate, $db_language );
       $classification = $data['classification'];
       $db_word = $data['word'];
 
@@ -120,7 +125,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
             $db_new_word = lib::create( 'database\word' );
             $db_new_word->dictionary_id = $db_dictionary->id;
             $db_new_word->word = $word_candidate;
-            $db_new_word->language = $language;
+            $db_new_word->language_id = $db_language->id;
             $db_new_word->save();
             $db_test_entry_ranked_word->word_id = $word_class_name::db()->insert_id();
           }

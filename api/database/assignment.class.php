@@ -24,12 +24,11 @@ class assignment extends \cenozo\database\record
    */
   public function get_deferred_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get deferred count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );
@@ -45,12 +44,11 @@ class assignment extends \cenozo\database\record
    */
   public function get_completed_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get completed count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );
@@ -68,10 +66,10 @@ class assignment extends \cenozo\database\record
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
-    {
       throw lib::create( 'exception\runtime',
         'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
-    }
+
+    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );
@@ -103,7 +101,10 @@ class assignment extends \cenozo\database\record
         'There must be one or more cohorts assigned to user: '. $db_user->name,
           __METHOD__ );
 
-    $language = $db_user->language;
+    $language_id_list = array();
+    foreach( $db_user->get_language_list() as $db_language )
+      $language_id_list[] = $db_language->id;
+
     $id = NULL;
 
     if( $has_tracking )
@@ -116,8 +117,12 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'cohort.name', '=', 'tracking' );
       $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
       $modifier->where( 'participant_site.site_id', '=', $session->get_site()->id );
-      if( $language != 'any' )
-        $modifier->where( 'IFNULL(participant.language,"en")', '=', $language );
+      if( 0 < count( $language_id_list ) )
+      {
+        $db_service_language = $session->get_service()->get_language();
+        $modifier->where( 'IFNULL( participant.language_id, '.
+          $db_service_language->id . ' )', 'IN', $language_id_list );
+      }
       $modifier->group( 'participant.id' );
 
       $sql = sprintf(

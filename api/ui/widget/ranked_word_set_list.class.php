@@ -38,21 +38,21 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
   {
     parent::prepare();
 
-    $word_class_name = lib::get_class_name( 'database\word' );
+    $language_class_name = lib::get_class_name( 'database\language' );
+    $ranked_word_set_has_language_class_name =
+      lib::get_class_name( 'database\ranked_word_set_has_language' );
 
     $this->add_column( 'rank', 'string', 'Rank', true );
-
-    $this->languages = $word_class_name::get_enum_values( 'language' );
-    foreach( $this->languages as $language )
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'id', 'IN',
+      $ranked_word_set_has_language_class_name::get_distinct_values( 'language_id' ) );
+    $this->language_list = $language_class_name::select( $modifier );
+    foreach( $this->language_list as $db_language )
     {
-      $this->add_column( 'word_' . $language, 'string', 'Word (' .
-        ($language == "en" ? 'English' : 'French')  . ')', false );
+      $this->add_column(
+        'word_'. $db_language->code, 'string',
+        'Word( '. $db_language->name . ' )', false );
     }
-
-    //TODO consider disabling the add button at the bottom of the list
-    // once all the words in the primary dictionary have been used up
-    // or do this in the parent "test" class
-    //$this->set_addable()
   }
 
   /**
@@ -65,17 +65,15 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
 
-    foreach( $this->get_record_list() as $record )
+    foreach( $this->get_record_list() as $db_ranked_word_set )
     {
-      $row_array[ 'rank' ] = $record->rank;
-      foreach( $this->languages as $language )
+      $row_array[ 'rank' ] = $db_ranked_word_set->rank;
+      foreach( $this->language_list as $db_language )
       {
-        $word_id = 'word_' . $language . '_id';
-        $db_word = lib::create( 'database\word', $record->$word_id );
-        $row_array[ 'word_' . $language ] = $db_word ? $db_word->word : '';
+        $db_word = $db_ranked_word_set->get_word( $db_language );
+        $row_array[ 'word_'. $db_language->code ] = $db_word->word;
       }
-
-      $this->add_row( $record->id, $row_array );
+      $this->add_row( $db_ranked_word_set->id, $row_array );
     }
   }
 
@@ -85,5 +83,5 @@ class ranked_word_set_list extends \cenozo\ui\widget\base_list
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = NULL;
+  protected $language_list = NULL;
 }

@@ -143,9 +143,13 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     // allow bilingual responses for FAS tests if both the typist and the participant speak french
     $db_participant = $db_test_entry->get_assignment()->get_participant();
-    $language = is_null( $db_participant->language ) ? 'any' : $db_participant->language;
-    if( $is_FAS && $language == 'fr' && $db_user->language == 'fr' ) $language = 'any';
-    $this->set_variable( 'language', $language );
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+    {
+      $session = lib::create( 'business\session' );
+      $db_language = $session->get_service()->get_language();
+    }
+    $this->set_variable( 'language_id', $db_language->id );
 
     // get the audio files from sabretooth
     if( $db_participant->get_cohort()->name == 'tracking' )

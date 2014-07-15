@@ -63,12 +63,11 @@ class dictionary_report extends \cenozo\ui\pull\base_report
 
     // loop through all the words
     $word_mod = lib::create( 'database\modifier' );
-    $word_mod->where( 'word.dictionary_id', '=', $db_dictionary->id );
-    $word_mod->order( 'word.language' );
+    $word_mod->where( 'dictionary_id', '=', $db_dictionary->id );
     $contents = array();
     foreach( $word_class_name::select( $word_mod ) as $db_word )
     {
-      $contents[] = array( $db_word->word, $db_word->language );
+      $contents[] = array( $db_word->word, $db_word->get_language()->code );
     }
 
     $word_count = $db_dictionary->get_word_count();

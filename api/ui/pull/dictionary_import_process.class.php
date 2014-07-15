@@ -38,6 +38,7 @@ class dictionary_import_process extends \cenozo\ui\pull
     parent::execute();
 
     $dictionary_import_class_name = lib::get_class_name( 'database\dictionary_import' );
+    $language_class_name = lib::get_class_name( 'database\language' );
     $word_class_name = lib::get_class_name( 'database\word' );
 
     $md5 = $this->get_argument( 'md5' );
@@ -63,7 +64,19 @@ class dictionary_import_process extends \cenozo\ui\pull
     $dictionary_word_count = 0;
     $error_count           = 0;
 
-    $languages = $word_class_name::get_enum_values( 'language' );
+    $language_mod = lib::create( 'database\modifier' );
+    $language_mod->where( 'active', '=', true );
+    $language_codes = array();
+    foreach( $language_class_name::select( $language_mod ) as $db_language )
+    {
+      $language_codes[$db_language->id] = $db_language->code;
+    }
+    if( 0 == count( $language_codes ) )
+    {
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
+      $language_codes[$db_language->id] = $db_language->code;
+    }
+
     $word_array = array();
     $this->data = array();
     $this->data['id'] = $db_dictionary_import->id;
@@ -98,7 +111,7 @@ class dictionary_import_process extends \cenozo\ui\pull
         if( is_array( $word ) ) $word = implode( ' ', $word );
 
         $language = strtolower( trim( $row_entry[1] ) );
-        if( !in_array( $language, $languages ) )
+        if( !in_array( $language, array_values( $language_codes ) ) )
         {
           $this->data['error_entries'][] =
             'Error: invalid language code "' . $language . '" on line '
@@ -155,12 +168,12 @@ class dictionary_import_process extends \cenozo\ui\pull
       {
         $unique_word_count = 0;
         $word_array_final = array();
-        foreach( $languages as $language )
+        foreach( $language_codes as $language_id => $code )
         {
           $candidate_words = array();
           foreach( $word_array as $key => $value )
           {
-            if( $value[1] == $language )
+            if( $value[1] == $code )
               $candidate_words[] = $value[0];
           }
           $candidate_word_count = count( $candidate_words );
@@ -168,8 +181,8 @@ class dictionary_import_process extends \cenozo\ui\pull
           {
             $dictionary_words = array();
             $modifier = lib::create( 'database\modifier' );
-            $modifier->where( 'word.dictionary_id', '=', $dictionary_id );
-            $modifier->where( 'word.language', '=', $language );
+            $modifier->where( 'dictionary_id', '=', $dictionary_id );
+            $modifier->where( 'language_id', '=', $language_id );
             foreach( $word_class_name::select( $modifier ) as $db_word )
             {
               $dictionary_words[] = $db_word->word;
@@ -187,7 +200,7 @@ class dictionary_import_process extends \cenozo\ui\pull
             if( 0 < $unique_count )
             {
               foreach( $unique_words as $word )
-                $word_array_final[] = array( $word, $language );
+                $word_array_final[] = array( $word, $code );
 
               $unique_word_count += $unique_count;
               $duplicate_word_count += $candidate_word_count - $unique_count;

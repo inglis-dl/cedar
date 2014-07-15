@@ -47,12 +47,14 @@ class word extends \cenozo\database\record
    */
   public function get_usage_count()
   {
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $test_class_name = lib::get_class_name( 'database\test' );
+
     if( is_null( $this->id ) )
     {
       throw lib::create( 'exception\runtime',
         'Tried to get a usage count for a word with no id', __METHOD__ );
     }
-    $test_class_name = lib::get_class_name( 'database\test' );
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
     $modifier->or_where( 'variant_dictionary_id', '=', $this->dictionary_id );
@@ -63,6 +65,6 @@ class word extends \cenozo\database\record
 
     return static::db()->get_one(
       sprintf( 'SELECT total FROM %s WHERE word_id = %s',
-               $column, $this->id ) );
+               $column, $database_class_name::format_string( $this->id ) ) );
   }
 }

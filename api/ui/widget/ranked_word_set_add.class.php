@@ -37,22 +37,18 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
 
-    $word_class_name = lib::get_class_name( 'database\word' );
+    $language_class_name = lib::get_class_name( 'database\language' );
 
     // add items to the view
     $this->add_item( 'test_id', 'hidden' );
     $this->add_item( 'rank', 'enum', 'Rank' );
 
-    $this->languages = $word_class_name::get_enum_values( 'language' );
-    foreach( $this->languages as $language )
+    $language_mod = lib::create( 'database\modifier' );
+    $language_mod->where( 'active', '=', true );
+    $this->language_list = $language_class_name::select( $language_mod );
+    foreach( $this->language_list as $db_language )
     {
-      $description = 'Unknown';
-      if( $language == 'en' )
-        $description = 'English';
-      elseif ( $language == 'fr' )
-        $description = 'French';
-
-      $this->add_item( 'word_' . $language . '_id', 'enum', 'Word (' . $description  . ')' );
+      $this->add_item( 'word_' . $db_language->code, 'enum', 'Word (' . $db_language->name . ')' );
     }
   }
 
@@ -68,8 +64,8 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
   {
     parent::setup();
 
-    $word_class_name = lib::get_class_name( 'database\word' );
     $ranked_word_set_class_name = lib::get_class_name( 'database\ranked_word_set' );
+    $word_class_name = lib::get_class_name( 'database\word' );
 
     // this widget must have a parent, and it's subject must be a test
     if( is_null( $this->parent ) || 'test' != $this->parent->get_subject() )
@@ -81,53 +77,47 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
 
     if( is_null( $db_dictionary ) )
       throw lib::create( 'exception\notice',
-      'The primary dictionary selection cannot be left blank.', __METHOD__ );
+        'The primary dictionary must be set for the ' . $db_test->name . ' test.', __METHOD__ );
 
-    $words = array();
+    $word_list = array();
     $dictionary_word_count = $db_dictionary->get_word_count();
     if( 0 < $dictionary_word_count &&
-        0 == ( $dictionary_word_count % count( $this->languages ) ) )
+        0 == ( $dictionary_word_count % count( $this->language_list ) ) )
     {
-      foreach( $this->languages as $language )
+      foreach( $this->language_list as $db_language )
       {
         // get word ids from all ranked word sets that have this test id
-        $ranked_mod =  lib::create( 'database\modifier' );
-        $ranked_mod->where( 'ranked_word_set.test_id', '=', $db_test->id );
-        $word_id = 'word_' . $language . '_id';
+        $modifier =  lib::create( 'database\modifier' );
+        $modifier->where( 'test_id', '=', $db_test->id );
         $word_ids_exclude = array();
-        foreach( $ranked_word_set_class_name::select( $ranked_mod ) as $db_ranked_word_set )
+        foreach( $ranked_word_set_class_name::select( $modifier ) as $db_ranked_word_set )
         {
-          $word_ids_exclude[] = $db_ranked_word_set->$word_id;
+          $db_word = $db_ranked_word_set->get_word( $db_language );
+          if( !is_null( $db_word ) )
+            $word_ids_exclude[] = $db_word->id;
         }
 
-        // get the words that can be selected from
+        // get the primary dictionary's words that can be selected from
         $word_mod = lib::create( 'database\modifier' );
-        $word_mod->where( 'word.dictionary_id', '=', $db_dictionary->id );
-        $word_mod->where( 'word.language', '=', $language );
-        if( !empty( $word_ids_exclude ) )
-        {
-          $word_mod->where( 'word.id', 'NOT IN', $word_ids_exclude );
-        }
+        $word_mod->where( 'dictionary_id', '=', $db_dictionary->id );
+        $word_mod->where( 'language_id', '=', $db_language->id );
+
+        if( 0 < count( $word_ids_exclude ) )
+          $word_mod->where( 'id', 'NOT IN', $word_ids_exclude );
+
         foreach( $word_class_name::select( $word_mod ) as $db_word )
-        {
-          $words[$language][$db_word->id] = $db_word->word;
-        }
+          $word_list[ $db_language->id ][ $db_word->id ] = $db_word->word;
       }
     }
     else
-    {
       throw lib::create( 'exception\notice',
         'The primary dictionary must contain at least one word of each language.',
         __METHOD__ );
-    }
 
-    //TODO remove this exception once the list class turns off adding
-    if( empty( $words ) )
-    {
+    if( 0 == count( $word_list ) )
       throw lib::create( 'exception\notice',
         'There are no words left in the dictionary to create a ranked word set.',
         __METHOD__ );
-    }
 
     $num_ranks = $db_test->get_ranked_word_set_count();
     $ranks = array();
@@ -141,11 +131,10 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
     $this->set_item( 'test_id', $db_test->id );
     $this->set_item( 'rank', $last_rank_key, true, $ranks );
 
-    foreach( $this->languages as $language )
+    foreach( $this->language_list as $db_language )
     {
-      $word_list = $words[$language];
-      $word_id = 'word_' . $language . '_id';
-      $this->set_item( $word_id, key( $word_list ), true, $word_list, true );
+      $word_list = $word_list[ $db_language->id ];
+      $this->set_item( 'word_' . $db_language->code, key( $word_list ), true, $word_list, true );
     }
   }
 
@@ -155,5 +144,5 @@ class ranked_word_set_add extends \cenozo\ui\widget\base_view
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
-  protected $languages = NULL;
+  protected $language_list = NULL;
 }

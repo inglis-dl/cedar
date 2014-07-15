@@ -368,9 +368,6 @@ class assignment_manager extends \cenozo\singleton
     }
     else
     {
-      $language = $db_test_entry->get_assignment()->get_participant()->language;
-      $language = is_null( $language ) ? 'en' : $language;
-
       $classification = array_combine(
         array( $db_test->dictionary_id,
                $db_test->intrusion_dictionary_id,
@@ -530,7 +527,9 @@ class assignment_manager extends \cenozo\singleton
       }
       else if( $test_type_name == 'ranked_word' )
       {
-        $ranked_word_id = 'word_' . $language . '_id';
+        $db_language = $db_test_entry->get_assignment()->get_participant()->get_language();
+        if( is_null( $db_language ) )
+          $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
         $rank_modifier = lib::create( 'database\modifier' );
         $rank_modifier->order( 'ranked_word_set.rank' );
@@ -642,11 +641,8 @@ class assignment_manager extends \cenozo\singleton
                 throw lib::create( 'exception\runtime',
                   'Invalid test entry ranked word pair', __METHOD__ );
 
-              $db_ranked_word_set = $a_obj->get_ranked_word_set();
-              $db_ranked_word_set_word =
-                lib::create( 'database\word', $db_ranked_word_set->$ranked_word_id );
-              $ranked_word_set_word = $db_ranked_word_set_word->word;
-              $ranked_word_set_id = $db_ranked_word_set->id;
+              $ranked_word_set_word = $a_obj->get_word( $db_language );
+              $ranked_word_set_id = $a_obj->get_ranked_word_set()->id;
             }
 
             $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
@@ -692,7 +688,6 @@ class assignment_manager extends \cenozo\singleton
               $classification[ $dictionary_id ] : '';
           }
           if( !is_null( $c_obj->selection ) )  $selection_3 = $c_obj->selection;
-
 
           $entry_data[] = array(
                    'id_1' => $id_1,
