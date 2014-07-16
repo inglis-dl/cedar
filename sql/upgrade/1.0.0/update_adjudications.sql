@@ -184,13 +184,13 @@ CREATE PROCEDURE update_adjudications()
       JOIN test_entry_total_adjudicate t ON t.assignment_id=a.id
       SET end_datetime = NULL
       WHERE end_datetime IS NOT NULL
-      AND t.adjudicate > 0
+      AND t.adjudicate > 0;
 
       UPDATE assignment a
       JOIN test_entry_total_deferred t ON t.assignment_id=a.id
       SET end_datetime = NULL
       WHERE end_datetime IS NOT NULL
-      AND t.deferred > 0
+      AND t.deferred > 0;
 
     END IF;
 

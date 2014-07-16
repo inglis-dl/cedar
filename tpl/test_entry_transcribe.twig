@@ -12,17 +12,6 @@
 
   <script type="text/javascript">
 
-    function break_dialog() {
-      confirm_dialog(
-        "On a break",
-        "<p>Close this window when you wish to end your break.</p>",
-        function() {
-          ajax_push( "typist", "end_break" );
-        },
-        false
-      );
-    }
-
     function configure() {
       var audio_state = $( "#{{ widget.full }}__audio_status option:selected" ).val();
       var participant_state = $( "#{{ widget.full }}__participant_status option:selected" ).val();
@@ -35,18 +24,11 @@
 
     $( function () {
 
-      // go on break button
-      $( "#{{ widget.full }}__break" ).click( function() {
-        if( ajax_push( "typist", "begin_break" ) ) break_dialog();
-      } );
-
-      {# show the break dialog if the operator is on break #}
-      {% if on_break %}break_dialog();{% endif %}
-
       $( "#{{ widget.full }}__audio_status" ).change( function() {
         var state = $( "#{{ widget.full }}__audio_status option:selected" ).val();
         if( 'unavailable' == state ) {
-          $( "#{{ widget.full }}_defer" ).trigger( "click", function( push = false) {
+          $( "#{{ widget.full }}_defer" ).trigger( "click", function( push ) {
+            push = typeof push !== 'undefined' ? push : false;
             var audio_select = "#{{ widget.full }}__audio_status";
             var columns = new Object();
             var state = $( audio_select + ' option:selected' ).val();
@@ -255,8 +237,6 @@
       <div style="min-width: 25%; float: left;">
         {% from 'macros.twig' import note_widget %}
         {{ note_widget( widget.full, 'test_entry', id, false, 'Notes' ) }}
-        <button id="{{ widget.full }}__break"
-          style="width: 200px;">Go on break</button>
       </div>
       {% from 'macros.twig' import confirm_buttons %}
         {{ confirm_buttons( slot, widget.full,

@@ -64,7 +64,7 @@ class dictionary_import_process extends \cenozo\ui\pull
     $dictionary_word_count = 0;
     $error_count           = 0;
 
-    $language_mod = lib::create( 'business\modifier' );
+    $language_mod = lib::create( 'database\modifier' );
     $language_mod->where( 'active', '=', true );
     $language_codes = array();
     foreach( $language_class_name::select( $language_mod ) as $db_language )

@@ -24,7 +24,6 @@ class assignment extends \cenozo\database\record
    */
   public function get_deferred_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
       throw lib::create( 'exception\runtime',
         'Tried to get deferred count for an assignment with no id', __METHOD__ );
@@ -45,7 +44,6 @@ class assignment extends \cenozo\database\record
    */
   public function get_completed_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
       throw lib::create( 'exception\runtime',
         'Tried to get completed count for an assignment with no id', __METHOD__ );
@@ -123,7 +121,7 @@ class assignment extends \cenozo\database\record
       {
         $db_service_language = $session->get_service()->get_language();
         $modifier->where( 'IFNULL( participant.language_id, '.
-                           $db_service_language->id . ' )', 'IN', $language_id_list );
+          $db_service_language->id . ' )', 'IN', $language_id_list );
       }
       $modifier->group( 'participant.id' );
 

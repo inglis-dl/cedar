@@ -328,8 +328,9 @@ class test_entry extends \cenozo\database\has_note
     else
       $db_participant = $db_assignment->get_participant();
 
-    $language = $db_participant->language;
-    $language = is_null( $language ) ? 'en' : $language;
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
     if( $test_type_name == 'ranked_word' )
     {
@@ -364,7 +365,7 @@ class test_entry extends \cenozo\database\has_note
     else if( $test_type_name == 'alpha_numeric' )
     {
       $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'language', '=', $language );
+      $modifier->where( 'language_id', '=', $db_language->id );
       $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
       for( $rank = 1; $rank <= $word_count; $rank++ )
       {

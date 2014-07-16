@@ -78,12 +78,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $session = lib::create( 'business\session' );
     $db_user = $session->get_user();
 
-    // determine whether the typist is on a break
-    $away_time_mod = lib::create( 'database\modifier' );
-    $away_time_mod->where( 'end_datetime', '=', NULL );
-    $this->set_variable( 'on_break',
-      0 < $db_user->get_away_time_count( $away_time_mod ) );
-
     $db_test_entry = $this->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
@@ -114,7 +108,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $participant_status =
       array_search( $db_test_entry->participant_status, $participant_status_list );
     $this->set_variable( 'participant_status', $participant_status );
-    $this->set_variable(  'participant_status_list', $participant_status_list );
+    $this->set_variable( 'participant_status_list', $participant_status_list );
 
     $this->set_variable( 'deferred', $db_test_entry->deferred );
     $this->set_variable( 'completed', $db_test_entry->completed );

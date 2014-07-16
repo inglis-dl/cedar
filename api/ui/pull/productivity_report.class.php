@@ -128,7 +128,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $start_datetime_obj->format( 'Y-m-d' ).' 23:59:59' );
     }
 
-    $sql_comparators = array();
+    $sql_queries = array();
     foreach( $test_class_name::select() as $db_test )
     {
       $table_name = 'test_entry_' . $db_test->get_test_type()->name;
@@ -137,28 +137,81 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $table_class_name::db()->get_column_names( $table_class_name::get_table_name() );
       unset( $column_names[ array_search( 'id', $column_names ) ] );
       unset( $column_names[ array_search( 'test_entry_id', $column_names ) ] );
-      $sql_comparators[ $db_test->id ][ $table_name ] = array_values( $column_names );
+
+      $sql_pre = 'SELECT COUNT(*) FROM ( SELECT ';
+      $sql_columns1 = 'SELECT ';
+      $sql_columns2 = 'SELECT ';
+      $sql_post = ') temp GROUP BY ';
+      $last = end( $column_names );
+      foreach( $column_names as $column )
+      {
+        if( $last == $column )
+        {
+          $sql_columns1 = $sql_columns1 . 't1.'. $column;
+          $sql_columns2 = $sql_columns2 . 't2.'. $column;
+          $sql_post = $sql_post . $column;
+        }
+        else
+        {
+          $sql_columns1 = $sql_columns1 . 't1.'. $column . ', ';
+          $sql_columns2 = $sql_columns2 . 't2.'. $column . ', ';
+          $sql_post = $sql_post . $column . ', ';
+        }
+        $sql_pre = $sql_pre . $column . ', ';
+      }
+
+      $sql_pre = $sql_pre . ' COUNT(*) AS c FROM (';
+      $sql_post = $sql_post . ' HAVING c=1 ) temp2';
+
+      $sql_columns1 = $sql_columns1 . ' FROM '. $table_name . ' t1 ' .
+        'WHERE t1.test_entry_id=%s';
+      $sql_columns2 = $sql_columns2 . ' FROM '. $table_name . ' t2 ' .
+        'WHERE t2.test_entry_id=%s';
+
+      $sql_queries[ $db_test->id ] =
+        $sql_pre . $sql_columns1 . ' UNION ALL ' . $sql_columns2 . $sql_post;
     }
 
     $temp_user_mod = clone $base_assignment_mod;
     $temp_user_mod->where( 'assignment.end_datetime', '!=', NULL );
     $sql = sprintf(
-      'CREATE TEMPORARY TABLE temp_user '.
-      'SELECT t1.id AS adjudicate_entry_id, '.
-      't1.test_id AS test_id, '.
-      't1.audio_status AS adjudicate_audio_status, '.
-      't1.participant_status AS adjudicate_participant_status, '.
+      'CREATE TEMPORARY TABLE temp_user_adjudicate '.
+      'SELECT assignment.user_id, '.
+      't1.id AS adjudicate_entry_id, '.
       't2.id AS progenitor_entry_id, '.
-      't2.audio_status AS progenitor_audio_status, '.
-      't2.participant_status AS progenitor_participant_status, '.
-      'assignment.user_id '.
+      't1.test_id AS test_id, '.
+      't1.audio_status <=> t2.audio_status '.
+      'AND t1.participant_status <=> t2.participant_status AS status_equal '.
       'FROM assignment '.
       'JOIN test_entry t1 ON t1.participant_id=assignment.participant_id '.
       'LEFT JOIN test_entry t2 ON t2.test_id=t1.test_id %s '.
       'AND t2.assignment_id=assignment.id', $temp_user_mod->get_sql() );
 
     $assignment_class_name::db()->execute( $sql );
-    $sql = 'ALTER TABLE temp_user ADD INDEX dk_user_id (user_id), ADD INDEX dk_test_id (test_id)';
+    $sql =
+      'ALTER TABLE temp_user_adjudicate '.
+      'ADD INDEX dk_user_id (user_id), ADD INDEX dk_test_id (test_id)';
+    $assignment_class_name::db()->execute( $sql );
+
+    $sql = sprintf(
+      'CREATE TEMPORARY TABLE temp_user_complete '.
+      'SELECT user_id, '.
+      'COUNT(*) AS assignment_count, '.
+      'SUM( complete_status ) AS complete_count '.
+      'FROM ( '.
+      'SELECT assignment.id, '.
+      'assignment.user_id AS user_id, '.
+      'IF( ( COUNT( test_entry.id ) - '.
+      'SUM( IF( test_entry.deferred = false, '.
+      'IF( test_entry.completed = true , 1, 0 ), 0 ) ) ) = 0, 1, 0 ) AS complete_status '.
+      'FROM assignment '.
+      'LEFT JOIN test_entry ON assignment.id=test_entry.assignment_id %s'.
+      'GROUP BY assignment.id '.
+      ') AS tmp '.
+      'GROUP BY user_id ', $base_assignment_mod->get_sql() );
+
+    $assignment_class_name::db()->execute( $sql );
+    $sql = 'ALTER TABLE temp_user_complete ADD INDEX dk_user_id (user_id)';
     $assignment_class_name::db()->execute( $sql );
 
     // create a table for every site included in the report
@@ -198,78 +251,33 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $num_adjudicate  = 0;
         $assignment_time = 0;
 
-        $assignment_mod = clone $base_assignment_mod;
-        $assignment_mod->where( 'assignment.user_id', '=', $db_user->id );
-        $assignment_mod->group( 'assignment.id' );
+        $id_string = $database_class_name::format_string( $db_user->id );
 
         $sql = sprintf(
-          'SELECT COUNT(*) FROM ( '.
-          'SELECT '.
-          'IF( COUNT( test_entry.id ) - '.
-          'SUM( IF(  test_entry.deferred = false, '.
-          'IF( test_entry.completed = true , 1, 0 ), 0  ) ), "complete", "incomplete") '.
-          'AS complete_status '.
-          'FROM assignment '.
-          'LEFT JOIN test_entry ON assignment.id=test_entry.assignment_id %s '.
-          'HAVING complete_status="incomplete" ) AS tmp', $assignment_mod->get_sql() );
+          'SELECT * FROM temp_user_complete '.
+          'WHERE user_id=%s', $id_string );
 
-        $num_complete = $assignment_class_name::db()->get_one( $sql );
-
-        $sql = str_replace( 'complete_status="incomplete', 'complete_status="complete', $sql );
-
-        $num_incomplete = $assignment_class_name::db()->get_one( $sql );
+        $data = $assignment_class_name::db()->get_row( $sql );
+        $num_complete = $data[ 'complete_count' ];
+        $num_incomplete = $data[ 'assignment_count' ] - $num_complete;
 
         $sql = sprintf(
-          'SELECT * FROM temp_user '.
-          'WHERE user_id=%s',
-          $database_class_name::format_string( $db_user->id ) );
+          'SELECT * FROM temp_user_adjudicate '.
+          'WHERE user_id=%s', $id_string );
 
         $num_adjudicate = 0;
         foreach( $assignment_class_name::db()->get_all( $sql ) as $data )
         {
-          if( ( $data[ 'adjudicate_audio_status' ] != $data[ 'progenitor_audio_status' ] ) ||
-              ( $data[ 'adjudicate_participant_status' ] != $data[ 'progenitor_participant_status' ] ) )
+          if( 0 == $data[ 'status_equal' ] )
           {
             $num_adjudicate++;
           }
           else
           {
-            $test_id = $data[ 'test_id' ];
-            $table_name = current( array_keys( $sql_comparators[ $test_id ] ) );
-            $table_columns = current( array_values( $sql_comparators[ $test_id ] ) );
-            $sql_pre = 'SELECT COUNT(*) FROM ( SELECT ';
-            $sql_columns1 = 'SELECT ';
-            $sql_columns2 = 'SELECT ';
-            $sql_post = ') temp GROUP BY ';
-            $last = end( $table_columns );
-            foreach( $table_columns as $column )
-            {
-              if( $last == $column )
-              {
-                $sql_columns1 = $sql_columns1 . 't1.'. $column;
-                $sql_columns2 = $sql_columns2 . 't2.'. $column;
-                $sql_post = $sql_post . $column;
-              }
-              else
-              {
-                $sql_columns1 = $sql_columns1 . 't1.'. $column . ', ';
-                $sql_columns2 = $sql_columns2 . 't2.'. $column . ', ';
-                $sql_post = $sql_post . $column . ', ';
-              }
-              $sql_pre = $sql_pre . $column . ', ';
-            }
-
-            $sql_pre = $sql_pre . ' COUNT(*) AS c FROM (';
-            $sql_post = $sql_post . ' HAVING c=1 ) temp2';
-
-            $sql_columns1 = $sql_columns1 . ' FROM '. $table_name . ' t1 ' .
-              sprintf( 'WHERE t1.test_entry_id=%s',
-              $database_class_name::format_string( $data['progenitor_entry_id'] ) );
-            $sql_columns2 = $sql_columns2 . ' FROM '. $table_name . ' t2 ' .
-              sprintf( 'WHERE t2.test_entry_id=%s',
+            $sql = sprintf(
+              $sql_queries[ $data[ 'test_id' ] ],
+              $database_class_name::format_string( $data['progenitor_entry_id'] ),
               $database_class_name::format_string( $data['adjudicate_entry_id'] ) );
-
-            $sql = $sql_pre . $sql_columns1 . ' UNION ALL ' . $sql_columns2 . $sql_post;
 
             if( 0 < $assignment_class_name::db()->get_one( $sql ) ) $num_adjudicate++;
           }
