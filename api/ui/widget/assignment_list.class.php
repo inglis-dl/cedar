@@ -41,7 +41,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
 
-    $this->add_column( 'start_datetime', 'date', 'Start Date', true );
+    $this->add_column( 'start_datetime', 'datetime', 'Start', true );
     $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
