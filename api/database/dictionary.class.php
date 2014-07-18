@@ -61,4 +61,19 @@ class dictionary extends \cenozo\database\record
 
     return static::db()->get_one( $sql );
   }
+
+  /**
+   * Transfer words from this dictionary record to another or delete those words having no
+   * usage and if no destination is specified.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @arg array  $is_list array of word ids to transfer
+   * @arg database\record $db_dictionary the dictionary to send the words to (NULL => delete)
+   * @throws exception\runtime
+   * @access public
+   */
+  public function transfer_word( $id_list, $db_dictionary = NULL )
+  {
+    // stub
+  }
 }
