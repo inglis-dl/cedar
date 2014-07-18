@@ -190,6 +190,16 @@ SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "dictionary" AND operation.name = "import"
 AND role.name IN ( "administrator" );
 
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "dictionary" AND operation.name = "transfer_word"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "dictionary" AND operation.name = "transfer_word"
+AND role.name IN ( "administrator" );
+
 -- dictionary_import
 
 INSERT INTO role_has_operation( role_id, operation_id )
