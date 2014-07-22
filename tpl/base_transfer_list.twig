@@ -1,6 +1,6 @@
 {##
  # base_transfer_list.twig
- # 
+ #
  # Base template for transferring items from one record to another.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
@@ -10,7 +10,7 @@
 
   <script type="text/javascript">
     $( function () {
-      // add button
+      // transfer button
       $( "#{{ widget.compound }}_transfer" ).click( function() {
         // get the object of checked ids from the cookies
         var json_checked_ids =
@@ -20,17 +20,17 @@
                           "null" == json_checked_ids
                         ? new Object()
                         : jQuery.parseJSON( json_checked_ids );
-        
+
         var ids = new Array();
         for( id_string in checked_ids ) {
           ids.push( parseInt( id_string.substring( id_string.lastIndexOf("_") + 1 ) ) );
         }
-        
+
         if( 0 == ids.length ) {
           error_dialog(
             "Error: Nothing selected",
             "<p>You must select at least one {{ list_subject }}.<br>" +
-            "Please select {{ list_subjects }} to add to the " +
+            "Please select {{ list_subjects }} to transfer from the " +
             "{{ widget.subject_name }}, or click cancel.</p>",
             true );
         } else {
@@ -38,12 +38,13 @@
           {% block arguments %}
             var args = new Object();
             args.id = {{ id }};
+            args.id_target = {{ id_target }};
             args.id_list = ids;
           {% endblock arguments %}
 
           confirm_dialog(
             "Transfer {{ list_subjects }} from the {{ widget.subject_name }}?",
-            "<p>You have selected " + 
+            "<p>You have selected " +
             ( 1 == ids.length ? "one {{ list_subject }}" : ids.length + " {{ list_subjects }}" ) +
             " to be transferred from the {{ widget.subject_name }}.<br>" +
             "Are you sure you want to continue?</p>",
@@ -57,7 +58,7 @@
           );
         }
       } );
-    
+
       // cancel button
       $( "#{{ widget.compound }}_back" ).click( function() {
         // clear the checked ids cookie
@@ -65,11 +66,38 @@
       } );
     } );
   </script>
-  
+
 {% endblock javascript %}
 
 {% block widget %}
-  
+
+  {% block prelist %}
+
+    {% if sources is defined and targets is defined and current_targets is defined %}
+      <label for="{{ widget.full }}__transfer_from">Transfer From:</label>
+      <select id="{{ widget.full }}__transfer_from" class="ui-state-default"
+        style="margin-top:4px;margin-bottom:4px;">
+        {% for source_id, name in sources %}
+          <option {% if source_id == id %}selected{% endif %}
+            value="{{ id }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+
+      {% set id_target = id_target|default(0) %}
+      <label for="{{ widget.full }}__transfer_to">Transfer To:</label>
+      <select id="{{ widget.full }}__transfer_to" class="ui-state-default"
+        style="margin-top:4px;margin-bottom:4px;">
+        <option {% if 0 == id_target %}selected{% endif %}
+          value="0">Delete</option>
+        {% for id, name in current_targets %}
+          <option {% if id == id_target %}selected{% endif %}
+            value="{{ id }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+
+  {% endblock prelist %}
+
   {% block listing %}
 
     {# Add the list using the list"s widget name to determine which template to use #}
@@ -77,8 +105,9 @@
     {% include list_template with list %}
 
   {% endblock listing %}
-  
+
   {% from 'macros.twig' import confirm_buttons %}
   {{ confirm_buttons( slot, widget.compound, [ 'transfer' ], 'Cancel', 'right', true ) }}
 
+  </div>
 {% endblock widget %}

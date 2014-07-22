@@ -14,7 +14,7 @@ use cenozo\lib, cenozo\log, cedar\util;
  *
  * @abstract
  */
-abstract class base_transfer_list extends base_record
+abstract class base_transfer_list extends \cenozo\ui\widget\base_record
 {
   /**
    * Constructor
@@ -78,6 +78,8 @@ abstract class base_transfer_list extends base_record
 
     $this->list_widget->process();
     $this->set_variable( 'list', $this->list_widget->get_variables() );
+    $this->set_variable( 'sources', $this->sources );
+    $this->set_variable( 'targets', $this->targets );
   }
 
   /**
@@ -93,4 +95,19 @@ abstract class base_transfer_list extends base_record
    * @access protected
    */
   protected $child_subject;
+
+  /**
+   * An associative array of subject primary key id => string identifier (name)
+   * @var array
+   * @access protected
+   */
+  protected $sources;
+
+  /**
+   * An associative array of from primary key id => to primary key id
+   * A string value can also be provided to indicate a delete operation
+   * @var array
+   * @access protected
+   */
+  protected $targets;
 }
