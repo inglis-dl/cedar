@@ -28,18 +28,6 @@ class dictionary_import extends \cenozo\ui\widget\base_record
   }
 
   /**
-   * Processes arguments, preparing them for the operation.
-   *
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
-   * @access protected
-   */
-  protected function prepare()
-  {
-    parent::prepare();
-  }
-
-  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
