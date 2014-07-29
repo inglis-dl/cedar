@@ -282,6 +282,7 @@ class test_entry extends \cenozo\database\has_note
         }
         $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
         $modifier->where( 'test_id', '=', $this->test_id );
+        $modifier->limit( 1 );
         $db_test_entry = current( static::select( $modifier ) );
       }
     }

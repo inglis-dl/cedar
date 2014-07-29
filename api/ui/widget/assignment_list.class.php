@@ -48,7 +48,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'test_entry_total_deferred.deferred', 'number', 'Deferred', true );
     $this->add_column( 'test_entry_total_adjudicate.adjudicate', 'number', 'Adjudicate', true );
     $this->add_column( 'test_entry_total_completed.completed', 'number', 'Completed', true );
-
     $this->set_addable( $db_role->name == 'typist' );
     $this->set_allow_restrict_state( $db_role->name != 'typist' );
 
@@ -134,9 +133,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $allow_transcribe = false;
       $allow_adjudicate = false;
 
-      $deferred_count   = $db_assignment->get_deferred_count();
-      $adjudicate_count = $db_assignment->get_adjudicate_count();
-      $completed_count  = $db_assignment->get_completed_count();
+      $all_counts = $db_assignment->get_all_counts();
+      $deferred_count   = $all_counts['deferred'];
+      $adjudicate_count = $all_counts['adjudicate'];
+      $completed_count  = $all_counts['completed'];
 
       // select the first test_entry for which we either want to transcribe
       // or adjudicate depending on user role
@@ -169,6 +169,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $test_entry_mod->where( 'adjudicate', '=', true );
           $test_entry_mod->where( 'deferred', '=', false );
           $test_entry_mod->where( 'completed', '=', true );
+          $test_entry_mod->limit( 1 );
           $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
           if( false !== $db_test_entry )
           {
@@ -191,10 +192,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
         'start_datetime' => $db_assignment->start_datetime,
         'participant.uid' => $db_participant->uid,
         'cohort.name' => $db_participant->get_cohort()->name,
-        'user.name' => $db_assignment->get_user()->name,
+        'user.name' => $db_assignment->get_user()->name,        
         'test_entry_total_deferred.deferred' => $deferred_count,
         'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
-        'test_entry_total_completed.completed' =>  $completed_count,
+        'test_entry_total_completed.completed' =>  $completed_count,        
         'allow_transcribe' => $allow_transcribe ? 1 : 0,
         'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
         'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id );
