@@ -10,6 +10,18 @@
 
   <script type="text/javascript">
     $( function () {
+
+      // find the select widget with jquery and
+      // override .change function
+      // get the current id from the selector
+      // slot_load( {{ slot }}, "{{ widget.subject }}", "{{ widget.name }}", { id: the_id_var_to_load } );
+      $( "#{{ widget.full }}__transfer_from" ).change( function() {
+         var id_source = $( "#{{ widget.full }}__transfer_from option:selected" ).val();
+         if( id_source != {{ id }} ) {
+           slot_load( {{ slot }}, "{{ widget.subject }}", "{{ widget.name }}", { id : id_source } );
+         }        
+      } );
+
       // transfer button
       $( "#{{ widget.compound }}_transfer" ).click( function() {
         // get the object of checked ids from the cookies
@@ -38,7 +50,7 @@
           {% block arguments %}
             var args = new Object();
             args.id = {{ id }};
-            args.id_target = {{ id_target }};
+            args.id_target = $( "#{{ widget.full }}__transfer_to option:selected" ).val();
             args.id_list = ids;
           {% endblock arguments %}
 

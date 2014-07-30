@@ -29,14 +29,12 @@ class dictionary_transfer_word extends base_transfer_list
   }
 
   /**
-   * Overrides the word list widget's method.
+   * Processes arguments, preparing them for the operation.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param database\modifier $modifier Modifications to the list.
-   * @return int
    * @access protected
    */
-  public function prepare()
+  protected function prepare()
   {
     parent::prepare();
 
@@ -44,7 +42,15 @@ class dictionary_transfer_word extends base_transfer_list
     $this->sources = array();
     $this->targets = array();
 
-    foreach( $test_class_name::select() as $db_test )
+    $db_dictionary = $this->get_record();
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
+    $modifier->or_where( 'intrusion_dictionary_id', '=', $db_dictionary->id );
+    $modifier->or_where( 'variant_dictionary_id', '=', $db_dictionary->id );
+    $modifier->or_where( 'mispelled_dictionary_id', '=', $db_dictionary->id );
+    $modifier->limit( 1 );
+
+    foreach( $test_class_name::select( $modifier ) as $db_test )
     {
       $db_dictionary = $db_test->get_dictionary();
       if( is_null( $db_dictionary ) ) continue;
@@ -80,11 +86,14 @@ class dictionary_transfer_word extends base_transfer_list
     }
   }
 
-  public function setup()
+  /** 
+   * Finish setting the variables in a widget.
+   * 
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access protected
+   */
+  protected function setup()
   {
-    $this->set_record(
-      lib::create( 'database\dictionary', current( array_keys( $this->sources ) ) ) );
-
     parent::setup();
 
     $db_dictionary = $this->get_record();
@@ -93,55 +102,5 @@ class dictionary_transfer_word extends base_transfer_list
       $this->set_variable( 'id_target', 0 );
       $this->set_variable( 'current_targets', $this->targets[ $db_dictionary->id ] );
     }
-  }
-
-  /**
-   * Overrides the word list widget's method.
-   *
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param database\modifier $modifier Modifications to the list.
-   * @return int
-   * @access protected
-   */
-  public function determine_word_count( $modifier = NULL )
-  {
-    $word_class_name = lib::get_class_name( 'database\word' );
-
-    $existing_word_ids = array();
-    foreach( $this->get_record()->get_word_list() as $db_word )
-      $existing_word_ids[] = $db_word->id;
-
-    if( 0 < count( $existing_word_ids ) )
-    {
-      if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'id', 'NOT IN', $existing_word_ids );
-    }
-
-    return $word_class_name::count( $modifier );
-  }
-
-  /**
-   * Overrides the word list widget's method.
-   *
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param database\modifier $modifier Modifications to the list.
-   * @return array( record )
-   * @access protected
-   */
-  public function determine_word_list( $modifier = NULL )
-  {
-    $word_class_name = lib::get_class_name( 'database\word' );
-
-    $existing_word_ids = array();
-    foreach( $this->get_record()->get_word_list() as $db_word )
-      $existing_word_ids[] = $db_word->id;
-
-    if( 0 < count( $existing_word_ids ) )
-    {
-      if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'id', 'NOT IN', $existing_word_ids );
-    }
-
-    return $word_class_name::select( $modifier );
   }
 }
