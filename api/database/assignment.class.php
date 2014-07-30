@@ -30,7 +30,7 @@ class assignment extends \cenozo\database\record
 
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s',
+      sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id=%s',
                $database_class_name::format_string( $this->id ) ) );
   }
 
@@ -50,7 +50,7 @@ class assignment extends \cenozo\database\record
 
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
+      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id=%s',
                $database_class_name::format_string( $this->id ) ) );
   }
 
@@ -64,15 +64,34 @@ class assignment extends \cenozo\database\record
    */
   public function get_adjudicate_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
       throw lib::create( 'exception\runtime',
         'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
 
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
+      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id=%s',
                $database_class_name::format_string( $this->id ) ) );
+  }
+
+  /**
+   * Get the deferred, adjudicate and complete counts for this assignment.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return integer
+   * @access public
+   */
+  public function get_all_counts()
+  {
+    if( is_null( $this->id ) )
+      throw lib::create( 'exception\runtime',
+        'Tried to get counts for an assignment with no id', __METHOD__ );
+
+    $database_class_name = lib::get_class_name( 'database\database' );
+    return static::db()->get_row( sprintf(
+      'SELECT deferred, adjudicate, completed FROM assignment_total WHERE assignment_id=%s',
+      $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -168,6 +187,7 @@ class assignment extends \cenozo\database\record
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'participant_id', '=', $this->participant_id );
     $modifier->where( 'user_id', '!=', $this->user_id );
+    $modifier->limit( 1 );
     $db_assignment = current( static::select( $modifier ) );
     return false === $db_assignment ? NULL : $db_assignment;
   }

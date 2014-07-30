@@ -42,10 +42,11 @@ class word extends \cenozo\database\record
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
+   * @param string the name of the word count view to query
    * @return integer
    * @access public
    */
-  public function get_usage_count()
+  public function get_usage_count( $word_total_view_name = NULL )
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     $test_class_name = lib::get_class_name( 'database\test' );
@@ -55,13 +56,23 @@ class word extends \cenozo\database\record
       throw lib::create( 'exception\runtime',
         'Tried to get a usage count for a word with no id', __METHOD__ );
     }
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
-    $modifier->or_where( 'variant_dictionary_id', '=', $this->dictionary_id );
-    $modifier->or_where( 'intrusion_dictionary_id', '=', $this->dictionary_id );
-    $modifier->or_where( 'mispelled_dictionary_id', '=', $this->dictionary_id );
-    $db_test = current( $test_class_name::select( $modifier ) );
-    $column = $db_test->get_test_type()->name . '_word_total';
+
+    $column = '';
+    if( !is_null( $word_total_view_name ) )
+    {
+      $column = $word_total_view_name;
+    }
+    else
+    {
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
+      $modifier->or_where( 'variant_dictionary_id', '=', $this->dictionary_id );
+      $modifier->or_where( 'intrusion_dictionary_id', '=', $this->dictionary_id );
+      $modifier->or_where( 'mispelled_dictionary_id', '=', $this->dictionary_id );
+      $modifier->limit( 1 );
+      $db_test = current( $test_class_name::select( $modifier ) );
+      $column = $db_test->get_test_type()->name . '_word_total';
+    }
 
     return static::db()->get_one(
       sprintf( 'SELECT total FROM %s WHERE word_id = %s',

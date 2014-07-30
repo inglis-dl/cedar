@@ -641,14 +641,14 @@ class assignment_manager extends \cenozo\singleton
                 throw lib::create( 'exception\runtime',
                   'Invalid test entry ranked word pair', __METHOD__ );
 
-              $ranked_word_set_word = $a_obj->get_word( $db_language );
+              $ranked_word_set_word = $a_obj->get_ranked_word_set()->get_word( $db_language )->word;
               $ranked_word_set_id = $a_obj->get_ranked_word_set()->id;
             }
 
             $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
                             $a_obj->selection != $b_obj->selection );
 
-            //copy the progenitor to the adjudicate
+            // copy the progenitor to the adjudicate
             if( !$adjudicate )
             {
               $c_obj->word_id= $a_obj->word_id;

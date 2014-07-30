@@ -701,7 +701,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`sabretooth_recording` (`interview_id` INT, `
 -- -----------------------------------------------------
 -- Placeholder table for view `cedar`.`assignment_total`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `cedar`.`assignment_total` (`id` INT);
+CREATE TABLE IF NOT EXISTS `cedar`.`assignment_total` (`assignment_id` INT, `deferred` INT, `adjudicate` INT, `completed` INT);
 
 -- -----------------------------------------------------
 -- Placeholder table for view `cedar`.`test_entry_total_completed`
@@ -761,16 +761,13 @@ DROP VIEW IF EXISTS `cedar`.`assignment_total` ;
 DROP TABLE IF EXISTS `cedar`.`assignment_total`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `assignment_total` AS
-SELECT assignment.id AS assignment_id,
-test_entry_total.total AS total,
-test_entry_total_deferred.deferred AS deferred,
-test_entry_total_completed.completed AS completed,
-test_entry_total_adjudicate.adjudicate AS adjudicate,
-FROM assignment
-JOIN test_entry_total ON test_entry_total.assignment_id=assignment.id
-JOIN test_entry_total_deferred ON test_entry_total_deferred.assignment_id=assignment.id
-JOIN test_entry_total_completed ON test_entry_total_completed.assignment_id=assignment.id
-JOIN test_entry_total_adjudicate ON test_entry_total_adjudicate.assignment_id=assignment.id;
+SELECT assignment_id,
+SUM( deferred ) AS deferred,
+SUM( IFNULL( adjudicate, 0 ) ) AS adjudicate,
+SUM( completed ) AS completed
+FROM test_entry
+WHERE assignment_id IS NOT NULL
+GROUP BY assignment_id;
 
 -- -----------------------------------------------------
 -- View `cedar`.`test_entry_total_completed`
@@ -824,12 +821,12 @@ DROP VIEW IF EXISTS `cedar`.`classification_word_total` ;
 DROP TABLE IF EXISTS `cedar`.`classification_word_total`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `classification_word_total` AS
-SELECT w.id AS word_id, COUNT(tec.id) AS total, w.dictionary_id AS dictionary_id FROM word w
+SELECT w.id AS word_id,
+COUNT(tec.id) AS total,
+w.dictionary_id AS dictionary_id
+FROM word w
 LEFT JOIN test_entry_classification tec ON tec.word_id=w.id
-LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
-LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
-LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
-LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
+JOIN dictionary d ON d.id=w.dictionary_id
 GROUP BY w.id;
 
 -- -----------------------------------------------------
@@ -839,12 +836,12 @@ DROP VIEW IF EXISTS `cedar`.`alpha_numeric_word_total` ;
 DROP TABLE IF EXISTS `cedar`.`alpha_numeric_word_total`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `alpha_numeric_word_total` AS
-SELECT w.id AS word_id, COUNT(tean.id) AS total, w.dictionary_id AS dictionary_id FROM word w
+SELECT w.id AS word_id,
+COUNT(tean.id) AS total,
+w.dictionary_id AS dictionary_id
+FROM word w
 LEFT JOIN test_entry_alpha_numeric tean ON tean.word_id=w.id
-LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
-LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
-LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
-LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
+JOIN dictionary ON d.id=w.dictionary_id
 GROUP BY w.id;
 
 -- -----------------------------------------------------
@@ -854,15 +851,12 @@ DROP VIEW IF EXISTS `cedar`.`ranked_word_word_total` ;
 DROP TABLE IF EXISTS `cedar`.`ranked_word_word_total`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `ranked_word_word_total` AS
-SELECT w.id AS word_id, COUNT(terw.id) + COUNT(terw1.id) AS total, w.dictionary_id AS dictionary_id FROM word w
+SELECT w.id AS word_id,
+COUNT(terw.id) AS total,
+w.dictionary_id AS dictionary_id
+FROM word w
 LEFT JOIN test_entry_ranked_word terw ON terw.word_id=w.id
-LEFT JOIN ranked_word_set_has_language AS rwshl ON rwshl.word_id=w.id
-LEFT JOIN ranked_word_set AS rws ON rws.id=rwshl.ranked_word_set_id
-LEFT JOIN test_entry_ranked_word AS terw1 ON terw1.ranked_word_set_id=rws.id 
-LEFT JOIN test AS t1 ON t1.dictionary_id=w.dictionary_id
-LEFT JOIN test AS t2 ON t2.intrusion_dictionary_id=w.dictionary_id
-LEFT JOIN test AS t3 ON t3.variant_dictionary_id=w.dictionary_id
-LEFT JOIN test AS t4 ON t4.mispelled_dictionary_id=w.dictionary_id
+JOIN dictionary d ON d.id=w.dictionary_id
 GROUP BY w.id;
 
 -- -----------------------------------------------------
