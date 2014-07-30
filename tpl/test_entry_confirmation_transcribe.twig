@@ -1,6 +1,6 @@
 {##
  # test_entry_confirmation_transcribe.twig
- # 
+ #
  # Transcribe a confirmation test.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_view.twig for parameters
@@ -8,20 +8,41 @@
 {% extends "widget.twig" %}
 
 {% block javascript %}
+
   {{ parent() }}
+
   <script type="text/javascript">
 
+    var table_selector = "#{{ widget.full }}__entry_table";
+
     function configure_ui() {
-      var disable = $(':input[type="radio"]:checked').length == 0 && !{{ deferred }};
-      $("#{{ parent.full }}_Next").button( { disabled : disable } );
 
       //disable elements based on deferred status
-      if( {{ deferred }} ) {
-        $("#{{ parent.full }}_Defer").button( { disabled :  true } );
-        $("#{{ parent.full }}_Reset").button( { disabled : true } );
-        $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-          $(this).attr( "disabled", "disabled" );
+      if( {{ deferred }} || !{{ editable }} ) {
+        $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
+        $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
+        $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
+        $( table_selector + " input" ).each( function() {
+          $(this).prop( "disabled", true );
         } );
+      } else {
+        // only enable the next button when there is at least one entry filled
+        var has_null_status =
+          'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
+        var disable =
+          0 == $( table_selector + ' input[type="radio"]:checked' ).length && has_null_status;
+        $("#{{ parent.full }}_next").button( { disabled : disable } );
+
+        // disable the Reset button if there is nothing to reset
+        $( "#{{ parent.full }}_reset" ).button( { disabled : disable } );
+
+        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
+            'refused' == "{{ participant_status }}" ) {
+          $( table_selector + " input" ).each( function() {
+            $(this).prop( "disabled", true );
+          } );
+        }
       }
     }
 
@@ -30,83 +51,63 @@
       configure_ui();
 
       // find and handle radio element change events
-      $( "#{{ widget.full }}__entry_table" ).find("input:radio").change( function() {
+      $( table_selector + " input:radio" ).change( function() {
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).attr( "name" );
-        columns["test_entry_id"] = "{{ parent.id }}";
-        if( $(this).val() == "yes" ) {
-          columns["confirmation"] = 1;
-        } else {
-          columns["confirmation"] = 0;
-        }
+        args.id = $(this).prop( "id" ).split( "__" )[0];
+        columns["confirmation"] = ( $(this).val() === "yes" ) ? 1 : 0;
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           configure_ui();
         }
-      } ); // end radio input change
-
-      $( "#{{ parent.full }}_Reset" ).click(function() {
-        if( ajax_push( "{{ parent.subject }}", "reset", { "id": "{{ parent.id }}" } ) ) {
-          input = $("#{{ widget.full }}__entry_table" ).find( "input" );
-          input.each( function() {
-            $(this).removeAttr( "checked" );
-          } );
-          configure_ui();
-        }
-      } );// end Reset button click
+      } );// end radio input change
 
     } );
   </script>
 
 {% endblock javascript %}
 
-{% block defer_action %}
-  <script type="text/javascript">
-  if( {{ deferred }} ) {
-    $( "#{{ widget.full }}__entry_table" ).find( "input" ).each( function() {
-    $(this).attr( "disabled", "disabled" );
-    } );
-  }
-  </script>
-{% endblock defer_action %}
-
 {% block widget %}
-    
-  <div class="spacer">
+
+  <div class="spacer"></div>
 
   <caption style="text-align: left;"><strong>{{ entry_data.instruction }}</strong></caption>
 
-  <div class="spacer">
+  <div class="spacer"></div>
 
   <table id="{{ widget.full }}__entry_table" style="width:20%">
-      
-      <thead>
-        <tr>
-          <th>Yes</th>
-          <th>No</th>
-        </tr>
-      </thead>
 
-      <tbody>
+    <thead>
       <tr>
-          <td><input
-             id="{{ widget.full }}__Yes"
-             name={{ entry_data.id }}
-             value="yes"
-             type="radio"
-             {{ entry_data.confirmation == '1' ? "checked" : "" }}>
-          </td>
-          <td><input
-             id="{{ widget.full }}__No"
-             name={{ entry_data.id }}
-             value="no"
-             type="radio"
-             {{ entry_data.confirmation == '0' ? "checked" : "" }}>
-          </td>
-       </tr> 
+        <th>Yes</th>
+        <th>No</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>
+          <input type="radio"
+            id="{{ entry_data.id }}__yes"
+            name="confirmation"
+            value="yes"
+            {% if editable == 0 %}
+              { readonly }
+            {% endif %}
+            {{ entry_data.confirmation == '1' ? "checked" : "" }}/>
+        </td>
+        <td>
+          <input type="radio"
+            id="{{ entry_data.id }}__no"
+            name="confirmation"
+            value="no"
+            {% if editable == 0 %}
+              { readonly }
+            {% endif %}
+            {{ entry_data.confirmation == '0' ? "checked" : "" }}/>
+        </td>
+      </tr>
     </tbody>
-  </table> 
+  </table>
 
 {% endblock widget %}
-

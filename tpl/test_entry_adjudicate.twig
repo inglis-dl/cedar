@@ -1,6 +1,6 @@
 {##
  # test_entry_adjudicate.twig
- # 
+ #
  # Extends the base_record template for adjudicating test entries.
  # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
@@ -10,28 +10,40 @@
 
   {{ parent() }}
 
-  <script type="text/javascript">   
+  <script type="text/javascript">
 
     $( function () {
 
-      $( "#{{ widget.full }}_Quit" ).click( function() {
+      $( "#{{ widget.full }}_submit" ).click( function() {
+        // submit the adjudication
+        if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ adjudicate_entry_id }} } ) ) {
+          $( "#{{ widget.full }}_submit" ).button( { disabled : true } );
+          $( "#{{ widget.full }}_next" ).trigger( "click" );
+        }
+      } );// end Submit button click
+
+      $( "#{{ widget.full }}_quit" ).click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click
 
-      $( "#{{ widget.full }}_Prev" ).click( function() {
-        slot_load( {{ slot }}, 
-          "{{ widget.subject }}", "{{ widget.name }}", 
-          { id : {{ prev_test_entry_id }} } );
-      } ).button( { disabled : {{ rank == 1 ? 'true' : 'false' }} } ); // end Prev click
+      $( "#{{ widget.full }}_prev" ).click( function() {
+        {% if 0 == prev_test_entry_id %}
+          slot_load( {{ slot }}, "assignment", "list" );
+        {% else %}
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
+            { id : {{ prev_test_entry_id }} } );
+        {% endif %}
+      } ).button( { disabled : 1 == {{ rank }} } ); // end Prev click
 
-      $( "#{{ widget.full }}_Next" ).click( function() {
+      $( "#{{ widget.full }}_next" ).click( function() {
         {% if 0 == next_test_entry_id %}
           slot_load( {{ slot }}, "assignment", "list" );
-        {% else %}  
-          slot_load( {{ slot }}, 
-            "{{ widget.subject }}", "{{ widget.name }}", 
+        {% else %}
+          slot_load( {{ slot }},
+            "{{ widget.subject }}", "{{ widget.name }}",
             { id : {{ next_test_entry_id }} } );
-        {% endif %}  
+        {% endif %}
       } ); // end Next click
 
     } );
@@ -41,46 +53,35 @@
 
 {% block record %}
 
+  <div class="spacer"></div>
   <div>
-    
-    <div class="spacer">
-
-    <div>
-      {% include [ 'test_entry_', test_type, '_adjudicate.twig']|join with test_entry_args %}      
-    </div>  
-
-    <div class="spacer">
-
-      <div>
-        <table>
+    {% include [ 'test_entry_', test_type, '_adjudicate.twig']|join with test_entry_args %}
+  </div>
+  <div class="spacer"></div>
+  <div id="audio_control">
+    {% if recording_data is defined %}
+      <table>
+        {% set recording_id = 0 %}
+        {% for recording in recording_data %}
           <tr>
-            <td align="left"
-                style="white-space: nowrap">
-              <div id="audio_control">  
-                <audio controls
-                  id="{{ widget.full }}__audio_player"
-                  <embed height="50" style="width:100%">
-                </audio>
-                <input type="checkbox"
-                  id="{{ widget.full }}__audio_fault" 
-                  {{ audio_fault ? "checked":"" }}
-                  "disabled">
-                <label for="{{ widget.full }}__audio_fault">Audio Fault</label>
-              </div>
-            </td>
             <td>
-              <div>
-                {% from 'macros.twig' import confirm_buttons %}
-                  {{ confirm_buttons( slot, widget.full, 
-                    ['Submit', 'Prev', 'Next', 'Quit'], '', 'right', true ) }}
-              </div>
+              <audio controls>
+                id="{{ widget.full }}__recording__{{ recording_id }}"
+                <source src="{{ recording }}" type="audio/wav">
+              </audio>
             </td>
           </tr>
-        </table>
-      </div>
-    </div>
+          {% set recording_id = recording_id+1 %}
+        {% endfor %}
+      </table>
+    {% endif %}
   </div>
-
+  <div class="spacer"></div>
+  <div>
+    {% from 'macros.twig' import confirm_buttons %}
+      {{ confirm_buttons( slot, widget.full,
+        ['submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
+  </div>
   <div id="{{ widget.full }}__note_dialog"></div>
 
 {% endblock record %}

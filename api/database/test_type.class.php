@@ -1,7 +1,7 @@
 <?php
 /**
  * test_type.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */

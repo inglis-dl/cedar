@@ -1,6 +1,6 @@
 {##
  # dictionary_import.twig
- # 
+ #
  # Used to upload dictionary words from CSV data files
  # @author Dean Inglis <inglisd@mcmaster.ca>
  #}
@@ -36,20 +36,20 @@
                 args.md5 = md5;
                 args.dictionary_id = {{ id }};
                 var data = ajax_pull("dictionary_import", "process", args );
-                
+
                 var allow_proceed = false;
                 if( undefined != data ) {
                   var err_count = data.error_count;
                   var html = '<table style="width:90%; margin-left:10%; margin-right:10%; text-align:left">';
 
-                  if( err_count != 0 ) {
+                  if( 0 != err_count ) {
                     html += '<tr><td class="heading"> ERRORS </td></tr>';
                     var err_entries = data.error_entries;
                     for( var i = 0; i < err_count; i++ ) {
                       html += '<tr><td>' + err_entries[i] + '</td></tr>';
                     }
                   }
-                  if( data.unique_word_count > 0 ) {
+                  if( 0 < data.unique_word_count ) {
                     allow_proceed = true;
                   }
 
@@ -82,7 +82,7 @@
                       slot_prev( {{ slot }} );
                     }
                   } ); // end cancel click
-                  
+
                   $( "#{{ widget.full }}__proceed" ).click( function () {
                     var args = new Object();
                     args.dictionary_id = {{ id }};
@@ -109,10 +109,10 @@
     <div class="spacer">
       <p>
         Upload new words using a CSV (comma separated values) file where
-        all words are enclosed by double quotes (&quot;). There must be 
-        only two columns: a word column and a language code column. The 
+        all words are enclosed by double quotes (&quot;). There must be
+        only two columns: a word column and a language code column. The
         language code must be one of "en" (English) or "fr" (French). Files
-        can be comprised of words of different languages ( e.g., one line of a 
+        can be comprised of words of different languages ( e.g., one line of a
         csv file could be  "curtain","en" ).
       </p>
     </div>
@@ -124,7 +124,7 @@
             <span class="title">CSV file to import:</span>
           </td>
           <td class="content">
-            <input type="file" 
+            <input type="file"
                    id="{{ widget.full }}__file" name="file" />
           </td>
           <td class="content">
@@ -136,4 +136,3 @@
     <div id="{{ widget.full }}__results"></div>
   </div>
 {% endblock widget %}
-

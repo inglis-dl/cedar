@@ -1,7 +1,7 @@
 <?php
 /**
  * assignment_new.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,28 +27,56 @@ class assignment_new extends \cenozo\ui\push\base_new
     parent::__construct( 'assignment', $args );
   }
 
-  /** 
-   * Validate the operation.
-   * 
+  /**
+   * Processes arguments, preparing them for the operation.
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
    * @access protected
    */
-  protected function validate()
+  protected function prepare()
   {
-    parent::validate();
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $event_type_class_name = lib::get_class_name( 'database\event_type' );
+    $participant_class_name = lib::get_class_name( 'database\participant' );
 
-    // make sure the name column isn't blank
-    $columns = $this->get_argument( 'columns' );
+    $columns = $this->get_argument( 'columns', array() );
+    if( empty( $columns ) )
+    {
+      $this->arguments['columns'] = $columns;
+    }
 
-    if( !array_key_exists( 'user_id', $columns ) || 0 == strlen( $columns['user_id'] ) ) 
-      throw lib::create( 'exception\notice',
-        'The user\'s name cannot be left blank.', __METHOD__ );
+    if( ( !array_key_exists( 'user_id', $columns ) || 0 == strlen( $columns['user_id'] ) ) ||
+        ( !array_key_exists( 'participant_id', $columns ) ||
+          0 == strlen( $columns['participant_id'] ) ) )
+    {
+      $session = lib::create( 'business\session' );
+      $db_user = $session->get_user();
+
+      // block with a semaphore
+      $session->acquire_semaphore();
+
+      $db_participant = $assignment_class_name::get_next_available_participant( $db_user );
+
+      // throw a notice if no participant was found
+      if( is_null( $db_participant ) )
+      {
+        $session->release_semaphore();
+        throw lib::create( 'exception\notice',
+          'There are currently no participants available for processing.', __METHOD__ );
+      }
+
+      $columns['user_id'] = $db_user->id;
+      $columns['participant_id'] = $db_participant->id;
+      $columns['cohort_name'] = $db_participant->get_cohort()->name;
+      $this->arguments['columns'] = $columns;
+    }
+
+    parent::prepare();
   }
 
-  /** 
+  /**
    * Finishes the operation with any post-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\runtime
    * @access protected
@@ -57,29 +85,10 @@ class assignment_new extends \cenozo\ui\push\base_new
   {
     parent::finish();
 
-    $db_assignment = $this->get_record();
-    $columns = $this->get_argument( 'columns' );
-    $test_class_name = lib::get_class_name( 'database\test' );
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::initialize_assignment( $this->get_record() );
 
-    $modifier = NULL; 
-    if( $columns['cohort_name'] == 'tracking' )
-    {
-      $modifier = lib::create('database\modifier');
-      $modifier->where( 'name', 'not like', 'FAS%' );
-    }  
-
-    $language = $db_assignment->get_participant()->language;
-    $language = is_null( $language ) ? 'en' : $language;
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-
-    //create a test entry for each test
-    foreach( $test_class_name::select( $modifier ) as $db_test )
-    {
-      $args = array();
-      $args['columns']['test_id'] = $db_test->id;
-      $args['columns']['assignment_id'] = $db_assignment->id;
-      $operation = lib::create( 'ui\push\test_entry_new', $args );
-      $operation->process();
-    }
+    $session = lib::create( 'business\session' );
+    $session->release_semaphore();
   }
 }

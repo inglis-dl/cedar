@@ -1,7 +1,7 @@
 <?php
 /**
  * dictionary_add_word.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class dictionary_add_word extends \cenozo\ui\widget\base_add_record
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string $name The name of the word.

@@ -1,7 +1,7 @@
 <?php
 /**
  * error_codes.inc.php
- * 
+ *
  * This file is where all error codes are defined.
  * All error code are named after the class and function they occur in.
  */
@@ -24,13 +24,13 @@ define( 'TEMPLATE_CEDAR_BASE_ERRNO',   850000 );
 
 /**
  * "database" error codes
- * 
+ *
  * Since database errors already have codes this list is likely to stay empty.
  */
 
 /**
  * "ldap" error codes
- * 
+ *
  * Since ldap errors already have codes this list is likely to stay empty.
  */
 
@@ -48,7 +48,7 @@ define( 'TEMPLATE_CEDAR_BASE_ERRNO',   850000 );
 
 /**
  * "system" error codes
- * 
+ *
  * Since system errors already have codes this list is likely to stay empty.
  * Note the following PHP error codes:
  *      1: error,
@@ -66,6 +66,6 @@ define( 'TEMPLATE_CEDAR_BASE_ERRNO',   850000 );
 
 /**
  * "template" error codes
- * 
+ *
  * Since template errors already have codes this list is likely to stay empty.
  */

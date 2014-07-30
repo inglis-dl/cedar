@@ -12,19 +12,22 @@ global $SETTINGS;
 // tagged version
 $SETTINGS['general']['application_name'] = 'cedar';
 $SETTINGS['general']['service_name'] = $SETTINGS['general']['application_name'];
-$SETTINGS['general']['version'] = '0.1.0';
+$SETTINGS['general']['version'] = '1.0.1';
 
 // always leave as false when running as production server
 $SETTINGS['general']['development_mode'] = false;
 
-// the name of the cohort associated with this application
-$SETTINGS['general']['cohort'] = 'default';
+// defines the details used by cedar when communicating with sabretooth
+$SETTINGS['sabretooth']['user'] = NULL;
+$SETTINGS['sabretooth']['password'] = NULL;
+$SETTINGS['sabretooth']['site'] = NULL;
+$SETTINGS['sabretooth']['role'] = 'cedar';
+
+// the default number of classification test entry inputs
+$SETTINGS['interface']['classification_max_rank'] = 40;
+
+// the url of sabretooth (set to NULL to disable sabretooth support)
+$SETTINGS['url']['SABRETOOTH'] = NULL;
 
 // the location of cedar internal path
 $SETTINGS['path']['APPLICATION'] = '/usr/local/lib/cedar';
-
-// additional javascript libraries
-$SETTINGS['url']['JQUERY'] = '/jquery';
-$SETTINGS['url']['JQUERY_PLUGINS'] = $SETTINGS['url']['JQUERY'].'/plugins';
-$SETTINGS['url']['JQUERY_JSTREE_JS'] = $SETTINGS['url']['JQUERY_PLUGINS'].'/jsTree.js';
-$SETTINGS['url']['JQUERY_TIMERS_JS'] = $SETTINGS['url']['JQUERY_PLUGINS'].'/timers.js';

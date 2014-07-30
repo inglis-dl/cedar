@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_list.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables required by the test_entry list.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -29,7 +29,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
 
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -37,31 +37,33 @@ class test_entry_list extends \cenozo\ui\widget\base_list
   protected function prepare()
   {
     parent::prepare();
-    
+
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+
     $this->add_column( 'test.rank', 'constant', 'Order', true );
     $this->add_column( 'test_id', 'string', 'Test', true );
-    $this->add_column( 'audio_fault', 'boolean', 'Audio Fault', true );
+    $this->add_column( 'audio_status', 'string', 'Audio Status' );
+    $this->add_column( 'participant_status', 'string', 'Participant Status' );
     $this->add_column( 'completed', 'boolean', 'Completed', true );
     $this->add_column( 'deferred', 'boolean', 'Deferred', true );
 
-    // TODO adjudications may be removed at after system operates
+    // TODO adjudications may be removed after system operates
     // and shows that double data entry is not required.  Consider
     // setting as a system Setting to be set by an administrator
-    $operation_class_name = lib::get_class_name( 'database\operation' );
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
     {
       $this->adjudicate_allowed = true;
       $this->add_column( 'adjudicate', 'boolean', 'Adjudicate', true );
-    }  
+    }
 
-    //TODO consider adding the typist(s) name assigned to the test and their email
+    // TODO consider adding the typist(s) name assigned to the test and their email
     // contact info
   }
-  
+
   /**
    * Set the rows array needed by the template.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -69,21 +71,31 @@ class test_entry_list extends \cenozo\ui\widget\base_list
   {
     parent::setup();
 
-    foreach( $this->get_record_list() as $record )
+    foreach( $this->get_record_list() as $db_test_entry )
     {
-      $db_test = $record->get_test();
-      $data = array( 'test.rank' => $db_test->rank,
-               'test_id' => $db_test->name,
-               'audio_fault' => $record->audio_fault,
-               'deferred' => $record->deferred,
-               'completed' => $record->completed );
+      $db_test = $db_test_entry->get_test();
+
+      $columns = array(
+        'test.rank' => $db_test->rank,
+        'test_id' => $db_test->name,
+        'audio_status' =>
+          is_null( $db_test_entry->audio_status ) ? '(N/A)' : $db_test_entry->audio_status,
+        'participant_status' =>
+          is_null( $db_test_entry->participant_status ) ? '(N/A)' : $db_test_entry->participant_status,
+        $db_test_entry->participant_status,
+        'deferred' => $db_test_entry->deferred,
+        'completed' => $db_test_entry->completed,
+        // note count isn't a column, it's used for the note button
+        'note_count' => $db_test_entry->get_note_count() );
+
       if( $this->adjudicate_allowed )
-        $data['adjudicate'] = $record->adjudicate;
-      $this->add_row( $record->id, $data );   
+        $columns['adjudicate'] = $db_test_entry->adjudicate;
+
+      $this->add_row( $db_test_entry->id, $columns );
     }
   }
 
-  /** 
+  /**
    * Are adjudications allowed.
    * @var adjudicate_allowed
    * @access protected

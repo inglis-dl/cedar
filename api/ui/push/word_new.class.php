@@ -1,7 +1,7 @@
 <?php
 /**
  * word_new.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,9 +27,9 @@ class word_new extends \cenozo\ui\push\base_new
     parent::__construct( 'word', $args );
   }
 
-  /** 
+  /**
    * Validate the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -41,7 +41,7 @@ class word_new extends \cenozo\ui\push\base_new
     $columns = $this->get_argument( 'columns' );
 
     // if there is a word, validate it
-    if( array_key_exists( 'word', $columns ) ) 
+    if( array_key_exists( 'word', $columns ) )
     {
       $word = strtolower( $columns['word'] );
     }

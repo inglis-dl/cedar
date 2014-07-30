@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_confirmation_edit.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -27,21 +27,19 @@ class test_entry_confirmation_edit extends \cenozo\ui\push\base_edit
     parent::__construct( 'test_entry_confirmation', $args );
   }
 
-  /** 
+  /**
    * This method executes the operation's purpose.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function execute()
   {
-    // \cenozo\database\database::$debug=true;
     parent::execute();
 
-    $db_test_entry_confirmation = $this->get_record();
-    $db_test_entry = $db_test_entry_confirmation->get_test_entry();
-    $completed = is_null( $db_test_entry_confirmation ) ? 0 : 1;
-    $db_test_entry->update_status_fields( $completed );
-    // \cenozo\database\database::$debug=false;
-  }  
+    $db_test_entry = $this->get_record()->get_test_entry();
+
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $assignment_manager::complete_test_entry( $db_test_entry );
+  }
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * test_add_dictionary.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class test_add_dictionary extends \cenozo\ui\widget\base_add_record
 {
   /**
    * Constructor
-   * 
+   *
    * Defines all variables which need to be set for the associated template.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param string $name The name of the dictionary.
@@ -28,9 +28,9 @@ class test_add_dictionary extends \cenozo\ui\widget\base_add_record
     parent::__construct( 'test', 'dictionary', $args );
   }
 
-  /** 
+  /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -45,16 +45,16 @@ class test_add_dictionary extends \cenozo\ui\widget\base_add_record
     $this->add_item( 'intrusion_dictionary_id', 'enum', 'Intrusion Dictionary' );
   }
 
-  /** 
+  /**
    * Defines all items in the view.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
   protected function setup()
   {
     parent::setup();
-    
+
     // create enum arrays
     $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
     foreach( $dictionary_class_name::select() as $db_dictionary )

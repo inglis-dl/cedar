@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_confirmation_transcribe.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -12,9 +12,9 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * widget test_entry_confirmation transcribe
  */
-class test_entry_confirmation_transcribe extends \cenozo\ui\widget
+class test_entry_confirmation_transcribe extends base_transcribe
 {
-  /** 
+  /**
    * Constructor.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -22,37 +22,12 @@ class test_entry_confirmation_transcribe extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_confirmation', 'transcribe', $args );
+    parent::__construct( 'test_entry_confirmation', $args );
   }
 
   /**
-   * Processes arguments, preparing them for the operation.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
-   * @access protected
-   */
-  protected function prepare()
-  {
-    parent::prepare();
-  
-    if( is_null( $this->parent ) ) 
-      throw lib::create( 'exception\runtime', 'This class must have a parent', __METHOD__ );
-   
-    $db_test_entry = $this->parent->get_record();
-    $db_test = $db_test_entry->get_test();
-    $heading = $db_test->name . ' test entry form';
-
-    //TODO put this somewhere else
-    if( $db_test_entry->deferred )
-      $heading = $heading . ' NOTE: this test is currently deferred';
-
-    $this->set_heading( $heading );
-  }
-
-  /** 
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -60,17 +35,12 @@ class test_entry_confirmation_transcribe extends \cenozo\ui\widget
   {
     parent::setup();
 
-    $db_test_entry = $this->parent->get_record();
-    $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
+    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
 
-    if( $test_type_name != 'confirmation' )
-      throw lib::create( 'exception\runtime',
-              'Widget requires test type to be ranked word, not ' . 
-              $test_type_name, __METHOD__ );
-    
+    $db_test_entry = $this->parent->get_record();
+
     $instruction = "Was the participant able to ";
-    if( preg_match( '/alpha/', $db_test->name ) )
+    if( preg_match( '/alpha/', $db_test_entry->get_test()->name ) )
     {
       $instruction = $instruction .
         "recite the alphabet, from A, B, C, D and so on?";
@@ -81,15 +51,15 @@ class test_entry_confirmation_transcribe extends \cenozo\ui\widget
         "count from 1 to 20, from 1, 2, 3, 4 and so on?";
     }
 
-    // Get the db entries
-    $test_entry_confirmation_class_name = lib::get_class_name( 'database\test_entry_confirmation' );
-    $db_test_entry_confirmation = $test_entry_confirmation_class_name::get_unique_record(
-      'test_entry_id', $db_test_entry->id );
+    $db_test_entry_confirmation =
+      $test_entry_confirmation_class_name::get_unique_record( 'test_entry_id', $db_test_entry->id );
 
-    $entry_data = array( 'id' => $db_test_entry_confirmation->id,
-                         'confirmation' => is_null( $db_test_entry_confirmation->confirmation ) ? '' :
-                            $db_test_entry_confirmation->confirmation,
-                         'instruction' => $instruction );
-    $this->set_variable( 'entry_data', $entry_data );                     
+    $entry_data =
+      array( 'id' => $db_test_entry_confirmation->id,
+             'confirmation' => is_null( $db_test_entry_confirmation->confirmation ) ? '' :
+                                        $db_test_entry_confirmation->confirmation,
+             'instruction' => $instruction );
+
+    $this->set_variable( 'entry_data', $entry_data );
   }
 }

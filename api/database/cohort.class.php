@@ -1,7 +1,7 @@
 <?php
 /**
  * cohort.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -40,9 +40,9 @@ class cohort extends \cenozo\database\cohort
    * @access protected
    */
   protected function get_record_list(
-    $record_type, $modifier = NULL, $inverted = false, $count = false )
+    $record_type, $modifier = NULL, $inverted = false, $count = false, $distinct = true )
   {
     $grand_parent = get_parent_class( get_parent_class( get_class() ) );
-    return $grand_parent::get_record_list( $record_type, $modifier, $inverted, $count );
+    return $grand_parent::get_record_list( $record_type, $modifier, $inverted, $count, $distinct );
   }
 }

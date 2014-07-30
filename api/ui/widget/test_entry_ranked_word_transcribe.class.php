@@ -1,7 +1,7 @@
 <?php
 /**
  * test_entry_ranked_word_transcribe.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -12,9 +12,9 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * widget test_entry_ranked_word transcribe
  */
-class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
+class test_entry_ranked_word_transcribe extends base_transcribe
 {
-  /** 
+  /**
    * Constructor.
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param array $args An associative array of arguments to be processed by the widget
@@ -22,41 +22,13 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test_entry_ranked_word', 'transcribe', $args );
+    parent::__construct( 'test_entry_ranked_word', $args );
   }
 
   /**
-   * Processes arguments, preparing them for the operation.
-   * 
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
-   * @access protected
-   */
-  protected function prepare()
-  {
-    parent::prepare();
-
-    // parent must be a test_entry_transcribe widget
-    if( is_null( $this->parent ) )
-      throw lib::create( 'exception\runtime', 'This class must have a parent', __METHOD__ );
-   
-    $db_test_entry = $this->parent->get_record();
-
-    $db_test = $db_test_entry->get_test();
-    $heading = $db_test->name . ' test entry form';
-
-    //TODO put this somewhere else
-    if( $db_test_entry->deferred )
-      $heading = $heading . ' NOTE: this test is currently deferred';
-
-    $this->set_heading( $heading );
-  }
-
-  /** 
    * Sets up the operation with any pre-execution instructions that may be necessary.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
    * @access protected
    */
   protected function setup()
@@ -65,71 +37,62 @@ class test_entry_ranked_word_transcribe extends \cenozo\ui\widget
 
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
+    $db_participant = $db_test_entry->get_assignment()->get_participant();
 
-    if( $test_type_name != 'ranked_word' )
-      throw lib::create( 'exception\runtime',
-              'Widget requires test type to be ranked word, not ' . 
-              $test_type_name, __METHOD__ );
-
-    $language = $db_test_entry->get_assignment()->get_participant()->language;
-    $language = is_null( $language ) ? 'en' : $language;
-    
-    $word_list = array();
-    $intrusion_list = array();
-    foreach( $db_test_entry->get_test_entry_ranked_word_list() as $db_test_entry_ranked_word )
-    {
-      $data = 
-          array(
-            'id' => $db_test_entry_ranked_word->id,
-            'selection' => is_null( $db_test_entry_ranked_word->selection ) ? '' :
-               $db_test_entry_ranked_word->selection,  
-            'word_candidate' => 
-              is_null( $db_test_entry_ranked_word->word_candidate ) ? '' :
-                $db_test_entry_ranked_word->word_candidate );
-
-      if( !is_null( $db_test_entry_ranked_word->word_id ) )
-      {
-        $word_list[ $db_test_entry_ranked_word->get_word()->word ] = $data;
-      }
-      else
-      {
-        $intrusion_list[] = $data;
-      }
-    }    
+    $db_language = $db_participant->get_language();
+    if( is_null( $db_language ) )
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->order( 'rank' );
+    $modifier->where( 'ranked_word_set_id', '!=', NULL );
+    $modifier->order( 'ranked_word_set.rank' );
     $entry_data = array();
 
-    // Get the list of ranked words in order.
-    // Create data for the rows in the transcribe widget's table.
-    foreach( $db_test->get_ranked_word_set_list( $modifier )
-      as $db_ranked_word_set )
+    // get the primary word entries
+    foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as
+             $db_test_entry_ranked_word )
     {
-      // Get the word in the participant's language.
-      $word_id = 'word_' . $language . '_id';
-      $db_word = lib::create( 'database\word', $db_ranked_word_set->$word_id );
-      if( array_key_exists( $db_word->word, $word_list ) )
+      $db_ranked_word_set = $db_test_entry_ranked_word->get_ranked_word_set();
+      $selection = $db_test_entry_ranked_word->selection;
+      $db_ranked_word_set_word = $db_ranked_word_set->get_word( $db_language );
+      $db_word = $db_test_entry_ranked_word->get_word();
+      $classification = '';
+
+      if( !is_null( $db_word ) && $selection == 'variant' )
       {
-         $entry_data[] = array(
-           'id' => $word_list[ $db_word->word ][ 'id' ],
-           'word_id' => $db_word->id,
-           'word' => $db_word->word,       
-           'selection' => $word_list[ $db_word->word ][ 'selection' ],
-           'word_candidate' => $word_list[ $db_word->word ][ 'word_candidate' ] );
+        $classification = 'variant';
       }
+
+      $entry_data[] =
+        array(
+          'id' => $db_test_entry_ranked_word->id,
+          'ranked_word_set_id' => $db_ranked_word_set->id,
+          'ranked_word_set_word' => $db_ranked_word_set_word->word,
+          'word_id' => is_null( $db_word ) ? '' : $db_word->id,
+          'word' => is_null( $db_word ) ? '' : $db_word->word,
+          'selection' => is_null( $selection ) ? '' : $selection,
+          'classification' => $classification );
     }
 
-    foreach( $intrusion_list as $intrusion )
+    // now get the intrusions
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'ranked_word_set_id', '=', NULL );
+    foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as
+             $db_test_entry_ranked_word )
     {
-      $entry_data[] = array(
-        'id' => $intrusion[ 'id' ],
-        'word_id' => '',
-        'word' => '',
-        'selection' => '',
-        'word_candidate' => $intrusion[ 'word_candidate' ] );      
+      $db_word = $db_test_entry_ranked_word->get_word();
+
+      $entry_data[] =
+        array(
+          'id' => $db_test_entry_ranked_word->id,
+          'ranked_word_set_id' => '',
+          'ranked_word_set_word' => '',
+          'word_id' => is_null( $db_word ) ? '' : $db_word->id,
+          'word' => is_null( $db_word ) ? '' : $db_word->word,
+          'selection' => '',
+          'classification' => is_null( $db_word ) ? '' : 'intrusion' );
     }
+
     $this->set_variable( 'entry_data', $entry_data );
   }
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * user_view.class.php
- * 
+ *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
  */
@@ -16,7 +16,7 @@ class user_view extends \cenozo\ui\widget\user_view
 {
   /**
    * Processes arguments, preparing them for the operation.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
    * @access protected
@@ -32,7 +32,7 @@ class user_view extends \cenozo\ui\widget\user_view
 
   /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */
@@ -50,7 +50,7 @@ class user_view extends \cenozo\ui\widget\user_view
 
   /**
    * Overrides the cohort list widget's method.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return int
@@ -58,9 +58,8 @@ class user_view extends \cenozo\ui\widget\user_view
    */
   public function determine_cohort_count( $modifier = NULL )
   {
-    $session = lib::create( 'business\session' );
-
     $cohort_class_name = lib::get_class_name( 'database\cohort' );
+    $session = lib::create( 'business\session' );
     if( NULL == $modifier ) $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'user_has_cohort.user_id', '=', $this->get_record()->id );
     return $cohort_class_name::count( $modifier );
@@ -68,7 +67,7 @@ class user_view extends \cenozo\ui\widget\user_view
 
   /**
    * Overrides the cohort list widget's method.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the list.
    * @return array( record )
@@ -76,9 +75,8 @@ class user_view extends \cenozo\ui\widget\user_view
    */
   public function determine_cohort_list( $modifier = NULL )
   {
-    $session = lib::create( 'business\session' );
-
     $cohort_class_name = lib::get_class_name( 'database\cohort' );
+    $session = lib::create( 'business\session' );
     if( NULL == $modifier ) $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'user_has_cohort.user_id', '=', $this->get_record()->id );
     return $cohort_class_name::select( $modifier );
