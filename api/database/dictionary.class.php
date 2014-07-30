@@ -14,7 +14,6 @@ use cenozo\lib, cenozo\log, cedar\util;
  */
 class dictionary extends \cenozo\database\record
 {
-
   /**
    * Returns a list of words.
    *
@@ -33,6 +32,32 @@ class dictionary extends \cenozo\database\record
   }
 
   /**
+   * Get the test that links to this dictionary.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return $db_test or NULL if no test
+   * @access public
+   */
+  public function get_owner_test()
+  {
+    $test_class_name = lib::get_class_name( 'database\test' );
+
+    if( is_null( $this->id ) )
+      throw lib::create( 'exception\runtime',
+        'Tried to find an owner test for a dictionary with no id', __METHOD__ );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'dictionary_id', '=', $this->id );
+    $modifier->or_where( 'intrusion_dictionary_id', '=', $this->id );
+    $modifier->or_where( 'variant_dictionary_id', '=', $this->id );
+    $modifier->or_where( 'mispelled_dictionary_id', '=', $this->id );
+    $modifier->limit( 1 );
+    $db_test = current( $test_class_name::select( $modifier ) );
+    return false !== $db_test ? $db_test : NULL;
+  }
+
+  /**
    * Get the test_entry daughter table word usage count for this dictionary.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -43,26 +68,15 @@ class dictionary extends \cenozo\database\record
   public function get_usage_count()
   {
     $database_class_name = lib::get_class_name( 'database\database' );
-    $test_class_name = lib::get_class_name( 'database\test' );
 
-    if( is_null( $this->id ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to get a usage count for a dictionary with no id', __METHOD__ );
-
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', '=', $this->id );
-    $modifier->or_where( 'intrusion_dictionary_id', '=', $this->id );
-    $modifier->or_where( 'variant_dictionary_id', '=', $this->id );
-    $modifier->or_where( 'mispelled_dictionary_id', '=', $this->id );
-    $modifier->limit( 1 );
-    $db_test = current( $test_class_name::select( $modifier ) );
+    $db_test = $this->get_owner_test();
     $usage_count = 0;
-    if( false !== $db_test )
+    if( !is_null( $db_test ) )
     {
-      $id_string = $database_class_name::format_string( $this->id );
       $sql = sprintf(
         'SELECT( IFNULL((SELECT SUM(total) FROM %s_word_total WHERE dictionary_id=%s), 0))' ,
-        $db_test->get_test_type()->name, $id_string );
+        $db_test->get_test_type()->name,
+        $database_class_name::format_string( $this->id ) );
 
       $usage_count = static::db()->get_one( $sql );
     }
@@ -74,13 +88,31 @@ class dictionary extends \cenozo\database\record
    * usage and if no destination is specified.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @arg array  $is_list array of word ids to transfer
+   * @arg array $id_list array of word ids to transfer
    * @arg database\record $db_dictionary the dictionary to send the words to (NULL => delete)
    * @throws exception\runtime
    * @access public
    */
   public function transfer_word( $id_list, $db_dictionary = NULL )
   {
-    // stub
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $sql = '';
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'id', 'IN', $id_list );
+    $modifier->where( 'dictionary_id', '=', $this->id );
+    if( is_null( $db_dictionary ) )
+    {
+      $sql = sprintf(
+        'DELETE FROM word %s', $modifier->get_sql() );
+    }
+    else
+    {
+      $sql = sprintf(
+        'UPDATE word SET dictionary_id=%s %s',
+        $database_class_name::format_string( $db_dictionary->id ),
+        $modifier->get_sql() );
+    }
+
+    static::db()->execute( $sql );
   }
 }
