@@ -38,24 +38,25 @@ class dictionary_transfer_word extends base_transfer_list
   {
     parent::prepare();
 
+    $dictionary_class_name = lib::get_class_name( 'database\dictionary' );
     $test_class_name = lib::get_class_name( 'database\test' );
+
     $this->sources = array();
     $this->targets = array();
 
-    $db_dictionary = $this->get_record();
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', '=', $db_dictionary->id );
-    $modifier->or_where( 'intrusion_dictionary_id', '=', $db_dictionary->id );
-    $modifier->or_where( 'variant_dictionary_id', '=', $db_dictionary->id );
-    $modifier->or_where( 'mispelled_dictionary_id', '=', $db_dictionary->id );
-    $modifier->limit( 1 );
+    $db_test = $this->get_record()->get_owner_test();
 
-    foreach( $test_class_name::select( $modifier ) as $db_test )
+    $current_sources = array();
+
+    if( !is_null( $db_test ) )
     {
       $db_dictionary = $db_test->get_dictionary();
-      if( is_null( $db_dictionary ) ) continue;
-      $current_sources = array();
-      $current_sources[$db_dictionary->id] = $db_dictionary->name;
+
+      // disallow word movement to or from the primary dictionary of ranked_word type tests
+      if( !is_null( $db_dictionary ) && !$db_test->rank_words )
+      {
+        $current_sources[$db_dictionary->id] = $db_dictionary->name;
+      }
 
       $db_intrusion_dictionary = $db_test->get_intrusion_dictionary();
       if( !is_null( $db_intrusion_dictionary ) )
@@ -68,27 +69,51 @@ class dictionary_transfer_word extends base_transfer_list
       $db_mispelled_dictionary = $db_test->get_mispelled_dictionary();
       if( !is_null( $db_mispelled_dictionary ) )
         $current_sources[$db_mispelled_dictionary->id] = $db_mispelled_dictionary->name;
+    }
+    else
+    {
+      // if a dictionary is not assigned to a test
+      // words can either be deleted or transferred to any other dictionary except
+      // for the primary dictionary of ranked_word type tests
+      //
+      // Note that words cannot be transferred from a dictionary associated with
+      // a test to one that is not
+      $db_dictionary = $this->get_record();
+      $current_sources[$db_dictionary->id] = $db_dictionary->name;
 
-      $keys = array_keys( $current_sources );
-      $key_count = count( $keys );
-      for( $i = 0; $i < $key_count; $i++ )
+      // add in all the other dictionaries after the current dictionary
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'id', '!=', $db_dictionary->id );
+      foreach( $dictionary_class_name::select( $modifier ) as $db_dictionary )
       {
-        $k = $keys[$i];
-        $tmp = array();
-        $tmp[] = 'delete';
-        for( $j = 0; $j < $key_count; $j++ )
-        {
-          if( $i != $j ) $tmp[ $keys[$j] ] = $current_sources[ $keys[$j] ];
-        }
-        $this->sources[$k]=$current_sources[$k];
-        $this->targets[$k]=$tmp;
+        $db_test = $db_dictionary->get_owner_test();
+
+        if( !is_null( $db_test ) && $db_dictionary->id == $db_test->dictionary_id
+          && $db_test->rank_words ) continue;
+
+        $current_sources[$db_dictionary->id] = $db_dictionary->name;
       }
+    }
+
+    $keys = array_keys( $current_sources );
+    $key_count = count( $keys );
+    for( $i = 0; $i < $key_count; $i++ )
+    {
+      $k = $keys[$i];
+      $tmp = array();
+      $tmp[] = 'delete';
+      for( $j = 0; $j < $key_count; $j++ )
+      {
+        if( $i != $j ) $tmp[ $keys[$j] ] = $current_sources[ $keys[$j] ];
+      }
+      $this->sources[$k]=$current_sources[$k];
+      $this->targets[$k]=$tmp;
     }
   }
 
-  /** 
+  /**
    * Finish setting the variables in a widget.
-   * 
+   *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access protected
    */

@@ -60,9 +60,9 @@
             "Are you sure you want to continue?</p>",
             function() {
               if( ajax_push( "{{ widget.subject }}", "transfer_{{ list_subject }}", args ) ) {
-                // clear the checked ids object cookie and return to the previous page
+                // clear the checked ids object cookie and refresh the page
                 $.cookie( "{{ widget.full }}_{{ list_widget_name }}_checked_ids", null );
-                slot_prev_clip( {{ slot }} );
+                slot_refresh( {{ slot }} );
               }
             }
           );

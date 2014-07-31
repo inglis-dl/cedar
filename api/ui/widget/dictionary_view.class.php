@@ -65,11 +65,25 @@ class dictionary_view extends \cenozo\ui\widget\base_view
       $this->add_action( 'import', 'Import', $db_operation,
         'Import words from a CSV file into the dictionary' );
     }
+
     $db_operation = $operation_class_name::get_operation( 'widget', 'dictionary', 'transfer_word' );
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
     {
-      $this->add_action( 'transfer_word', 'Transfer', $db_operation,
-        'Transfer words from the dictionary to a sibling dictionary' );
+      $allow = true;
+      // disallow word movement to or from the primary dictionary of ranked_word type tests
+      $db_dictionary = $this->get_record();
+      $db_test = $db_dictionary->get_owner_test();
+      if( !is_null( $db_test ) && $db_test->rank_words )
+      {
+        $db_primary_dictionary = $db_test->get_dictionary();
+        if( !is_null( $db_primary_dictionary ) &&
+            $db_primary_dictionary->id == $db_dictionary->id )
+          $allow = false;
+      }
+
+      if( $allow )
+        $this->add_action( 'transfer_word', 'Transfer', $db_operation,
+          'Transfer words from the dictionary to a sibling dictionary' );
     }
   }
 

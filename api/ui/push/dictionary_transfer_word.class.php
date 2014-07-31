@@ -51,23 +51,19 @@ class dictionary_transfer_word extends \cenozo\ui\push\base_record
     $db_destination_dictionary =
       is_null( $id ) || 0 == $id ? NULL : lib::create( 'database\dictionary', $id );
 
-    log::debug( 'destination dictionary: ');
-    log::debug( $db_destination_dictionary );
-
-     if( is_null( $db_destination_dictionary ) )
-     {
-       $db_test = $db_dictionary->get_owner_test();
-       $word_total_view_name = is_null( $db_test ) ? NULL :
-         $db_test->get_test_type()->name . '_word_total';
-       foreach( $id_list as $id )
-       {
-         log::debug( 'word it in id_list: '. $id );
-         $db_word = lib::create( 'database\word', $id );
-         if( 0 < $db_word->get_usage_count( $word_total_view_name ) )
-           throw lib::create( 'exception\notice',
-             'The word "'. $db_word->word . '" is in use and cannot be deleted', __METHOD__ );
-       }
-     }
+    if( is_null( $db_destination_dictionary ) )
+    {
+      $db_test = $db_dictionary->get_owner_test();
+      $word_total_view_name = is_null( $db_test ) ? NULL :
+        $db_test->get_test_type()->name . '_word_total';
+      foreach( $id_list as $id )
+      {
+        $db_word = lib::create( 'database\word', $id );
+        if( 0 < $db_word->get_usage_count( $word_total_view_name ) )
+          throw lib::create( 'exception\notice',
+            'The word "'. $db_word->word . '" is in use and cannot be deleted', __METHOD__ );
+      }
+    }
   }
 
   /**
