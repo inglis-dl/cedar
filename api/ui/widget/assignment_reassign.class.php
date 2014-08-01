@@ -1,6 +1,6 @@
 <?php
 /**
- * assignment_view.class.php
+ * assignment_reassign.class.php
  *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * widget assignment view
  */
-class assignment_view extends \cenozo\ui\widget\base_view
+class assignment_reassign extends \cenozo\ui\widget\base_view
 {
   /**
    * Constructor
@@ -24,7 +24,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
    */
   public function __construct( $args )
   {
-    parent::__construct( 'assignment', 'view', $args );
+    parent::__construct( 'assignment', 'reassign', $args );
   }
 
   /**
@@ -43,25 +43,18 @@ class assignment_view extends \cenozo\ui\widget\base_view
     // add items to the view
     $this->add_item( 'uid', 'constant', 'UID' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
-    $this->add_item( 'user', 'constant', 'User' );
+    $this->add_item( 'user1', 'constant', 'User 1' );
+    $this->add_item( 'user2', 'constant', 'User 2' );
 
-    // create the test_entry sub-list widget
-    $this->test_entry_list = lib::create( 'ui\widget\test_entry_list', $this->arguments );
-    $this->test_entry_list->set_parent( $this );
-    $this->test_entry_list->set_heading( 'Tests' );
-
-    $db_operation = $operation_class_name::get_operation( 'widget', 'assignment', 'reassign' );
+    $db_operation = $operation_class_name::get_operation( 'push', 'assignment', 'reassign' );
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
     {
-      $db_assignment = $this->get_record();
-      if( !is_null( $db_assignment->get_sibling_assignment() ) &&
-          2 <= count( $db_assignment->get_reassign_user() ) )
-      {
-        $this->add_action( 'reassign', 'Reassign', $db_operation,
-          'Reassign this participant\'s assignments to typists '.
-          'with no language restrictions' );
-      }
+      $this->add_action( 'reassign', 'Reassign', $db_operation,
+        'Reassign this participant\'s assignments to typists '.
+        'with no language restrictions' );
     }
+
+    $this->set_heading( 'Reassign Assignment' );
   }
 
   /**
@@ -80,20 +73,12 @@ class assignment_view extends \cenozo\ui\widget\base_view
     $db_participant = $db_assignment->get_participant();
     $this->set_item( 'uid', $db_participant->uid, true );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name, true );
-    $this->set_item( 'user', $db_assignment->get_user()->name, true );
 
-    try
+    $user_ids = $db_assignment->get_reassign_user();
+    for( $i = 1; $i <= 2; $i++ )
     {
-      $this->test_entry_list->process();
-      $this->set_variable( 'test_entry_list', $this->test_entry_list->get_variables() );
+      $db_user = lib::create( 'database\user', $user_ids[ $i-1 ] );
+      $this->set_item( 'user'.$i, $db_user->name, true );
     }
-    catch( \cenozo\exception\permission $e ) {}
   }
-
-  /**
-   * The test_entry list widget.
-   * @var test_entry_list
-   * @access protected
-   */
-  protected $test_entry_list = NULL;
 }

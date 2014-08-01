@@ -57,6 +57,10 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "dictionary", "report", true, "View a form to select a dictionary report." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "dictionary", "import", true, "View a form to import words from a CSV file." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "dictionary", "transfer_word", true, "View a form for transferring words from a dictionary." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "dictionary", "transfer_word", true, "Transfer words from one dictionary to another." );
 
 -- dictionary_import
 

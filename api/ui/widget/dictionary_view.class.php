@@ -65,6 +65,26 @@ class dictionary_view extends \cenozo\ui\widget\base_view
       $this->add_action( 'import', 'Import', $db_operation,
         'Import words from a CSV file into the dictionary' );
     }
+
+    $db_operation = $operation_class_name::get_operation( 'widget', 'dictionary', 'transfer_word' );
+    if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
+    {
+      $allow = true;
+      // disallow word movement to or from the primary dictionary of ranked_word type tests
+      $db_dictionary = $this->get_record();
+      $db_test = $db_dictionary->get_owner_test();
+      if( !is_null( $db_test ) && $db_test->rank_words )
+      {
+        $db_primary_dictionary = $db_test->get_dictionary();
+        if( !is_null( $db_primary_dictionary ) &&
+            $db_primary_dictionary->id == $db_dictionary->id )
+          $allow = false;
+      }
+
+      if( $allow )
+        $this->add_action( 'transfer_word', 'Transfer', $db_operation,
+          'Transfer words from the dictionary to a sibling dictionary' );
+    }
   }
 
  /**
@@ -84,6 +104,8 @@ class dictionary_view extends \cenozo\ui\widget\base_view
     // set the view's items
     $db_dictionary = $this->get_record();
     $this->set_item( 'name', $db_dictionary->name, true );
+    $this->set_item( 'description', $db_dictionary->description );
+    $this->set_variable( 'dictionary_id', $db_dictionary->id );
 
     foreach( $language_class_name::select( $language_mod ) as $db_language )
     {
@@ -91,9 +113,6 @@ class dictionary_view extends \cenozo\ui\widget\base_view
       $modifier->where( 'word.language_id','=', $db_language->id );
       $this->set_item( 'words_' . $db_language->code, $db_dictionary->get_word_count( $modifier ) );
     }
-
-    $this->set_item( 'description', $db_dictionary->description );
-    $this->set_variable( 'dictionary_id', $db_dictionary->id );
 
     try
     {

@@ -41,14 +41,13 @@ class assignment_list extends \cenozo\ui\widget\base_list
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
 
-    $this->add_column( 'start_datetime', 'date', 'Start Date', true );
+    $this->add_column( 'start_datetime', 'datetime', 'Start', true );
     $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
     $this->add_column( 'test_entry_total_deferred.deferred', 'number', 'Deferred', true );
     $this->add_column( 'test_entry_total_adjudicate.adjudicate', 'number', 'Adjudicate', true );
     $this->add_column( 'test_entry_total_completed.completed', 'number', 'Completed', true );
-
     $this->set_addable( $db_role->name == 'typist' );
     $this->set_allow_restrict_state( $db_role->name != 'typist' );
 
@@ -134,9 +133,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $allow_transcribe = false;
       $allow_adjudicate = false;
 
-      $deferred_count   = $db_assignment->get_deferred_count();
-      $adjudicate_count = $db_assignment->get_adjudicate_count();
-      $completed_count  = $db_assignment->get_completed_count();
+      $all_counts = $db_assignment->get_all_counts();
+      $deferred_count   = $all_counts['deferred'];
+      $adjudicate_count = $all_counts['adjudicate'];
+      $completed_count  = $all_counts['completed'];
 
       // select the first test_entry for which we either want to transcribe
       // or adjudicate depending on user role
@@ -157,7 +157,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $allow_transcribe_operation = $allow_transcribe;
         }
       }
-      else if( $db_role->name == 'administrator' && $db_assignment->all_tests_complete() &&
+      else if( $db_role->name != 'typist' && $db_assignment->all_tests_complete() &&
                0 < $adjudicate_count )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
@@ -169,6 +169,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $test_entry_mod->where( 'adjudicate', '=', true );
           $test_entry_mod->where( 'deferred', '=', false );
           $test_entry_mod->where( 'completed', '=', true );
+          $test_entry_mod->limit( 1 );
           $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
           if( false !== $db_test_entry )
           {

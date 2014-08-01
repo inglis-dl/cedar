@@ -30,7 +30,7 @@ class assignment extends \cenozo\database\record
 
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id = %s',
+      sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id=%s',
                $database_class_name::format_string( $this->id ) ) );
   }
 
@@ -50,7 +50,7 @@ class assignment extends \cenozo\database\record
 
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
+      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id=%s',
                $database_class_name::format_string( $this->id ) ) );
   }
 
@@ -64,15 +64,34 @@ class assignment extends \cenozo\database\record
    */
   public function get_adjudicate_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     if( is_null( $this->id ) )
       throw lib::create( 'exception\runtime',
         'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
 
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
+      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id=%s',
                $database_class_name::format_string( $this->id ) ) );
+  }
+
+  /**
+   * Get the deferred, adjudicate and complete counts for this assignment.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return integer
+   * @access public
+   */
+  public function get_all_counts()
+  {
+    if( is_null( $this->id ) )
+      throw lib::create( 'exception\runtime',
+        'Tried to get counts for an assignment with no id', __METHOD__ );
+
+    $database_class_name = lib::get_class_name( 'database\database' );
+    return static::db()->get_row( sprintf(
+      'SELECT deferred, adjudicate, completed FROM assignment_total WHERE assignment_id=%s',
+      $database_class_name::format_string( $this->id ) ) );
   }
 
   /**
@@ -168,6 +187,7 @@ class assignment extends \cenozo\database\record
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'participant_id', '=', $this->participant_id );
     $modifier->where( 'user_id', '!=', $this->user_id );
+    $modifier->limit( 1 );
     $db_assignment = current( static::select( $modifier ) );
     return false === $db_assignment ? NULL : $db_assignment;
   }
@@ -181,12 +201,6 @@ class assignment extends \cenozo\database\record
    */
   public function all_tests_complete()
   {
-  /*
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'deferred', '=', false );
-    $modifier->where( 'completed', '=', true );
-    return $this->get_test_entry_count() == $this->get_test_entry_count( $modifier );
-  */
     $database_class_name = lib::get_class_name( 'database\database' );
     $id_string = $database_class_name::format_string( $this->id );
     $sql = sprintf(
@@ -207,5 +221,54 @@ class assignment extends \cenozo\database\record
       ')', $id_string, $id_string );
 
     return 0 == static::db()->get_one( $sql );
+  }
+
+  /**
+   * Returns the id of a user having no language restrictions that the
+   * assignment can be reassigned to.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return array
+   * @access public
+   */
+  public function get_reassign_user()
+  {
+    $user_class_name = lib::get_class_name( 'database\user' );
+    $role_class_name = lib::get_class_name( 'database\role' );
+    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'user_has_language.user_id', '!=', NULL );
+
+    // all the users who have a language restriction
+    $exclude_ids = array();
+    foreach( $user_class_name::select( $modifier ) as $db_user )
+    {
+      $exclude_ids[] =  $db_user->id;
+    }
+    $exclude_ids[] = $this->user_id;
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
+    $modifier->where( 'access.role_id', '=', $db_role->id );
+    $modifier->where( 'user.id', 'NOT IN', $exclude_ids );
+
+    $id_list = array();
+    $min = PHP_INT_MAX;
+    foreach( $user_class_name::select( $modifier ) as $db_user )
+    {
+      // how many open assignments does this user have
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'user_id', '=', $db_user->id );
+      $modifier->where( 'end_datetime', '=', NULL );
+      $count = static::count( $modifier );
+      if( $count < $min )
+      {
+        $min = $count;
+        array_unshift( $id_list, $db_user->id );
+      }
+    }
+
+    return $id_list;
   }
 }
