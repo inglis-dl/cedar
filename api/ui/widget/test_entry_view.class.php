@@ -54,9 +54,10 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'adjudicate', 'constant', 'Adjudicate' );
 
     // create the test_entry_transcribe sub widget
-    if(  lib::create( 'business\session' )->get_role()->name != 'administrator' )
+    if(  lib::create( 'business\session' )->get_role()->name == 'typist' )
       throw lib::create( 'exception\runtime',
-        'Only administrators can view transcriptions within a test_entry_view', __METHOD__ );
+        'Only administrators and supervisors can view transcriptions within a test_entry_view',
+        __METHOD__ );
 
     $this->test_entry_transcribe = lib::create( 'ui\widget\test_entry_transcribe',
       array( 'test_entry_transcribe' => array( 'id' => $this->get_argument( 'id' ) ) ) );

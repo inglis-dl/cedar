@@ -365,10 +365,13 @@ class test_entry extends \cenozo\database\has_note
     }
     else if( $test_type_name == 'alpha_numeric' )
     {
+      /*
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'language_id', '=', $db_language->id );
       $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
-      for( $rank = 1; $rank <= $word_count; $rank++ )
+      */
+      $max_rank = 40;
+      for( $rank = 1; $rank <= $max_rank; $rank++ )
       {
         $db_test_entry_alpha_numeric = lib::create( 'database\\'. $entry_class_name );
         $db_test_entry_alpha_numeric->test_entry_id = $this->id;

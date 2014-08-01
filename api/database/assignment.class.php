@@ -201,12 +201,6 @@ class assignment extends \cenozo\database\record
    */
   public function all_tests_complete()
   {
-  /*
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'deferred', '=', false );
-    $modifier->where( 'completed', '=', true );
-    return $this->get_test_entry_count() == $this->get_test_entry_count( $modifier );
-  */
     $database_class_name = lib::get_class_name( 'database\database' );
     $id_string = $database_class_name::format_string( $this->id );
     $sql = sprintf(
@@ -227,5 +221,54 @@ class assignment extends \cenozo\database\record
       ')', $id_string, $id_string );
 
     return 0 == static::db()->get_one( $sql );
+  }
+
+  /**
+   * Returns the id of a user having no language restrictions that the
+   * assignment can be reassigned to.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return array
+   * @access public
+   */
+  public function get_reassign_user()
+  {
+    $user_class_name = lib::get_class_name( 'database\user' );
+    $role_class_name = lib::get_class_name( 'database\role' );
+    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'user_has_language.user_id', '!=', NULL );
+
+    // all the users who have a language restriction
+    $exclude_ids = array();
+    foreach( $user_class_name::select( $modifier ) as $db_user )
+    {
+      $exclude_ids[] =  $db_user->id;
+    }
+    $exclude_ids[] = $this->user_id;
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
+    $modifier->where( 'access.role_id', '=', $db_role->id );
+    $modifier->where( 'user.id', 'NOT IN', $exclude_ids );
+
+    $id_list = array();
+    $min = PHP_INT_MAX;
+    foreach( $user_class_name::select( $modifier ) as $db_user )
+    {
+      // how many open assignments does this user have
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'user_id', '=', $db_user->id );
+      $modifier->where( 'end_datetime', '=', NULL );
+      $count = static::count( $modifier );
+      if( $count < $min )
+      {
+        $min = $count;
+        array_unshift( $id_list, $db_user->id );
+      }
+    }
+
+    return $id_list;
   }
 }

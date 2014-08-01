@@ -157,7 +157,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $allow_transcribe_operation = $allow_transcribe;
         }
       }
-      else if( $db_role->name == 'administrator' && $db_assignment->all_tests_complete() &&
+      else if( $db_role->name != 'typist' && $db_assignment->all_tests_complete() &&
                0 < $adjudicate_count )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
@@ -192,10 +192,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
         'start_datetime' => $db_assignment->start_datetime,
         'participant.uid' => $db_participant->uid,
         'cohort.name' => $db_participant->get_cohort()->name,
-        'user.name' => $db_assignment->get_user()->name,        
+        'user.name' => $db_assignment->get_user()->name,
         'test_entry_total_deferred.deferred' => $deferred_count,
         'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
-        'test_entry_total_completed.completed' =>  $completed_count,        
+        'test_entry_total_completed.completed' =>  $completed_count,
         'allow_transcribe' => $allow_transcribe ? 1 : 0,
         'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
         'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id );

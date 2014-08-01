@@ -9,3 +9,11 @@ VALUES( "widget", "dictionary", "transfer_word", true,
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "dictionary", "transfer_word", true,
 "Transfer words from one dictionary to another." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "assignment", "reassign", true,
+"View a form for reassigning an assignment to different users with no language restrictions." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "assignment", "reassign", true,
+"Reassign an assignment to a different user with no language restrictions." );
