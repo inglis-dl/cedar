@@ -305,12 +305,14 @@ CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
   `create_timestamp` TIMESTAMP NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
   `participant_id` INT UNSIGNED NOT NULL,
+  `site_id` INT UNSIGNED NOT NULL,
   `start_datetime` DATETIME NOT NULL,
   `end_datetime` DATETIME NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_participant_id` (`participant_id` ASC),
   INDEX `fk_user_id` (`user_id` ASC),
-  UNIQUE INDEX `uq_user_id_participant_id` (`user_id` ASC, `participant_id` ASC),
+  UNIQUE INDEX `uq_user_id_participant_id_site_id` (`user_id` ASC, `participant_id` ASC, `site_id` ASC),
+  INDEX `fk_site_id` (`site_id` ASC),
   CONSTRAINT `fk_assignment_participant_id`
     FOREIGN KEY (`participant_id`)
     REFERENCES `cenozo`.`participant` (`id`)
@@ -319,6 +321,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`assignment` (
   CONSTRAINT `fk_assignment_user_id`
     FOREIGN KEY (`user_id`)
     REFERENCES `cenozo`.`user` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_assignment_site_id`
+    FOREIGN KEY (`site_id`)
+    REFERENCES `cenozo`.`site` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;

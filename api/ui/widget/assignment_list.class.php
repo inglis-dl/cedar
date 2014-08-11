@@ -12,7 +12,7 @@ use cenozo\lib, cenozo\log, cedar\util;
 /**
  * widget assignment list
  */
-class assignment_list extends \cenozo\ui\widget\base_list
+class assignment_list extends \cenozo\ui\widget\site_restricted_list
 {
   /**
    * Constructor
@@ -109,7 +109,6 @@ class assignment_list extends \cenozo\ui\widget\base_list
     // allow test_entry adjudicate via a adjudicate button on assignment rows
     $allow_adjudicate_operation = false;
 
-    $modifier = NULL;
     if( $this->allow_restrict_state )
     {
       $language_mod = lib::create( 'database\modifier' );
@@ -123,7 +122,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $this->set_variable( 'restrict_language_id', $restrict_language_id );
     }
 
-    foreach( $this->get_record_list( $modifier ) as $db_assignment )
+    foreach( $this->get_record_list() as $db_assignment )
     {
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'assignment_id', '=', $db_assignment->id );
@@ -243,6 +242,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where( 'test_entry.completed', '=', false );
     }
+
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
@@ -299,6 +299,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where( 'test_entry.completed', '=', false );
     }
+
     if( $this->allow_restrict_state )
     {
       $restrict_state_id = $this->get_argument( 'restrict_state_id', '' );
