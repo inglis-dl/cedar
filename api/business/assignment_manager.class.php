@@ -97,7 +97,7 @@ class assignment_manager extends \cenozo\singleton
     $util_class_name = lib::get_class_name( 'util' );
 
     $user_ids = $db_assignment->get_reassign_user();
-    if( 2 > count( $user_ids ) )
+    if( count( $user_ids ) < 2 )
       throw lib::create( 'exception\notice',
         'At least two users with no language restrictions are required',  __METHOD__ );
 
@@ -623,8 +623,8 @@ class assignment_manager extends \cenozo\singleton
           $c = array_merge( $c, $c_intrusion );
 
         //create additional entries if necessary
-        $count = abs( max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
-          count( $c_intrusion ) );
+        $count = max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
+          count( $c_intrusion );
         if( 0 < $count )
         {
           for( $i = 0; $i < $count; $i++ )
@@ -634,6 +634,12 @@ class assignment_manager extends \cenozo\singleton
             $db_entry->save();
             array_push( $c, $db_entry );
           }
+        }
+        else if( 0 > $count )
+        {
+          log::debug( $count );
+          log::debug( $c_intrusion );
+          die();
         }
 
         while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) || !is_null( key( $c ) ) )

@@ -250,9 +250,13 @@ class assignment extends \cenozo\database\record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
-    $modifier->where( 'access.role_id', '=', $db_role->id );
+    $modifier->where( 'access.role_id', 'IN', array( $db_role->id ) );
     $modifier->where( 'user.id', 'NOT IN', $exclude_ids );
 
+    // prepare a list of user id's sorted according to the users'
+    // number of open assignments from least to most with the
+    // objective to reassign the assignments over to those typists
+    // with fewer active assignments
     $id_list = array();
     $min = PHP_INT_MAX;
     foreach( $user_class_name::select( $modifier ) as $db_user )
@@ -262,10 +266,14 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'user_id', '=', $db_user->id );
       $modifier->where( 'end_datetime', '=', NULL );
       $count = static::count( $modifier );
-      if( $count < $min )
+      if( $count < $min  )
       {
         $min = $count;
         array_unshift( $id_list, $db_user->id );
+      }
+      else
+      {
+        $id_list[] = $db_user->id;
       }
     }
 
