@@ -554,8 +554,8 @@ class assignment_manager extends \cenozo\singleton
           $c = array_merge( $c, $c_intrusion );
 
         //create additional entries if necessary
-        $count = abs( max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
-          count( $c_intrusion ) );
+        $count = max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
+          count( $c_intrusion );
         if( 0 < $count )
         {
           for( $i = 0; $i < $count; $i++ )
