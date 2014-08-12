@@ -96,15 +96,21 @@ class assignment_manager extends \cenozo\singleton
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     $util_class_name = lib::get_class_name( 'util' );
 
+    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+    if( is_null( $db_sibling_assignment ) )
+      throw lib::create( 'exception\notice',
+        'A sibling assignment is required',  __METHOD__ );
+
     $user_ids = $db_assignment->get_reassign_user();
     if( count( $user_ids ) < 2 )
       throw lib::create( 'exception\notice',
         'At least two users with no language restrictions are required',  __METHOD__ );
 
-    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-    if( is_null( $db_sibling_assignment ) )
-      throw lib::create( 'exception\notice',
-        'A sibling assignment is required',  __METHOD__ );
+    $reset_1 = reset( $user_ids );
+    $user_id_1 =  key( $user_ids );
+    unset( $user_ids[ $user_id_1 ] );
+    $reset_2 = reset( $user_ids );
+    $user_id_2 =  key( $user_ids );
 
     // remove any adjudications associated with this participant
     $modifier = lib::create( 'database\modifier' );
@@ -119,11 +125,6 @@ class assignment_manager extends \cenozo\singleton
       $test_entry_class_name::db()->execute( $sql );
       $db_adjudicate_entry->delete();
     }
-
-    $user_id_1 = array_keys( $user_ids[0] )[0];
-    $reset_1 = array_values( $user_ids[0] )[0];
-    $user_id_2 = array_keys( $user_ids[1] )[0];
-    $reset_2 = array_values( $user_ids[1] )[0];
 
     $assignment_ids = array();
     $date_obj = $util_class_name::get_datetime_object();
