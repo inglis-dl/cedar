@@ -224,11 +224,12 @@ class assignment extends \cenozo\database\record
   }
 
   /**
-   * Returns the id of a user having no language restrictions that the
-   * assignment can be reassigned to.
+   * Returns the id of a user as an array key having no language restrictions that the
+   * assignment can be reassigned to with.  The boolean value returned with the key
+   * indicates whether to keep the assignment intact or to reinitialize it.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @return array
+   * @return associative array  user_id => boolean
    * @access public
    */
   public function get_reassign_user()
@@ -244,9 +245,13 @@ class assignment extends \cenozo\database\record
     $exclude_ids = array();
     foreach( $user_class_name::select( $modifier ) as $db_user )
     {
-      $exclude_ids[] =  $db_user->id;
+      $exclude_ids[] = $db_user->id;
     }
-    $exclude_ids[] = $this->user_id;
+
+    // if the user assigned to this assignment does not have a language restriction
+    // then they need to be added to front of the returned id_list so that we dont
+    // delete their transcriptions during reassign
+    $prepend = !in_array( $this->user_id, $exclude_ids );
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
@@ -276,6 +281,33 @@ class assignment extends \cenozo\database\record
         $id_list[] = $db_user->id;
       }
     }
+
+    if( $prepend )
+    {
+      if( in_array( $this->user_id, $id_list )  )
+        $id_list = array_splice( $id_list, array_search( $this->user_id, $id_list ), 1 );
+      $id_list[] = $this->user_id;
+    }
+
+    // check if the sibling assignment's user also has a language restriction
+    $db_sibling_assignment = $this->get_sibling_assignment();
+    if( !is_null( $db_sibling_assignment ) )
+    {
+      $id = $db_sibling_assignment->user_id;
+      if( !in_array( $id, $exclude_ids ) )
+      {
+        if( in_array( $id, $id_list ) )
+          $id_list = array_splice( $id_list, array_search( $id, $id_list ), 1 );
+        $id_list[] = $id;
+      }
+    }
+
+    $id_list = array_combine( $id_list, array_fill( 0, count( $id_list ), true ) );
+    if( array_key_exists( $this->user_id, $id_list ) )
+      $id_list[ $this->user_id ] = false;
+    if( !is_null( $db_sibling_assignment ) &&
+         array_key_exists( $db_sibling_assignment->user_id, $id_list ) )
+      $id_list[ $db_sibling_assginment->user_id ] = false;
 
     return $id_list;
   }

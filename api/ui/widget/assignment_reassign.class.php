@@ -77,7 +77,7 @@ class assignment_reassign extends \cenozo\ui\widget\base_view
     $user_ids = $db_assignment->get_reassign_user();
     for( $i = 1; $i <= 2; $i++ )
     {
-      $db_user = lib::create( 'database\user', $user_ids[ $i-1 ] );
+      $db_user = lib::create( 'database\user', array_keys( $user_ids[ $i-1 ] )[0] );
       $this->set_item( 'user'.$i, $db_user->name, true );
     }
   }

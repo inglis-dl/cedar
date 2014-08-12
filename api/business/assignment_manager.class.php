@@ -120,37 +120,55 @@ class assignment_manager extends \cenozo\singleton
       $db_adjudicate_entry->delete();
     }
 
+    $user_id_1 = array_keys( $user_ids[0] )[0];
+    $reset_1 = array_values( $user_ids[0] )[0];
+    $user_id_2 = array_keys( $user_ids[1] )[0];
+    $reset_2 = array_values( $user_ids[1] )[0];
+
+    $assignment_ids = array();
+    $date_obj = $util_class_name::get_datetime_object();
+
     $db_assignment->end_datetime = NULL;
     $db_sibling_assignment->end_datetime = NULL;
-    $db_assignment->user_id = $user_ids[0];
-    $db_sibling_assignment->user_id = $user_ids[1];
-    $date_obj = $util_class_name::get_datetime_object();
-    $db_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
-    $db_sibling_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
+    if( $reset_1 )
+    {
+      $db_assignment->user_id = $user_id_1;
+      $db_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
+      $assignment_ids[] = $db_assignment->id;
+    }
+
+    if( $reset_2 )
+    {
+      $db_sibling_assignment->user_id = $user_id_2;
+      $db_sibling_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
+      $assignment_ids[] = $db_sibling_assignment->id;
+    }
     $db_assignment->save();
     $db_sibling_assignment->save();
 
     // delete the test_entry records
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'assignment_id', 'IN',
-      array( $db_assignment->id, $db_sibling_assignment->id ) );
-    foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
+    if( count( $assignment_ids ) )
     {
-      $mod = lib::create( 'database\modifier' );
-      $mod->where( 'test_entry_id', '=', $db_test_entry->id );
-      $sql = sprintf( 'DELETE FROM test_entry_note %s',
-        $mod->get_sql() );
-      $test_entry_class_name::db()->execute( $sql );
-      $sql = sprintf( 'DELETE FROM test_entry_%s %s',
-        $db_test_entry->get_test()->get_test_type()->name,
-        $mod->get_sql() );
-      $test_entry_class_name::db()->execute( $sql );
-      $db_test_entry->delete();
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'assignment_id', 'IN', $assignment_ids );
+      foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
+      {
+        $mod = lib::create( 'database\modifier' );
+        $mod->where( 'test_entry_id', '=', $db_test_entry->id );
+        $sql = sprintf( 'DELETE FROM test_entry_note %s',
+          $mod->get_sql() );
+        $test_entry_class_name::db()->execute( $sql );
+        $sql = sprintf( 'DELETE FROM test_entry_%s %s',
+          $db_test_entry->get_test()->get_test_type()->name,
+          $mod->get_sql() );
+        $test_entry_class_name::db()->execute( $sql );
+        $db_test_entry->delete();
+      }
     }
 
     // initialize each assignment
-    static::initialize_assignment( $db_assignment );
-    static::initialize_assignment( $db_sibling_assignment );
+    if( $reset_1 ) static::initialize_assignment( $db_assignment );
+    if( $reset_2 ) static::initialize_assignment( $db_sibling_assignment );
   }
 
   /**
@@ -634,12 +652,6 @@ class assignment_manager extends \cenozo\singleton
             $db_entry->save();
             array_push( $c, $db_entry );
           }
-        }
-        else if( 0 > $count )
-        {
-          log::debug( $count );
-          log::debug( $c_intrusion );
-          die();
         }
 
         while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) || !is_null( key( $c ) ) )

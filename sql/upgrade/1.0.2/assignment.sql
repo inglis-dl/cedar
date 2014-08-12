@@ -15,6 +15,9 @@ CREATE PROCEDURE patch_assignment()
       AND CONSTRAINT_NAME = "uq_user_id_participant_id" );
 
     IF @test = 1 THEN
+
+      SELECT "Adding a new column to the assignemt table" AS "";
+
       ALTER TABLE assignment
       ADD COLUMN site_id INT UNSIGNED NOT NULL AFTER participant_id;
 
