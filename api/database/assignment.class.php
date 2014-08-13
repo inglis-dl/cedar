@@ -307,7 +307,7 @@ class assignment extends \cenozo\database\record
       $id_list[ $this->user_id ] = false;
     if( !is_null( $db_sibling_assignment ) &&
          array_key_exists( $db_sibling_assignment->user_id, $id_list ) )
-      $id_list[ $db_sibling_assginment->user_id ] = false;
+      $id_list[ $db_sibling_assignment->user_id ] = false;
 
     return $id_list;
   }
