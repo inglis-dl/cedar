@@ -17,3 +17,7 @@ VALUES( "widget", "assignment", "reassign", true,
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "assignment", "reassign", true,
 "Reassign an assignment to a different user with no language restrictions." );
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry_ranked_word", "delete", true,
+"Deletes an intrusion entry for an ranked word test type." );

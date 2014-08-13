@@ -15,6 +15,14 @@
 
     var table_selector = "#{{ widget.full }}__entry_table";
 
+    // highlight the row the mouse is over
+    $( table_selector + ' tbody tr').mouseover( function() {
+      $(this).addClass( "ui-widget-header" );
+    } );
+    $( table_selector + ' tbody tr').mouseout( function() {
+      $(this).removeClass( "ui-widget-header" );
+    } );
+
     function configure_ui( do_text ) {
 
       if( {{ deferred }} || !{{ editable }} ) {
@@ -29,7 +37,11 @@
         var numYes = $( table_selector + ' input:radio[value="yes"]:checked' ).length;
         var numNo = $( table_selector + ' input:radio[value="no"]:checked' ).length;
         var numVariant = $( table_selector + ' input:radio[value="variant"]:checked' ).length;
-        var numEmptyIntrusion = $( table_selector + ' input:text[id$="intrusion"][value=""]' ).length;
+        var numEmptyIntrusion = 0;
+        $( table_selector + ' input:text[id$="intrusion"]' ).each( function() {
+          if( 0 == $(this).val().length ) numEmptyIntrusion++;
+        } );
+
         var has_null_status = 'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         // count number of items with value "yes"
@@ -39,7 +51,8 @@
 
         // disable the next and add buttons if the ranked word entries are incomplete
         // or if there are empty intrusion fields
-        var disable = ( ( numYes + numNo + numVariant ) != numRadio && has_null_status ) || 0 < numEmptyIntrusion;
+        var disable = ( ( numYes + numNo + numVariant ) != numRadio && has_null_status ) ||
+                      0 != numEmptyIntrusion;
         $( "#{{ parent.full }}_next" ).button( { disabled : disable } );
         $( "#{{ widget.full }}_add" ).button( { disabled : disable } );
 
@@ -202,9 +215,6 @@
 
     $( function () {
 
-      update_input_list();
-      configure_ui();
-
       // note that only non-strict tests can have new entries added for intrusions
       $( "#{{ widget.full }}_add" ).button( {
         text: false,
@@ -218,7 +228,22 @@
         if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
           slot_refresh( {{ slot }} );
         }
-      } ); // end Add button click
+      } ); // end add button click
+
+      // allow removal of intrusions
+      $( table_selector + ' button[id$="intrusion_delete"]' ).button( {
+        text: false,
+        icons: { primary: "ui-icon-closethick" }
+        } )
+      .click( function() {
+        var id = $(this).prop( "id" ).split("__")[0];
+        if( ajax_push( "{{ widget.subject }}", "delete", { "id": id } ) ) {
+          slot_refresh( {{ slot }} );
+        }
+      } ); // end delete button click
+
+      update_input_list();
+      configure_ui();
 
       // find and handle radio element change events:
       // enable/disable the text entry element depending on
@@ -264,7 +289,6 @@
   <div class="spacer"></div>
 
   <table id="{{ widget.full }}__entry_table">
-
     <thead>
       <tr>
         <td></td>
@@ -274,14 +298,12 @@
         <td></td>
       </tr>
     </thead>
-
     <tbody>
     {% for entry in entry_data %}
-
         {% if entry.ranked_word_set_word is defined %}
         <tr class="ranked_word">
-          <td class="heading">{{ entry.ranked_word_set_word }}</td>
-          <td><input type="radio"
+          <td class="heading" style="width:50px">{{ entry.ranked_word_set_word }}</td>
+          <td style="width:30px"><input type="radio"
                id="{{ entry.id }}__yes"
                name="{{ entry.ranked_word_set_id }}"
                value="yes"
@@ -289,7 +311,7 @@
                  { readonly }
                {% endif %}
                {{ entry.selection == 'yes' ? "checked" : "" }}/></td>
-          <td><input type="radio"
+          <td style="width:30px"><input type="radio"
                id="{{ entry.id }}__no"
                name="{{ entry.ranked_word_set_id }}"
                value="no"
@@ -297,7 +319,7 @@
                  { readonly }
                {% endif %}
                {{ entry.selection == 'no' ? "checked" : "" }}/></td>
-          <td><input type="radio"
+          <td style="width:30px"><input type="radio"
                id="{{ entry.id }}__variant"
                name="{{ entry.ranked_word_set_id }}"
                value="variant"
@@ -305,7 +327,8 @@
                  { readonly }
                {% endif %}
                {{ entry.selection == 'variant' ? "checked" : "" }}/></td>
-          <td><input type="text"
+          <td style="width:100px"><input type="text"
+              style="float:left"
                id="{{ entry.id }}__candidate"
                name="{{ entry.ranked_word_set_id }}"
                {% if editable == 0 %}
@@ -323,8 +346,9 @@
         {% else %}
         <tr class="intrusion">
           <td class="heading">INTRUSION</td>
-          <td></td><td></td><td></td>
+          <td colspan="3"></td>
           <td><input type="text"
+              style="float:left"
                id="{{ entry.id }}__intrusion"
                {% if editable == 0 %}
                  { readonly }
@@ -334,7 +358,14 @@
                  {% if entry.classification is defined %}
                    class="{{ entry.classification }}"
                  {% endif %}
-               {% endif %}/></td>
+               {% endif %}/>
+            <button class="{{ widget.full }}__delete_entry"
+              style="float:right"
+               {% if editable == 0 %}
+                 { disabled  }
+               {% endif %}
+              id="{{ entry.id }}__intrusion_delete">Delete</button>
+              </td>
          </tr>
         {% endif %}
     {% endfor %}
