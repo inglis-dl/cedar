@@ -55,7 +55,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
     {
       $db_assignment = $this->get_record();
       if( !is_null( $db_assignment->get_sibling_assignment() ) &&
-          count( $db_assignment->get_reassign_user() ) >= 2  )
+          2 == count( $db_assignment->get_reassign_user() ) )
       {
         $this->add_action( 'reassign', 'Reassign', $db_operation,
           'Reassign this participant\'s assignments to typists '.

@@ -102,15 +102,24 @@ class assignment_manager extends \cenozo\singleton
         'A sibling assignment is required',  __METHOD__ );
 
     $user_ids = $db_assignment->get_reassign_user();
-    if( count( $user_ids ) < 2 )
+    if( 2 != count( $user_ids ) )
       throw lib::create( 'exception\notice',
-        'At least two users with no language restrictions are required',  __METHOD__ );
+        'Two users with no language restrictions are required for reassigning',  __METHOD__ );
 
+    // we have two user ids which now need to be identified
+    // with the current two assignments
     $reset_1 = reset( $user_ids );
     $user_id_1 =  key( $user_ids );
     unset( $user_ids[ $user_id_1 ] );
     $reset_2 = reset( $user_ids );
     $user_id_2 =  key( $user_ids );
+
+    $assignment_reset = array();
+    if( $reset_1[0] )
+      $assignment_reset[ $reset_1[1] ] = $user_id_1;
+
+    if( $reset_2[0] )
+      $assignment_reset[ $reset_2[1] ] = $user_id_2;
 
     // remove any adjudications associated with this participant
     $modifier = lib::create( 'database\modifier' );
@@ -126,32 +135,28 @@ class assignment_manager extends \cenozo\singleton
       $db_adjudicate_entry->delete();
     }
 
-    $assignment_ids = array();
-    $date_obj = $util_class_name::get_datetime_object();
-
     $db_assignment->end_datetime = NULL;
     $db_sibling_assignment->end_datetime = NULL;
-    if( $reset_1 )
+    $date_obj = $util_class_name::get_datetime_object();
+    if( array_key_exists( $db_assignment->id, $assignment_reset ) )
     {
-      $db_assignment->user_id = $user_id_1;
+      $db_assignment->user_id = $assignment_reset[ $db_assignment->id ];
       $db_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
-      $assignment_ids[] = $db_assignment->id;
     }
 
-    if( $reset_2 )
+    if( array_key_exists( $db_sibling_assignment->id, $assignment_reset ) )
     {
-      $db_sibling_assignment->user_id = $user_id_2;
+      $db_sibling_assignment->user_id = $assignment_reset[ $db_sibling_assignment->id ];
       $db_sibling_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
-      $assignment_ids[] = $db_sibling_assignment->id;
     }
     $db_assignment->save();
     $db_sibling_assignment->save();
 
-    // delete the test_entry records
-    if( count( $assignment_ids ) )
+    // delete the test_entry records as required
+    if( 0 < count( $assignment_reset ) )
     {
       $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'assignment_id', 'IN', $assignment_ids );
+      $modifier->where( 'assignment_id', 'IN', array_keys( $assignment_reset ) );
       foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
       {
         $mod = lib::create( 'database\modifier' );
@@ -167,9 +172,11 @@ class assignment_manager extends \cenozo\singleton
       }
     }
 
-    // initialize each assignment
-    if( $reset_1 ) static::initialize_assignment( $db_assignment );
-    if( $reset_2 ) static::initialize_assignment( $db_sibling_assignment );
+    // initialize each assignment as required
+    if( array_key_exists( $db_assignment->id, $assignment_reset ) )
+      static::initialize_assignment( $db_assignment );
+    if( array_key_exists( $db_sibling_assignment->id, $assignment_reset ) )
+      static::initialize_assignment( $db_sibling_assignment );
   }
 
   /**

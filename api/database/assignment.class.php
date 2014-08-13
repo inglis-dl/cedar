@@ -282,32 +282,65 @@ class assignment extends \cenozo\database\record
       }
     }
 
+    // check if the sibling assignment's user has a language restriction
+    $assignmnet_pool = array();
+    $assignment_pool[] = $this->id;
+
+    $db_sibling_assignment = $this->get_sibling_assignment();
+    if( is_null( $db_sibling_assignment ) )
+      throw lib::create( 'exception\notice',
+        'A sibling assignment is required',  __METHOD__ );
+
+    $assignment_pool[] = $db_sibling_assignment->id;
+    $id = $db_sibling_assignment->user_id;
+    if( in_array( $id, $id_list ) )
+    {
+      unset( $id_list[ array_search( $id, $id_list ) ] );
+      $id_list = array_values( $id_list );
+      array_unshift( $id_list, $id );
+    }
+
     if( $prepend )
     {
       if( in_array( $this->user_id, $id_list )  )
-        $id_list = array_splice( $id_list, array_search( $this->user_id, $id_list ), 1 );
-      $id_list[] = $this->user_id;
+      {
+        unset( $id_list[ array_search( $this->user_id, $id_list ) ] );
+        $id_list = array_values( $id_list );
+      }
+      array_unshift( $id_list, $this->user_id );
     }
 
-    // check if the sibling assignment's user also has a language restriction
-    $db_sibling_assignment = $this->get_sibling_assignment();
-    if( !is_null( $db_sibling_assignment ) )
+    // truncate to 2 entries
+    if( count( $id_list ) > 2 )
+      $id_list = array_slice( $id_list, 0, 2 );
+
+    $id_list = array_combine( $id_list, array_fill( 0, 2, true ) );
+
+    if( array_key_exists( $this->user_id, $id_list ) )
     {
-      $id = $db_sibling_assignment->user_id;
-      if( !in_array( $id, $exclude_ids ) )
+      $id_list[ $this->user_id ] = array( false, $this->id );
+      unset( $assignment_pool[ array_search( $this->id, $assignment_pool ) ] );
+    }
+
+    if( array_key_exists( $db_sibling_assignment->user_id, $id_list ) )
+    {
+      $id_list[ $db_sibling_assignment->user_id ] = array( false, $db_sibling_assignment->id );
+      unset( $assignment_pool[ array_search( $db_sibling_assignment->id, $assignment_pool ) ] );
+    }
+
+    if( 0 < count( $assignment_pool ) )
+    {
+      //find the id_list key that doesnt have an array value
+      reset( $assignment_pool );
+      foreach( $id_list as $user_id => &$value )
       {
-        if( in_array( $id, $id_list ) )
-          $id_list = array_splice( $id_list, array_search( $id, $id_list ), 1 );
-        $id_list[] = $id;
+        if( !is_array( $value ) )
+        {
+          $value = array( $value, current( $assignment_pool ) );
+          next( $assignment_pool );
+        }
       }
     }
-
-    $id_list = array_combine( $id_list, array_fill( 0, count( $id_list ), true ) );
-    if( array_key_exists( $this->user_id, $id_list ) )
-      $id_list[ $this->user_id ] = false;
-    if( !is_null( $db_sibling_assignment ) &&
-         array_key_exists( $db_sibling_assignment->user_id, $id_list ) )
-      $id_list[ $db_sibling_assignment->user_id ] = false;
 
     return $id_list;
   }
