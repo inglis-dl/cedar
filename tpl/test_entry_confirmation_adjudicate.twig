@@ -15,6 +15,14 @@
 
     var table_selector = "#{{ widget.full }}__adjudicate_table";
 
+    // highlight the row the mouse is over
+    $( table_selector + ' tbody tr').mouseover( function() {
+      $(this).addClass( "ui-widget-header" );
+    } );
+    $( table_selector + ' tbody tr').mouseout( function() {
+      $(this).removeClass( "ui-widget-header" );
+    } );
+
     function configure_ui() {
       var disable_submit = false;
       var has_non_status_fields =
@@ -156,11 +164,14 @@
             </div>
           </td>
           {% if entry_data.adjudicate|default(false) %}
-            <td bgcolor=#B1F3B1>
+            <td class="accept">
               <div class="radio__accept">
                 <input type="radio"
                   id="{{ entry_data.id_1 }}__accept"
                   name="{{ entry_data.id_3 }}"
+                  {% if entry_data.confirmation_1 == entry_data.confirmation_3 %}
+                    { checked }
+                  {% endif %}
                   value="accept"/>
                 <label for="{{ entry_data.id_1 }}__accept">Accept</label>
               </div>
@@ -189,11 +200,14 @@
             </div>
           </td>
           {% if entry_data.adjudicate|default(false) %}
-            <td bgcolor=#B1F3B1>
+            <td class="accept">
               <div class="radio__accept">
                 <input type="radio"
                   id="{{ entry_data.id_2 }}__accept"
                   name="{{ entry_data.id_3 }}"
+                  {% if entry_data.confirmation_2 == entry_data.confirmation_3 %}
+                    { checked }
+                  {% endif %}
                   value="accept"/>
                 <label for="{{ entry_data.id_2 }}__accept">Accept</label>
               </div>
@@ -239,9 +253,13 @@
               </select>
             </td>
             {% if status.adjudicate|default(false) %}
-              <td bgcolor=#B1F3B1>
+              <td class="accept">
                 <input type="radio"
                   id="{{ status.id_1 }}__{{ status.status_type }}__status__accept"
+                  {% if status.status_1 != status.status_2
+                    and status.status_3 == status.status_1 %}
+                      { checked }
+                  {% endif %}
                   name="{{ status.id_3 }}__{{ status.status_type }}__status__accept"
                   value="{{ status.status_type }}__status__accept"/>
                 <label for="{{ status.id_1 }}__{{ status.status_type }}__status__accept">Accept</label>
@@ -262,9 +280,13 @@
               </select>
             </td>
             {% if status.adjudicate|default(false) %}
-              <td bgcolor=#B1F3B1>
+              <td class="accept">
                 <input type="radio"
                   id="{{ status.id_2 }}__{{ status.status_type }}__status__accept"
+                  {% if status.status_1 != status.status_2
+                    and status.status_3 == status.status_2 %}
+                      { checked }
+                  {% endif %}
                   name="{{ status.id_3 }}__{{ status.status_type }}__status__accept"
                   value="{{ status.status_type }}__status__accept"/>
                 <label for="{{ status.id_2 }}__{{ status.status_type }}__status__accept">Accept</label>

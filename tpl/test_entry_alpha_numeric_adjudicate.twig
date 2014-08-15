@@ -15,6 +15,14 @@
 
     var table_selector = "#{{ widget.full }}__adjudicate_table";
 
+    // highlight the row the mouse is over
+    $( table_selector + ' tbody tr').mouseover( function() {
+      $(this).addClass( "ui-widget-header" );
+    } );
+    $( table_selector + ' tbody tr').mouseout( function() {
+      $(this).removeClass( "ui-widget-header" );
+    } );
+
     function configure_ui() {
       var disable_submit = false;
       var has_non_status_fields =
@@ -66,12 +74,18 @@
       // copy the progenitor to the text input for adjudicate entry
       $( table_selector + ' input:radio[value="accept"]' ).change(
         function() {
-          var entry_id = $(this).prop( "id" ).split( "__" )[0];
-          var target_text_id = '#' + $(this).prop( "name" ) + "__adjudicate";
+          var target_entry_id = $(this).prop( "name" );
+          var source_entry_id = $(this).prop( "id" ).split( "__" )[0];
+          var target_text_id = '#' + target_entry_id + "__adjudicate";
+          var source_text_id = '#' + source_entry_id + "__candidate";
           var blank_id = target_text_id.replace( "adjudicate", "blank" );
-          $( blank_id ).removeProp( "checked" );
-          var source_text_id = '#' + entry_id + "__candidate";
+
           var candidate = $( source_text_id ).val();
+          candidate = $( source_text_id ).val();
+          if( typeof candidate === 'undefined' ) {
+            candidate = "";
+          }
+
           $( target_text_id ).val( candidate );
           $( target_text_id ).attr( "value", candidate );
           $( target_text_id ).removeProp( "disabled" );
@@ -79,7 +93,7 @@
           // push the edit
           var args = new Object();
           var columns = new Object();
-          args.id = $(this).prop( "name" );
+          args.id = target_entry_id;
 
           if( 0 == candidate.length ) {
             columns["word_id"] = '';
@@ -90,9 +104,11 @@
 
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+            $( blank_id ).prop( "checked", 0 == candidate.length );
             configure_ui();
           } else {
             alert( "Entry was not accepted, try again." );
+            $( blank_id ).prop( "checked", true );
             // clear the text entry and re-focus
             $(this).val( "" );
             $(this).attr( "value", "" );
@@ -106,9 +122,10 @@
       } );// end radio input change and click
 
       $( table_selector + ' input:text[id$="adjudicate"]' ).change( function() {
+        var target_entry_id = $(this).prop( "id" ).split( "__" )[0];
+
         // uncheck the progenitor radio items
-        $( table_selector + ' input:radio[name="' +
-          $(this).prop( "id" ).split( "__" )[0] + '"]' ).removeProp( "checked" );
+        $( table_selector + ' input:radio[name="' + target_entry_id + '"]' ).removeProp( "checked" );
         // uncheck the all checkboxes
         $( table_selector + ' input:checkbox[value="all"]' ).removeProp( "checked" );
 
@@ -120,7 +137,7 @@
 
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).prop( "id" ).split( "__" )[0];
+        args.id = target_entry_id;
         if( 0 == candidate.length ) {
           columns["word_id"] = '';
         } else {
@@ -130,10 +147,10 @@
 
         // flag to determine the submit button enable state
         var blank_id = '#' + $(this).prop( "id" ).replace( "adjudicate", "blank" );
-        $( blank_id ).prop( "checked", 0 == candidate.length );
 
         // push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          $( blank_id ).prop( "checked", 0 == candidate.length );
           configure_ui();
         } else {
           alert( "Entry was not accepted, try again." );
@@ -141,6 +158,7 @@
           $(this).val( "" );
           $(this).attr( "value", "" );
           $(this).focus();
+          $( blank_id ).prop( "checked", true );
         }
       } );// end text input change
 
@@ -240,11 +258,21 @@
               readonly/>
           </td>
           {% if entry.adjudicate|default(false) %}
-            <td bgcolor=#B1F3B1>
+            <td class="accept">
               <div class="radio__accept__1">
                 <input type="radio"
                   id="{{ entry.id_1 }}__accept"
                   name="{{ entry.id_3 }}"
+                  {% if entry.word_id_1 is defined
+                     and entry.word_id_3 is defined
+                     and entry.word_id_3 == entry.word_id_1 %}
+                       { checked }
+                  {% else %}
+                    {% if entry.word_id_3 == ""
+                       and entry.word_id_1 == "" %}
+                        { checked }
+                    {% endif %}
+                  {% endif %}
                   value="accept"/>
                 <label for="{{ entry.id_1 }}__accept">Accept</label>
               </div>
@@ -262,17 +290,34 @@
               readonly/>
           </td>
           {% if entry.adjudicate|default(false) %}
-            <td bgcolor=#B1F3B1>
+            <td class="accept">
               <div class="radio__accept__2">
                 <input type="radio"
                   id="{{ entry.id_2 }}__accept"
                   name="{{ entry.id_3 }}"
+                  {% if entry.word_id_2 is defined
+                     and entry.word_id_3 is defined
+                     and entry.word_id_3 == entry.word_id_2 %}
+                       { checked }
+                  {% else %}
+                    {% if entry.word_id_3 == ""
+                       and entry.word_id_2 == "" %}
+                        { checked }
+                    {% endif %}
+                  {% endif %}
                   value="accept"/>
                 <label for="{{ entry.id_2 }}__accept">Accept</label>
               </div>
             </td>
             <td>
               <div class="adjudicate">
+                <input type="checkbox"
+                  id="{{ entry.id_3 }}__blank"
+                  name="{{ entry.id_3 }}"
+                  {{ entry.word_3 == "" ? "checked" : "" }}
+                  readonly
+                  disabled
+                  value="blank"/>
                 <input type="text"
                   id="{{ entry.id_3 }}__adjudicate"
                   style="width:10%; text-align:center"
@@ -282,13 +327,6 @@
                   {% else %}
                     { disabled }
                   {% endif %} />
-                <input type="checkbox"
-                  id="{{ entry.id_3 }}__blank"
-                  name="{{ entry.id_3 }}"
-                  {{ entry.word_3 == "" ? "checked" : "" }}
-                  readonly
-                  disabled
-                  value="blank"/>
               </div>
              </td>
           {% else %}
@@ -299,7 +337,7 @@
       {% if disable_all_checkbox == false %}
         <tr>
           <td colspan="2"></td>
-          <td bgcolor=#B1F3B1>
+          <td class="accept">
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__1"
               name="{{ widget.full }}__accept__all"
@@ -307,7 +345,7 @@
               <label for="{{ widget.full }}__accept__all__1">All</label>
           </td>
           <td></td>
-          <td bgcolor=#B1F3B1>
+          <td class="accept">
             <input type="checkbox"
               id="{{ widget.full }}__accept__all__2"
               name="{{ widget.full }}__accept__all"
@@ -334,9 +372,13 @@
             </select>
           </td>
           {% if status.adjudicate|default(false) %}
-            <td bgcolor=#B1F3B1>
+            <td class="accept">
               <input type="radio"
                 id="{{ status.id_1 }}__{{ status.status_type }}__status__accept"
+                {% if status.status_1 != status.status_2
+                  and status.status_3 == status.status_1 %}
+                    { checked }
+                {% endif %}
                 name="{{ status.id_3 }}__{{ status.status_type }}__status__accept"
                 value="{{ status.status_type }}__status__accept"/>
               <label for="{{ status.id_1 }}__{{ status.status_type }}__status__accept">Accept</label>
@@ -357,9 +399,13 @@
             </select>
           </td>
           {% if status.adjudicate|default(false) %}
-            <td bgcolor=#B1F3B1>
+            <td class="accept">
               <input type="radio"
                 id="{{ status.id_2 }}__{{ status.status_type }}__status__accept"
+                {% if status.status_1 != status.status_2
+                  and status.status_3 == status.status_2 %}
+                    { checked }
+                {% endif %}
                 name="{{ status.id_3 }}__{{ status.status_type }}__status__accept"
                 value="{{ status.status_type }}__status__accept"/>
               <label for="{{ status.id_2 }}__{{ status.status_type }}__status__accept">Accept</label>
