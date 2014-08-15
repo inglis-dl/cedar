@@ -30,6 +30,10 @@
   - clean up interface appearance
   - fix buggy use of empty/intrusion text input fields
 
+* Adding supervisor role
+  - add the supervisor role for working with adjudications, reports, tests (list, view),
+    notes, users (list)
+
 ====================================================================================================
 1.0.1
 ====================================================================================================
