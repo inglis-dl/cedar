@@ -1,4 +1,21 @@
 ====================================================================================================
+1.0.1
+====================================================================================================
+
+* Incorporate cenozo language restrictions
+  - add operations to edit, list, view languages
+  - add operations to add, edit, delete a user's language restrictions
+  - revamp how ranked word sets are implemented by adding ranked_word_set_has_language table
+  - remove defunct word_*_id columns from the ranked_word_set table
+  - add language_id column to word table
+
+* Performance improvements to word count views
+  - changed the way dictionary views make use of word counts so that the db views
+    could be implmented in sql with fewer joins
+
+* Dropped defunct recording table
+
+====================================================================================================
 1.0.0
 ====================================================================================================
 
@@ -8,7 +25,7 @@
 
 * Adding audio and participant enumerated status
   - audio status refined to unusable, salvageable and unavailable states
-  - participant status includes refusals and interviewer prompting during FAS and AFT tests 
+  - participant status includes refusals and interviewer prompting during FAS and AFT tests
 
 * Event system now tracks when participants are released to services
 
@@ -17,7 +34,7 @@
 ====================================================================================================
 
 * Adding typist breaks
-  - added functionality for typists to take timed breaks and for administrators to 
+  - added functionality for typists to take timed breaks and for administrators to
   manage them
   - added away_time and user_time tables (copied and adapted from sabretooth)
 
@@ -46,7 +63,7 @@
   daughter table level
   - changed test_entry adjudicate column to default to NULL to accomodate tertiary status:
   NULL (never adjudicated), 0 (adjudicated), 1 (requiring adjudication)
- 
+
 * Improved perfomance during assignment creation
   - created a view of sabretooth's recording table
 
