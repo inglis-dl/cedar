@@ -1,4 +1,36 @@
 ====================================================================================================
+1.0.2
+====================================================================================================
+
+* Adding assignment reassign
+  - link the cenozo site and cedar assignment db tables to track
+    which site the assignment is currently assigned to
+  - add functionality to automatically identify 2 typists with no language restriction
+    for reassigning deferred bilingual content to
+  - add reassign operation
+
+* Adding dictionary word transfer
+  - add operations for tranferring words among dictionaries associated with a test
+    including transferring to the 'null' dictionary (ie., trash)
+  - primary dictionary words are prohibited from transfers
+  - add operations for dictionary transfer_word
+
+* Adding REY intrusion deletion
+  - add a delete button beside REY test intrusion entries so that typists
+    can remove accidentally added intrusion fields
+  - add operation to delete a test_entry_ranked_word entry
+
+* Transcription UI improvements
+  - add javascript mouseover and mouseout functions to highlight rows in REY test
+    transcription table
+
+* Adjudication UI improvements
+  - add javascript mouseover and mouseout functions to highlight rows in adjudication
+    tables
+  - clean up interface appearance
+  - fix buggy use of empty/intrusion text input fields
+
+====================================================================================================
 1.0.1
 ====================================================================================================
 
