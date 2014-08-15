@@ -488,6 +488,20 @@
                   <input type="radio"
                     id="{{ entry.id_1 }}__accept"
                     name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.id_3 }}__accept"
+                    {% if entry.selection_1 is defined
+                       and entry.selection_3 is defined
+                       and entry.selection_1 == entry.selection_3 %}
+                      {% if entry.word_id_1 is defined
+                         and entry.word_id_3 is defined
+                         and entry.word_id_3 == entry.word_id_1 %}
+                           { checked }
+                      {% else %}
+                        {% if entry.word_id_3 == ""
+                           and entry.word_id_1 == "" %}
+                            { checked }
+                        {% endif %}
+                      {% endif %}
+                    {% endif %}
                     value="accept"/>
                   <label for="{{ entry.id_1 }}__accept">Accept</label>
                 </div>
@@ -546,6 +560,20 @@
                   <input type="radio"
                     id="{{ entry.id_2 }}__accept"
                     name="{{ entry.id_1 }}__{{ entry.id_2 }}__{{ entry.id_3 }}__accept"
+                    {% if entry.selection_2 is defined
+                       and entry.selection_3 is defined
+                       and entry.selection_2 == entry.selection_3 %}
+                      {% if entry.word_id_2 is defined
+                         and entry.word_id_3 is defined
+                         and entry.word_id_3 == entry.word_id_2 %}
+                           { checked }
+                      {% else %}
+                        {% if entry.word_id_3 == ""
+                           and entry.word_id_2 == "" %}
+                            { checked }
+                        {% endif %}
+                      {% endif %}
+                    {% endif %}
                     value="accept"/>
                   <label for="{{ entry.id_2 }}__accept">Accept</label>
                 </div>
