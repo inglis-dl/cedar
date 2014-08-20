@@ -502,6 +502,7 @@ class assignment_manager extends \cenozo\singleton
           }
         }
         $c = $db_adjudicate_test_entry->$get_list_function( clone $modifier );
+        $rank = 1;
         while( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) )
         {
           $a_obj = current( $a );

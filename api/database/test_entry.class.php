@@ -426,9 +426,9 @@ class test_entry extends \cenozo\database\has_note
     $count = 0;
     if( count( $rows ) > 0 )
     {
-      foreach( $rows as $index => $id )
+      foreach( $rows as $index => $row )
       {
-        $db_entry = lib::create( 'database\test_entry_' . $test_type_name, $id );
+        $db_entry = lib::create( 'database\test_entry_' . $test_type_name, $row['id'] );
         if( !is_null( $db_entry->word_id ) ) break;
         $db_entry->delete();
         $count++;
@@ -470,9 +470,9 @@ class test_entry extends \cenozo\database\has_note
     $count = 0;
     if( count( $rows ) > 0 )
     {
-      foreach( $rows as $index => $id )
+      foreach( $rows as $index => $row )
       {
-        $db_entry = lib::create( 'database\test_entry_' . $test_type_name, $id );
+        $db_entry = lib::create( 'database\test_entry_' . $test_type_name, $row['id'] );
         if( $test_type_name == 'ranked_word' &&
             !is_null( $db_entry->ranked_word_set_id ) ) break;
         $db_entry->delete();
