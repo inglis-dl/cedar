@@ -169,6 +169,7 @@ class assignment_list extends \cenozo\ui\widget\base_list
           $test_entry_mod->where( 'adjudicate', '=', true );
           $test_entry_mod->where( 'deferred', '=', false );
           $test_entry_mod->where( 'completed', '=', true );
+          $test_entry_mod->order( 'test_id' );
           $test_entry_mod->limit( 1 );
           $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
           if( false !== $db_test_entry )
@@ -178,7 +179,8 @@ class assignment_list extends \cenozo\ui\widget\base_list
             $sibling_mod->where( 'adjudicate', '=', true );
             $sibling_mod->where( 'deferred', '=', false );
             $sibling_mod->where( 'completed', '=', true );
-            if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) )
+            if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) &&
+                !$allow_adjudicate )
             {
               $test_entry_id = $db_test_entry->id;
               $allow_adjudicate = true;
@@ -192,10 +194,10 @@ class assignment_list extends \cenozo\ui\widget\base_list
         'start_datetime' => $db_assignment->start_datetime,
         'participant.uid' => $db_participant->uid,
         'cohort.name' => $db_participant->get_cohort()->name,
-        'user.name' => $db_assignment->get_user()->name,        
+        'user.name' => $db_assignment->get_user()->name,
         'test_entry_total_deferred.deferred' => $deferred_count,
         'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
-        'test_entry_total_completed.completed' =>  $completed_count,        
+        'test_entry_total_completed.completed' =>  $completed_count,
         'allow_transcribe' => $allow_transcribe ? 1 : 0,
         'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
         'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id );
