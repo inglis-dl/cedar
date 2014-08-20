@@ -211,7 +211,7 @@
             configure_ui();
           } else {
             if( is_intrusion ) {
-              $( blank_id ).prop( "checked", true );
+              $( blank_id ).prop( "checked", false );
             }
           }
       } )
@@ -330,7 +330,7 @@
             $(this).attr( "value", "" );
             $(this).focus();
             if( is_intrusion ) {
-              $( blank_id ).prop( "checked", true );
+              $( blank_id ).prop( "checked", false );
             }
           }
         }
@@ -341,10 +341,10 @@
         $( table_selector + ' input:checkbox[value="all"]' ).not($(this)).removeProp( "checked" );
         $(this).prop( "checked", $(this).prop( "checked" ) );
         $( table_selector + ' input:checkbox[value="blank"]' ).removeProp( "checked" );
+        var id = $(this).prop( "id" ).split("__")[3];
+        var radio_selector_id = " div.radio__accept__" + id + " :radio";
         if( $(this).prop( "checked" ) ) {
           // check all the radio items corresponding to the progenitor column (1 or 2)?
-          var id = $(this).prop( "id" ).split("__")[3];
-          var radio_selector_id = " div.radio__accept__" + id + " :radio";
           $('body').css( 'cursor', 'wait' );
           $( table_selector + radio_selector_id ).prop( "checked", true ).trigger( "change" );
           $('body').css( 'cursor', 'auto' );
@@ -352,10 +352,13 @@
           // uncheck all the radio items and clear the adjudicate text inputs
           $( table_selector + ' div.adjudicate :radio' ).removeProp( "checked" ).trigger( "change" );
           $text_selector = $( table_selector + ' div.adjudicate :text' );
-          $test_selector.prop( "disabled", true );
+          $text_selector.prop( "disabled", true );
           $text_selector.removeClass( "candidate primary intrusion variant undefined" );
+          // update previous and present state of value
           $text_selector.val( "" );
           $text_selector.attr( "value", "" );
+          $text_selector.trigger( "change" );
+          $( table_selector + radio_selector_id ).removeProp( "checked" );
         }
 
         configure_ui();
@@ -700,13 +703,6 @@
               <td colspan="2"></td>
               <td>
                 <div class="adjudicate">
-                <input type="checkbox"
-                  id="{{ entry.id_3 }}__blank"
-                  name="{{ entry.id_3 }}"
-                  {{ entry.word_3 == "" ? "checked" : "" }}
-                  readonly
-                  disabled
-                  value="blank"/>
                   <input type="text"
                     id="{{ entry.id_3 }}__intrusion"
                     style="width:100px"
@@ -718,6 +714,18 @@
                       class="undefined"
                       { disabled }
                     {% endif %}/>
+                <input type="checkbox"
+                  id="{{ entry.id_3 }}__blank"
+                  name="{{ entry.id_3 }}"
+                  {% if entry.word_id_3 == "" %}
+                    {% if entry.word_id_1 == ""
+                          or entry.word_id_2 == "" %}
+                      { checked }
+                    {% endif %}
+                  {% endif %}
+                  readonly
+                  disabled
+                  value="blank"/>
                 </div>
               </td>
             {% else %}

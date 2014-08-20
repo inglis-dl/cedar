@@ -137,7 +137,7 @@
             configure_ui();
           } else {
             alert( "Entry was not accepted, try again." );
-            $( blank_id ).prop( "checked", true );
+            $( blank_id ).prop( "checked", false );
             // clear the text entry and re-focus
             $( target_text_id ).val( "" );
             $( target_text_id ).attr( "value", "" );
@@ -216,7 +216,7 @@
           $(this).val( "" );
           $(this).attr( "value", "" );
           $(this).focus();
-           $( blank_id ).prop( "checked", true );
+           $( blank_id ).prop( "checked", false );
         }
       } );// end text input change
 
@@ -237,8 +237,8 @@
           $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
           $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' );
           $text_selector.prop( "disabled", true );
-          // update previous and present state of value
           $text_selector.removeClass( "candidate primary intrusion variant" );
+          // update previous and present state of value
           $text_selector.val( "" );
           $text_selector.attr( "value", "" );
         }
@@ -380,7 +380,12 @@
                 <input type="checkbox"
                   id="{{ entry.id_3 }}__blank"
                   name="{{ entry.id_3 }}"
-                  {{ entry.word_3 == "" ? "checked" : "" }}
+                  {% if entry.word_id_3 == "" %}
+                    {% if entry.word_id_1 == ""
+                          or entry.word_id_2 == "" %}
+                      { checked }
+                    {% endif %}
+                  {% endif %}
                   readonly
                   disabled
                   value="blank"/>
