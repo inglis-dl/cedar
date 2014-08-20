@@ -483,7 +483,7 @@ class assignment_manager extends \cenozo\singleton
         $max_count = max( count( $a ), count( $b ) );
         if( count( $c ) > $max_count )
         {
-          $db_adjudicate_test_entry->truncate( $max_count );
+          $db_adjudicate_test_entry->truncate( count( $c ) - $max_count );
         }
         else if( count( $c ) < $max_count )
         {
@@ -632,7 +632,7 @@ class assignment_manager extends \cenozo\singleton
         $max_count = max( count( $a ), count( $b ) );
         if( count( $c ) > $max_count )
         {
-          $db_adjudicate_test_entry->truncate( $max_count );
+          $db_adjudicate_test_entry->truncate( count( $c ) - $max_count );
         }
         else if( count( $c ) < $max_count )
         {
