@@ -168,6 +168,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           $test_entry_mod->where( 'adjudicate', '=', true );
           $test_entry_mod->where( 'deferred', '=', false );
           $test_entry_mod->where( 'completed', '=', true );
+          $test_entry_mod->order( 'test_id' );
           $test_entry_mod->limit( 1 );
           $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
           if( false !== $db_test_entry )
@@ -177,7 +178,8 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
             $sibling_mod->where( 'adjudicate', '=', true );
             $sibling_mod->where( 'deferred', '=', false );
             $sibling_mod->where( 'completed', '=', true );
-            if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) )
+            if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) &&
+                !$allow_adjudicate )
             {
               $test_entry_id = $db_test_entry->id;
               $allow_adjudicate = true;
