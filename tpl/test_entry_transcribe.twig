@@ -26,35 +26,12 @@
 
       $( "#{{ widget.full }}__audio_status" ).change( function() {
         var state = $( "#{{ widget.full }}__audio_status option:selected" ).val();
-        if( 'unavailable' == state ) {
-          $( "#{{ widget.full }}_defer" ).trigger( "click", function( push ) {
-            push = typeof push !== 'undefined' ? push : false;
-            var audio_select = "#{{ widget.full }}__audio_status";
-            var columns = new Object();
-            var state = $( audio_select + ' option:selected' ).val();
-            if( push ) {
-              columns['deferred'] = 1;
-            } else {
-              state = 'NULL';
-              $( audio_select + ' option:selected' ).val( 'NULL' );
-            }
-            columns['audio_status'] = 'NULL' == state ? '' : state;
-            var args = new Object();
-            args.id = {{ id }};
-            args.columns = columns;
-            if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-              configure();
-              slot_refresh( {{ slot }} );
-            }
-          } );
-        } else {
-          var args = new Object();
-          args.columns = { audio_status : 'NULL' == state ? '' : state };
-          args.id = {{ id }};
-          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-            configure();
-            slot_refresh( {{ slot }} );
-          }
+        var args = new Object();
+        args.id = {{ id }};
+        args.columns = { audio_status : 'NULL' == state ? '' : state };
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          configure();
+          slot_refresh( {{ slot }} );
         }
       } ); // end Audio Status change
 
