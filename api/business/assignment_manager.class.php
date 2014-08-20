@@ -463,50 +463,46 @@ class assignment_manager extends \cenozo\singleton
     }
     else
     {
+      $db_test_entry->trim();
+      $db_sibling_test_entry->trim();
+
       $classification = array_combine(
         array( $db_test->dictionary_id,
                $db_test->intrusion_dictionary_id,
                $db_test->variant_dictionary_id ),
         array( 'primary', 'intrusion', 'variant' ) );
+
       if( $test_type_name == 'alpha_numeric' || $test_type_name == 'classification' )
       {
-        $rank_modifier = lib::create( 'database\modifier' );
-        $rank_modifier->order( 'rank' );
-        $a = $db_test_entry->$get_list_function( clone $rank_modifier );
-        $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
-        $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
+        $modifier = lib::create( 'database\modifier' );
+        $modifier->order( 'rank' );
+        $a = $db_test_entry->$get_list_function( clone $modifier );
+        $b = $db_sibling_test_entry->$get_list_function( clone $modifier );
+        $c = $db_adjudicate_test_entry->$get_list_function( clone $modifier );
 
-        // get the max ranked entry that has something entered
-        $max_rank_modifier = lib::create( 'database\modifier' );
-        $max_rank_modifier->where( 'test_entry_id', 'IN',
-          array( $db_test_entry->id, $db_sibling_test_entry->id ) );
-        $max_rank_modifier->where( 'word_id', '!=', NULL );
-        $max_rank_modifier->order_desc( 'rank' );
-        $max_rank_modifier->limit( 1 );
-        $db_max_rank_entry = current( $entry_class_name::select( $max_rank_modifier ) );
-
-        if( false === $db_max_rank_entry )
+        $max_count = max( count( $a ), count( $b ) );
+        if( count( $c ) > $max_count )
         {
-          $db_max_rank_entry = count( $a ) > count( $b ) ? end( $a ) : end( $b );
+          $db_adjudicate_test_entry->truncate( $max_count );
+        }
+        else if( count( $c ) < $max_count )
+        {
+          $db_max_rank_entry = $max_count == count( $a ) ? end( $a ) : end( $b );
           reset( $a );
           reset( $b );
-        }
 
-        //create additional entries if necessary
-        $c_obj = end( $c );
-        for( $rank = $c_obj->rank + 1; $rank <= $db_max_rank_entry->rank; $rank++ )
-        {
-          $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
-          $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
-          $db_entry->rank = $rank;
-          $db_entry->save();
+          //create additional entries if necessary
+          $c_obj = end( $c );
+          for( $rank = $c_obj->rank + 1; $rank <= $db_max_rank_entry->rank; $rank++ )
+          {
+            $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
+            $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
+            $db_entry->rank = $rank;
+            $db_entry->save();
+          }
         }
-        reset( $c );
-
-        $rank = 1;
-        $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
-        while( ( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) ) &&
-               $rank <= $db_max_rank_entry->rank )
+        $c = $db_adjudicate_test_entry->$get_list_function( clone $modifier );
+        while( !is_null( key( $a ) ) || !is_null( key( $b ) ) || !is_null( key( $c ) ) )
         {
           $a_obj = current( $a );
           $b_obj = current( $b );
@@ -626,42 +622,29 @@ class assignment_manager extends \cenozo\singleton
         if( is_null( $db_language ) )
           $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
-        $rank_modifier = lib::create( 'database\modifier' );
-        $rank_modifier->order( 'ranked_word_set.rank' );
-        $a = $db_test_entry->$get_list_function( clone $rank_modifier );
-        $b = $db_sibling_test_entry->$get_list_function( clone $rank_modifier );
-        $c = $db_adjudicate_test_entry->$get_list_function( clone $rank_modifier );
+        $modifier = lib::create( 'database\modifier' );
+        $modifier->order( 'id' );
+        $a = $db_test_entry->$get_list_function( clone $modifier );
+        $b = $db_sibling_test_entry->$get_list_function( clone $modifier );
+        $c = $db_adjudicate_test_entry->$get_list_function( clone $modifier );
 
-        // now get the intrusions and append them to the primary word entries
-        $intrusion_modifier = lib::create( 'database\modifier' );
-        $intrusion_modifier->where( 'selection', '=', NULL );
-        $intrusion_modifier->where( 'ranked_word_set_id', '=', NULL );
-
-        $a_intrusion = $db_test_entry->$get_list_function( clone $intrusion_modifier );
-        $b_intrusion = $db_sibling_test_entry->$get_list_function( clone $intrusion_modifier );
-        $c_intrusion = $db_adjudicate_test_entry->$get_list_function( clone $intrusion_modifier );
-
-        if( 0 < count( $a_intrusion ) )
-          $a = array_merge( $a, $a_intrusion );
-        if( 0 < count( $b_intrusion ) )
-          $b = array_merge( $b, $b_intrusion );
-        if( 0 < count( $c_intrusion ) )
-          $c = array_merge( $c, $c_intrusion );
-
-        //create additional entries if necessary
-        $count = max( array( count( $a_intrusion ), count( $b_intrusion ) ) ) -
-          count( $c_intrusion );
-        if( 0 < $count )
+        $max_count = max( count( $a ), count( $b ) );
+        if( count( $c ) > $max_count )
         {
-          for( $i = 0; $i < $count; $i++ )
+          $db_adjudicate_test_entry->truncate( $max_count );
+        }
+        else if( count( $c ) < $max_count )
+        {
+          //create additional entries if necessary
+          $num = $max_count - count( $c );
+          for( $i = 0 ; $i < $num; $i++ )
           {
-            $db_entry = lib::create( 'database\test_entry_' . $test_type_name );
+            $db_entry = lib::create( 'database\test_entry_ranked_word' );
             $db_entry->test_entry_id = $db_adjudicate_test_entry->id;
             $db_entry->save();
-            array_push( $c, $db_entry );
           }
         }
-
+        $c = $db_adjudicate_test_entry->$get_list_function( clone $modifier );
         while( !is_null( key( $a ) ) || !is_null( key ( $b ) ) || !is_null( key( $c ) ) )
         {
           $a_obj = current( $a );

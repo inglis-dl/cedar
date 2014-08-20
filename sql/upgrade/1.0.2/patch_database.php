@@ -106,6 +106,215 @@ class patch
       die();
     }
 
+
+    // first do a clean up of empty records
+    // get all the participant's assignments
+    $cenozo = $db->GetOne(
+      'SELECT unique_constraint_schema '.
+      'FROM information_schema.referential_constraints '.
+      'WHERE constraint_schema = DATABASE() '.
+      'AND constraint_name = "fk_role_has_operation_role_id"' );
+
+    $db->Execute(
+      'CREATE TEMPORARY TABLE assign1 as '.
+      'SELECT a.id AS assignment_id, p.id AS participant_id '.
+      'FROM ' .  $cenozo . '.participant p '.
+      'JOIN assignment a ON a.participant_id=p.id '.
+      'GROUP BY p.id '.
+      'HAVING COUNT(*)=2' );
+    $db->Execute( 'ALTER TABLE assign1 ADD INDEX (assignment_id)' );
+
+    $db->Execute(
+      'CREATE TEMPORARY TABLE assign2 AS '.
+      'SELECT a.id AS assignment_id, a.participant_id AS participant_id '.
+      'FROM assignment a '.
+      'JOIN assign1 ON assign1.participant_id=a.participant_id '.
+      'WHERE assign1.assignment_id!=a.id' );
+    $db->Execute( 'ALTER TABLE assign2 ADD INDEX (assignment_id)' );
+
+    $db->Execute(
+      'INSERT INTO assign1 (assignment_id, participant_id) '.
+      'SELECT assignment_id, participant_id '.
+      'FROM assign2' );
+    $db->Execute( 'DROP TABLE assign2' );
+
+    $type_names = array( 'alpha_numeric', 'classification' );
+    foreach( $type_names as $type_name )
+    {
+      // locate empty progenitor entries by rank
+      $table_name = 'test_entry_' . $type_name;
+      out( 'working on ' . $table_name . ' records' );
+      $db->Execute(
+        'CREATE TEMPORARY TABLE tmp1 AS '.
+        'SELECT '.
+        'MAX( if(word_id IS NULL, 0 ,te.rank )) AS last_rank, '.
+        'COUNT(te.id) AS max_rank, '.
+        'te.test_entry_id, '.
+        'a.participant_id '.
+        'FROM ' . $table_name . ' te '.
+        'JOIN test_entry t ON t.id=te.test_entry_id '.
+        'JOIN assign1 a ON a.assignment_id=t.assignment_id '.
+        'WHERE completed=1 '.
+        'GROUP BY t.id' );
+      $db->Execute( 'ALTER TABLE tmp1 ADD INDEX (participant_id)' );
+      $db->Execute( 'UPDATE tmp1 SET last_rank=max_rank WHERE last_rank=0' );
+
+      // locate empty adjudicate entries by rank
+      $db->Execute(
+        'CREATE TEMPORARY TABLE tmp2 AS '.
+        'SELECT '.
+        'MAX( if(word_id IS NULL, 0, te.rank)) AS last_rank, '.
+        'COUNT(te.id) AS max_rank, '.
+        'te.test_entry_id, '.
+        't.participant_id '.
+        'FROM ' . $table_name . ' te '.
+        'JOIN test_entry t ON t.id=te.test_entry_id '.
+        'JOIN (SELECT distinct participant_id FROM tmp1 ) x '.
+        'ON x.participant_id=t.participant_id '.
+        'GROUP BY t.id' );
+      $db->Execute( 'ALTER TABLE tmp2 ADD INDEX (participant_id)' );
+      $db->Execute( 'UPDATE tmp2 SET last_rank=max_rank WHERE last_rank=0' );
+      $db->Execute(
+        'INSERT INTO tmp1 (last_rank, max_rank, test_entry_id, participant_id) '.
+        'SELECT last_rank, max_rank, test_entry_id, participant_id FROM tmp2' );
+      $db->Execute( 'DROP TABLE tmp2' );
+      $db->Execute(
+        'DELETE te.* '.
+        'FROM ' . $table_name . ' AS te '.
+        'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+        'WHERE te.rank > tmp1.last_rank' );
+
+      // trim records with audio_status ={unavailable, unusable} or participant_status={refused}
+      $sql_pre =
+        'DELETE te.* '.
+        'FROM ' . $table_name . ' AS te '.
+        'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+        'JOIN test_entry t ON t.id=tmp1.test_entry_id '.
+        'WHERE te.rank>1 '.
+        'AND te.rank=tmp1.max_rank ';
+
+      $db->Execute(
+        $sql_pre .
+        'AND audio_status IN ("unavailable","unusable")' );
+      $db->Execute(
+        $sql_pre .
+        'AND participant_status IN ("refused")' );
+      $db->Execute( 'DROP TABLE tmp1' );
+    }
+
+    out( 'working on test_entry_ranked_word records' );
+
+    // test_entry_ranked_word entries require different handling: no rank column
+    $db->Execute(
+      'CREATE TEMPORARY TABLE tmp1 AS '.
+      'SELECT '.
+      'MIN(te.id) AS first_id, '.
+      'MAX(te.id) AS last_id, '.
+      'te.test_entry_id, '.
+      'a.participant_id '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN test_entry t ON t.id=te.test_entry_id '.
+      'JOIN assign1 a ON a.assignment_id=t.assignment_id '.
+      'WHERE completed=1 '.
+      'AND word_id IS NULL '.
+      'AND ranked_word_set_id IS NULL '.
+      'GROUP BY t.id' );
+    $db->Execute( 'ALTER TABLE tmp1 ADD INDEX (participant_id)' );
+
+    // delete empty intrusions
+    $db->Execute(
+      'DELETE te.* '.
+      'FROM test_entry_ranked_word AS te '.
+      'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+      'WHERE te.id BETWEEN tmp1.first_id AND tmp1.last_id '.
+      'AND te.test_entry_id=tmp1.test_entry_id ' );
+
+    $db->Execute(
+      'CREATE TEMPORARY TABLE tmp2 AS '.
+      'SELECT '.
+      'MAX(x.id_count) AS min_count, x.participant_id FROM ( '.
+      'SELECT '.
+      'COUNT(te.id) AS id_count, '.
+      'a.assignment_id, '.
+      'a.participant_id '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN test_entry t ON t.id=te.test_entry_id '.
+      'JOIN assign1 a ON a.assignment_id=t.assignment_id '.
+      'WHERE completed=1 '.
+      'GROUP BY t.id ) AS x '.
+      'GROUP BY x.participant_id' );
+    $db->Execute( 'ALTER TABLE tmp2 ADD INDEX (participant_id)' );
+
+    $db->Execute(
+      'CREATE TEMPORARY TABLE tmp3 AS '.
+      'SELECT '.
+      'COUNT(te.id) - tmp2.min_count AS count, '.
+      'te.test_entry_id, '.
+      'tmp2.participant_id '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN test_entry t ON t.id=te.test_entry_id '.
+      'JOIN tmp2 ON tmp2.participant_id=t.participant_id '.
+      'WHERE completed=1 '.
+      'GROUP BY t.id' );
+    $db->Execute( 'ALTER TABLE tmp3 ADD INDEX (test_entry_id)' );
+
+    $rows = $db->GetAll(
+      'SELECT id, te.test_entry_id, count '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN tmp3 ON tmp3.test_entry_id=te.test_entry_id '.
+      'WHERE count>0 '.
+      'ORDER BY test_entry_id DESC, id DESC' );
+
+    if( count( $rows ) > 0 )
+    {
+      $current_count = 0;
+      $current_test_entry_id = 0;
+      $sql =
+        'DELETE FROM test_entry_ranked_word WHERE id IN ( ';
+      foreach( $rows as $index => $row )
+      {
+        $id = $row['id'];
+        $test_entry_id = $row['test_entry_id'];
+        $count = $row['count'];
+
+        if( $current_test_entry_id != $test_entry_id )
+        {
+           $current_test_entry_id = $test_entry_id;
+           $current_count=0;
+        }
+        if( $current_count != $count )
+        {
+           $sql = $sql . sprintf( '%d, ', $id );
+           $current_count++;
+        }
+      }
+      $sql = substr( $sql, 0, strrpos( $sql, ',' ) );
+      $sql = $sql . ' )';
+      $db->Execute( $sql );
+    }
+
+    $sql_pre =
+      'DELETE te.* '.
+      'FROM test_entry_ranked_word AS te '.
+      'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+      'JOIN test_entry t ON t.id=tmp1.test_entry_id '.
+      'WHERE te.ranked_word_set_id IS NULL ';
+    $db->Execute(
+      $sql_pre .
+      'AND audio_status IN ("unavailable","unusable")' );
+    $db->Execute(
+      $sql_pre .
+      'AND participant_status IN ("refused")' );
+    $db->Execute( 'DROP TABLE tmp3' );
+    $db->Execute( 'DROP TABLE tmp2' );
+    $db->Execute( 'DROP TABLE tmp1' );
+    $db->Execute( 'DROP TABLE assign1' );
+
+    out( 'finished cleaning' );
+    die();
+
+    // process assignments
+
     $total = $db->GetOne(
       'SELECT COUNT(*) FROM assignment_total atot ' .
       'JOIN assignment a ON atot.assignment_id=a.id '.
@@ -142,7 +351,6 @@ class patch
          'SELECT participant_id FROM assignment '.
          'WHERE id = %d', $a1_id ) );
 
-        if( $p_id != 2181 ) continue; 
         $a2_id = $db->GetOne( sprintf(
          'SELECT id FROM assignment '.
          'WHERE id != %d '.
@@ -166,7 +374,7 @@ class patch
           'JOIN test_type tt ON tt.id = t.test_type_id '.
           'WHERE assignment_id IN ( %d, %d ) '.
           'ORDER BY te.test_id, te.assignment_id', $a1_id, $a2_id ) );
-        if( count($tests) != 12 )
+        if( 12 != count($tests) )
         {
           error( sprintf( 'Not enough tests for assignment ids %d %d', $a1_id, $a2_id ) );
           die();
@@ -214,7 +422,7 @@ class patch
           $match = true;
           if( $t1['audio_status'] != $t2['audio_status'] || $t1['participant_status'] != $t2['participant_status'] )
           {
-            $match = false;            
+            $match = false;
           }
           else
           {
@@ -325,7 +533,7 @@ class patch
             else
             {
               if( !is_null( $adj_id ) &&  1 == $adj_completed )
-              {              
+              {
                 // set the adjudicate status of the test_entries to 0
                 if( 0 != $t1['adjudicate'] )
                 {
@@ -354,8 +562,8 @@ class patch
               'SELECT update_timestamp FROM test_entry '.
               'WHERE assignment_id = %d OR participant_id = %d '.
               'ORDER BY update_timestamp DESC LIMIT 1', $a1_id, $p_id ) );
-            $end_datetime = $result[0]['update_timestamp'];  
- 
+            $end_datetime = $result[0]['update_timestamp'];
+
             $db->Execute( sprintf(
               'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a1_id ) );
             $assignment_closed_count++;
@@ -366,7 +574,7 @@ class patch
               'SELECT update_timestamp FROM test_entry '.
               'WHERE assignment_id = %d OR participant_id = %d '.
               'ORDER BY update_timestamp DESC LIMIT 1', $a2_id, $p_id ) );
-            $end_datetime = $result[0]['update_timestamp'];  
+            $end_datetime = $result[0]['update_timestamp'];
 
             $db->Execute( sprintf(
               'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a2_id ) );
@@ -393,7 +601,7 @@ class patch
                 'SELECT update_timestamp FROM test_entry '.
                 'WHERE assignment_id = %d OR participant_id = %d '.
                 'ORDER BY update_timestamp DESC LIMIT 1', $a1_id, $p_id ) );
-              $end_datetime = $result[0]['update_timestamp'];  
+              $end_datetime = $result[0]['update_timestamp'];
 
               $db->Execute( sprintf(
                 'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a1_id ) );
