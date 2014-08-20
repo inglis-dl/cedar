@@ -34,6 +34,9 @@
   - add the supervisor role for working with adjudications, reports, tests (list, view),
     notes, users (list)
 
+* Remove deferral process
+  - removed the deferall process when a typist selects audio_status={unavailable}
+
 ====================================================================================================
 1.0.1
 ====================================================================================================
