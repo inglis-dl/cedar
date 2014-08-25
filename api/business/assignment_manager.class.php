@@ -211,6 +211,8 @@ class assignment_manager extends \cenozo\singleton
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+          $db_test_entry->trim();
+          $db_sibling_test_entry->trim();
           if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
             if( ( is_null( $db_test_entry->adjudicate ) ||
@@ -463,9 +465,6 @@ class assignment_manager extends \cenozo\singleton
     }
     else
     {
-      $db_test_entry->trim();
-      $db_sibling_test_entry->trim();
-
       $classification = array_combine(
         array( $db_test->dictionary_id,
                $db_test->intrusion_dictionary_id,
