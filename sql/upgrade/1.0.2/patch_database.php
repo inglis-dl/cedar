@@ -356,7 +356,6 @@ class patch
     $db->Execute( 'DROP TABLE assign1' );
 
     out( 'finished cleaning' );
-    die();
 
     // process assignments
 
