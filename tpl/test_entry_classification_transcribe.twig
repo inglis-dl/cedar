@@ -226,58 +226,58 @@
   <table id="{{ widget.full }}__entry_table">
 
     <tbody>
-
-    {% set numcell = 4 %}
-    {% set kprev = 'true' %}
-    {% set imax = entry_data|length-1 %}
-    {% if numcell > imax %}
-      {% set numcell = imax %}
-    {% endif %}
-
-    {% for i in range(0, imax, numcell) %}
-
-      <tr>
-
-      {% set kmax = i+numcell-1 %}
-      {% if kmax > imax %}
-        {% set kmax = imax %}
+    {% if entry_data|length != 0 %}
+      {% set numcell = 4 %}
+      {% set kprev = 'true' %}
+      {% set imax = entry_data|length-1 %}
+      {% if numcell > imax %}
+        {% set numcell = imax %}
       {% endif %}
-      {% for k in i..kmax %}
 
-        {% set value = '' %}
-        {% if entry_data[k].word_id is defined %}
-          {% set value = entry_data[k].word %}
+      {% for i in range(0, imax, numcell) %}
+
+        <tr>
+
+        {% set kmax = i+numcell-1 %}
+        {% if kmax > imax %}
+          {% set kmax = imax %}
         {% endif %}
-        {% set status = entry_data[k].word_id ? "word" : "empty" %}
+        {% for k in i..kmax %}
 
-        <td>
-          <input type="text"
-           id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
-           {% if entry_data[k].classification is defined %}
-             class="{{ entry_data[k].classification }}"
-           {% endif %}
+          {% set value = '' %}
+          {% if entry_data[k].word_id is defined %}
+            {% set value = entry_data[k].word %}
+          {% endif %}
+          {% set status = entry_data[k].word_id ? "word" : "empty" %}
 
-           {% if editable == 0 %}
-             { readonly }
-           {% endif %}
-
-           {% if status == 'empty'  %}
-             {% if kprev == 'false' %}
-               { disabled }
+          <td>
+            <input type="text"
+             id="{{ entry_data[ k ].id }}__{{ entry_data[ k ].rank }}"
+             {% if entry_data[k].classification is defined %}
+               class="{{ entry_data[k].classification }}"
              {% endif %}
-             {% set kprev = 'false' %}
-           {% elseif status == 'word' %}
-               {% set kprev = 'true' %}
-           {% endif %}
 
-           value="{{ value }}"/>
-        </td>
+             {% if editable == 0 %}
+               { readonly }
+             {% endif %}
+
+             {% if status == 'empty'  %}
+               {% if kprev == 'false' %}
+                 { disabled }
+               {% endif %}
+               {% set kprev = 'false' %}
+             {% elseif status == 'word' %}
+                 {% set kprev = 'true' %}
+             {% endif %}
+
+             value="{{ value }}"/>
+          </td>
+
+        {% endfor %}
+
+        </tr>
 
       {% endfor %}
-
-      </tr>
-
-    {% endfor %}
 
       {% if editable == 1 %}
       <tr>
@@ -288,7 +288,7 @@
         </td>
       </tr>
       {% endif %}
-
+    {% endif %}
     </tbody>
   </table>
 
