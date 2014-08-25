@@ -16,7 +16,7 @@ CREATE PROCEDURE patch_assignment()
 
     IF @test = 1 THEN
 
-      SELECT "Adding a new column to the assignemt table" AS "";
+      SELECT "Adding a new column to the assigment table" AS "";
 
       ALTER TABLE assignment
       ADD COLUMN site_id INT UNSIGNED NOT NULL AFTER participant_id;
