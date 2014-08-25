@@ -75,9 +75,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    $session = lib::create( 'business\session' );
-    $db_user = $session->get_user();
-
     $db_test_entry = $this->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
@@ -117,11 +114,8 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'test_id', $db_test->id );
 
     // set the dictionary id's needed for text autocomplete
-    $is_FAS = false;
     if( $test_type_name == 'classification' || $test_type_name == 'ranked_word' )
     {
-      $is_FAS = preg_match( '/FAS/', $db_test->name );
-
       $db_dictionary = $db_test->get_dictionary();
       if( !is_null( $db_dictionary ) )
         $this->set_variable( 'dictionary_id', $db_dictionary->id );
@@ -135,15 +129,17 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
         $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
     }
 
-    // allow bilingual responses for FAS tests if both the typist and the participant speak french
-    $db_participant = $db_test_entry->get_assignment()->get_participant();
+    $language_id_list = array();
+    $db_assignment = $db_test_entry->get_assignment();
+    foreach( $db_assignment->get_user()->get_language_list() as $db_language )
+      $language_id_list[] = $db_language->id;
+
+    $db_participant = $db_assignment->get_participant();
     $db_language = $db_participant->get_language();
     if( is_null( $db_language ) )
-    {
-      $session = lib::create( 'business\session' );
-      $db_language = $session->get_service()->get_language();
-    }
-    $this->set_variable( 'language_id', $db_language->id );
+      $db_language = lib::create( 'business\session' )->get_service()->get_language();
+
+    $this->set_variable( 'language_id', 0 < count( $language_id_list ) ? $db_language->id : 0 );
 
     // get the audio files from sabretooth
     if( $db_participant->get_cohort()->name == 'tracking' )

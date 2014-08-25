@@ -76,14 +76,31 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    $db_test_entry = $this->get_record();
-    $db_test = $db_test_entry->get_test();
-    $test_type_name = $db_test->get_test_type()->name;
-
     $db_assignment = $db_test_entry->get_assignment();
     if( is_null( $db_assignment ) )
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid assignment', __METHOD__ );
+
+    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+    if( is_null( $db_sibling_assignment ) )
+      throw lib::create( 'exception\runtime',
+        'Test entry adjudication requires a valid assignment', __METHOD__ );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
+    $modifier->where( 'deferred', '=', false );
+    $modifier->where( 'completed', '=', true );
+    $modifier->where( 'adjudicate', '=', true );
+    $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
+    $modifier->limit( 1 );
+    $db_sibling_test_entry = current( $test_entry_class_name::select( $modifier ) );
+    if( false === $db_sibling_test_entry )
+      throw lib::create( 'exception\runtime',
+        'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
+
+    $db_test_entry = $this->get_record();
+    $db_test = $db_test_entry->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
 
     $this->set_variable( 'test_id', $db_test->id );
 
@@ -103,6 +120,16 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
         $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
     }
 
+    $db_user = $db_assignment->get_user();
+    $db_sibling_user = $db_sibling_assignment->get_user();
+
+    $language_id_list = array();
+
+    foreach( $db_user->get_language_list() as $db_language )
+      $language_id_list[] = $db_language->id;
+    foreach( $db_sibling_user->get_language_list() as $db_language )
+      $language_id_list[] = $db_language->id;
+
     $db_participant = $db_assignment->get_participant();
     $this->set_variable( 'participant_id', $db_participant->id );
 
@@ -110,7 +137,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     if( is_null( $db_language ) )
       $db_language = lib::create( 'business\session' )->get_service()->get_language();
 
-    $this->set_variable( 'language_id', $db_language->id );
+    $this->set_variable( 'language_id', 0 < count( $language_id_list ) ? $db_language->id : 0 );
 
     if( $db_participant->get_cohort()->name == 'tracking' )
     {
@@ -140,27 +167,10 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     }
 
     $this->set_variable( 'test_entry_id_1', $db_test_entry->id );
-    $this->set_variable( 'user_1', $db_assignment->get_user()->name );
-
-    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-    if( is_null( $db_sibling_assignment ) )
-      throw lib::create( 'exception\runtime',
-        'Test entry adjudication requires a valid assignment', __METHOD__ );
-
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
-    $modifier->where( 'deferred', '=', false );
-    $modifier->where( 'completed', '=', true );
-    $modifier->where( 'adjudicate', '=', true );
-    $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
-    $modifier->limit( 1 );
-    $db_sibling_test_entry = current( $test_entry_class_name::select( $modifier ) );
-    if( false === $db_sibling_test_entry )
-      throw lib::create( 'exception\runtime',
-        'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
+    $this->set_variable( 'user_1', $db_user->name );
 
     $this->set_variable( 'test_entry_id_2', $db_sibling_test_entry->id );
-    $this->set_variable( 'user_2', $db_sibling_assignment->get_user()->name );
+    $this->set_variable( 'user_2', $db_sibling_user->name );
 
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );
@@ -185,8 +195,8 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     // assignment_manager creates the adjudicate entry
     $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
       array( 'test_id', 'participant_id' ),
-      array( $db_test_entry->get_test()->id,
-             $db_test_entry->get_assignment()->get_participant()->id ) );
+      array( $db_test->id,
+             $db_participant->id ) );
     $this->set_variable( 'adjudicate_entry_id', $db_adjudicate_test_entry->id );
   }
 
