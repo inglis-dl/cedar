@@ -24,11 +24,11 @@
   - add javascript mouseover and mouseout functions to highlight rows in REY test
     transcription table
 
-* Adjudication UI improvements
-  - add javascript mouseover and mouseout functions to highlight rows in adjudication
-    tables
+* Adjudication and Transcription UI improvements
+  - add javascript mouseover andmouseout functions to highlight rows in UI tables
   - clean up interface appearance
   - fix buggy use of empty/intrusion text input fields
+  - load english and french words when adjudicating or transcribing bilingual data
 
 * Adding supervisor role
   - add the supervisor role for working with adjudications, reports, tests (list, view),
