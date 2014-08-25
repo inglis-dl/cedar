@@ -106,7 +106,6 @@ class patch
       die();
     }
 
-
     // first do a clean up of empty records
     // get all the participant's assignments
     $cenozo = $db->GetOne(
@@ -115,8 +114,54 @@ class patch
       'WHERE constraint_schema = DATABASE() '.
       'AND constraint_name = "fk_role_has_operation_role_id"' );
 
+
+    // remove all records associated with participants having > 2 assignments
+
     $db->Execute(
-      'CREATE TEMPORARY TABLE assign1 as '.
+      'CREATE TEMPORARY TABLE tmp AS '.
+      'SELECT id, participant_id FROM ('.
+      'SELECT a.id, a.start_datetime, '.
+      '@rank:= IF( @current_id=a.participant_id, @rank + 1, 1 ) AS rank, '.
+      '@current_id:= a.participant_id AS participant_id '.
+      'FROM assignment a '.
+      'JOIN ( '.
+      'SELECT p.id AS participant_id '.
+      'FROM assignment a '.
+      'JOIN '. $cenozo . '.participant p ON p.id=a.participant_id '.
+      'GROUP BY p.id '.
+      'HAVING COUNT(p.id) > 2 ) AS x '.
+      'ON x.participant_id=a.participant_id '.
+      'ORDER BY a.participant_id, a.start_datetime ) AS y '.
+      'WHERE y.rank > 2');
+
+    $type_names = array( 'ranked_word', 'confirmation', 'alpha_numeric', 'classification' );  
+    foreach( $type_names as $type_name )
+    {
+      $table_name = 'test_entry_' . $type_name;
+
+      $db->Execute(
+        'DELETE te.* FROM '. $table_name . ' te '.
+        'JOIN test_entry t ON t.id=te.test_entry_id '.
+        'JOIN tmp ON tmp.id=t.assignment_id' );
+    }
+
+    $db->Execute(
+      'DELETE tn.* FROM test_entry_note te '.
+      'JOIN test_entry t ON t.id=tn.test_entry_id '.
+      'JOIN tmp ON tmp.id=t.assignment_id' );
+
+    $db->Execute(
+      'DELETE t.* FROM test_entry t '.
+      'JOIN tmp ON tmp.id=t.assignment_id' );
+
+    $db->Execute(
+      'DELETE a.* FROM assignment a '.
+      'JOIN tmp ON tmp.id=a.id' );
+
+    $db->Execute( 'DROP TABLE tmp' );
+
+    $db->Execute(
+      'CREATE TEMPORARY TABLE assign1 AS '.
       'SELECT a.id AS assignment_id, p.id AS participant_id '.
       'FROM ' .  $cenozo . '.participant p '.
       'JOIN assignment a ON a.participant_id=p.id '.
