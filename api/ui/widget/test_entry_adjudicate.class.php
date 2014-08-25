@@ -76,6 +76,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
+    $db_test_entry = $this->get_record();
     $db_assignment = $db_test_entry->get_assignment();
     if( is_null( $db_assignment ) )
       throw lib::create( 'exception\runtime',
@@ -98,7 +99,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       throw lib::create( 'exception\runtime',
         'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
 
-    $db_test_entry = $this->get_record();
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
 
