@@ -15,7 +15,7 @@
   - primary dictionary words are prohibited from transfers
   - add operations for dictionary transfer_word
 
-* Adding REY intrusion deletion
+* Adding intrusion deletion for ranked_word tests
   - add a delete button beside REY test intrusion entries so that typists
     can remove accidentally added intrusion fields
   - add operation to delete a test_entry_ranked_word entry
@@ -36,6 +36,11 @@
 
 * Remove deferral process
   - removed the deferall process when a typist selects audio_status={unavailable}
+
+* Adding new "collection" feature
+  - collections are arbitrary groups of participant
+  - can be locked so that editing is restricted to a list of specified users only
+  - restrict select reports by collection remains to be implemented
 
 ====================================================================================================
 1.0.1
