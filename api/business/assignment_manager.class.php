@@ -109,10 +109,10 @@ class assignment_manager extends \cenozo\singleton
     // we have two user ids which now need to be identified
     // with the current two assignments
     $reset_1 = reset( $user_ids );
-    $user_id_1 =  key( $user_ids );
+    $user_id_1 = key( $user_ids );
     unset( $user_ids[ $user_id_1 ] );
     $reset_2 = reset( $user_ids );
-    $user_id_2 =  key( $user_ids );
+    $user_id_2 = key( $user_ids );
 
     $assignment_reset = array();
     if( $reset_1[0] )
