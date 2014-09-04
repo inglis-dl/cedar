@@ -18,7 +18,8 @@ class word extends \cenozo\database\record
    * Check whether the word contains disallowed characters
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @return boolean true if valid word
+   * @param boolean $alpha_numeric Validate the candidate as being either letter or a number
+   * @return boolean True if a valid candidate
    * @access protected
    */
   public static function is_valid_word( $word_candidate, $alpha_numeric = false )

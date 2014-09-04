@@ -51,6 +51,7 @@ class assignment_new extends \cenozo\ui\push\base_new
     {
       $session = lib::create( 'business\session' );
       $db_user = $session->get_user();
+      $db_site = $session->get_site();
 
       // block with a semaphore
       $session->acquire_semaphore();
@@ -67,6 +68,7 @@ class assignment_new extends \cenozo\ui\push\base_new
 
       $columns['user_id'] = $db_user->id;
       $columns['participant_id'] = $db_participant->id;
+      $columns['site_id'] = $db_site->id;
       $columns['cohort_name'] = $db_participant->get_cohort()->name;
       $this->arguments['columns'] = $columns;
     }

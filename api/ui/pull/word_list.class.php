@@ -46,11 +46,16 @@ class word_list extends \cenozo\ui\pull
     $dictionary['intrusion_dictionary_id'] = $this->get_argument( 'intrusion_dictionary_id', NULL );
     $dictionary = array_filter( $dictionary );
 
-    $language_id = $this->get_argument( 'language_id', 0 );
-    $db_language = NULL;
-    if( 0 < $language_id )
+    $user_id = $this->get_argument( 'user_id', 0 );
+    $language_list = NULL;
+    if( 0 < $user_id )
     {
-      $db_language = lib::create( 'database\language', $language_id );
+      $db_user = lib::create( 'database\user', $user_id );
+      $language_list = $db_user->get_language_list();
+      if( is_null( $language_list ) )
+      {
+        $language_list[] = lib::create( 'business\session' )->get_service()->get_language();
+      }
     }
 
     $words_only = $this->get_argument( 'words_only', false );
@@ -58,7 +63,7 @@ class word_list extends \cenozo\ui\pull
     $modifier = lib::create( 'database\modifier' );
 
     $first = true;
-    $do_where_bracket = ( 1 < count( $dictionary ) ) && ( !is_null( $db_language ) );
+    $do_where_bracket = ( 1 < count( $dictionary ) ) && ( !is_null( $language_list ) );
     if( $do_where_bracket )
     {
       $modifier->where_bracket( true );
@@ -80,13 +85,16 @@ class word_list extends \cenozo\ui\pull
       $modifier->where_bracket( false );
     }
 
-    if( !is_null( $db_language ) )
+    if( !is_null( $language_list ) )
     {
-      $modifier->where( 'language_id', '=', $db_language->id );
+      $id_list = array();
+      foreach( $language_list as $db_language ) $id_list[] = $db_language->id;
+      $modifier->where( 'language_id', 'IN', $id_list );
     }
+
     if( $words_only )
     {
-      $this->data = $dictionary_class_name::get_word_list_words( $modifier );
+      $this->data = $dictionary_class_name::get_associative_word_list( $modifier );
     }
     else
     {

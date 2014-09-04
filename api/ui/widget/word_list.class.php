@@ -47,25 +47,22 @@ class word_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'word', 'string', 'Word', true );
     $this->add_column( 'language.name', 'string', 'Language', true );
 
-    $dictionary_id = $this->parent->get_variable( 'id' );
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', '=', $dictionary_id );
-    $modifier->or_where( 'variant_dictionary_id', '=', $dictionary_id );
-    $modifier->or_where( 'intrusion_dictionary_id', '=', $dictionary_id );
-    $modifier->or_where( 'mispelled_dictionary_id', '=', $dictionary_id );
-    $modifier->limit( 1 );
-    $db_test = current( $test_class_name::select( $modifier ) );
-
-    if( false !== $db_test )
+    $dictionary_id = $this->parent->get_variable( 'id', NULL );
+    if( !is_null( $dictionary_id ) )
     {
-      $test_type_name = $db_test->get_test_type()->name;
-
-      if( $test_type_name != 'confirmation' &&
-          !($test_type_name == 'ranked_word' && $db_test->dictionary_id == $dictionary_id) )
+      $db_dictionary = lib::create( 'database\dictionary', $dictionary_id );
+      $db_test = $db_dictionary->get_owner_test();
+      if( !is_null( $db_test ) )
       {
-        $this->word_total_view_name = $test_type_name . '_word_total';
-        $this->word_total_column = $this->word_total_view_name . '.total';
-        $this->add_column( $this->word_total_column, 'number', 'Usage', true );
+        $test_type_name = $db_test->get_test_type()->name;
+
+        if( $test_type_name != 'confirmation' &&
+            !($test_type_name == 'ranked_word' && $db_test->dictionary_id == $dictionary_id) )
+        {
+          $this->word_total_view_name = $test_type_name . '_word_total';
+          $this->word_total_column = $this->word_total_view_name . '.total';
+          $this->add_column( $this->word_total_column, 'number', 'Usage', true );
+        }
       }
     }
   }

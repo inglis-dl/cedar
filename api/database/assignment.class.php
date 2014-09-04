@@ -106,6 +106,7 @@ class assignment extends \cenozo\database\record
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
+    $session = lib::create( 'business\session' );
 
     $has_tracking = false;
     $has_comprehensive = false;
@@ -123,13 +124,12 @@ class assignment extends \cenozo\database\record
     $language_id_list = array();
     foreach( $db_user->get_language_list() as $db_language )
       $language_id_list[] = $db_language->id;
+    if( 0 == count( $language_id_list ) )
+      $language_id_list[] = $session->get_service()->get_language()->id;
 
     $id = NULL;
-
     if( $has_tracking )
     {
-      $session = lib::create( 'business\session' );
-
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'participant.active', '=', true );
       $modifier->where( 'user_assignment.id', '=', NULL );
@@ -201,12 +201,6 @@ class assignment extends \cenozo\database\record
    */
   public function all_tests_complete()
   {
-  /*
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'deferred', '=', false );
-    $modifier->where( 'completed', '=', true );
-    return $this->get_test_entry_count() == $this->get_test_entry_count( $modifier );
-  */
     $database_class_name = lib::get_class_name( 'database\database' );
     $id_string = $database_class_name::format_string( $this->id );
     $sql = sprintf(
@@ -227,5 +221,145 @@ class assignment extends \cenozo\database\record
       ')', $id_string, $id_string );
 
     return 0 == static::db()->get_one( $sql );
+  }
+
+  /**
+   * Returns the id of a user as an array key having no language restrictions that the
+   * assignment can be reassigned to with.  The boolean value returned with the key
+   * indicates whether to keep the assignment intact or to reinitialize it.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return associative array  user_id => boolean
+   * @access public
+   */
+  public function get_reassign_user()
+  {
+    $user_class_name = lib::get_class_name( 'database\user' );
+    $role_class_name = lib::get_class_name( 'database\role' );
+    $region_site_name = lib::get_class_name( 'database\region_site' );
+    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
+
+    $session = lib::create( 'business\session' );
+    $db_service = $session->get_service();
+    $db_site = $session->get_site();
+
+    // get all the languages cedar has access to
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'service_id', '=', $db_service->id );
+    $modifier->group( 'language_id' );
+
+    $service_language_list = array();
+    foreach( $region_site_name::select( $modifier ) as $db_region_site )
+    {
+      $service_language_list[] = $db_region_site->language_id;
+    }
+    $num_language = count( $service_language_list );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'access.role_id', '=', $db_role->id );
+    $modifier->where( 'access.site_id', '=', $db_site->id );
+    $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
+    $modifier->where( 'user_has_language.language_id', 'IN', $service_language_list );
+    $modifier->group( 'user.id' );
+    $modifier->having( 'COUNT( user.id )', '=', $num_language );
+
+    $user_list = $user_class_name::select( $modifier );
+
+    $id_list = array();
+    foreach( $user_list as $db_user )
+      $id_list[] = $db_user->id;
+
+    if( count( $id_list ) < 2 ) return $id_list;
+
+    // if the user assigned to this assignment has the aligned language restrictions
+    // then add them to te front of the returned id_list so that we dont
+    // delete their transcriptions during reassign
+    $prepend = in_array( $this->user_id, $id_list );
+
+    // prepare a list of user id's sorted according to the users'
+    // number of open assignments from least to most with the
+    // objective to reassign the assignments over to those typists
+    // with fewer active assignments
+    $id_list = array();
+    $min = PHP_INT_MAX;
+    foreach( $user_list as $db_user )
+    {
+      // how many open assignments does this user have
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'user_id', '=', $db_user->id );
+      $modifier->where( 'end_datetime', '=', NULL );
+      $count = static::count( $modifier );
+      if( $count < $min  )
+      {
+        $min = $count;
+        array_unshift( $id_list, $db_user->id );
+      }
+      else
+      {
+        $id_list[] = $db_user->id;
+      }
+    }
+
+    // check if the sibling assignment's user has a language restriction
+    $assignmnet_pool = array();
+    $assignment_pool[] = $this->id;
+
+    $db_sibling_assignment = $this->get_sibling_assignment();
+    if( is_null( $db_sibling_assignment ) )
+      throw lib::create( 'exception\notice',
+        'A sibling assignment is required',  __METHOD__ );
+
+    $assignment_pool[] = $db_sibling_assignment->id;
+    $id = $db_sibling_assignment->user_id;
+    if( in_array( $id, $id_list ) )
+    {
+      unset( $id_list[ array_search( $id, $id_list ) ] );
+      $id_list = array_values( $id_list );
+      array_unshift( $id_list, $id );
+    }
+
+    if( $prepend )
+    {
+      if( in_array( $this->user_id, $id_list )  )
+      {
+        unset( $id_list[ array_search( $this->user_id, $id_list ) ] );
+        $id_list = array_values( $id_list );
+      }
+      array_unshift( $id_list, $this->user_id );
+    }
+
+    // truncate to 2 entries
+    if( count( $id_list ) > 2 )
+      $id_list = array_slice( $id_list, 0, 2 );
+
+    $id_list = array_combine( $id_list, array_fill( 0, 2, true ) );
+
+    if( array_key_exists( $this->user_id, $id_list ) )
+    {
+      $id_list[ $this->user_id ] = array( false, $this->id );
+      unset( $assignment_pool[ array_search( $this->id, $assignment_pool ) ] );
+    }
+
+    if( array_key_exists( $db_sibling_assignment->user_id, $id_list ) )
+    {
+      $id_list[ $db_sibling_assignment->user_id ] = array( false, $db_sibling_assignment->id );
+      unset( $assignment_pool[ array_search( $db_sibling_assignment->id, $assignment_pool ) ] );
+    }
+
+    if( 0 < count( $assignment_pool ) )
+    {
+      //find the id_list key that doesnt have an array value
+      reset( $assignment_pool );
+      foreach( $id_list as $user_id => &$value )
+      {
+        if( !is_array( $value ) )
+        {
+          $value = array( $value, current( $assignment_pool ) );
+          next( $assignment_pool );
+        }
+      }
+    }
+
+    return $id_list;
   }
 }

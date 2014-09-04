@@ -1,0 +1,44 @@
+{##
+ # assignment_reassign.twig
+ #
+ # View assignment details.
+ # @author Dean Inglis <inglisd@mcmaster.ca>
+ # @see base_view.twig for parameters
+ #}
+{% extends "base_view.twig" %}
+
+{% block javascript %}
+
+  {{ parent() }}
+  <script type="text/javascript">
+    $( function () {
+
+      $( "#{{ widget.full }}__reassign" ).unbind( "click" ).click( function() {
+        confirm_dialog(
+          "Reassign {{ widget.subject_name }}?",
+          "Are you sure you want to reassign this {{ widget.subject_name }}?",
+          function() {
+            var args = Object();
+            args.id = {{ id|default(0) }};
+            if( ajax_push( "{{ widget.subject }}", "reassign", args ) ) {
+              $slot = $( "#" + {{ slot }} + "_slot" );
+              if( "#main_slot" == $slot.selector ) slot_prev_clip( {{ slot }} );
+              else $slot.dialog( "close" ); // assume we're in a popup dialog
+            }
+          }
+        );
+      } );
+
+    } );
+  </script>
+
+{% endblock javascript %}
+
+{% block record %}
+
+  {{ parent() }}
+
+  {% from 'macros.twig' import confirm_buttons %}
+  {{ confirm_buttons( slot, widget.full, '', 'Back', 'right', true ) }}
+
+{% endblock record %}

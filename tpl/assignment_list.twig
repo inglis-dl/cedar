@@ -5,7 +5,7 @@
  # @author Dean Inglis <inglisd@mcmaster.ca>
  # @see base_list.twig for parameters
  #}
-{% extends "base_list.twig" %}
+{% extends "site_restricted_list.twig" %}
 
 {% block javascript %}
 
@@ -78,12 +78,13 @@
 
 {% block prelist %}
 
-  <div style="padding-top: 4px; padding-bottom: 4px;">
+  <div style="padding-top: 4px">
     {% if state_list is defined %}
       <span class="spacer">
         {% set restrict_state_id = restrict_state_id|default(0) %}
-        Restrict to condition:
-        <select id="{{ widget.full }}__restrict_state_id" class="ui-state-default">
+        <label for="{{ widget.full }}__restrict_state_id">Restrict to condition:</label>
+        <select id="{{ widget.full }}__restrict_state_id" class="ui-state-default"
+                style="margin-top:4px;margin-bottom:4px;">
           <option {% if "" == restrict_state_id %}selected{% endif %}
                   value = "">Open</option>
           {% for id, name in state_list %}
@@ -94,8 +95,9 @@
       </span>
 
       <span>
-        Restrict to language:
-        <select id="{{ widget.full }}__restrict_language_id" class="ui-state-default">
+        <label for="{{ widget.full }}__restrict_language_id">Restrict to language:</label>
+        <select id="{{ widget.full }}__restrict_language_id" class="ui-state-default"
+                style="margin-top:4px;margin-bottom:4px;">
           {% for id, language in languages %}
             <option {% if id == restrict_language_id %}selected{% endif %}
                     value="{{ id }}">{{ language }}</option>

@@ -57,6 +57,10 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "dictionary", "report", true, "View a form to select a dictionary report." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "dictionary", "import", true, "View a form to import words from a CSV file." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "dictionary", "transfer_word", true, "View a form for transferring words from a dictionary." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "dictionary", "transfer_word", true, "Transfer words from one dictionary to another." );
 
 -- dictionary_import
 
@@ -107,9 +111,6 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test", "add_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test", "delete_ranked_word_set", true, "A form to create a ranked word set to add to a test." );
-INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "pull", "test", "classify_word", false, "Classifies a word candidate as either candidate, primary,
-intrusion or variant." );
 
 -- test_entry
 
@@ -127,7 +128,9 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "adjudicate", true, "View and edit paired test_entry details." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry", "list", true, "Lists an assignment's test_entries." );
-
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "test_entry", "classify_word", false, "Classifies a word candidate as either candidate, primary,
+intrusion or variant." );
 
 -- test_entry_alpha_numeric
 
@@ -167,7 +170,9 @@ VALUES( "widget", "test_entry_confirmation", "adjudicate", true, "View and edit 
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_ranked_word", "edit", true, "Edits an entry for an ranked word test type." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "push", "test_entry_ranked_word", "new", true, "Creates a new entry for an ranked word test type." );
+VALUES( "push", "test_entry_ranked_word", "edit", true, "Edits an entry for an ranked word test type." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry_ranked_word", "delete", true, "Deletes an intrusion entry for an ranked word test type." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_ranked_word", "transcribe", true, "Transcribe an entry for an ranked word test type." );
 INSERT INTO operation( type, subject, name, restricted, description )
