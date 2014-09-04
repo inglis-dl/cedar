@@ -26,6 +26,8 @@
     function configure_ui( do_text ) {
 
       if( {{ deferred }} || !{{ editable }} ) {
+        $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
+        $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
         $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
         $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
         $( "#{{ widget.full }}_add" ).button( { disabled : true } );
@@ -42,7 +44,8 @@
           if( 0 == $(this).val().length ) numEmptyIntrusion++;
         } );
 
-        var has_null_status = 'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
+        var has_null_status =
+          'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         // count number of items with value "yes"
         // count number of items with value "no"
@@ -60,29 +63,27 @@
         $( "#{{ parent.full }}_reset" ).button(
           { disabled : 0 == numYes && 0 == numNo && 0 == numVariant && has_null_status } );
 
-        do_text = (typeof do_text == 'undefined') ? true : do_text;
-        if( do_text ) {
-          // if no radio items are checked, disable all text inputs
-          $( table_selector + " input:text" ).each( function() {
-              var disable = false;
-              if( 0 == numYes && 0 == numNo && 0 == numVariant ) {
-                disable = true;
-              }
-              else {
-                if( $(this).prop( "id" ).split( "__" )[1] === "candidate" ) {
-                  var id = "#" + $(this).prop( "id" ).replace( "candidate", "variant" );
-                  disable = !$( id ).prop( "checked" );
-                }
-              }
-              $(this).prop( "disabled", disable );
-          } );
-        }
-
         if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
             'refused' == "{{ participant_status }}" ) {
           $( table_selector + " input" ).each( function() {
             $(this).prop( "disabled", true );
           } );
+        } else {
+          do_text = (typeof do_text == 'undefined') ? true : do_text;
+          if( do_text ) {
+            // if no radio items are checked, disable all text inputs
+            var disableAll = ( 0 == numYes && 0 == numNo && 0 == numVariant );
+            $( table_selector + " input:text" ).each( function() {
+              var disable = false;
+              if( !disableAll ) {
+                if( $(this).prop( "id" ).split( "__" )[1] === "candidate" ) {
+                  var id = "#" + $(this).prop( "id" ).replace( "candidate", "variant" );
+                  disable = !$( id ).prop( "checked" );
+                }
+              }
+              $(this).prop( "disabled", disableAll ? true : disable );
+            } );
+          }
         }
       }
     }
@@ -92,24 +93,36 @@
     $.ui.autocomplete.filter = function ( array, term ) {
       var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
       return $.grep( array, function ( value ) {
-        return matcher.test( value.label || value.value || value );
+        return matcher.test( value.label );
       } );
     };
 
     function get_variant_text_complete() {
       var args = new Object();
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      args["language_id"] = {{ language_id }};
+      // words are determined according to typist language restrictions
+      args["user_id"] = {{ user_id }};
       args["words_only"] = 1;
-      return ajax_pull( "word", "list", args );
+      return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
+        return {
+          label: value,
+          value: key
+        };
+      });
     }
 
     function get_intrusion_text_complete() {
       var args = new Object();
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-      args["language_id"] = {{ language_id }};
+      // words are determined according to typist language restrictions
+      args["user_id"] = {{ user_id }};
       args["words_only"] = 1;
-      return ajax_pull( "word", "list", args );
+      return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
+        return {
+          label: value,
+          value: key
+        };
+      });
     }
 
     function update_input_list() {
@@ -118,21 +131,71 @@
         source: get_variant_text_complete(),
         minLength: 1,
         select: function( event, ui ) {
-          $(this).val( ui.item.value );
-          $(this).attr( "value", ui.item.value );
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        focus: function( event, ui ) {
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        close: function( event, ui ) {
+          var source = $(this).autocomplete("option").source;
+          var candidate = $(this).val();
+          var key = null;
+          for(var i in source) {
+            if( candidate === source[i].label ) {
+              key = source[i].value;
+              break;
+            }
           }
-        } );
+          if( null === key ) return false;
+          $(this).trigger( "change",  [ key ]  );
+        }
+      } );
 
       $( table_selector + ' input:text[id$="intrusion"]' ).autocomplete( {
         source: get_intrusion_text_complete(),
         minLength: 1,
         select: function( event, ui ) {
-          $(this).val( ui.item.value );
-          $(this).attr( "value", ui.item.value );
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        focus: function( event, ui ) {
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        close: function( event, ui ) {
+          var needle = $(this).val();
+          var haystack = $(this).autocomplete("option").source;
+          var key = null;
+          for(var i in haystack) {
+            if( needle === haystack[i].label ) {
+              key = haystack[i].value;
+              break;
+            }
           }
-        } );
+          if( null === key ) return false;
+          $(this).trigger( "change",  [ key ]  );
+        }
+      } );
 
-      $( table_selector + ' input:text' ).change( function() {
+      $( table_selector + ' input:text' ).change( function(event, obj) {
+
+        // addresses focus event calling change
+        if( undefined === obj ) {
+          var needle = $(this).val();
+          var haystack = $(this).autocomplete("option").source;
+          for(var i in haystack) {
+            if( needle === haystack[i].label ) {
+              return false;
+            }
+          }
+        }
+
         var candidate = $(this).val().trim().toLowerCase();
         // we've trimmed and lower-cased the candidate, so update the UI
         $(this).val( candidate );
@@ -142,68 +205,65 @@
         if( 0 == candidate.length ) {
           alert( "Blank entries are not permitted" );
           configure_ui();
-        } else {
-          var args = new Object();
-          var columns = new Object();
-          args.id = $(this).prop( "id" ).split( "__" )[0];
-          var is_variant = $(this).prop( "id" ).split( "__" )[1] === "candidate";
-          columns["word_candidate"] = candidate;
-          if( is_variant ) {
-            columns["selection"] = "variant";
-            columns["ranked_word_set_id"] = $(this).prop( "name" );
+          $(this).focus();
+          return false;
+        }
+
+        // re-enable all radio and variant text inputs
+        $( table_selector + " input:radio" ).each( function() {
+          $(this).prop( "disabled", false );
+          if( $(this).val() === "variant" ) {
+            var text_id = table_selector + ' input:text[id="' +
+              $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
+            if( 0 < $( text_id ).val().length ) {
+              $( text_id ).prop( "disabled", false );
+            }
           }
+        } );
+
+        var args = new Object();
+        var columns = new Object();
+        var target_entry_id = $(this).prop( "id" ).split( "__" )[0];
+        args.id = target_entry_id;
+        var is_variant = $(this).prop( "id" ).split( "__" )[1] === "candidate";
+        if( undefined !== obj ) {
+          columns["word_id"] = obj;
+        } else {
+          columns["word_candidate"] = candidate;
+        }
+        if( is_variant ) {
+          columns["selection"] = "variant";
+          columns["ranked_word_set_id"] = $(this).prop( "name" );
+        }
+        args.columns = columns;
+
+        // push edits
+        if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+
+          // determine what type of word this is along with its id
+          args.id = {{ parent.id }};
+          var columns = new Object();
+          columns["child_id"] = target_entry_id;
           args.columns = columns;
 
-          // push edits
-          if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
+          var result = ajax_pull( "test_entry", "classify_word", args );
+          $(this).addClass( result.classification );
 
-            // determine what type of word this is
-            args.id = {{ test_id }};
-            args["language_id"] = {{ language_id }};
-            args["word_candidate"] = candidate;
-            var classification = ajax_pull( "test", "classify_word", args );
-            if( undefined != classification ) {
-               $(this).addClass( classification );
-              // if an intrusion, check and add the word if not in the autocomplete source
-              if( classification == 'intrusion' ) {
-                var text_selector = $( table_selector + ' input:text[id$="intrusion"]' );
-                var source = text_selector.autocomplete( "option", "source" );
-                if( -1 == $.inArray( candidate, source ) ) {
-                  source.push( candidate );
-                  source.sort();
-                  text_selector.autocomplete( "option", "source", source );
-                }
-              }
-            }
+          // if an intrusion, check and add the word if not in the autocomplete source
+          if( "intrusion" == result.classification && undefined === obj ) {
+            var text_selector = $( table_selector + ' input:text[id$="intrusion"]' );
+            var source = text_selector.autocomplete( "option", "source" );
+            source.push( { label : result.word, value : result.word_id } );
+            text_selector.autocomplete( "option", "source", source );
+          }
 
-            // re-enable all radio and variant text inputs
-            $( table_selector + " input:radio" ).each( function() {
-              $(this).prop( "disabled", false );
-              if( $(this).val() === "variant" ) {
-                var text_id = table_selector + ' input:text[id="' +
-                  $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
-                if( 0 < $( text_id ).val().length ) {
-                  $( text_id ).prop( "disabled", false );
-                }
-              }
-            } );
+          configure_ui();
 
-            configure_ui();
-
-          } else {
-            $(this).val( "" );
-            $(this).attr( "value", "" );
-            // re-enable all radio and variant text inputs
-            $( table_selector + " input:radio" ).each( function() {
-              $(this).prop( "disabled", false );
-              if( $(this).val() === "variant" ) {
-                var text_id = table_selector + ' input:text[id="' +
-                  $(this).prop( "id" ).replace( "variant", "candidate" ) + '"]';
-                if( 0 < $( text_id ).val().length ) {
-                  $( text_id ).prop( "disabled", false );
-                }
-              }
-            } );
+        } else {
+          $(this).val( "" );
+          $(this).attr( "value", "" );
+          if( is_variant ) {
+            // by default, select the "no" radio button
             var radio_id = table_selector + ' input:radio[id="' + args.id + '__no"]';
             $( radio_id ).focus();
             $( radio_id ).prop( "checked", true );
@@ -254,7 +314,7 @@
         var selection = $(this).val();
         args.id = $(this).prop( "id" ).split("__")[0];
         columns["selection"] = selection;
-        if( selection !== "variant" ) {
+        if( "variant" !== selection ) {
           columns["word_candidate"] = '';
         }
         args.columns = columns;
@@ -263,7 +323,7 @@
           var text_id =
             table_selector + ' input:text[id="' + args.id + '__candidate"]';
           $( text_id ).removeClass( "candidate primary intrusion variant" );
-          if( selection === "variant" ) {
+          if( "variant" === selection ) {
             // disable inputs until the variant is entered
             $( table_selector + " input" ).prop( "disabled", true );
             $( text_id ).prop( "disabled", false );

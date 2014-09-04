@@ -71,7 +71,7 @@
     $.ui.autocomplete.filter = function ( array, term ) {
       var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
       return $.grep( array, function ( value ) {
-        return matcher.test( value.label || value.value || value );
+        return matcher.test( value.label );
       } );
     };
 
@@ -80,9 +80,15 @@
       args["dictionary_id"] = {{ dictionary_id }};
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      args["language_id"] = {{ language_id }};
+      // words are determined according to typist language restrictions
+      args["user_id"] = {{ user_id }};
       args["words_only"] = 1;
-      return ajax_pull( "word", "list", args );
+      return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
+        return {
+          label: value,
+          value: key
+        };
+      });
     }
 
     $( function () {
@@ -100,12 +106,11 @@
           var blank_id = target_text_id.replace( "adjudicate", "blank" );
 
           var candidate = $( source_text_id ).val();
-          if( typeof candidate === 'undefined' ) {
+          if( undefined === candidate ) {
             candidate = "";
           }
 
           $( target_text_id ).removeClass( "candidate primary intrusion variant" );
-          $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
           $( target_text_id ).val( candidate );
           $( target_text_id ).attr( "value", candidate );
           $( target_text_id ).prop( "disabled", false );
@@ -127,11 +132,12 @@
             // get the word
             if( 0 != candidate.length ) {
               var args = new Object();
-              args.id = {{ test_id }};
-              args["language_id"] = {{ language_id }};
-              args["word_candidate"] = candidate;
-              var classification = ajax_pull( "test", "classify_word", args );
-              $( target_text_id ).addClass( classification );
+              args.id = {{ adjudicate_entry_id }};
+              var columns = new Object();
+              columns["child_id"] = target_entry_id;
+              args.columns = columns;
+              var result = ajax_pull( "test_entry", "classify_word", args );
+              $( target_text_id ).addClass( result.classification );
             }
             $( blank_id ).prop( "checked", 0 == candidate.length );
             configure_ui();
@@ -156,11 +162,41 @@
         source: get_text_complete(),
         minLength: 1,
         select: function( event, ui ) {
-          $(this).val( ui.item.value );
-          $(this).attr( "value", ui.item.value );
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        focus: function( event, ui ) {
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        close: function( event, ui ) {
+          var needle = $(this).val();
+          var haystack = $(this).autocomplete("option").source;
+          var key = null;
+          for(var i in haystack) {
+            if( needle === haystack[i].label ) {
+              key = haystack[i].value;
+              break;
+            }
+          }
+          if( null === key ) return false;
+          $(this).trigger( "change",  [ key ]  );
         }
-      } )
-      .change( function() {
+      } ).change( function(event, obj) {
+
+        // addresses focus event calling change
+        if( undefined === obj ) {
+          var needle = $(this).val();
+          var haystack = $(this).autocomplete("option").source;
+          for(var i in haystack) {
+            if( needle === haystack[i].label ) {
+              return false;
+            }
+          }
+        }
+
         var target_entry_id = $(this).prop( "id" ).split( "__" )[0];
 
         // uncheck the progenitor radio items
@@ -178,8 +214,8 @@
         var args = new Object();
         var columns = new Object();
         args.id = target_entry_id;
-        if( 0 == candidate.length ) {
-          columns["word_id"] = '';
+        if( undefined !== obj ) {
+          columns["word_id"] = obj;
         } else {
           columns["word_candidate"] = candidate;
         }
@@ -189,24 +225,24 @@
         var blank_id = '#' + $(this).prop( "id" ).replace( "adjudicate", "blank" );
 
         // push the edits
+        console.log( args );
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
-          // get the word
+
+          // determine what type of word this is along with its id
           if( 0 != candidate.length ) {
-            var args = new Object();
-            args.id = {{ test_id }};
-            args["language_id"] = {{ language_id }};
-            args["word_candidate"] = candidate;
-            var classification = ajax_pull( "test", "classify_word", args );
-            $(this).addClass( classification );
+            args.id = {{ adjudicate_entry_id }};
+            var columns = new Object();
+            columns["child_id"] = target_entry_id;
+            args.columns = columns;
+
+            var result = ajax_pull( "test_entry", "classify_word", args );
+            $(this).addClass( result.classification );
             // if a variant, check and add the word if not in the autocomplete source
-            if( classification == 'variant' ) {
+            if( "variant" == result.classification && undefined === obj ) {
               var text_selector = $( table_selector + ' input:text[id$="adjudicate"]' );
               var source = text_selector.autocomplete( "option", "source" );
-              if( -1 == $.inArray( candidate, source ) ) {
-                source.push( candidate );
-                source.sort();
-                text_selector.autocomplete( "option", "source", source );
-              }
+              source.push( { label :  result.word, value : result.word_id } );
+              text_selector.autocomplete( "option", "source", source );
             }
           }
           $( blank_id ).prop( "checked", 0 == candidate.length );

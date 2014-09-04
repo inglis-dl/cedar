@@ -123,21 +123,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $db_user = $db_assignment->get_user();
     $db_sibling_user = $db_sibling_assignment->get_user();
 
-    $language_id_list = array();
-
-    foreach( $db_user->get_language_list() as $db_language )
-      $language_id_list[] = $db_language->id;
-    foreach( $db_sibling_user->get_language_list() as $db_language )
-      $language_id_list[] = $db_language->id;
-
     $db_participant = $db_assignment->get_participant();
     $this->set_variable( 'participant_id', $db_participant->id );
 
-    $db_language = $db_participant->get_language();
-    if( is_null( $db_language ) )
-      $db_language = lib::create( 'business\session' )->get_service()->get_language();
-
-    $this->set_variable( 'language_id', 0 < count( $language_id_list ) ? $db_language->id : 0 );
+    // set the language(s) of dictionary words based on one user id
+    $this->set_variable( 'user_id', $db_user->id );
 
     if( $db_participant->get_cohort()->name == 'tracking' )
     {

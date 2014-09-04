@@ -67,11 +67,12 @@ class test extends \cenozo\database\has_rank
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @throws exception\runtime
-   * @param string $word A non-empty word.
-   * @param database\language $db_language The language of the word.
-   * @return array()  classification={candidate, primary, intrusion, variant, mispelled}, db_word
+   * @param string $word A non-empty word (can be NULL if word_id is not NULL).
+   * @param integer $word_id  The id of a word or NULL.
+   * @param database\language $db_language The language of the word or NULL.
+   * @return array()  classification={candidate, primary, intrusion, variant, mispelled}, word id
    */
-  public function get_word_classification( $word, $db_language = NULL )
+  public function get_word_classification( $word, $word_id, $db_language )
   {
     // all tests must have a primary dictionary assigned
     // non-strict tests must also have variant and intrusion dictionaries assigned
@@ -81,67 +82,69 @@ class test extends \cenozo\database\has_rank
            is_null( $this->variant_dictionary_id ) ) )
       throw lib::create( 'exception\runtime',
         'Word classification requires the test to have the necessary ' .
-        'dictionaries assigned.' , __METHOD__ );
+        'dictionaries assigned.', __METHOD__ );
+
+    $classification = array_combine(
+      array( $this->dictionary_id,
+             $this->intrusion_dictionary_id,
+             $this->variant_dictionary_id,
+             $this->mispelled_dictionary_id ),
+      array( 'primary', 'intrusion', 'variant', 'mispelled' ) );
 
     $word_class_name = lib::get_class_name( 'database\word' );
 
-    $data = array();
     $data['classification'] = 'candidate';
-    $data['word'] = NULL;
-
-    $base_mod = lib::create( 'database\modifier' );
-    if( !is_null( $db_language ) ) $base_mod->where( 'language_id', '=', $db_language->id );
-    $base_mod->where( 'word', '=', $word );
-    $base_mod->limit( 1 );
-
-    // check for mispelled words first
-    if( !is_null( $this->mispelled_dictionary_id ) )
+    $data['word'] = $word;
+    $data['word_id'] = '';
+    if( !is_null( $word_id ) )
     {
-      $modifier = clone $base_mod;
-      $modifier->where( 'dictionary_id', '=', $this->mispelled_dictionary_id );
-      $db_word = current( $word_class_name::select( $modifier ) );
-      if( false !== $db_word )
-      {
-        $data['classification'] = 'mispelled';
-        $data['word'] = $db_word;
-        return $data;
-      }
-    }
-
-    $modifier = clone $base_mod;
-    $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
-    $db_word = current( $word_class_name::select( $modifier ) );
-    if( false !== $db_word )
-    {
-      $data['classification'] = 'primary';
-      $data['word'] = $db_word;
+      $db_word = lib::create( 'database\word', $word_id );
+      $data['word'] = $db_word->word;
+      $data['word_id'] = $db_word->id;
+      if( array_key_exists( $db_word->dictionary_id, $classification ) )
+        $data['classification'] = $classification[$db_word->dictionary_id];
     }
     else
     {
-      if( !$this->strict )
+      $base_mod = lib::create( 'database\modifier' );
+      if( !is_null( $db_language ) ) $base_mod->where( 'language_id', '=', $db_language->id );
+      $base_mod->where( 'word', '=', $word );
+      $base_mod->limit( 1 );
+      $db_word = false;
+
+      // check for mispelled words first
+      if( !is_null( $this->mispelled_dictionary_id ) )
       {
         $modifier = clone $base_mod;
-        $modifier->where( 'dictionary_id', '=', $this->intrusion_dictionary_id );
+        $modifier->where( 'dictionary_id', '=', $this->mispelled_dictionary_id );
         $db_word = current( $word_class_name::select( $modifier ) );
-        if( false !== $db_word )
-        {
-          $data['classification'] = 'intrusion';
-          $data['word'] = $db_word;
-        }
-        else
+      }
+      if( false === $db_word )
+      {
+        $modifier = clone $base_mod;
+        $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
+        $db_word = current( $word_class_name::select( $modifier ) );
+        if( false === $db_word && !$this->strict )
         {
           $modifier = clone $base_mod;
-          $modifier->where( 'dictionary_id', '=', $this->variant_dictionary_id );
+          $modifier->where( 'dictionary_id', '=', $this->intrusion_dictionary_id );
           $db_word = current( $word_class_name::select( $modifier ) );
-          if( false !== $db_word )
+          if( false === $db_word )
           {
-            $data['classification'] = 'variant';
-            $data['word'] = $db_word;
+            $modifier = clone $base_mod;
+            $modifier->where( 'dictionary_id', '=', $this->variant_dictionary_id );
+            $db_word = current( $word_class_name::select( $modifier ) );
           }
         }
       }
+      if( $db_word !== false )
+      {
+        if( array_key_exists( $db_word->dictionary_id, $classification ) )
+          $data['classification'] = $classification[$db_word->dictionary_id];
+        $data['word'] = $db_word->word;
+        $data['word_id'] = $db_word->id;
+      }
     }
-
     return $data;
   }
 }

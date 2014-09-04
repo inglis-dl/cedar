@@ -71,3 +71,11 @@ VALUES( "push", "assignment", "reassign", true,
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_ranked_word", "delete", true,
 "Deletes an intrusion entry for an ranked word test type." );
+
+-- test_entry
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "pull", "test_entry", "classify_word", false, "Classifies a word candidate as either
+candidate, primary, intrusion or variant." );
+
+UPDATE IGNORE operation SET subject="test_entry" WHERE name="classify_word";

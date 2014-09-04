@@ -129,17 +129,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
         $this->set_variable( 'intrusion_dictionary_id', $db_intrusion_dictionary->id );
     }
 
-    $language_id_list = array();
     $db_assignment = $db_test_entry->get_assignment();
-    foreach( $db_assignment->get_user()->get_language_list() as $db_language )
-      $language_id_list[] = $db_language->id;
-
     $db_participant = $db_assignment->get_participant();
-    $db_language = $db_participant->get_language();
-    if( is_null( $db_language ) )
-      $db_language = lib::create( 'business\session' )->get_service()->get_language();
-
-    $this->set_variable( 'language_id', 0 < count( $language_id_list ) ? $db_language->id : 0 );
+    $this->set_variable( 'user_id', $db_assignment->user_id );
 
     // get the audio files from sabretooth
     if( $db_participant->get_cohort()->name == 'tracking' )

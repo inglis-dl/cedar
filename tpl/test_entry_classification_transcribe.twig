@@ -21,19 +21,18 @@
       if( {{ deferred }} || !{{ editable }} ) {
         $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
         $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
-        $( "#{{ parent.full }}_defer" ).button( { "disabled": true } );
-        $( "#{{ parent.full }}_reset" ).button( { "disabled": true } );
-        $( "#{{ widget.full }}_add" ).button( { "disabled": true } );
+        $( "#{{ parent.full }}_defer" ).button( { disabled : true } );
+        $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
+        $( "#{{ widget.full }}_add" ).button( { disabled : true } );
         $( table_selector + " input:text" ).each( function() {
           $(this).prop( "disabled", true );
         } );
       } else {
         // count the number of inputs, how many have text in them and which is the last
-        // non-disabled entry
+        // empty enabled input ready to receive focus
         var numFilled = 0;
         var numInput = 0;
         var lastEmpty = null;
-        var numEmptyAdded = 0;
         var has_null_status =
           'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
@@ -42,32 +41,31 @@
             numFilled++;
           } else {
             if( !$(this).prop( "disabled" ) ) lastEmpty = $(this);
-            if( $(this).parent().hasClass( "added" ) ) numEmptyAdded++;
           }
           numInput++;
         } );
 
-        // only enable the next button when there is at least one entry filled
-        // additionally, disable if there are any empty added fields
-        $( "#{{ parent.full }}_next" ).button( { disabled : ( has_null_status && 0 == numFilled ) || 0 < numEmptyAdded } );
+        // enable the next button if there is at least one filled input
+        $( "#{{ parent.full }}_next" ).button( { disabled : has_null_status && 0 == numFilled } );
 
-        // disable the Reset button if there is nothing to reset
+        // disable the reset button if there is nothing to reset
         $( "#{{ parent.full }}_reset" ).button( { disabled : has_null_status && 0 == numFilled } );
 
-        // only enable the add button when all inputs are filled
+        // enable the add button if all inputs are filled
         $( "#{{ widget.full }}_add" ).button( { disabled : numFilled != numInput } );
 
-        if( null !== lastEmpty && numFilled != numInput ) {
-          lastEmpty.focus();
-        } else {
-          $( table_selector + " input:text" ).last().blur();
-        }
-
+        // disable all inputs depending on audio or participant status
         if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
             'refused' == "{{ participant_status }}" ) {
           $( table_selector + " input" ).each( function() {
             $(this).prop( "disabled", true );
           } );
+        } else {
+          if( null !== lastEmpty && numFilled != numInput ) {
+            lastEmpty.focus();
+          } else {
+            $( table_selector + " input:text" ).last().blur();
+          }
         }
       }
     }
@@ -77,7 +75,7 @@
     $.ui.autocomplete.filter = function ( array, term ) {
       var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( term ), "i" );
       return $.grep( array, function ( value ) {
-        return matcher.test( value.label || value.value || value );
+        return matcher.test( value.label );
       } );
     };
 
@@ -86,79 +84,105 @@
       args["dictionary_id"] = {{ dictionary_id }};
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      args["language_id"] = {{ language_id }};
+      // words are determined according to typist language restrictions
+      args["user_id"] = {{ user_id }};
       args["words_only"] = 1;
-      return ajax_pull( "word", "list", args );
+      return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
+        return {
+          label: value,
+          value: key
+        };
+      });
     }
 
     function update_input_list() {
 
-      $input_list = $( table_selector + " input:text" );
-
-      // set up the autocomplete on all text inputs
-      $input_list.autocomplete( {
+      $( table_selector + " input:text" ).autocomplete( {
         source: get_text_complete(),
         minLength: 1,
         select: function( event, ui ) {
-          $(this).val( ui.item.value );
-          $(this).attr( "value", ui.item.value );
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        focus: function( event, ui ) {
+          $(this).val( ui.item.label );
+          $(this).attr( "value", ui.item.label );
+          return false;
+        },
+        close: function( event, ui ) {
+          var needle = $(this).val();
+          var haystack = $(this).autocomplete("option").source;
+          var key = null;
+          for(var i in haystack) {
+            if( needle === haystack[i].label ) {
+              key = haystack[i].value;
+              break;
+            }
+          }
+          if( null === key ) return false;
+          $(this).trigger( "change",  [ key ]  );
         }
-      } );// end autocomplete
+      } ).change( function(event, obj) {
 
-      // callback for when text inputs are changed
-      $input_list.change( function() {
+        // addresses focus event calling change
+        if( undefined === obj ) {
+          var needle = $(this).val();
+          var haystack = $(this).autocomplete("option").source;
+          for(var i in haystack) {
+            if( needle === haystack[i].label ) {
+              return false;
+            }
+          }
+        }
 
         var candidate = $(this).val().trim().toLowerCase();
-        // we've trimmed and lower-cased the candidate, so update the UI
+        // we've trimmed and lower-cased the candidate: update the UI
         $(this).val( candidate );
-        // update the value to present state
+        // update input value to present state
         $(this).attr( "value", candidate );
         $(this).removeClass( "candidate primary intrusion variant" );
         if( 0 == candidate.length ) {
           alert( "Blank entries are not permitted" );
           configure_ui();
+          $(this).focus();
           return false;
         }
+
         var args = new Object();
         var columns = new Object();
-        args.id = $(this).prop( "id" ).split( "__" )[0];
-        // test if this is from an Added text input
-        // if it is, the subject's edit class will use the uniqueness of
-        // test_entry_id and rank to find the record to edit
+        var target_entry_id = $(this).prop( "id" ).split( "__" )[0];
+        args.id = target_entry_id;
         var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
-        if( 0 == args.id ) {
-          args.id = "";
-          columns["rank"] = rank;
-          columns["test_entry_id"] = {{ parent.id }};
+        if( undefined !== obj ) {
+          columns["word_id"] = obj;
+        } else {
+          columns["word_candidate"] = candidate;
         }
-        columns["word_candidate"] = candidate;
         args.columns = columns;
 
         //push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
 
-          // determine what type of word this is
-          args.id = {{ test_id }};
-          args["language_id"] = {{ language_id }};
-          args["word_candidate"] = candidate;
-          var classification = ajax_pull( "test", "classify_word", args );
-          if( undefined != classification ) {
-            $(this).addClass( classification );
-            // if a variant, check and add the word if not in the autocomplete source
-            if( classification == 'variant' ) {
-              var source = $input_list.autocomplete( "option", "source" );
-              if( -1 == $.inArray( candidate, source ) ) {
-                source.push( candidate );
-                source.sort();
-                $input_list.autocomplete( "option", "source", source );
-              }
-            }
+          // determine what type of word this is along with its id
+          args.id = {{ parent.id }};
+          var columns = new Object();
+          columns["child_id"] = target_entry_id;
+          args.columns = columns;
+
+          var result = ajax_pull( "test_entry", "classify_word", args );
+          $(this).addClass( result.classification );
+          // if a variant, check and add the word if not in the autocomplete source
+          if( "variant" == result.classification && undefined === obj ) {
+            var text_selector = $( table_selector + " input:text" );
+            var source = text_selector.autocomplete( "option", "source" );
+            source.push( { label : result.word, value : result.word_id } );
+            text_selector.autocomplete( "option", "source", source );
           }
 
           // enable the next empty input
           var next_rank_id = "__" + ( rank + 1 );
-          $( table_selector + ' input:text[id$="' +
-            next_rank_id + '"]' ).prop( "disabled", false );
+          $( table_selector + ' input:text[id$="' + next_rank_id + '"]' ).prop( "disabled", false );
 
           configure_ui();
         } else {
@@ -168,7 +192,6 @@
           $(this).attr( "value", "" );
           $(this).focus();
         }
-
       } );// end text input change
 
     }// end function update_input_list
@@ -181,39 +204,19 @@
       $( "#{{ widget.full }}_add" ).button( {
         text: false,
         icons: { primary: "ui-icon-plusthick" }
-        } )
-      .click( function() {
-        // add a text input to the end of the table one row before the
-        // one containing the Add button
+        } ).click( function() {
+        // create a new classification test entry
         $td_selector = $( table_selector + " td" ).not( '.button' );
         var rank = $td_selector.length + 1;
-        var html = '<td class="added"><input type="text" id="0__' + rank + '"/></td>';
-        // the number of entries in a typical row
-        var maxTd = $( table_selector + " tr:first td" ).length;
-
-        // the number of entries in the target row
-        var targetRow = $( table_selector + " tr" ).length - 1;
-        var numTd = $( table_selector + " tr:nth-child(" + targetRow + ") td" ).length;
-
-        // add a new table row if required
-        if( numTd === maxTd ) {
-          html = '<tr class="added">' + html + "</tr>";
-          $( table_selector + " tr:last" ).before( html );
-        } else {
-          $( table_selector + " tr:last" ).prev().append( html );
-        }
-
-        // create a new classification test entry
         var args = new Object();
         var columns =  new Object();
+        columns["rank"] = rank;
         columns["test_entry_id"] = {{ parent.id }};
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "new", args ) ) {
-          update_input_list();
-          configure_ui();
+          slot_refresh( {{ slot }} );
         }
-      } );// end Add button click
-
+      } );// end add button click
     } );
   </script>
 

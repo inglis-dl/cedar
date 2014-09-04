@@ -106,6 +106,7 @@ class assignment extends \cenozo\database\record
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
+    $session = lib::create( 'business\session' );
 
     $has_tracking = false;
     $has_comprehensive = false;
@@ -123,13 +124,12 @@ class assignment extends \cenozo\database\record
     $language_id_list = array();
     foreach( $db_user->get_language_list() as $db_language )
       $language_id_list[] = $db_language->id;
+    if( 0 == count( $language_id_list ) )
+      $language_id_list[] = $session->get_service()->get_language()->id;
 
     $id = NULL;
-
     if( $has_tracking )
     {
-      $session = lib::create( 'business\session' );
-
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'participant.active', '=', true );
       $modifier->where( 'user_assignment.id', '=', NULL );
@@ -236,27 +236,45 @@ class assignment extends \cenozo\database\record
   {
     $user_class_name = lib::get_class_name( 'database\user' );
     $role_class_name = lib::get_class_name( 'database\role' );
+    $region_site_name = lib::get_class_name( 'database\region_site' );
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
 
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'user_has_language.user_id', '!=', NULL );
+    $session = lib::create( 'business\session' );
+    $db_service = $session->get_service();
+    $db_site = $session->get_site();
 
-    // all the users who have a language restriction
-    $exclude_ids = array();
-    foreach( $user_class_name::select( $modifier ) as $db_user )
+    // get all the languages cedar has access to
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'service_id', '=', $db_service->id );
+    $modifier->group( 'language_id' );
+
+    $service_language_list = array();
+    foreach( $region_site_name::select( $modifier ) as $db_region_site )
     {
-      $exclude_ids[] = $db_user->id;
+      $service_language_list[] = $db_region_site->language_id;
     }
-
-    // if the user assigned to this assignment does not have a language restriction
-    // then they need to be added to front of the returned id_list so that we dont
-    // delete their transcriptions during reassign
-    $prepend = !in_array( $this->user_id, $exclude_ids );
+    $num_language = count( $service_language_list );
 
     $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'access.role_id', '=', $db_role->id );
+    $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
-    $modifier->where( 'access.role_id', 'IN', array( $db_role->id ) );
-    $modifier->where( 'user.id', 'NOT IN', $exclude_ids );
+    $modifier->where( 'user_has_language.language_id', 'IN', $service_language_list );
+    $modifier->group( 'user.id' );
+    $modifier->having( 'COUNT( user.id )', '=', $num_language );
+
+    $user_list = $user_class_name::select( $modifier );
+
+    $id_list = array();
+    foreach( $user_list as $db_user )
+      $id_list[] = $db_user->id;
+
+    if( count( $id_list ) < 2 ) return $id_list;
+
+    // if the user assigned to this assignment has the aligned language restrictions
+    // then add them to te front of the returned id_list so that we dont
+    // delete their transcriptions during reassign
+    $prepend = in_array( $this->user_id, $id_list );
 
     // prepare a list of user id's sorted according to the users'
     // number of open assignments from least to most with the
@@ -264,7 +282,7 @@ class assignment extends \cenozo\database\record
     // with fewer active assignments
     $id_list = array();
     $min = PHP_INT_MAX;
-    foreach( $user_class_name::select( $modifier ) as $db_user )
+    foreach( $user_list as $db_user )
     {
       // how many open assignments does this user have
       $modifier = lib::create( 'database\modifier' );

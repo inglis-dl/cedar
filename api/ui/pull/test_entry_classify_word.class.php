@@ -1,6 +1,6 @@
 <?php
 /**
- * test_classify_word.class.php
+ * test_entry_classify_word.class.php
  *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
@@ -13,7 +13,7 @@ use cenozo\lib, cenozo\log, cedar\util;
  * Class for word classify pull operations.
  *
  */
-class test_classify_word extends \cenozo\ui\pull\base_record
+class test_entry_classify_word extends \cenozo\ui\pull\base_record
 {
   /**
    * Constructor.
@@ -23,7 +23,7 @@ class test_classify_word extends \cenozo\ui\pull\base_record
    */
   public function __construct( $args )
   {
-    parent::__construct( 'test', 'classify_word', $args );
+    parent::__construct( 'test_entry', 'classify_word', $args );
   }
 
   /**
@@ -36,19 +36,15 @@ class test_classify_word extends \cenozo\ui\pull\base_record
   {
     parent::execute();
 
-    $language_class_name = lib::get_class_name( 'database\language' );
+    $db_test_entry = $this->get_record();
+    $columns = $this->get_argument( 'columns' );
+    $child_id = $columns['child_id'];
+    $db_test = $db_test_entry->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
+    $db_child_entry = lib::create( 'database\test_entry_'.$test_type_name, $child_id );
+    $word_id = $db_child_entry->word_id;
 
-    $db_test = $this->get_record();
-    $word_candidate = $this->get_argument( 'word_candidate' );
-    $language = $this->get_argument( 'language', NULL );
-    $db_language = NULL;
-    if( !is_null( $language ) )
-    {
-      $db_language = $language_class_name::get_unique_record( 'code', $language );
-    }
-
-    $data = $db_test->get_word_classification( $word_candidate, $db_language );
-    $this->data = $data['classification'];
+    $this->data = $db_test->get_word_classification( NULL, $word_id, NULL );
   }
 
   /**

@@ -24,15 +24,6 @@ class test_entry_alpha_numeric_new extends \cenozo\ui\push\base_new
 */
   public function __construct( $args )
   {
-    if( !array_key_exists( 'rank', $args['columns'] ) || empty( $args['columns']['rank'] ) )
-    {
-      $test_entry_alpha_numeric_class_name =
-        lib::get_class_name( 'database\test_entry_alpha_numeric' );
-      $modifier = lib::create('database\modifier');
-      $modifier->where( 'test_entry_id', '=', $args['columns']['test_entry_id'] );
-      $args['columns']['rank'] = $test_entry_alpha_numeric_class_name::count( $modifier ) + 1;
-    }
-
     parent::__construct( 'test_entry_alpha_numeric', $args );
   }
 }
