@@ -52,6 +52,10 @@ class word_list extends \cenozo\ui\pull
     {
       $db_user = lib::create( 'database\user', $user_id );
       $language_list = $db_user->get_language_list();
+      if( is_null( $language_list ) )
+      {
+        $language_list[] = lib::create( 'business\session' )->get_service()->get_language();
+      }
     }
 
     $words_only = $this->get_argument( 'words_only', false );
