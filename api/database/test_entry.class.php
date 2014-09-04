@@ -380,4 +380,105 @@ class test_entry extends \cenozo\database\has_note
       }
     }
   }
+
+  /**
+   * Trim off empty alpha_numeric, classification and ranked_word test
+   * entries.  Trim removes entries starting from the highest id downward
+   * until the first non-empty record is reached.  Trim will remove, for example,
+   * trailing empty intrusion records in ranked_word tests.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return integer number of records deleted
+   * @access public
+   */
+  public function trim()
+  {
+    $db_test = $this->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
+    if( $test_type_name == 'confirmation' ) return 0;
+
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
+
+    $sql = null;
+    if( $test_type_name == 'classification' || $test_type_name == 'alpha_numeric' )
+    {
+      $sql = sprintf(
+        'SELECT id '.
+        'FROM test_entry_' . $test_type_name . ' '.
+        'WHERE word_id IS NULL '.
+        'AND test_entry_id = %s '.
+        'ORDER BY rank DESC',
+        $database_class_name::format_string( $this->id ) );
+    }
+    else
+    {
+      $sql = sprintf(
+        'SELECT id '.
+        'FROM test_entry_' . $test_type_name . ' '.
+        'WHERE word_id IS NULL '.
+        'AND ranked_word_set_id IS NULL '.
+        'AND test_entry_id = %s '.
+        'ORDER BY id DESC',
+        $database_class_name::format_string( $this->id ) );
+    }
+    $rows = $entry_class_name::db()->get_all( $sql );
+    $count = 0;
+    if( count( $rows ) > 0 )
+    {
+      foreach( $rows as $index => $row )
+      {
+        $db_entry = lib::create( 'database\test_entry_' . $test_type_name, $row['id'] );
+        if( !is_null( $db_entry->word_id ) ) break;
+        $db_entry->delete();
+        $count++;
+      }
+    }
+    return $count;
+  }
+
+  /**
+   * Truncate alpha_numeric, classification and ranked_word test
+   * entries.  Truncate removes entries starting from the highest id downward
+   * until $size deletions are obtained.  For ranked_word entries, only
+   * intrusions can be deleted.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return integer number of records deleted
+   * @access public
+   */
+  public function truncate( $size = 0 )
+  {
+    if( $size == 0 ) return 0;
+
+    $db_test = $this->get_test();
+    $test_type_name = $db_test->get_test_type()->name;
+    if( $test_type_name == 'confirmation' ) return 0;
+
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
+
+    $sql = sprintf(
+      'SELECT id '.
+      'FROM test_entry_' . $test_type_name . ' '.
+      'WHERE test_entry_id = %s '.
+      'ORDER BY id DESC '.
+      'LIMIT %d',
+      $database_class_name::format_string( $this->id ), $size );
+
+    $rows = $entry_class_name::db()->get_all( $sql );
+    $count = 0;
+    if( count( $rows ) > 0 )
+    {
+      foreach( $rows as $index => $row )
+      {
+        $db_entry = lib::create( 'database\test_entry_' . $test_type_name, $row['id'] );
+        if( $test_type_name == 'ranked_word' &&
+            !is_null( $db_entry->ranked_word_set_id ) ) break;
+        $db_entry->delete();
+        $count++;
+      }
+    }
+    return $count;
+  }
 }

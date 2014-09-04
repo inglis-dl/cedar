@@ -1,4 +1,65 @@
 ====================================================================================================
+1.0.2
+====================================================================================================
+
+* Adding assignment reassign
+  - link the cenozo site and cedar assignment db tables to track
+    which site the assignment is currently assigned to
+  - add functionality to automatically identify 2 typists with no language restriction
+    for reassigning deferred bilingual content to
+  - add reassign operation
+
+* Adding dictionary word transfer
+  - add operations for tranferring words among dictionaries associated with a test
+    including transferring to the 'null' dictionary (ie., trash)
+  - primary dictionary words are prohibited from transfers
+  - add operations for dictionary transfer_word
+
+* Adding intrusion deletion for ranked_word tests
+  - add a delete button beside REY test intrusion entries so that typists
+    can remove accidentally added intrusion fields
+  - add operation to delete a test_entry_ranked_word entry
+
+* Transcription UI improvements
+  - add javascript mouseover and mouseout functions to highlight rows in REY test
+    transcription table
+
+* Adjudication and Transcription UI improvements
+  - add javascript mouseover andmouseout functions to highlight rows in UI tables
+  - clean up interface appearance
+  - fix buggy use of empty/intrusion text input fields
+  - load english and french words when adjudicating or transcribing bilingual data
+
+* Adding supervisor role
+  - add the supervisor role for working with adjudications, reports, tests (list, view),
+    notes, users (list)
+
+* Remove deferral process
+  - removed the deferall process when a typist selects audio_status={unavailable}
+
+* Adding new "collection" feature
+  - collections are arbitrary groups of participant
+  - can be locked so that editing is restricted to a list of specified users only
+  - restrict select reports by collection remains to be implemented
+
+====================================================================================================
+1.0.1
+====================================================================================================
+
+* Incorporate cenozo language restrictions
+  - add operations to edit, list, view languages
+  - add operations to add, edit, delete a user's language restrictions
+  - revamp how ranked word sets are implemented by adding ranked_word_set_has_language table
+  - remove defunct word_*_id columns from the ranked_word_set table
+  - add language_id column to word table
+
+* Performance improvements to word count views
+  - changed the way dictionary views make use of word counts so that the db views
+    could be implmented in sql with fewer joins
+
+* Dropped defunct recording table
+
+====================================================================================================
 1.0.0
 ====================================================================================================
 
@@ -8,7 +69,7 @@
 
 * Adding audio and participant enumerated status
   - audio status refined to unusable, salvageable and unavailable states
-  - participant status includes refusals and interviewer prompting during FAS and AFT tests 
+  - participant status includes refusals and interviewer prompting during FAS and AFT tests
 
 * Event system now tracks when participants are released to services
 
@@ -17,7 +78,7 @@
 ====================================================================================================
 
 * Adding typist breaks
-  - added functionality for typists to take timed breaks and for administrators to 
+  - added functionality for typists to take timed breaks and for administrators to
   manage them
   - added away_time and user_time tables (copied and adapted from sabretooth)
 
@@ -46,7 +107,7 @@
   daughter table level
   - changed test_entry adjudicate column to default to NULL to accomodate tertiary status:
   NULL (never adjudicated), 0 (adjudicated), 1 (requiring adjudication)
- 
+
 * Improved perfomance during assignment creation
   - created a view of sabretooth's recording table
 

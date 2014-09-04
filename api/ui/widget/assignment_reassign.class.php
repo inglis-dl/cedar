@@ -74,11 +74,15 @@ class assignment_reassign extends \cenozo\ui\widget\base_view
     $this->set_item( 'uid', $db_participant->uid, true );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name, true );
 
+    // NOTE: this widget is parented by the assignment_view widget.
+    // The check is made during the parent prepare() method to ensure
+    // at least 2 id's are available to reassign to.
     $user_ids = $db_assignment->get_reassign_user();
-    for( $i = 1; $i <= 2; $i++ )
+    $i = 1;
+    foreach( $user_ids as $id => $value )
     {
-      $db_user = lib::create( 'database\user', $user_ids[ $i-1 ] );
-      $this->set_item( 'user'.$i, $db_user->name, true );
+      $db_user = lib::create( 'database\user', $id );
+      $this->set_item( 'user' . $i++, $db_user->name, true );
     }
   }
 }

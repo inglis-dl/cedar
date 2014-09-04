@@ -18,17 +18,23 @@ class dictionary extends \cenozo\database\record
    * Returns a list of words.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param database\modifier query modifier (default NULL)
    * @return array
    * @static
    * @access public
    */
-  public static function get_word_list_words( $modifier = NULL )
+  public static function get_associative_word_list( $modifier = NULL )
   {
     if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
 
-    return static::db()->get_col( sprintf(
-      'SELECT word FROM word %s',
-      $modifier->get_sql() ) );
+    $data = array();
+    foreach( static::db()->get_all( sprintf(
+      'SELECT id, word FROM word %s',
+      $modifier->get_sql() ) ) as $index => $value )
+    {
+      $data[ $value['id'] ] = $value[ 'word' ];
+    }
+    return $data;
   }
 
   /**
@@ -61,7 +67,6 @@ class dictionary extends \cenozo\database\record
    * Get the test_entry daughter table word usage count for this dictionary.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
    * @return integer
    * @access public
    */

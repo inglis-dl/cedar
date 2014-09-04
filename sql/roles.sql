@@ -134,6 +134,68 @@ SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "push" AND subject = "cohort" AND operation.name = "new"
 AND role.name IN ( "administrator" );
 
+-- collection
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "collection" AND operation.name = "add"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "collection" AND operation.name = "add_participant"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "collection" AND operation.name = "add_user"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "collection" AND operation.name = "delete"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "collection" AND operation.name = "delete_participant"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "collection" AND operation.name = "delete_user"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "collection" AND operation.name = "edit"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "collection" AND operation.name = "list"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "collection" AND operation.name = "new"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "collection" AND operation.name = "new_participant"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "collection" AND operation.name = "new_user"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "collection" AND operation.name = "view"
+AND role.name IN ( "administrator", "supervisor" );
+
 -- dictionary
 
 INSERT INTO role_has_operation( role_id, operation_id )
@@ -697,6 +759,11 @@ INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "push" AND subject = "test_entry_ranked_word" AND operation.name = "new"
 AND role.name IN ( "administrator", "supervisor", "typist" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "test_entry_ranked_word" AND operation.name = "delete"
+AND role.name IN ( "typist" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation

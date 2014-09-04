@@ -42,6 +42,41 @@ class patch
     }
   }
 
+  private static function my_execute( $connection, $sql )
+  {
+    $result = $connection->Execute( $sql );
+    if( false === $result )
+    {
+      out( $connection->ErrorMsg() );
+      out( $sql );
+      die();
+    }
+  }
+
+  private static function my_get_one( $connection, $sql )
+  {
+    $result = $connection->GetOne( $sql );
+    if( false === $result )
+    {
+      out( $connection->ErrorMsg() );
+      out( $sql );
+      die();
+    }
+    return $result;
+  }
+
+  private static function my_get_all( $connection, $sql )
+  {
+    $result = $connection->GetAll( $sql );
+    if( false === $result )
+    {
+      out( $connection->ErrorMsg() );
+      out( $sql );
+      die();
+    }
+    return $result;
+  }
+
   public function execute()
   {
     $error_count = 0;
@@ -100,18 +135,304 @@ class patch
                             $this->settings['db']['username'],
                             $this->settings['db']['password'],
                             $database );
-    if( false == $result )
+    if( false === $result )
     {
       error( 'Unable to connect, quiting' );
       die();
     }
 
-    $total = $db->GetOne(
+    // first do a clean up of empty records
+    // get all the participant's assignments
+    $sql =
+      'SELECT unique_constraint_schema '.
+      'FROM information_schema.referential_constraints '.
+      'WHERE constraint_schema = DATABASE() '.
+      'AND constraint_name = "fk_role_has_operation_role_id"';
+    $cenozo = patch::my_get_one( $db, $sql );
+
+    // remove all records associated with participants having > 2 assignments
+
+    $sql =
+      'CREATE TEMPORARY TABLE tmp AS '.
+      'SELECT id, participant_id FROM ('.
+      'SELECT a.id, a.start_datetime, '.
+      '@rank:= IF( @current_id=a.participant_id, @rank + 1, 1 ) AS rank, '.
+      '@current_id:= a.participant_id AS participant_id '.
+      'FROM assignment a '.
+      'JOIN ( '.
+      'SELECT p.id AS participant_id '.
+      'FROM assignment a '.
+      'JOIN '. $cenozo . '.participant p ON p.id=a.participant_id '.
+      'GROUP BY p.id '.
+      'HAVING COUNT(p.id) > 2 ) AS x '.
+      'ON x.participant_id=a.participant_id '.
+      'ORDER BY a.participant_id, a.start_datetime ) AS y '.
+      'WHERE y.rank > 2';
+    patch::my_execute( $db, $sql );
+
+    $type_names = array( 'ranked_word', 'confirmation', 'alpha_numeric', 'classification' );
+    foreach( $type_names as $type_name )
+    {
+      $table_name = 'test_entry_' . $type_name;
+
+      $sql =
+        'DELETE te.* FROM '. $table_name . ' te '.
+        'JOIN test_entry t ON t.id=te.test_entry_id '.
+        'JOIN tmp ON tmp.id=t.assignment_id';
+      patch::my_execute( $db, $sql );
+    }
+
+    $sql =
+      'DELETE tn.* FROM test_entry_note tn '.
+      'JOIN test_entry t ON t.id=tn.test_entry_id '.
+      'JOIN tmp ON tmp.id=t.assignment_id';
+    patch::my_execute( $db, $sql );
+
+    $sql =
+      'DELETE t.* FROM test_entry t '.
+      'JOIN tmp ON tmp.id=t.assignment_id';
+    patch::my_execute( $db, $sql );
+
+    $sql =
+      'DELETE a.* FROM assignment a '.
+      'JOIN tmp ON tmp.id=a.id';
+    patch::my_execute( $db, $sql );
+
+    $sql = 'DROP TABLE tmp';
+    patch::my_execute( $db, $sql );
+
+    $sql =
+      'CREATE TEMPORARY TABLE assign1 AS '.
+      'SELECT a.id AS assignment_id, p.id AS participant_id '.
+      'FROM ' .  $cenozo . '.participant p '.
+      'JOIN assignment a ON a.participant_id=p.id '.
+      'GROUP BY p.id '.
+      'HAVING COUNT(*)=2';
+    patch::my_execute( $db, $sql );
+    $sql = 'ALTER TABLE assign1 ADD INDEX (assignment_id)';
+    patch::my_execute( $db, $sql );
+
+    $sql =
+      'CREATE TEMPORARY TABLE assign2 AS '.
+      'SELECT a.id AS assignment_id, a.participant_id AS participant_id '.
+      'FROM assignment a '.
+      'JOIN assign1 ON assign1.participant_id=a.participant_id '.
+      'WHERE assign1.assignment_id!=a.id';
+    patch::my_execute( $db, $sql );
+    $sql = 'ALTER TABLE assign2 ADD INDEX (assignment_id)';
+    patch::my_execute( $db, $sql );
+
+    $sql =
+      'INSERT INTO assign1 (assignment_id, participant_id) '.
+      'SELECT assignment_id, participant_id '.
+      'FROM assign2';
+    patch::my_execute( $db, $sql );
+    $sql = 'DROP TABLE assign2';
+    patch::my_execute( $db, $sql );
+
+    $type_names = array( 'alpha_numeric', 'classification' );
+    foreach( $type_names as $type_name )
+    {
+      // locate empty progenitor entries by rank
+      $table_name = 'test_entry_' . $type_name;
+      out( 'working on ' . $table_name . ' records' );
+      $sql =
+        'CREATE TEMPORARY TABLE tmp1 AS '.
+        'SELECT '.
+        'MAX( if(word_id IS NULL, 0 ,te.rank )) AS last_rank, '.
+        'COUNT(te.id) AS max_rank, '.
+        'te.test_entry_id, '.
+        'a.participant_id '.
+        'FROM ' . $table_name . ' te '.
+        'JOIN test_entry t ON t.id=te.test_entry_id '.
+        'JOIN assign1 a ON a.assignment_id=t.assignment_id '.
+        'WHERE completed=1 '.
+        'GROUP BY t.id';
+      patch::my_execute( $db, $sql );
+      $sql = 'ALTER TABLE tmp1 ADD INDEX (participant_id)';
+      patch::my_execute( $db, $sql );
+      $sql = 'UPDATE tmp1 SET last_rank=max_rank WHERE last_rank=0';
+      patch::my_execute( $db, $sql );
+
+      // locate empty adjudicate entries by rank
+      $sql =
+        'CREATE TEMPORARY TABLE tmp2 AS '.
+        'SELECT '.
+        'MAX( if(word_id IS NULL, 0, te.rank)) AS last_rank, '.
+        'COUNT(te.id) AS max_rank, '.
+        'te.test_entry_id, '.
+        't.participant_id '.
+        'FROM ' . $table_name . ' te '.
+        'JOIN test_entry t ON t.id=te.test_entry_id '.
+        'JOIN (SELECT distinct participant_id FROM tmp1 ) x '.
+        'ON x.participant_id=t.participant_id '.
+        'GROUP BY t.id';
+      patch::my_execute( $db, $sql );
+      $sql = 'ALTER TABLE tmp2 ADD INDEX (participant_id)';
+      patch::my_execute( $db, $sql );
+      $sql = 'UPDATE tmp2 SET last_rank=max_rank WHERE last_rank=0';
+      patch::my_execute( $db, $sql );
+      $sql =
+        'INSERT INTO tmp1 (last_rank, max_rank, test_entry_id, participant_id) '.
+        'SELECT last_rank, max_rank, test_entry_id, participant_id FROM tmp2';
+      patch::my_execute( $db, $sql );
+      $sql = 'DROP TABLE tmp2';
+      patch::my_execute( $db, $sql );
+      $sql =
+        'DELETE te.* '.
+        'FROM ' . $table_name . ' AS te '.
+        'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+        'WHERE te.rank > tmp1.last_rank';
+      patch::my_execute( $db, $sql );
+
+      // trim records with audio_status ={unavailable, unusable} or participant_status={refused}
+      // leave 1 empty entry in case the record is deferred
+      $sql_pre =
+        'DELETE te.* '.
+        'FROM ' . $table_name . ' AS te '.
+        'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+        'JOIN test_entry t ON t.id=tmp1.test_entry_id '.
+        'WHERE te.rank>1 ';
+
+      $sql = $sql_pre .
+        'AND t.audio_status IN ("unavailable","unusable")';
+      patch::my_execute( $db, $sql );
+      $sql = $sql_pre .
+        'AND t.participant_status IN ("refused")';
+      patch::my_execute( $db, $sql );
+      $sql = 'DROP TABLE tmp1';
+      patch::my_execute( $db, $sql );
+    }
+
+    out( 'working on test_entry_ranked_word records' );
+
+    // test_entry_ranked_word entries require different handling: no rank column
+    $sql =
+      'CREATE TEMPORARY TABLE tmp1 AS '.
+      'SELECT '.
+      'MIN(te.id) AS first_id, '.
+      'MAX(te.id) AS last_id, '.
+      'te.test_entry_id, '.
+      'a.participant_id '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN test_entry t ON t.id=te.test_entry_id '.
+      'JOIN assign1 a ON a.assignment_id=t.assignment_id '.
+      'WHERE completed=1 '.
+      'AND word_id IS NULL '.
+      'AND ranked_word_set_id IS NULL '.
+      'GROUP BY t.id';
+    patch::my_execute( $db, $sql );
+    $sql = 'ALTER TABLE tmp1 ADD INDEX (participant_id)';
+    patch::my_execute( $db, $sql );
+
+    // delete empty intrusions
+    $sql =
+      'DELETE te.* '.
+      'FROM test_entry_ranked_word AS te '.
+      'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+      'WHERE te.id BETWEEN tmp1.first_id AND tmp1.last_id '.
+      'AND te.test_entry_id=tmp1.test_entry_id ';
+    patch::my_execute( $db, $sql );
+
+    $sql =
+      'CREATE TEMPORARY TABLE tmp2 AS '.
+      'SELECT '.
+      'MAX(x.id_count) AS min_count, x.participant_id FROM ( '.
+      'SELECT '.
+      'COUNT(te.id) AS id_count, '.
+      'a.assignment_id, '.
+      'a.participant_id '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN test_entry t ON t.id=te.test_entry_id '.
+      'JOIN assign1 a ON a.assignment_id=t.assignment_id '.
+      'WHERE completed=1 '.
+      'GROUP BY t.id ) AS x '.
+      'GROUP BY x.participant_id';
+    patch::my_execute( $db, $sql );
+    $sql =  'ALTER TABLE tmp2 ADD INDEX (participant_id)';
+    patch::my_execute( $db, $sql );
+
+    $sql =
+      'CREATE TEMPORARY TABLE tmp3 AS '.
+      'SELECT '.
+      'COUNT(te.id) - tmp2.min_count AS count, '.
+      'te.test_entry_id, '.
+      'tmp2.participant_id '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN test_entry t ON t.id=te.test_entry_id '.
+      'JOIN tmp2 ON tmp2.participant_id=t.participant_id '.
+      'WHERE completed=1 '.
+      'GROUP BY t.id';
+    patch::my_execute( $db, $sql );
+    $sql = 'ALTER TABLE tmp3 ADD INDEX (test_entry_id)';
+    patch::my_execute( $db, $sql );
+
+    $rows = $db->GetAll(
+      'SELECT id, te.test_entry_id, count '.
+      'FROM test_entry_ranked_word te '.
+      'JOIN tmp3 ON tmp3.test_entry_id=te.test_entry_id '.
+      'WHERE count>0 '.
+      'ORDER BY test_entry_id DESC, id DESC' );
+
+    if( count( $rows ) > 0 )
+    {
+      $current_count = 0;
+      $current_test_entry_id = 0;
+      $sql =
+        'DELETE FROM test_entry_ranked_word WHERE id IN ( ';
+      foreach( $rows as $index => $row )
+      {
+        $id = $row['id'];
+        $test_entry_id = $row['test_entry_id'];
+        $count = $row['count'];
+
+        if( $current_test_entry_id != $test_entry_id )
+        {
+           $current_test_entry_id = $test_entry_id;
+           $current_count=0;
+        }
+        if( $current_count != $count )
+        {
+           $sql = $sql . sprintf( '%d, ', $id );
+           $current_count++;
+        }
+      }
+      $sql = substr( $sql, 0, strrpos( $sql, ',' ) );
+      $sql = $sql . ' )';
+      patch::my_execute( $db, $sql );
+    }
+
+    $sql_pre =
+      'DELETE te.* '.
+      'FROM test_entry_ranked_word AS te '.
+      'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+      'JOIN test_entry t ON t.id=tmp1.test_entry_id '.
+      'WHERE te.ranked_word_set_id IS NULL ';
+    $sql = $sql_pre .
+      'AND audio_status IN ("unavailable","unusable")';
+    patch::my_execute( $db, $sql );
+    $sql = $sql_pre .
+      'AND participant_status IN ("refused")';
+    patch::my_execute( $db, $sql );
+    $sql = 'DROP TABLE tmp3';
+    patch::my_execute( $db, $sql );
+    $sql = 'DROP TABLE tmp2';
+    patch::my_execute( $db, $sql );
+    $sql = 'DROP TABLE tmp1';
+    patch::my_execute( $db, $sql );
+    $sql = 'DROP TABLE assign1';
+    patch::my_execute( $db, $sql );
+
+    out( 'finished cleaning' );
+
+    // process assignments
+
+    $sql =
       'SELECT COUNT(*) FROM assignment_total atot ' .
       'JOIN assignment a ON atot.assignment_id=a.id '.
       'WHERE atot.deferred=0 '.
-      'AND atot.completed=6'
-      );
+      'AND atot.completed=6';
+    $total = patch::my_get_one( $db, $sql );
 
     out( sprintf( 'Processing %d assignments', $total ) );
     $base = 0;
@@ -124,39 +445,41 @@ class patch
 
     while( $base < $total )
     {
-      $rows = $db->GetAll( sprintf(
-      'SELECT assignment_id AS id, IF( IFNULL( a.end_datetime, 0 ) != 0, 1, 0) AS closed '.
-      'FROM assignment_total atot ' .
-      'JOIN assignment a ON a.id=atot.assignment_id '.
-      'WHERE atot.deferred = 0 '.
-      'AND atot.completed = 6 '.
-      'ORDER BY id LIMIT %d, %d', $base, $increment ) );
-
+      $sql = sprintf(
+        'SELECT assignment_id AS id, IF( IFNULL( a.end_datetime, 0 ) != 0, 1, 0) AS closed '.
+        'FROM assignment_total atot ' .
+        'JOIN assignment a ON a.id=atot.assignment_id '.
+        'WHERE atot.deferred = 0 '.
+        'AND atot.completed = 6 '.
+        'ORDER BY id LIMIT %d, %d', $base, $increment );
+      $rows = patch::my_get_all( $db, $sql );
       foreach( $rows as $index => $row )
       {
         $a1_id = $row['id'];
         if( in_array( $a1_id, $assignment_id_cache ) ) continue;
 
         // get the sibling assignment
-        $p_id = $db->GetOne( sprintf(
+        $sql = sprintf(
          'SELECT participant_id FROM assignment '.
-         'WHERE id = %d', $a1_id ) );
+         'WHERE id = %d', $a1_id );
+        $p_id = patch::my_get_one( $db, $sql );
 
-        if( $p_id != 2181 ) continue; 
-        $a2_id = $db->GetOne( sprintf(
+        $sql = sprintf(
          'SELECT id FROM assignment '.
          'WHERE id != %d '.
-         'AND participant_id=%d', $a1_id, $p_id ) );
+         'AND participant_id=%d', $a1_id, $p_id );
+        $a2_id = patch::my_get_one( $db, $sql );
 
         if( is_null( $a2_id) || in_array( $a2_id, $assignment_id_cache ) ) continue;
 
-        $a2_closed = $db->GetOne( sprintf(
+        $sql = sprintf(
          'SELECT IF( IFNULL( end_datetime, 0 ) != 0, 1, 0) FROM assignment '.
-         'WHERE id = %d ', $a2_id ) );
+         'WHERE id = %d ', $a2_id );
+        $a2_closed = patch::my_get_one( $db, $sql );
         $a1_closed = $row['closed'];
 
         // get all the test entries
-        $tests = $db->GetAll( sprintf(
+        $sql = sprintf(
           'SELECT te.id, te.test_id, te.assignment_id, tt.name, '.
           'IFNULL(te.adjudicate, -1) AS adjudicate, '.
           'IFNULL( te.audio_status, "NULL") AS audio_status, '.
@@ -165,8 +488,9 @@ class patch
           'JOIN test t ON t.id = te.test_id '.
           'JOIN test_type tt ON tt.id = t.test_type_id '.
           'WHERE assignment_id IN ( %d, %d ) '.
-          'ORDER BY te.test_id, te.assignment_id', $a1_id, $a2_id ) );
-        if( count($tests) != 12 )
+          'ORDER BY te.test_id, te.assignment_id', $a1_id, $a2_id );
+        $tests = patch::my_get_all( $db, $sql );
+        if( 12 != count($tests) )
         {
           error( sprintf( 'Not enough tests for assignment ids %d %d', $a1_id, $a2_id ) );
           die();
@@ -184,13 +508,14 @@ class patch
           $test_id = $t1['test_id'];
 
           // get any adjudication entries for the test and participant
-          $adjudicates = $db->GetAll( sprintf(
+          $sql = sprintf(
             'SELECT id, completed, update_timestamp, IFNULL(adjudicate, -1) AS adjudicate, '.
             'IFNULL( audio_status, "NULL") AS audio_status, '.
             'IFNULL(participant_status, "NULL") AS participant_status '.
             'FROM test_entry '.
             'WHERE participant_id = %d '.
-            'AND test_id = %d ORDER BY update_timestamp DESC', $p_id, $test_id ) );
+            'AND test_id = %d ORDER BY update_timestamp DESC', $p_id, $test_id );
+          $adjudicates = patch::my_get_all( $db, $sql );
           $adjudicate_num = count( $adjudicates );
           if( $adjudicate_num > 1 )
           {
@@ -198,10 +523,12 @@ class patch
               $adjudicate_num, $test_id, $type ) );
             for( $j = 1; $j < $adjudicate_num; $j++ )
             {
-              $db->Execute( sprintf(
-                'DELETE FROM test_entry_%s WHERE test_entry_id=%d', $type, $adjudicates[$j]['id'] ) );
-              $db->Execute( sprintf(
-                'DELETE FROM test_entry WHERE id=%d', $adjudicates[$j]['id'] ) );
+              $sql = sprintf(
+                'DELETE FROM test_entry_%s WHERE test_entry_id=%d', $type, $adjudicates[$j]['id'] );
+              patch::my_execute( $db, $sql );
+              $sql = sprintf(
+                'DELETE FROM test_entry WHERE id=%d', $adjudicates[$j]['id'] );
+              patch::my_execute( $db, $sql );
               $adjudicate_delete_count++;
             }
           }
@@ -214,65 +541,65 @@ class patch
           $match = true;
           if( $t1['audio_status'] != $t2['audio_status'] || $t1['participant_status'] != $t2['participant_status'] )
           {
-            $match = false;            
+            $match = false;
           }
           else
           {
             // check if the entries for the current test are different
             if( $type == 'classification' || $type == 'alpha_numeric' )
             {
-              $sql_match = sprintf(
-              'SELECT COUNT(*) FROM ( '.
-              'SELECT rank, word_id FROM ( '.
-              'SELECT t1.rank, t1.word_id FROM test_entry_%s t1 '.
-              'WHERE t1.test_entry_id = %d '.
-              'UNION ALL '.
-              'SELECT t2.rank, t2.word_id FROM test_entry_%s t2 '.
-              'WHERE t2.test_entry_id = %d ) AS tmp '.
-              'GROUP BY rank, word_id HAVING COUNT(*) = 1 ) AS tmp', $type, $t1['id'], $type, $t2['id'] );
-              $match = 0 == $db->GetOne( $sql_match );
+              $sql = sprintf(
+                'SELECT COUNT(*) FROM ( '.
+                'SELECT rank, word_id FROM ( '.
+                'SELECT t1.rank, t1.word_id FROM test_entry_%s t1 '.
+                'WHERE t1.test_entry_id = %d '.
+                'UNION ALL '.
+                'SELECT t2.rank, t2.word_id FROM test_entry_%s t2 '.
+                'WHERE t2.test_entry_id = %d ) AS tmp '.
+                'GROUP BY rank, word_id HAVING COUNT(*) = 1 ) AS tmp', $type, $t1['id'], $type, $t2['id'] );
+              $match = 0 == patch::my_get_one( $db, $sql );
             }
             else if( $type == 'confirmation' )
             {
-              $sql_match = sprintf(
-              'SELECT COUNT(*) FROM ( '.
-              'SELECT confirmation FROM ( '.
-              'SELECT t1.confirmation FROM test_entry_confirmation t1 '.
-              'WHERE t1.test_entry_id = %d '.
-              'UNION ALL '.
-              'SELECT t2.confirmation FROM test_entry_confirmation t2 '.
-              'WHERE t2.test_entry_id = %d ) AS tmp '.
-              'GROUP BY confirmation HAVING COUNT(*) = 1 ) AS tmp', $t1['id'], $t2['id'] );
-              $match = 0 == $db->GetOne( $sql_match );
+              $sql = sprintf(
+                'SELECT COUNT(*) FROM ( '.
+                'SELECT confirmation FROM ( '.
+                'SELECT t1.confirmation FROM test_entry_confirmation t1 '.
+                'WHERE t1.test_entry_id = %d '.
+                'UNION ALL '.
+                'SELECT t2.confirmation FROM test_entry_confirmation t2 '.
+                'WHERE t2.test_entry_id = %d ) AS tmp '.
+                'GROUP BY confirmation HAVING COUNT(*) = 1 ) AS tmp', $t1['id'], $t2['id'] );
+              $match = 0 == patch::my_get_one( $db, $sql );
             }
             else if( $type == 'ranked_word' )
             {
-              $sql_match = sprintf(
-              'SELECT COUNT(*) FROM ( '.
-              'SELECT ranked_word_set_id, word_id, selection FROM ( '.
-              'SELECT t1.ranked_word_set_id, t1.word_id, t1.selection FROM test_entry_ranked_word t1 '.
-              'WHERE t1.test_entry_id = %d '.
-              'AND t1.selection IS NOT NULL '.
-              'UNION ALL '.
-              'SELECT t2.ranked_word_set_id, t2.word_id, t2.selection FROM test_entry_ranked_word t2 '.
-              'WHERE t2.test_entry_id = %d '.
-              'AND t2.selection IS NOT NULL ) AS tmp '.
-              'GROUP BY ranked_word_set_id, word_id, selection HAVING COUNT(*) = 1 ) AS tmp', $t1['id'], $t2['id'] );
-              $match = 0 == $db->GetOne( $sql_match );
+              $sql = sprintf(
+                'SELECT COUNT(*) FROM ( '.
+                'SELECT ranked_word_set_id, word_id, selection FROM ( '.
+                'SELECT t1.ranked_word_set_id, t1.word_id, t1.selection FROM test_entry_ranked_word t1 '.
+                'WHERE t1.test_entry_id = %d '.
+                'AND t1.selection IS NOT NULL '.
+                'UNION ALL '.
+                'SELECT t2.ranked_word_set_id, t2.word_id, t2.selection FROM test_entry_ranked_word t2 '.
+                'WHERE t2.test_entry_id = %d '.
+                'AND t2.selection IS NOT NULL ) AS tmp '.
+                'GROUP BY ranked_word_set_id, word_id, selection HAVING COUNT(*) = 1 ) AS tmp', $t1['id'], $t2['id'] );
+              $match = 0 == patch::my_get_one( $db, $sql );
               if( $match )
               {
-                $sql_match = sprintf(
-                'SELECT COUNT(*) FROM ( '.
-                'SELECT word_id FROM ( '.
-                'SELECT t1.word_id FROM test_entry_ranked_word t1 '.
-                'WHERE t1.test_entry_id = %d '.
-                'AND t1.ranked_word_set_id IS NULL '.
-                'UNION ALL '.
-                'SELECT t2.word_id FROM test_entry_ranked_word t2 '.
-                'WHERE t2.test_entry_id = %d '.
-                'AND t2.ranked_word_set_id IS NULL ) AS tmp '.
-                'GROUP BY word_id HAVING COUNT(*) = 1 ) AS tmp', $t1['id'], $t2['id'] );
-                $match = 0 == $db->GetOne( $sql_match );
+                $sql = sprintf(
+                  'SELECT COUNT(*) FROM ( '.
+                  'SELECT word_id FROM ( '.
+                  'SELECT t1.word_id FROM test_entry_ranked_word t1 '.
+                  'WHERE t1.test_entry_id = %d '.
+                  'AND t1.ranked_word_set_id IS NULL '.
+                  'UNION ALL '.
+                  'SELECT t2.word_id FROM test_entry_ranked_word t2 '.
+                  'WHERE t2.test_entry_id = %d '.
+                  'AND t2.ranked_word_set_id IS NULL ) AS tmp '.
+                  'GROUP BY word_id HAVING COUNT(*) = 1 ) AS tmp', $t1['id'], $t2['id'] );
+                $match = 0 == patch::my_get_one( $db, $sql );
               }
             }
           }
@@ -282,23 +609,27 @@ class patch
             // remove erroneous adjudicate entries
             if( !is_null( $adj_id ) )
             {
-              $db->Execute( sprintf(
-                'DELETE FROM test_entry_%s WHERE test_entry_id = %d', $type, $adj_id ) );
-              $db->Execute( sprintf(
-                'DELETE FROM test_entry WHERE id = %d', $adj_id ) );
+              $sql = sprintf(
+                'DELETE FROM test_entry_%s WHERE test_entry_id = %d', $type, $adj_id );
+              patch::my_execute( $db, $sql );
+              $sql = sprintf(
+                'DELETE FROM test_entry WHERE id = %d', $adj_id );
+               patch::my_execute( $db, $sql );
               $adjudicate_delete_count++;
             }
             // ensure the adjudicate status is correctly set
             if( -1 != $t1['adjudicate'] )
             {
-              $db->Execute( sprintf(
-                'UPDATE test_entry SET adjudicate = NULL WHERE id = %d', $t1['id'] ) );
+              $sql = sprintf(
+                'UPDATE test_entry SET adjudicate = NULL WHERE id = %d', $t1['id'] );
+              patch::my_execute( $db, $sql );
               $test_entry_modify_count++;
             }
             if( -1 != $t2['adjudicate'] )
             {
-              $db->Execute( sprintf(
-                'UPDATE test_entry SET adjudicate = NULL WHERE id = %d', $t2['id'] ) );
+              $sql = sprintf(
+                'UPDATE test_entry SET adjudicate = NULL WHERE id = %d', $t2['id'] );
+              patch::my_execute( $db, $sql );
               $test_entry_modify_count++;
             }
           }
@@ -310,14 +641,16 @@ class patch
               // set the adjudicate status of the test_entries to 1
               if( 1 != $t1['adjudicate'] )
               {
-                $db->Execute( sprintf(
-                  'UPDATE test_entry SET adjudicate = 1 WHERE id = %d', $t1['id'] ) );
+                $sql = sprintf(
+                  'UPDATE test_entry SET adjudicate = 1 WHERE id = %d', $t1['id'] );
+                patch::my_execute( $db, $sql );
                 $test_entry_modify_count++;
               }
               if( 1 != $t2['adjudicate'] )
               {
-                $db->Execute( sprintf(
-                  'UPDATE test_entry SET adjudicate = 1 WHERE id = %d', $t2['id'] ) );
+                $sql = sprintf(
+                  'UPDATE test_entry SET adjudicate = 1 WHERE id = %d', $t2['id'] );
+                patch::my_execute( $db, $sql );
                 $test_entry_modify_count++;
               }
               $adjudicate_assignment = true;
@@ -325,18 +658,20 @@ class patch
             else
             {
               if( !is_null( $adj_id ) &&  1 == $adj_completed )
-              {              
+              {
                 // set the adjudicate status of the test_entries to 0
                 if( 0 != $t1['adjudicate'] )
                 {
-                  $db->Execute( sprintf(
-                    'UPDATE test_entry SET adjudicate = 0 WHERE id = %d', $t1['id'] ) );
+                  $sql = sprintf(
+                    'UPDATE test_entry SET adjudicate = 0 WHERE id = %d', $t1['id'] );
+                  patch::my_execute( $db, $sql );
                   $test_entry_modify_count++;
                 }
                 if( 0 != $t2['adjudicate'] )
                 {
-                  $db->Execute( sprintf(
-                    'UPDATE test_entry SET adjudicate = 0 WHERE id = %d', $t2['id'] ) );
+                  $sql = sprintf(
+                    'UPDATE test_entry SET adjudicate = 0 WHERE id = %d', $t2['id'] );
+                  patch::my_execute( $db, $sql );
                   $test_entry_modify_count++;
                 }
               }
@@ -350,26 +685,30 @@ class patch
         {
           if( !$a1_closed )
           {
-            $result = $db->GetAll( sprintf(
+            $sql = sprintf(
               'SELECT update_timestamp FROM test_entry '.
               'WHERE assignment_id = %d OR participant_id = %d '.
-              'ORDER BY update_timestamp DESC LIMIT 1', $a1_id, $p_id ) );
-            $end_datetime = $result[0]['update_timestamp'];  
- 
-            $db->Execute( sprintf(
-              'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a1_id ) );
+              'ORDER BY update_timestamp DESC LIMIT 1', $a1_id, $p_id );
+            $result = patch::my_get_all( $db, $sql );
+            $end_datetime = $result[0]['update_timestamp'];
+
+            $sql = sprintf(
+              'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a1_id );
+            patch::my_execute( $db, $sql );
             $assignment_closed_count++;
           }
           if( !$a2_closed )
           {
-            $result = $db->GetAll( sprintf(
+            $sql = sprintf(
               'SELECT update_timestamp FROM test_entry '.
               'WHERE assignment_id = %d OR participant_id = %d '.
-              'ORDER BY update_timestamp DESC LIMIT 1', $a2_id, $p_id ) );
-            $end_datetime = $result[0]['update_timestamp'];  
+              'ORDER BY update_timestamp DESC LIMIT 1', $a2_id, $p_id );
+            $result = patch::my_get_all( $db, $sql );
+            $end_datetime = $result[0]['update_timestamp'];
 
-            $db->Execute( sprintf(
-              'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a2_id ) );
+            $sql = sprintf(
+              'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a2_id );
+            patch::my_execute( $db, $sql );
             $assignment_closed_count++;
           }
         }
@@ -378,9 +717,10 @@ class patch
           // open assignments if there is a mismatch but no adjudicate test_entry
           if( $adjudicate_assignment )
           {
-            $db->Execute( sprintf(
+            $sql = sprintf(
               'UPDATE assignment SET end_datetime = NULL '.
-              'WHERE id IN (%d, %d)', $a1_id, $a2_id ) );
+              'WHERE id IN (%d, %d)', $a1_id, $a2_id );
+            patch::my_execute( $db, $sql );
             if( $a1_closed ) $assignment_open_count++;
             if( $a2_closed ) $assignment_open_count++;
           }
@@ -389,26 +729,30 @@ class patch
             // there is an adjudicate, close the assignments if necessary
             if( !$a1_closed )
             {
-              $result = $db->GetAll( sprintf(
+              $sql = sprintf(
                 'SELECT update_timestamp FROM test_entry '.
                 'WHERE assignment_id = %d OR participant_id = %d '.
-                'ORDER BY update_timestamp DESC LIMIT 1', $a1_id, $p_id ) );
-              $end_datetime = $result[0]['update_timestamp'];  
+                'ORDER BY update_timestamp DESC LIMIT 1', $a1_id, $p_id );
+              $result = patch::my_get_all( $db, $sql );
+              $end_datetime = $result[0]['update_timestamp'];
 
-              $db->Execute( sprintf(
-                'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a1_id ) );
+              $sql = sprintf(
+                'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a1_id );
+              patch::my_execute( $db, $sql );
               $assignment_closed_count++;
             }
             if( !$a2_closed )
             {
-              $result = $db->GetAll( sprintf(
+              $sql = sprintf(
                 'SELECT update_timestamp FROM test_entry '.
                 'WHERE assignment_id = %d OR participant_id = %d '.
-                'ORDER BY update_timestamp DESC LIMIT 1', $a2_id, $p_id ) );
+                'ORDER BY update_timestamp DESC LIMIT 1', $a2_id, $p_id );
+              $result = patch::my_get_all( $db, $sql );
               $end_datetime = $result[0]['update_timestamp'];
 
-              $db->Execute( sprintf(
-                'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a2_id ) );
+              $sql = sprintf(
+                'UPDATE assignment SET end_datetime = "%s" WHERE id = %d', $end_datetime, $a2_id );
+              patch::my_execute( $db, $sql );
               $assignment_closed_count++;
             }
           }
