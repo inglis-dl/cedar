@@ -101,6 +101,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
         $db_test = $db_test_entry->get_test();
         $db_language = NULL;
         $language_list = $db_user->get_language_list();
+        if( !is_array( $language_list ) || is_null( $language_list ) ) $language_list = array();
         if( 0 == count( $language_list ) )
         {
           $language_list[] = $session->get_service()->get_language();
