@@ -26,6 +26,9 @@ $SETTINGS['sabretooth']['role'] = 'cedar';
 // the default number of classification test entry inputs
 $SETTINGS['interface']['classification_max_rank'] = 40;
 
+// the default number of alpha_numeric test entry inputs
+$SETTINGS['interface']['alpha_numeric_max_rank'] = 60;
+
 // the url of sabretooth (set to NULL to disable sabretooth support)
 $SETTINGS['url']['SABRETOOTH'] = NULL;
 

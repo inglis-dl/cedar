@@ -365,12 +365,8 @@ class test_entry extends \cenozo\database\has_note
     }
     else if( $test_type_name == 'alpha_numeric' )
     {
-      /*
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'language_id', '=', $db_language->id );
-      $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
-      */
-      $max_rank = 40;
+      $setting_manager = lib::create( 'business\setting_manager' );
+      $max_rank = $setting_manager->get_setting( 'interface', 'alpha_numeric_max_rank' );
       for( $rank = 1; $rank <= $max_rank; $rank++ )
       {
         $db_test_entry_alpha_numeric = lib::create( 'database\\'. $entry_class_name );
