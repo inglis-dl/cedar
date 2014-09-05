@@ -97,12 +97,12 @@
 
     function update_input_list() {
 
-      $( table_selector + " input:text" ).keypress(function(event){
-        var keycode = (event.keyCode ? event.keyCode : event.which);
+      $( table_selector + " input:text" ).keypress( function( event ) {
+        var keycode = event.keyCode ? event.keyCode : event.which;
         if( 13 == keycode && $(this).autocomplete('widget').is(':visible') ) {
           $(this).autocomplete('close');
         }
-      }).autocomplete( {
+      } ).autocomplete( {
         source: get_text_complete(),
         minLength: 1,
         delay: 0,
