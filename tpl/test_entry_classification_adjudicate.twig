@@ -158,9 +158,15 @@
 
       } );// end radio input change and click
 
-      $( table_selector + ' input:text[id$="adjudicate"]' ).autocomplete( {
+      $( table_selector + ' input:text[id$="adjudicate"]' ).keypress( function( event ) {
+        var keycode = event.keyCode ? event.keyCode : event.which;
+        if( 13 == keycode && $(this).autocomplete('widget').is(':visible') ) {
+          $(this).autocomplete('close');
+        }
+      } ).autocomplete( {
         source: get_text_complete(),
         minLength: 1,
+        delay: 0,
         select: function( event, ui ) {
           $(this).val( ui.item.label );
           $(this).attr( "value", ui.item.label );

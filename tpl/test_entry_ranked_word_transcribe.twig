@@ -127,9 +127,15 @@
 
     function update_input_list() {
 
-      $( table_selector + ' input:text[id$="candidate"]' ).autocomplete( {
+      $( table_selector + ' input:text[id$="candidate"]' ).keypress( function( event ) {
+        var keycode = event.keyCode ? event.keyCode : event.which;
+        if( 13 == keycode && $(this).autocomplete('widget').is(':visible') ) {
+          $(this).autocomplete('close');
+        }
+      } ).autocomplete( {
         source: get_variant_text_complete(),
         minLength: 1,
+        delay: 0,
         select: function( event, ui ) {
           $(this).val( ui.item.label );
           $(this).attr( "value", ui.item.label );
@@ -155,9 +161,15 @@
         }
       } );
 
-      $( table_selector + ' input:text[id$="intrusion"]' ).autocomplete( {
+      $( table_selector + ' input:text[id$="intrusion"]' ).keypress( function( event ) {
+        var keycode = event.keyCode ? event.keyCode : event.which;
+        if( 13 == keycode && $(this).autocomplete('widget').is(':visible') ) {
+          $(this).autocomplete('close');
+        }
+      } ).autocomplete( {
         source: get_intrusion_text_complete(),
         minLength: 1,
+        delay: 0,
         select: function( event, ui ) {
           $(this).val( ui.item.label );
           $(this).attr( "value", ui.item.label );
