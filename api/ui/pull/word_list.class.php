@@ -54,6 +54,7 @@ class word_list extends \cenozo\ui\pull
       $language_list = $db_user->get_language_list();
       if( is_null( $language_list ) )
       {
+        $language_list = array();
         $language_list[] = lib::create( 'business\session' )->get_service()->get_language();
       }
     }
