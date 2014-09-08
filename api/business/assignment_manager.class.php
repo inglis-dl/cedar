@@ -354,7 +354,7 @@ class assignment_manager extends \cenozo\singleton
     $test_type_name = $db_test->get_test_type()->name;
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
 
-    if( $db_test_entry->adjudicate != true ||
+    if( is_null( $db_test_entry->adjudicate ) ||
        !$db_test_entry->completed ||
         $db_test_entry->deferred )
       throw lib::create( 'exception\runtime', 'Invalid test entry', __METHOD__ );
@@ -397,7 +397,7 @@ class assignment_manager extends \cenozo\singleton
     $participant_status_list = array_reverse( $participant_status_list, true );
 
     // only classification tests (FAS and AFT) require prompt status
-    if( $test_type_name != 'classification' )
+    if( 'classification' != $test_type_name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
@@ -436,7 +436,7 @@ class assignment_manager extends \cenozo\singleton
 
     $entry_data = array();
 
-    if( $test_type_name == 'confirmation' )
+    if( 'confirmation' == $test_type_name )
     {
       $obj_list = array(
         current( $db_test_entry->$get_list_function() ),
@@ -471,7 +471,7 @@ class assignment_manager extends \cenozo\singleton
                $db_test->variant_dictionary_id ),
         array( 'primary', 'intrusion', 'variant' ) );
 
-      if( $test_type_name == 'alpha_numeric' || $test_type_name == 'classification' )
+      if( 'alpha_numeric' == $test_type_name || 'classification' == $test_type_name )
       {
         $modifier = lib::create( 'database\modifier' );
         $modifier->order( 'rank' );
@@ -616,7 +616,7 @@ class assignment_manager extends \cenozo\singleton
           next( $c );
         }
       }
-      else if( $test_type_name == 'ranked_word' )
+      else if( 'ranked_word' == $test_type_name )
       {
         $db_language = $db_test_entry->get_assignment()->get_participant()->get_language();
         if( is_null( $db_language ) )
