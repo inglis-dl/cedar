@@ -44,7 +44,10 @@
           if( 0 == $(this).val().length ) numEmptyIntrusion++;
         } );
 
-        var has_null_status =
+        var complete_status =
+          "unavailable" == "{{ audio_status }}" || "unusable" == "{{ audio_status }}" ||
+          "refused" == "{{ participant_status }}";
+        var null_status =
           'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         // count number of items with value "yes"
@@ -54,17 +57,16 @@
 
         // disable the next and add buttons if the ranked word entries are incomplete
         // or if there are empty intrusion fields
-        var disable = ( ( numYes + numNo + numVariant ) != numRadio && has_null_status ) ||
+        var disable = (( numYes + numNo + numVariant ) != numRadio && !complete_status ) ||
                       0 != numEmptyIntrusion;
         $( "#{{ parent.full }}_next" ).button( { disabled : disable } );
         $( "#{{ widget.full }}_add" ).button( { disabled : disable } );
 
         // disable the reset button if there is nothing to reset
         $( "#{{ parent.full }}_reset" ).button(
-          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant && has_null_status } );
+          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant && null_status } );
 
-        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
-            'refused' == "{{ participant_status }}" ) {
+        if( complete_status ) {
           $( table_selector + " input" ).each( function() {
             $(this).prop( "disabled", true );
           } );
