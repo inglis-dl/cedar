@@ -238,8 +238,9 @@ class assignment_manager extends \cenozo\singleton
             {
               // delete test_entry daughter record(s)
               $sql = sprintf(
-                'DELETE FROM test_entry_'. $db_test->get_test_type()->name .
-                ' WHERE test_entry_id = %s',
+                'DELETE FROM test_entry_%s '.
+                'WHERE test_entry_id = %s',
+                $db_test->get_test_type()->name,
                 $database_class_name::format_string( $db_adjudicate_test_entry->id ) );
 
               $test_entry_class_name::db()->execute( $sql );
