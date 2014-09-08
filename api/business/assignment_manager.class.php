@@ -363,7 +363,7 @@ class assignment_manager extends \cenozo\singleton
     $db_assignment = $db_test_entry->get_assignment();
     $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
 
-    if( is_null( $db_sibling_test_entry ) || $db_sibling_test_entry->adjudicate != true ||
+    if( is_null( $db_sibling_test_entry ) || is_null( $db_sibling_test_entry->adjudicate ) ||
         !$db_sibling_test_entry->completed || $db_sibling_test_entry->deferred )
       throw lib::create( 'exception\runtime', 'Invalid sibling test entry', __METHOD__ );
 
