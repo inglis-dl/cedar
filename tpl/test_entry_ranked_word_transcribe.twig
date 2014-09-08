@@ -203,6 +203,7 @@
           var haystack = $(this).autocomplete("option").source;
           for(var i in haystack) {
             if( needle === haystack[i].label ) {
+              $(this).val( $(this).attr( "value" ) );
               return false;
             }
           }
@@ -216,7 +217,6 @@
         $(this).removeClass( "candidate primary intrusion variant" );
         if( 0 == candidate.length ) {
           alert( "Blank entries are not permitted" );
-          configure_ui();
           $(this).focus();
           return false;
         }
