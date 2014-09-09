@@ -260,6 +260,7 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
     $modifier->where( 'user_has_language.language_id', 'IN', $service_language_list );
+    $modifier->where( 'user.active', '=', true );
     $modifier->group( 'user.id' );
     $modifier->having( 'COUNT( user.id )', '=', $num_language );
 
