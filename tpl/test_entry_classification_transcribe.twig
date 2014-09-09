@@ -109,8 +109,9 @@
 
       $( table_selector + " input:text" ).keypress( function( event ) {
         var keycode = event.keyCode ? event.keyCode : event.which;
-        if( 13 == keycode && $(this).autocomplete('widget').is(':visible') ) {
+        if( ( 13 == keycode || 9 == keycode ) && $(this).autocomplete('widget').is(':visible') ) {
           $(this).autocomplete('close');
+          return false;
         }
       } ).autocomplete( {
         source: get_text_complete(),
@@ -137,10 +138,10 @@
             }
           }
           if( null === key ) return false;
+
           $(this).trigger( "change",  [ key ]  );
         }
       } ).change( function(event, obj) {
-
         // addresses focus event calling change
         if( undefined === obj ) {
           var needle = $(this).val();

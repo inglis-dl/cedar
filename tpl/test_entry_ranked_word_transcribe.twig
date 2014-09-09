@@ -131,8 +131,9 @@
 
       $( table_selector + ' input:text[id$="candidate"]' ).keypress( function( event ) {
         var keycode = event.keyCode ? event.keyCode : event.which;
-        if( 13 == keycode && $(this).autocomplete('widget').is(':visible') ) {
+        if( ( 13 == keycode || 9 == keycode ) && $(this).autocomplete('widget').is(':visible') ) {
           $(this).autocomplete('close');
+          return false;
         }
       } ).autocomplete( {
         source: get_variant_text_complete(),
@@ -165,8 +166,9 @@
 
       $( table_selector + ' input:text[id$="intrusion"]' ).keypress( function( event ) {
         var keycode = event.keyCode ? event.keyCode : event.which;
-        if( 13 == keycode && $(this).autocomplete('widget').is(':visible') ) {
+        if( ( 13 == keycode || 9 == keycode ) && $(this).autocomplete('widget').is(':visible') ) {
           $(this).autocomplete('close');
+          return false;
         }
       } ).autocomplete( {
         source: get_intrusion_text_complete(),
