@@ -35,6 +35,28 @@ class assignment extends \cenozo\database\record
   }
 
   /**
+   * Are there any deferred test_entry records for this assignment?
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return boolean
+   * @access public
+   */
+  public function has_deferrals()
+  {
+    if( is_null( $this->id ) )
+      throw lib::create( 'exception\runtime',
+        'Tried to get deferral status for an assignment with no id', __METHOD__ );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment_id', '=', $this->id);
+    $modifier->where( 'deferred', '=', true);
+    //$modifier->limit( 1 );
+    $sql = sprintf( 'SELECT count(*) FROM test_entry %s', $modifier->get_sql() );
+    return 0 !== intval( static::db()->get_one( $sql ) );
+  }
+
+  /**
    * Get the number of completed test_entry records for this assignment.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -72,6 +94,27 @@ class assignment extends \cenozo\database\record
     return static::db()->get_one(
       sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id=%s',
                $database_class_name::format_string( $this->id ) ) );
+  }
+
+  /**
+   * Are there any test_entry records requiring adjudication for this assignment?
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return boolean
+   * @access public
+   */
+  public function has_adjudicates()
+  {
+    if( is_null( $this->id ) )
+      throw lib::create( 'exception\runtime',
+        'Tried to get adjudication status for an assignment with no id', __METHOD__ );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment_id', '=', $this->id);
+    $modifier->where( 'adjudicate', '=', true);
+    $sql = sprintf( 'SELECT count(*) FROM test_entry %s', $modifier->get_sql() );
+    return 0 !== intval( static::db()->get_one( $sql ) );
   }
 
   /**
@@ -220,7 +263,20 @@ class assignment extends \cenozo\database\record
         ') '.
       ')', $id_string, $id_string );
 
-    return 0 == static::db()->get_one( $sql );
+    return 0 === intval( static::db()->get_one( $sql ) );
+  }
+
+  /**
+   * Are there any incomplete test_entry records for this assignment?
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return boolean
+   * @access public
+   */
+  public function has_incompletes()
+  {
+    return 0 !== $this->all_tests_complete();
   }
 
   /**
