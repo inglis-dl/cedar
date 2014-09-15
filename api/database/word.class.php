@@ -108,6 +108,6 @@ class word extends \cenozo\database\record
       $type_name,
       $database_class_name::format_string( $this->id ) );
 
-    return 0 !== intVal( static::db()->get_one( $sql ) );
+    return 0 !== intval( static::db()->get_one( $sql ) );
   }
 }
