@@ -36,8 +36,6 @@ class dictionary_transfer_word extends \cenozo\ui\push\base_record
   {
     parent::validate();
 
-    $word_class_name = lib::get_class_name( 'database\user_time' );
-
     $id_list = $this->get_argument( 'id_list', array() );
     if( 0 == count( $id_list ) )
       throw lib::create( 'exception\notice',
@@ -53,13 +51,10 @@ class dictionary_transfer_word extends \cenozo\ui\push\base_record
 
     if( is_null( $db_destination_dictionary ) )
     {
-      $db_test = $db_dictionary->get_owner_test();
-      $word_total_view_name = is_null( $db_test ) ? NULL :
-        $db_test->get_test_type()->name . '_word_total';
       foreach( $id_list as $id )
       {
         $db_word = lib::create( 'database\word', $id );
-        if( 0 < $db_word->get_usage_count( $word_total_view_name ) )
+        if( $db_word->has_usage() )
           throw lib::create( 'exception\notice',
             'The word "'. $db_word->word . '" is in use and cannot be deleted', __METHOD__ );
       }
