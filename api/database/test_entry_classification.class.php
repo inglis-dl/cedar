@@ -26,7 +26,7 @@ class test_entry_classification extends \cenozo\database\has_rank
     reset( $rhs_list );
     reset( $lhs_list );
     $match = true;
-    while( $matxh && ( !is_null( key( $rhs_list ) ) || !is_null( key ( $lhs_list ) ) ) )
+    while( $match && ( !is_null( key( $rhs_list ) ) || !is_null( key ( $lhs_list ) ) ) )
     {
       $rhs_list_obj = current( $rhs_list );
       $lhs_list_obj = current( $lhs_list );
