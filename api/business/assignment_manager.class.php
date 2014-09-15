@@ -211,8 +211,6 @@ class assignment_manager extends \cenozo\singleton
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
-          $db_test_entry->trim();
-          $db_sibling_test_entry->trim();
           if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
             if( ( is_null( $db_test_entry->adjudicate ) ||
@@ -367,6 +365,9 @@ class assignment_manager extends \cenozo\singleton
     if( is_null( $db_sibling_test_entry ) || is_null( $db_sibling_test_entry->adjudicate ) ||
         !$db_sibling_test_entry->completed || $db_sibling_test_entry->deferred )
       throw lib::create( 'exception\runtime', 'Invalid sibling test entry', __METHOD__ );
+
+    $db_test_entry->trim();
+    $db_sibling_test_entry->trim();
 
     $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
 
