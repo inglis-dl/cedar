@@ -45,9 +45,9 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
     $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
-    $this->add_column( 'test_entry_total_deferred.deferred', 'number', 'Deferred', true );
-    $this->add_column( 'test_entry_total_adjudicate.adjudicate', 'number', 'Adjudicate', true );
-    $this->add_column( 'test_entry_total_completed.completed', 'number', 'Completed', true );
+    $this->add_column( 'deferred', 'boolean', 'Deferred', false );
+    $this->add_column( 'adjudicate', 'boolean', 'Adjudicate', false );
+    $this->add_column( 'completed', 'boolean', 'Completed', false );
     $this->set_addable( $db_role->name == 'typist' );
     $this->set_allow_restrict_state( $db_role->name != 'typist' );
 
@@ -132,16 +132,15 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       $allow_transcribe = false;
       $allow_adjudicate = false;
 
-      $all_counts = $db_assignment->get_all_counts();
-      $deferred_count   = $all_counts['deferred'];
-      $adjudicate_count = $all_counts['adjudicate'];
-      $completed_count  = $all_counts['completed'];
+      $deferred   = $db_assignment->has_deferrals();
+      $adjudicate = $db_assignment->has_adjudicates();
+      $completed  = $db_assignment->all_tests_complete();
 
       // select the first test_entry for which we either want to transcribe
       // or adjudicate depending on user role
       $test_entry_id = NULL;
 
-      if( $db_role->name == 'typist' )
+      if( 'typist' == $db_role->name )
       {
         $test_entry_mod = clone $base_mod;
         $test_entry_mod->where( 'completed', '=', false );
@@ -156,12 +155,11 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           $allow_transcribe_operation = $allow_transcribe;
         }
       }
-      else if( $db_role->name != 'typist' && $db_assignment->all_tests_complete() &&
-               0 < $adjudicate_count )
+      else if( 'typist' != $db_role->name && $completed && $adjudicate )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
         if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() &&
-            $db_sibling_assignment->get_adjudicate_count() > 0 )
+            $db_sibling_assignment->has_adjudicates() )
         {
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
@@ -194,9 +192,9 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         'participant.uid' => $db_participant->uid,
         'cohort.name' => $db_participant->get_cohort()->name,
         'user.name' => $db_assignment->get_user()->name,
-        'test_entry_total_deferred.deferred' => $deferred_count,
-        'test_entry_total_adjudicate.adjudicate' =>  $adjudicate_count,
-        'test_entry_total_completed.completed' =>  $completed_count,
+        'deferred' => $deferred,
+        'adjudicate' =>  $adjudicate,
+        'completed' =>  $completed,
         'allow_transcribe' => $allow_transcribe ? 1 : 0,
         'allow_adjudicate' => $allow_adjudicate ? 1 : 0,
         'test_entry_id' => is_null( $test_entry_id ) ? '' : $test_entry_id );
@@ -238,7 +236,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
-    if( $db_role->name == 'typist' )
+    if( 'typist' == $db_role->name )
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
@@ -261,6 +259,14 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         {
           // Open
           $modifier->where( 'end_datetime', '=', NULL );
+          if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
+          {
+            $modifier->where( 'test_entry.deferred', '=', true );
+          }
+          else if( $restrict_state_id == array_search( 'Adjudicate', $this->state_list ) )
+          {
+            $modifier->where( 'test_entry.adjudicate', '=', true );
+          }
         }
       }
 
@@ -318,6 +324,14 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         {
           // Open
           $modifier->where( 'end_datetime', '=', NULL );
+          if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
+          {
+            $modifier->where( 'test_entry.deferred', '=', true );
+          }
+          else if( $restrict_state_id == array_search( 'Adjudicate', $this->state_list ) )
+          {
+            $modifier->where( 'test_entry.adjudicate', '=', true );
+          }
         }
       }
 
@@ -371,7 +385,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
    * @access protected
    */
   protected $state_list = array(
-    1 => 'Closed', 2 => 'No restriction' );
+    1 => 'Closed', 2 => 'No restriction', 3 => 'Deferred', 4 => 'Adjudicate' );
 
   /**
    * Get a restrict state name from its id

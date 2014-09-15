@@ -44,7 +44,10 @@
           if( 0 == $(this).val().length ) numEmptyIntrusion++;
         } );
 
-        var has_null_status =
+        var complete_status =
+          "unavailable" == "{{ audio_status }}" || "unusable" == "{{ audio_status }}" ||
+          "refused" == "{{ participant_status }}";
+        var null_status =
           'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
         // count number of items with value "yes"
@@ -54,17 +57,16 @@
 
         // disable the next and add buttons if the ranked word entries are incomplete
         // or if there are empty intrusion fields
-        var disable = ( ( numYes + numNo + numVariant ) != numRadio && has_null_status ) ||
+        var disable = (( numYes + numNo + numVariant ) != numRadio && !complete_status ) ||
                       0 != numEmptyIntrusion;
         $( "#{{ parent.full }}_next" ).button( { disabled : disable } );
         $( "#{{ widget.full }}_add" ).button( { disabled : disable } );
 
         // disable the reset button if there is nothing to reset
         $( "#{{ parent.full }}_reset" ).button(
-          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant && has_null_status } );
+          { disabled : 0 == numYes && 0 == numNo && 0 == numVariant && null_status } );
 
-        if( 'unavailable' == "{{ audio_status }}" || 'unusable' == "{{ audio_status }}" ||
-            'refused' == "{{ participant_status }}" ) {
+        if( complete_status ) {
           $( table_selector + " input" ).each( function() {
             $(this).prop( "disabled", true );
           } );
@@ -127,9 +129,16 @@
 
     function update_input_list() {
 
-      $( table_selector + ' input:text[id$="candidate"]' ).autocomplete( {
+      $( table_selector + ' input:text[id$="candidate"]' ).keypress( function( event ) {
+        var keycode = event.keyCode ? event.keyCode : event.which;
+        if( ( 13 == keycode || 9 == keycode ) && $(this).autocomplete('widget').is(':visible') ) {
+          $(this).autocomplete('close');
+          return false;
+        }
+      } ).autocomplete( {
         source: get_variant_text_complete(),
         minLength: 1,
+        delay: 0,
         select: function( event, ui ) {
           $(this).val( ui.item.label );
           $(this).attr( "value", ui.item.label );
@@ -155,9 +164,16 @@
         }
       } );
 
-      $( table_selector + ' input:text[id$="intrusion"]' ).autocomplete( {
+      $( table_selector + ' input:text[id$="intrusion"]' ).keypress( function( event ) {
+        var keycode = event.keyCode ? event.keyCode : event.which;
+        if( ( 13 == keycode || 9 == keycode ) && $(this).autocomplete('widget').is(':visible') ) {
+          $(this).autocomplete('close');
+          return false;
+        }
+      } ).autocomplete( {
         source: get_intrusion_text_complete(),
         minLength: 1,
+        delay: 0,
         select: function( event, ui ) {
           $(this).val( ui.item.label );
           $(this).attr( "value", ui.item.label );
@@ -191,6 +207,7 @@
           var haystack = $(this).autocomplete("option").source;
           for(var i in haystack) {
             if( needle === haystack[i].label ) {
+              $(this).val( $(this).attr( "value" ) );
               return false;
             }
           }
@@ -204,7 +221,6 @@
         $(this).removeClass( "candidate primary intrusion variant" );
         if( 0 == candidate.length ) {
           alert( "Blank entries are not permitted" );
-          configure_ui();
           $(this).focus();
           return false;
         }

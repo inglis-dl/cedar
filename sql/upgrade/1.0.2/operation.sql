@@ -60,6 +60,8 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "dictionary", "transfer_word", true,
 "Transfer words from one dictionary to another." );
 
+-- assignment
+
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "assignment", "reassign", true,
 "View a form for reassigning an assignment to different users with no language restrictions." );
@@ -68,9 +70,23 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "assignment", "reassign", true,
 "Reassign an assignment to a different user with no language restrictions." );
 
+-- test_entry_ranked_word
+
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_ranked_word", "delete", true,
-"Deletes an intrusion entry for an ranked word test type." );
+"Deletes an intrusion entry of a ranked word test type." );
+
+-- test_entry_classification
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry_classification", "delete", true,
+"Deletes an entry of a classification test type." );
+
+-- test_entry_alpha_numeric
+
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry_alpha_numeric", "delete", true,
+"Deletes an entry of an alpha numeric test type." );
 
 -- test_entry
 

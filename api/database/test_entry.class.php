@@ -299,7 +299,6 @@ class test_entry extends \cenozo\database\has_note
   public function initialize( $reset_default = true )
   {
     $database_class_name = lib::get_class_name( 'database\database' );
-    $word_class_name = lib::get_class_name( 'database\word' );
 
     if( $reset_default )
     {
@@ -322,18 +321,7 @@ class test_entry extends \cenozo\database\has_note
       $database_class_name::format_string( $this->id ) );
     static::db()->execute( $sql );
 
-    $db_assignment = $this->get_assignment();
-    // if null db_assignment then this is an ajudication
-    if( is_null( $db_assignment ) )
-      $db_participant = $this->get_participant();
-    else
-      $db_participant = $db_assignment->get_participant();
-
-    $db_language = $db_participant->get_language();
-    if( is_null( $db_language ) )
-      $db_language = lib::create( 'business\session' )->get_service()->get_language();
-
-    if( $test_type_name == 'ranked_word' )
+    if( 'ranked_word' == $test_type_name )
     {
       $modifier = lib::create( 'database\modifier' );
       $modifier->order( 'rank' );
@@ -345,13 +333,13 @@ class test_entry extends \cenozo\database\has_note
         $db_test_entry_ranked_word->save();
       }
     }
-    else if( $test_type_name == 'confirmation' )
+    else if( 'confirmation' == $test_type_name )
     {
       $db_test_entry_confirmation = lib::create( 'database\\'. $entry_class_name );
       $db_test_entry_confirmation->test_entry_id = $this->id;
       $db_test_entry_confirmation->save();
     }
-    else if( $test_type_name == 'classification' )
+    else if( 'classification' == $test_type_name )
     {
       $setting_manager = lib::create( 'business\setting_manager' );
       $max_rank = $setting_manager->get_setting( 'interface', 'classification_max_rank' );
@@ -363,14 +351,10 @@ class test_entry extends \cenozo\database\has_note
         $db_test_entry_classification->save();
       }
     }
-    else if( $test_type_name == 'alpha_numeric' )
+    else if( 'alpha_numeric' == $test_type_name )
     {
-      /*
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'language_id', '=', $db_language->id );
-      $word_count = $db_test->get_dictionary()->get_word_count( $modifier );
-      */
-      $max_rank = 40;
+      $setting_manager = lib::create( 'business\setting_manager' );
+      $max_rank = $setting_manager->get_setting( 'interface', 'alpha_numeric_max_rank' );
       for( $rank = 1; $rank <= $max_rank; $rank++ )
       {
         $db_test_entry_alpha_numeric = lib::create( 'database\\'. $entry_class_name );
@@ -473,7 +457,7 @@ class test_entry extends \cenozo\database\has_note
       foreach( $rows as $index => $row )
       {
         $db_entry = lib::create( 'database\test_entry_' . $test_type_name, $row['id'] );
-        if( $test_type_name == 'ranked_word' &&
+        if( 'ranked_word' == $test_type_name &&
             !is_null( $db_entry->ranked_word_set_id ) ) break;
         $db_entry->delete();
         $count++;
