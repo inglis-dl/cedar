@@ -139,6 +139,9 @@ VALUES( "push", "test_entry_alpha_numeric", "edit", true, "Edits an alpha numeri
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_alpha_numeric", "new", true, "Creates a new alpha numeric test entry." );
 INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry_alpha_numeric", "delete", true, "Deletes an entry for an alpha_numeric test type." );
+INSERT INTO operation( type, subject, name, restricted, description )
+INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_alpha_numeric", "transcribe", true, "Transcribe an alpha numeric test entry." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_alpha_numeric", "adjudicate", true, "View and edit paired test_entry details." );
@@ -149,6 +152,9 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_classification", "edit", true, "Edits a classification test entry." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_classification", "new", true, "Creates a new classification test entry." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry_classification", "delete", true, "Deletes an entry for a classification test type." );
+INSERT INTO operation( type, subject, name, restricted, description )
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_classification", "transcribe", true, "Transcribe a classification test entry." );
 INSERT INTO operation( type, subject, name, restricted, description )
@@ -172,7 +178,7 @@ VALUES( "push", "test_entry_ranked_word", "edit", true, "Edits an entry for an r
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "test_entry_ranked_word", "edit", true, "Edits an entry for an ranked word test type." );
 INSERT INTO operation( type, subject, name, restricted, description )
-VALUES( "push", "test_entry_ranked_word", "delete", true, "Deletes an intrusion entry for an ranked word test type." );
+VALUES( "push", "test_entry_ranked_word", "delete", true, "Deletes an intrusion entry for a ranked word test type." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "test_entry_ranked_word", "transcribe", true, "Transcribe an entry for an ranked word test type." );
 INSERT INTO operation( type, subject, name, restricted, description )

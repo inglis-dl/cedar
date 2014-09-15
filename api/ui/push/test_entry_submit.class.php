@@ -56,28 +56,30 @@ class test_entry_submit extends \cenozo\ui\push\base_record
   {
     parent::finish();
 
-    // an adjudicate test entry has been submitted
-    // get one of the assignments of the original test entry based
-    // on participant id
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $db_adjudicate_test_entry = $this->get_record();
 
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'participant_id', '=', $db_adjudicate_test_entry->participant_id );
-    $modifier->limit( 1 );
-    $db_assignment = current( $assignment_class_name::select( $modifier ) );
-
     // get the progenitor test entry records
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'assignment.participant_id', '=', $db_assignment->participant_id );
+    $modifier->where( 'assignment.participant_id', '=', $db_adjudicate_test_entry->participant_id );
     $modifier->where( 'test_id', '=', $db_adjudicate_test_entry->get_test()->id );
     foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
     {
       $db_test_entry->adjudicate = false;
       $db_test_entry->save();
     }
+
+    $db_adjudicate_test_entry->adjudicate = false;
+    $db_adjudicate_test_entry->save();
+
+    // get one of the assignments of the original test entry based
+    // on participant id
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'participant_id', '=', $db_adjudicate_test_entry->participant_id );
+    $modifier->limit( 1 );
+    $db_assignment = current( $assignment_class_name::select( $modifier ) );
 
     $assignment_manager = lib::create( 'business\assignment_manager' );
     $assignment_manager::complete_assignment( $db_assignment );

@@ -29,7 +29,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
    * Processes arguments, preparing them for the operation.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\notice
    * @access protected
    */
   protected function prepare()
@@ -51,7 +50,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $this->test_entry_widget->set_parent( $this );
 
     $modifier = NULL;
-    if( $db_participant->get_cohort()->name == 'tracking' )
+    if( 'tracking' == $db_participant->get_cohort()->name )
     {
       $modifier = lib::create('database\modifier');
       $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
@@ -68,6 +67,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
    * Sets up the operation with any pre-execution instructions that may be necessary.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
    * @access protected
    */
   protected function setup()
@@ -78,34 +78,34 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $db_test_entry = $this->get_record();
     $db_assignment = $db_test_entry->get_assignment();
-    if( is_null( $db_assignment ) )
-      throw lib::create( 'exception\runtime',
-        'Test entry adjudication requires a valid assignment', __METHOD__ );
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
     if( is_null( $db_sibling_assignment ) )
       throw lib::create( 'exception\runtime',
-        'Test entry adjudication requires a valid assignment', __METHOD__ );
+        'Test entry adjudication requires a valid sibling assignment', __METHOD__ );
+
+    $db_test = $db_test_entry->get_test();
+    $db_participant = $db_assignment->get_participant();
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
+    $modifier->where( 'test_id', '=', $db_test->id );
     $modifier->where( 'deferred', '=', false );
     $modifier->where( 'completed', '=', true );
-    $modifier->where( 'adjudicate', '=', true );
+    $modifier->where( 'adjudicate', '!=', NULL );
     $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
-    $modifier->limit( 1 );
     $db_sibling_test_entry = current( $test_entry_class_name::select( $modifier ) );
     if( false === $db_sibling_test_entry )
       throw lib::create( 'exception\runtime',
-        'Test entry adjudication requires a valid sibling test entry', __METHOD__ );
+        'Test entry adjudication of '. $db_test->name . ' test for '.
+        $db_participant->uid . ' requires a valid sibling test entry',
+        __METHOD__ );
 
-    $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
 
     $this->set_variable( 'test_id', $db_test->id );
 
     // set the dictionary id's needed for text autocomplete
-    if( $test_type_name == 'classification' || $test_type_name == 'ranked_word' )
+    if( 'classification' == $test_type_name || 'ranked_word' == $test_type_name )
     {
       $db_dictionary = $db_test->get_dictionary();
       if( !is_null( $db_dictionary ) )
@@ -123,13 +123,12 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $db_user = $db_assignment->get_user();
     $db_sibling_user = $db_sibling_assignment->get_user();
 
-    $db_participant = $db_assignment->get_participant();
     $this->set_variable( 'participant_id', $db_participant->id );
 
     // set the language(s) of dictionary words based on one user id
     $this->set_variable( 'user_id', $db_user->id );
 
-    if( $db_participant->get_cohort()->name == 'tracking' )
+    if( 'tracking' == $db_participant->get_cohort()->name )
     {
       $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );

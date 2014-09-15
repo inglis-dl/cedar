@@ -42,41 +42,72 @@ class word extends \cenozo\database\record
    * Get the test_entry daughter table usage count for this word.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
    * @param string the name of the word count view to query
    * @return integer
    * @access public
    */
-  public function get_usage_count( $word_total_view_name = NULL )
+  public function get_usage_count()
   {
     $database_class_name = lib::get_class_name( 'database\database' );
-    $test_class_name = lib::get_class_name( 'database\test' );
+    $id = $database_class_name::format_string( $this->dictionary_id );
 
-    if( is_null( $this->id ) )
-    {
-      throw lib::create( 'exception\runtime',
-        'Tried to get a usage count for a word with no id', __METHOD__ );
-    }
+    $sql = sprintf(
+      'SELECT tt.name FROM test_type tt '.
+      'JOIN test t on t.test_type_id=tt.id '.
+      'WHERE t.id IN ( '.
+      'SELECT id FROM test '.
+      'WHERE dictionary_id=%s '.
+      'OR variant_dictionary_id=%s '.
+      'OR intrusion_dictionary_id=%s '.
+      'OR mispelled_dictionary_id=%s )',
+      $id, $id, $id, $id );
 
-    $column = '';
-    if( !is_null( $word_total_view_name ) )
-    {
-      $column = $word_total_view_name;
-    }
-    else
-    {
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'dictionary_id', '=', $this->dictionary_id );
-      $modifier->or_where( 'variant_dictionary_id', '=', $this->dictionary_id );
-      $modifier->or_where( 'intrusion_dictionary_id', '=', $this->dictionary_id );
-      $modifier->or_where( 'mispelled_dictionary_id', '=', $this->dictionary_id );
-      $modifier->limit( 1 );
-      $db_test = current( $test_class_name::select( $modifier ) );
-      $column = $db_test->get_test_type()->name . '_word_total';
-    }
+    $type_name = static::db()->get_one( $sql );
 
-    return static::db()->get_one(
-      sprintf( 'SELECT total FROM %s WHERE word_id = %s',
-               $column, $database_class_name::format_string( $this->id ) ) );
+    if( 'confirmation' == $type_name ) return 1;
+
+    $sql = sprintf(
+      'SELECT COUNT(*) FROM test_entry_%s '.
+      'WHERE word_id=%s',
+      $type_name,
+      $database_class_name::format_string( $this->id ) );
+
+    return static::db()->get_one( $sql );
+  }
+
+  /**
+   * Is this word in use by any test_entry daughter records?
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return boolean
+   * @access public
+   */
+  public function has_usage()
+  {
+    $database_class_name = lib::get_class_name( 'database\database' );
+    $id = $database_class_name::format_string( $this->dictionary_id );
+
+    $sql = sprintf(
+      'SELECT tt.name FROM test_type tt '.
+      'JOIN test t on t.test_type_id=tt.id '.
+      'WHERE t.id IN ( '.
+      'SELECT id FROM test '.
+      'WHERE dictionary_id=%s '.
+      'OR variant_dictionary_id=%s '.
+      'OR intrusion_dictionary_id=%s '.
+      'OR mispelled_dictionary_id=%s )',
+      $id, $id, $id, $id );
+
+    $type_name = static::db()->get_one( $sql );
+
+    if( 'confirmation' == $type_name ) return true;
+
+    $sql = sprintf(
+      'SELECT COUNT(*) FROM test_entry_%s '.
+      'WHERE word_id=%s',
+      $type_name,
+      $database_class_name::format_string( $this->id ) );
+
+    return 0 !== intval( static::db()->get_one( $sql ) );
   }
 }
