@@ -43,6 +43,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
     // add items to the view
     $this->add_item( 'uid', 'constant', 'UID' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
+    $this->add_item( 'site', 'constant', 'Site' );
     $this->add_item( 'user', 'constant', 'User' );
 
     // create the test_entry sub-list widget
@@ -80,6 +81,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
     $db_participant = $db_assignment->get_participant();
     $this->set_item( 'uid', $db_participant->uid, true );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name, true );
+    $this->set_item( 'site', $db_assignment->get_site()->name, true );
     $this->set_item( 'user', $db_assignment->get_user()->name, true );
 
     try
