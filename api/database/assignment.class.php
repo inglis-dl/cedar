@@ -142,14 +142,18 @@ class assignment extends \cenozo\database\record
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param  record db_user A user requesting a participant for a new assignment
+   * @throws exception\notice
    * @return string (NULL if none available)
    * @access public
    */
-  public static function get_next_available_participant( $db_user )
+  public static function get_next_available_participant()
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
+    $region_site_class_name = lib::get_class_name( 'database\region_site' );
+
     $session = lib::create( 'business\session' );
+    $db_user = $session->get_user();
 
     $has_tracking = false;
     $has_comprehensive = false;
@@ -159,16 +163,31 @@ class assignment extends \cenozo\database\record
       $has_comprehensive |= 'comprehensive' == $db_cohort->name;
     }
 
-    if( $has_tracking == false && $has_comprehensive == false )
+    if( false == $has_tracking && false == $has_comprehensive )
       throw lib::create( 'exception\notice',
         'There must be one or more cohorts assigned to user: '. $db_user->name,
           __METHOD__ );
 
-    $language_id_list = array();
-    foreach( $db_user->get_language_list() as $db_language )
-      $language_id_list[] = $db_language->id;
-    if( 0 == count( $language_id_list ) )
-      $language_id_list[] = $session->get_service()->get_language()->id;
+    $db_service = $session->get_service();
+    $db_site = $session->get_site();
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'service_id', '=', $db_service->id );
+    $modifier->where( 'site_id', '=', $db_site->id );
+    $modifier->group( 'language_id' );
+
+    // get the languages the site can process
+    $site_languages = array();
+    foreach( $region_site_class_name::select( $modifier ) as $db_region_site )
+      $site_languages[] = $db_region_site->get_language()->id;
+
+    // get the languages the user can process
+    $user_languages = array();
+    foreach( $db_user->get_language_list()  as $db_language )
+    {
+      if( in_array( $db_language->id, $site_languages ) )
+        $user_languages[] = $db_language->id;
+    }
 
     $id = NULL;
     if( $has_tracking )
@@ -178,13 +197,10 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'user_assignment.id', '=', NULL );
       $modifier->where( 'cohort.name', '=', 'tracking' );
       $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
-      $modifier->where( 'participant_site.site_id', '=', $session->get_site()->id );
-      if( 0 < count( $language_id_list ) )
-      {
-        $db_service_language = $session->get_service()->get_language();
-        $modifier->where( 'IFNULL( participant.language_id, '.
-          $db_service_language->id . ' )', 'IN', $language_id_list );
-      }
+      $modifier->where( 'participant_site.site_id', '=', $db_site->id );
+      $modifier->where( 'IFNULL( participant.language_id, ' .
+        $database_class_name::format_string( $user_languages[0] ) . ' )',
+        'IN', $user_languages );
       $modifier->group( 'participant.id' );
 
       $sql = sprintf(
@@ -214,7 +230,7 @@ class assignment extends \cenozo\database\record
     {
     }
 
-    return is_null( $id ) ? $id : lib::create( 'database\participant', $id );
+    return is_null( $id ) ? NULL : lib::create( 'database\participant', $id );
   }
 
   /**
@@ -270,7 +286,6 @@ class assignment extends \cenozo\database\record
    * Are there any incomplete test_entry records for this assignment?
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @throws exception\runtime
    * @return boolean
    * @access public
    */
@@ -280,11 +295,12 @@ class assignment extends \cenozo\database\record
   }
 
   /**
-   * Returns the id of a user as an array key having no language restrictions that the
+   * Returns the id of a user as an array key having language restrictions that the
    * assignment can be reassigned to with.  The boolean value returned with the key
    * indicates whether to keep the assignment intact or to reinitialize it.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
    * @return associative array  user_id => boolean
    * @access public
    */
@@ -304,32 +320,33 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'service_id', '=', $db_service->id );
     $modifier->group( 'language_id' );
 
-    $service_language_list = array();
+    $service_languages = array();
     foreach( $region_site_name::select( $modifier ) as $db_region_site )
-    {
-      $service_language_list[] = $db_region_site->language_id;
-    }
-    $num_language = count( $service_language_list );
+      $service_languages[] = $db_region_site->language_id;
 
+    $num_language = count( $service_languages );
+
+    // get all typists at this site that can process the current record's participant cohort
+    // that have the required (multiple) language restrictions
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'access.role_id', '=', $db_role->id );
     $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
-    $modifier->where( 'user_has_language.language_id', 'IN', $service_language_list );
+    $modifier->where( 'user_has_language.language_id', 'IN', $service_languages );
     $modifier->where( 'user.active', '=', true );
     $modifier->group( 'user.id' );
     $modifier->having( 'COUNT( user.id )', '=', $num_language );
 
-    $user_list = $user_class_name::select( $modifier );
+    $db_user_list = $user_class_name::select( $modifier );
 
     $id_list = array();
-    foreach( $user_list as $db_user )
+    foreach( $db_user_list as $db_user )
       $id_list[] = $db_user->id;
 
     if( count( $id_list ) < 2 ) return $id_list;
 
     // if the user assigned to this assignment has the aligned language restrictions
-    // then add them to te front of the returned id_list so that we dont
+    // then add them to the front of the returned id_list so as not to
     // delete their transcriptions during reassign
     $prepend = in_array( $this->user_id, $id_list );
 
@@ -339,7 +356,7 @@ class assignment extends \cenozo\database\record
     // with fewer active assignments
     $id_list = array();
     $min = PHP_INT_MAX;
-    foreach( $user_list as $db_user )
+    foreach( $db_user_list as $db_user )
     {
       // how many open assignments does this user have
       $modifier = lib::create( 'database\modifier' );
