@@ -173,41 +173,45 @@ class patch
       'WHERE y.rank > 2';
     patch::my_execute( $db, $sql );
 
-    $type_names = array( 'ranked_word', 'confirmation', 'alpha_numeric', 'classification' );
-    foreach( $type_names as $type_name )
+    if( 0 < patch::my_get_one( $db, 'SELECT COUNT(*) FROM tmp' ) )
     {
-      $table_name = 'test_entry_' . $type_name;
+      out( 'working on pruning assignments (rank > 2)' );
+      $type_names = array( 'ranked_word', 'confirmation', 'alpha_numeric', 'classification' );
+      foreach( $type_names as $type_name )
+      {
+        $table_name = 'test_entry_' . $type_name;
+
+        $sql =
+          'DELETE te.* FROM '. $table_name . ' te '.
+          'JOIN test_entry t ON t.id=te.test_entry_id '.
+          'JOIN tmp ON tmp.id=t.assignment_id';
+        patch::my_execute( $db, $sql );
+      }
 
       $sql =
-        'DELETE te.* FROM '. $table_name . ' te '.
-        'JOIN test_entry t ON t.id=te.test_entry_id '.
+        'DELETE tn.* FROM test_entry_note tn '.
+        'JOIN test_entry t ON t.id=tn.test_entry_id '.
         'JOIN tmp ON tmp.id=t.assignment_id';
       patch::my_execute( $db, $sql );
+
+      $sql =
+        'DELETE t.* FROM test_entry t '.
+        'JOIN tmp ON tmp.id=t.assignment_id';
+      patch::my_execute( $db, $sql );
+
+      $sql =
+        'DELETE a.* FROM assignment a '.
+        'JOIN tmp ON tmp.id=a.id';
+
+      $pruned_count = patch::my_get_one( $db, str_replace('DELETE a.*','SELECT COUNT(*)', $sql ) );
+
+      patch::my_execute( $db, $sql );
+
+      if( $pruned_count ) out( 'pruned ' . $pruned_count . ' extra assignments (rank > 2)' );
+
+      $sql = 'DROP TABLE tmp';
+      patch::my_execute( $db, $sql );
     }
-
-    $sql =
-      'DELETE tn.* FROM test_entry_note tn '.
-      'JOIN test_entry t ON t.id=tn.test_entry_id '.
-      'JOIN tmp ON tmp.id=t.assignment_id';
-    patch::my_execute( $db, $sql );
-
-    $sql =
-      'DELETE t.* FROM test_entry t '.
-      'JOIN tmp ON tmp.id=t.assignment_id';
-    patch::my_execute( $db, $sql );
-
-    $sql =
-      'DELETE a.* FROM assignment a '.
-      'JOIN tmp ON tmp.id=a.id';
-
-    $pruned_count = patch::my_get_one( $db, str_replace('DELETE a.*','SELECT COUNT(*)', $sql ) );
-
-    patch::my_execute( $db, $sql );
-
-    if( $pruned_count ) out( 'pruned ' . $pruned_count . ' extra assignments (rank > 2)' );
-
-    $sql = 'DROP TABLE tmp';
-    patch::my_execute( $db, $sql );
 
     $sql =
       'CREATE TEMPORARY TABLE assign1 AS '.
@@ -241,25 +245,35 @@ class patch
     $type_names = array( 'alpha_numeric', 'classification' );
     foreach( $type_names as $type_name )
     {
-      // locate empty progenitor entries by rank
+      // locate empty progenitor entries by rank,
+      // deferred entries are exempt since they
+      // are pruned during the deferral resolution process
       $table_name = 'test_entry_' . $type_name;
       out( 'working on ' . $table_name . ' records' );
       $sql =
         'CREATE TEMPORARY TABLE tmp1 AS '.
         'SELECT '.
-        'MAX( if(word_id IS NULL, 0 ,te.rank )) AS last_rank, '.
-        'COUNT(te.id) AS max_rank, '.
+        'MAX( if( word_id IS NULL, 0, te.rank ) ) AS last_rank, '.
+        'COUNT( te.id ) AS max_rank, '.
         'te.test_entry_id, '.
         'a.participant_id '.
         'FROM ' . $table_name . ' te '.
         'JOIN test_entry t ON t.id=te.test_entry_id '.
         'JOIN assign1 a ON a.assignment_id=t.assignment_id '.
         'WHERE completed=1 '.
+        'AND deferred=0 '.
         'GROUP BY t.id';
       patch::my_execute( $db, $sql );
       $sql = 'ALTER TABLE tmp1 ADD INDEX (participant_id)';
       patch::my_execute( $db, $sql );
       $sql = 'UPDATE tmp1 SET last_rank=max_rank WHERE last_rank=0';
+      patch::my_execute( $db, $sql );
+
+      $sql =
+        'CREATE TEMPORARY TABLE tmp3 AS '.
+        'SELECT DISTINCT participant_id FROM tmp1';
+      patch::my_execute( $db, $sql );
+      $sql = 'ALTER TABLE tmp3 ADD INDEX (participant_id)';
       patch::my_execute( $db, $sql );
 
       // locate empty adjudicate entries by rank
@@ -272,8 +286,7 @@ class patch
         't.participant_id '.
         'FROM ' . $table_name . ' te '.
         'JOIN test_entry t ON t.id=te.test_entry_id '.
-        'JOIN (SELECT distinct participant_id FROM tmp1 ) x '.
-        'ON x.participant_id=t.participant_id '.
+        'JOIN tmp3 ON tmp3.participant_id=t.participant_id '.
         'GROUP BY t.id';
       patch::my_execute( $db, $sql );
       $sql = 'ALTER TABLE tmp2 ADD INDEX (participant_id)';
@@ -286,44 +299,47 @@ class patch
       patch::my_execute( $db, $sql );
       $sql = 'DROP TABLE tmp2';
       patch::my_execute( $db, $sql );
-
-      $sql =
-        'DELETE te.* '.
-        'FROM ' . $table_name . ' AS te '.
-        'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
-        'WHERE te.rank > tmp1.last_rank';
-
-      $pruned_count =
-        patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
-
+      $sql = 'DROP TABLE tmp3';
       patch::my_execute( $db, $sql );
 
-      // trim records with audio_status ={unavailable, unusable} or participant_status={refused}
-      // leave 1 empty entry in case the record is deferred
-      $sql_pre =
-        'DELETE te.* '.
-        'FROM ' . $table_name . ' AS te '.
-        'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
-        'JOIN test_entry t ON t.id=tmp1.test_entry_id '.
-        'WHERE te.rank>1 ';
+      if( 0 < patch::my_get_one( $db, 'SELECT COUNT(*) FROM tmp1' ) )
+      {
+        $sql =
+          'DELETE te.* '.
+          'FROM ' . $table_name . ' AS te '.
+          'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+          'WHERE te.rank > tmp1.last_rank';
 
-      $sql = $sql_pre .
-        'AND t.audio_status IN ("unavailable","unusable")';
+        $pruned_count =
+          patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
 
-      $pruned_count +=
-        patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+        patch::my_execute( $db, $sql );
 
-      patch::my_execute( $db, $sql );
+        // trim records with audio_status ={unavailable, unusable} or participant_status={refused}
+        $sql_pre =
+          'DELETE te.* '.
+          'FROM ' . $table_name . ' AS te '.
+          'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
+          'JOIN test_entry t ON t.id=tmp1.test_entry_id ';
 
-      $sql = $sql_pre .
-        'AND t.participant_status IN ("refused")';
+        $sql = $sql_pre .
+          'WHERE t.audio_status IN ("unavailable","unusable")';
 
-      $pruned_count +=
-        patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+        $pruned_count +=
+          patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
 
-      patch::my_execute( $db, $sql );
+        patch::my_execute( $db, $sql );
 
-      if( $pruned_count ) out( 'pruned ' .  $pruned_count . ' ' . $table_name . ' records' );
+        $sql = $sql_pre .
+          'WHERE t.participant_status = "refused"';
+
+        $pruned_count +=
+          patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+
+        patch::my_execute( $db, $sql );
+
+        if( $pruned_count ) out( 'pruned ' .  $pruned_count . ' ' . $table_name . ' records' );
+      }
 
       $sql = 'DROP TABLE tmp1';
       patch::my_execute( $db, $sql );
@@ -585,7 +601,7 @@ class patch
           else
           {
             // check if the entries for the current test are different
-            if( $type == 'classification' || $type == 'alpha_numeric' )
+            if( 'classification' == $type || 'alpha_numeric' == $type )
             {
               $sql = sprintf(
                 'SELECT COUNT(*) FROM ( '.
@@ -598,7 +614,7 @@ class patch
                 'GROUP BY rank, word_id HAVING COUNT(*) = 1 ) AS tmp', $type, $t1['id'], $type, $t2['id'] );
               $match = 0 == patch::my_get_one( $db, $sql );
             }
-            else if( $type == 'confirmation' )
+            else if( 'confirmation' == $type )
             {
               $sql = sprintf(
                 'SELECT COUNT(*) FROM ( '.
@@ -611,7 +627,7 @@ class patch
                 'GROUP BY confirmation HAVING COUNT(*) = 1 ) AS tmp', $t1['id'], $t2['id'] );
               $match = 0 == patch::my_get_one( $db, $sql );
             }
-            else if( $type == 'ranked_word' )
+            else if( 'ranked_word' == $type )
             {
               $sql = sprintf(
                 'SELECT COUNT(*) FROM ( '.
@@ -800,7 +816,8 @@ class patch
         $assignment_id_cache[] = $a1_id;
         $assignment_id_cache[] = $a2_id;
       }
-      out( sprintf( 'Finished %d of %d assignments [opened: %d, closed: %d, deleted: %d, modified: %d]',
+      out( sprintf( 'Finished %d of %d assignments [opened: %d, closed: %d, '.
+                    'adjudicates deleted: %d, test_entrys modified: %d]',
         $base + count( $rows ), $total, $assignment_open_count, $assignment_closed_count,
         $adjudicate_delete_count, $test_entry_modify_count ) );
 
