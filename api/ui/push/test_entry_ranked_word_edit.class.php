@@ -42,7 +42,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
     if( array_key_exists( 'word_candidate', $columns ) )
     {
-      // empty entries are permitted for adjudicates
+      // empty intrusion entries are permitted for adjudicates
       $word_candidate = $columns['word_candidate'];
       if( '' !== $word_candidate )
       {
@@ -50,6 +50,13 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
         if( !$word_class_name::is_valid_word( $word_candidate ) )
           throw lib::create( 'exception\notice',
             'The word "'. $word_candidate . '" is not a valid word entry.',
+            __METHOD__ );
+      }
+      else
+      {
+        if( 'variant' == $this->get_record()->selection )
+          throw lib::create( 'exception\notice',
+            'An empty word cannot be set as a variant.',
             __METHOD__ );
       }
     }
