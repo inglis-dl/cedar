@@ -148,7 +148,6 @@
           var haystack = $(this).autocomplete("option").source;
           for(var i in haystack) {
             if( needle === haystack[i].label ) {
-              $(this).val( $(this).attr( "value" ) );
               return false;
             }
           }
