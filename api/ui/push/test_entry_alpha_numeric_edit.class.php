@@ -66,6 +66,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
     parent::execute();
 
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $region_site_class_name = lib::get_class_name( 'database\region_site' );
     $word_class_name = lib::get_class_name( 'database\word' );
     $session = lib::create( 'business\session' );
 
@@ -94,9 +95,24 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
         }
         $db_user = $db_assignment->get_user();
 
-        $db_language = current( $db_user->get_language_list() );
+        $db_language = $db_user->get_language();
         if( is_null( $db_language ) )
-          $db_language = $session->get_service()->get_language();
+        {
+          $db_service = $session->get_service();
+          $db_site = $session->get_site();
+
+          $modifier = lib::create( 'database\modifier' );
+          $modifier->where( 'service_id', '=', $db_service->id );
+          $modifier->where( 'site_id', '=', $db_site->id );
+          $modifier->group( 'language_id' );
+
+          // get the fist language the site can process
+          $db_language = current( $region_site_class_name::select( $modifier ) );
+
+          // if all else fails use the service language
+          if( false === $db_language )
+            $db_language = $session->get_service()->get_language();
+        }
 
         // does the word candidate exist in the primary dictionary?
         $db_dictionary = $db_test_entry->get_test()->get_dictionary();

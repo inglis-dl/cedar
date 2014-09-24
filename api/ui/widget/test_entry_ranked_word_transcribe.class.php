@@ -38,10 +38,38 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
     $db_participant = $db_test_entry->get_assignment()->get_participant();
+    $region_site_class_name = lib::get_class_name( 'database\region_site' );
 
     $db_language = $db_participant->get_language();
     if( is_null( $db_language ) )
-      $db_language = lib::create( 'business\session' )->get_service()->get_language();
+    {
+      $session = lib::create( 'business\session' );
+      $db_user = $session->get_user();
+      $db_service = $session->get_service();
+      $db_site = $session->get_site();
+
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'service_id', '=', $db_service->id );
+      $modifier->where( 'site_id', '=', $db_site->id );
+      $modifier->group( 'language_id' );
+
+      // get the languages the site can process
+      $site_languages = array();
+      foreach( $region_site_class_name::select( $modifier ) as $db_region_site )
+        $site_languages[] = $db_region_site->get_language()->id;
+
+      // get the languages the user can process
+      $user_languages = array();
+      foreach( $db_user->get_language_list() as $db_user_language )
+      {
+        if( in_array( $db_user_language->id, $site_languages ) )
+          $user_languages[] = $db_user_language->id;
+      }
+      if( 0 == count( $user_languages ) )
+        $db_language = lib::create( 'business\session' )->get_service()->get_language();
+      else
+        $db_language = lib::create( 'database\language', $user_languages[0] );
+    }
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'ranked_word_set_id', '!=', NULL );
@@ -58,7 +86,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
       $db_word = $db_test_entry_ranked_word->get_word();
       $classification = '';
 
-      if( !is_null( $db_word ) && $selection == 'variant' )
+      if( !is_null( $db_word ) && 'variant' == $selection )
       {
         $classification = 'variant';
       }

@@ -68,6 +68,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
     parent::execute();
 
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $region_site_class_name = lib::get_class_name( 'database\region_site' );
     $word_class_name = lib::get_class_name( 'database\word' );
     $session = lib::create( 'business\session' );
 
@@ -103,7 +104,21 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         if( !is_array( $language_list ) || is_null( $language_list ) ) $language_list = array();
         if( 0 == count( $language_list ) )
         {
-          $language_list[] = $session->get_service()->get_language();
+          $db_service = $session->get_service();
+          $db_site = $session->get_site();
+
+          $modifier = lib::create( 'database\modifier' );
+          $modifier->where( 'service_id', '=', $db_service->id );
+          $modifier->where( 'site_id', '=', $db_site->id );
+          $modifier->group( 'language_id' );
+
+          // get the languages the site can process
+          foreach( $region_site_class_name::select( $modifier ) as $db_region_site )
+           $language_list[] = $db_region_site->get_language();
+          
+          // if all else fails use the service language
+          if( 0 == count( $language_list ) ) 
+            $language_list[] = $session->get_service()->get_language();
         }
         foreach( $language_list as $db_user_language )
         {
