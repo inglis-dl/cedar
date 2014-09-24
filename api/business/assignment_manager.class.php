@@ -728,6 +728,9 @@ class assignment_manager extends \cenozo\singleton
             $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
                             $a_obj->selection != $b_obj->selection );
 
+            if( 'variant' == $a_obj->selection && 'variant' == $b_obj->selection &&
+                ( is_null( $a_obj->word_id ) || is_null( $b_obj->word_id ) ) ) $adjudicate = true;
+
             // copy the progenitor to the adjudicate
             if( !$adjudicate )
             {
