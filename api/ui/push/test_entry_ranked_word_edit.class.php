@@ -54,7 +54,8 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        if( 'variant' == $this->get_record()->selection )
+        if( !array_key_exists( 'selection', $columns ) &&
+            'variant' == $this->get_record()->selection )
           throw lib::create( 'exception\notice',
             'An empty word cannot be set as a variant.',
             __METHOD__ );

@@ -95,7 +95,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
         }
         $db_user = $db_assignment->get_user();
 
-        $db_language = $db_user->get_language();
+        $db_language = current( $db_user->get_language_list() );
         if( is_null( $db_language ) )
         {
           $db_service = $session->get_service();
