@@ -152,6 +152,9 @@ class patch
 
     // remove all records associated with participants having > 2 assignments
 
+    $sql = 'SET @rank = 0';
+    patch::my_execute( $db, $sql );
+
     $sql =
       'CREATE TEMPORARY TABLE tmp AS '.
       'SELECT id, participant_id FROM ('.
@@ -196,7 +199,12 @@ class patch
     $sql =
       'DELETE a.* FROM assignment a '.
       'JOIN tmp ON tmp.id=a.id';
+
+    $pruned_count = patch::my_get_one( $db, str_replace('DELETE a.*','SELECT COUNT(*)', $sql ) );
+
     patch::my_execute( $db, $sql );
+
+    if( $pruned_count ) out( 'pruned ' . $pruned_count . ' extra assignments (rank > 2)' );
 
     $sql = 'DROP TABLE tmp';
     patch::my_execute( $db, $sql );
@@ -278,11 +286,16 @@ class patch
       patch::my_execute( $db, $sql );
       $sql = 'DROP TABLE tmp2';
       patch::my_execute( $db, $sql );
+
       $sql =
         'DELETE te.* '.
         'FROM ' . $table_name . ' AS te '.
         'JOIN tmp1 ON tmp1.test_entry_id=te.test_entry_id '.
         'WHERE te.rank > tmp1.last_rank';
+
+      $pruned_count =
+        patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+
       patch::my_execute( $db, $sql );
 
       // trim records with audio_status ={unavailable, unusable} or participant_status={refused}
@@ -296,10 +309,22 @@ class patch
 
       $sql = $sql_pre .
         'AND t.audio_status IN ("unavailable","unusable")';
+
+      $pruned_count +=
+        patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+
       patch::my_execute( $db, $sql );
+
       $sql = $sql_pre .
         'AND t.participant_status IN ("refused")';
+
+      $pruned_count +=
+        patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+
       patch::my_execute( $db, $sql );
+
+      if( $pruned_count ) out( 'pruned ' .  $pruned_count . ' ' . $table_name . ' records' );
+
       $sql = 'DROP TABLE tmp1';
       patch::my_execute( $db, $sql );
     }
@@ -374,6 +399,7 @@ class patch
       'WHERE count>0 '.
       'ORDER BY test_entry_id DESC, id DESC' );
 
+    $pruned_count = 0;
     if( count( $rows ) > 0 )
     {
       $current_count = 0;
@@ -395,6 +421,7 @@ class patch
         {
            $sql = $sql . sprintf( '%d, ', $id );
            $current_count++;
+           $pruned_count++;
         }
       }
       $sql = substr( $sql, 0, strrpos( $sql, ',' ) );
@@ -410,10 +437,22 @@ class patch
       'WHERE te.ranked_word_set_id IS NULL ';
     $sql = $sql_pre .
       'AND audio_status IN ("unavailable","unusable")';
+
+    $pruned_count +=
+      patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+
     patch::my_execute( $db, $sql );
+
     $sql = $sql_pre .
       'AND participant_status IN ("refused")';
+
+    $pruned_count +=
+      patch::my_get_one( $db, str_replace( 'DELETE te.*','SELECT COUNT(*)', $sql ) );
+
     patch::my_execute( $db, $sql );
+
+    if( $pruned_count ) out( 'pruned ' .  $pruned_count . ' test_entry_ranked_word records' );
+
     $sql = 'DROP TABLE tmp3';
     patch::my_execute( $db, $sql );
     $sql = 'DROP TABLE tmp2';
