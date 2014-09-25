@@ -78,9 +78,7 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
     parent::execute();
 
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
-    $region_site_class_name = lib::get_class_name( 'database\region_site' );
     $word_class_name = lib::get_class_name( 'database\word' );
-    $session = lib::create( 'business\session' );
 
     $db_test_entry_ranked_word = $this->get_record();
     $db_test_entry = $db_test_entry_ranked_word->get_test_entry();
@@ -95,12 +93,11 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        $db_user = NULL;
         $db_assignment = $db_test_entry->get_assignment();
         if( is_null( $db_assignment ) )
         {
           $modifier = lib::create( 'database\modifier' );
-          $modifier->where( 'participant_id', '=', $db_test_entry->get_participant()->id );
+          $modifier->where( 'participant_id', '=', $db_test_entry->participant_id );
           $modifier->limit( 1 );
           $db_assignment = current( $assignment_class_name::select( $modifier ) );
         }
@@ -108,27 +105,11 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
 
         $data = NULL;
         $db_test = $db_test_entry->get_test();
-        $db_language = NULL;
+        $db_language = $db_test_entry->get_default_participant_language();
         $language_list = $db_user->get_language_list();
-        if( !is_array( $language_list ) || is_null( $language_list ) ) $language_list = array();
         if( 0 == count( $language_list ) )
-        {
-          $db_service = $session->get_service();
-          $db_site = $session->get_site();
+          $language_list[] = $db_language;
 
-          $modifier = lib::create( 'database\modifier' );
-          $modifier->where( 'service_id', '=', $db_service->id );
-          $modifier->where( 'site_id', '=', $db_site->id );
-          $modifier->group( 'language_id' );
-
-          // get the languages the site can process
-          foreach( $region_site_class_name::select( $modifier ) as $db_region_site )
-           $language_list[] = $db_region_site->get_language();
-
-          // if all else fails use the service language
-          if( 0 == count( $language_list ) )
-            $language_list[] = $session->get_service()->get_language();
-        }
         foreach( $language_list as $db_user_language )
         {
           $db_language = $db_user_language;
@@ -177,14 +158,11 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
                 'Assign an intrusion dictionary for the '. $db_test->name . ' test.',
                  __METHOD__ );
 
+            $session = lib::create( 'business\session' );
             $session->acquire_semaphore();
             $db_new_word = lib::create( 'database\word' );
             $db_new_word->dictionary_id = $db_dictionary->id;
             $db_new_word->word = $word;
-            if( is_null( $db_language ) )
-            {
-              $db_language = $session->get_service()->get_language();
-            }
             $db_new_word->language_id = $db_language->id;
             $db_new_word->save();
             $db_test_entry_ranked_word->word_id = $word_class_name::db()->insert_id();

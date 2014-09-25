@@ -111,8 +111,8 @@ class assignment extends \cenozo\database\record
         'Tried to get adjudication status for an assignment with no id', __METHOD__ );
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'assignment_id', '=', $this->id);
-    $modifier->where( 'adjudicate', '=', true);
+    $modifier->where( 'assignment_id', '=', $this->id );
+    $modifier->where( 'adjudicate', '=', true );
     $sql = sprintf( 'SELECT count(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 !== intval( static::db()->get_one( $sql ) );
   }
@@ -171,23 +171,28 @@ class assignment extends \cenozo\database\record
     $db_service = $session->get_service();
     $db_site = $session->get_site();
 
+    // get the languages that are common to both site and user
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'service_id', '=', $db_service->id );
     $modifier->where( 'site_id', '=', $db_site->id );
     $modifier->group( 'language_id' );
 
-    // get the languages the site can process
-    $site_languages = array();
-    foreach( $region_site_class_name::select( $modifier ) as $db_region_site )
-      $site_languages[] = $db_region_site->get_language()->id;
+    $sql = sprintf(
+      'SELECT language_id AS id '.
+      'FROM user_has_language uhl '.
+      'INNER JOIN ( '.
+      'SELECT l.id FROM language l '.
+      'JOIN region_site rs ON rs.language_id=l.id '.
+      '%s ) x ON x.id=uhl.language_id '.
+      'WHERE uhl.user_id = %s',
+      $modifier->get_sql(),
+      $database_class_name::format_string( $db_user->id ) );
 
-    // get the languages the user can process
-    $user_languages = array();
-    foreach( $db_user->get_language_list()  as $db_language )
-    {
-      if( in_array( $db_language->id, $site_languages ) )
-        $user_languages[] = $db_language->id;
-    }
+    $user_languages = static::db()->get_all( $sql );
+    array_walk( $user_languages, function( &$item ){ $item=$item['id']; } );
+
+    if( 0 == count( $user_languages ) )
+      $user_languages[] = $db_service->language_id;
 
     $id = NULL;
     if( $has_tracking )
@@ -199,7 +204,7 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
       $modifier->where( 'participant_site.site_id', '=', $db_site->id );
       $modifier->where( 'IFNULL( participant.language_id, ' .
-        $database_class_name::format_string( $user_languages[0] ) . ' )',
+        $database_class_name::format_string( current( $user_languages ) ) . ' )',
         'IN', $user_languages );
       $modifier->group( 'participant.id' );
 
@@ -320,11 +325,11 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'service_id', '=', $db_service->id );
     $modifier->group( 'language_id' );
 
-    $service_languages = array();
+    $cedar_languages = array();
     foreach( $region_site_name::select( $modifier ) as $db_region_site )
-      $service_languages[] = $db_region_site->language_id;
+      $cedar_languages[] = $db_region_site->language_id;
 
-    $num_language = count( $service_languages );
+    $num_language = count( $cedar_languages );
 
     // get all typists at this site that can process the current record's participant cohort
     // that have the required (multiple) language restrictions
@@ -332,7 +337,7 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'access.role_id', '=', $db_role->id );
     $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
-    $modifier->where( 'user_has_language.language_id', 'IN', $service_languages );
+    $modifier->where( 'user_has_language.language_id', 'IN', $cedar_languages );
     $modifier->where( 'user.active', '=', true );
     $modifier->group( 'user.id' );
     $modifier->having( 'COUNT( user.id )', '=', $num_language );

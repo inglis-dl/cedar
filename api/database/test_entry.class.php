@@ -465,4 +465,21 @@ class test_entry extends \cenozo\database\has_note
     }
     return $count;
   }
+
+  /**
+   * Get the id of the participant's preferred language or that of the
+   * service to use for transcribing audio recordings.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return $db_language default language to transcribe in
+   * @access public
+   */
+  public function get_default_participant_language()
+  {
+    $db_participant = is_null( $this->assignment_id ) ?
+      $this->get_participant() : $this->get_assignment()->get_participant();
+    return is_null( $db_participant->language_id ) ?
+      lib::create( 'business\session' )->get_service()->get_language() :
+      $db_participant->get_language();
+  }
 }

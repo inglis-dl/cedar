@@ -38,7 +38,6 @@ class test_entry_classification_transcribe extends base_transcribe
 
     $db_test_entry = $this->parent->get_record();
     $db_test = $db_test_entry->get_test();
-    $db_participant = $db_test_entry->get_assignment()->get_participant();
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->order( 'rank' );
