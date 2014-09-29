@@ -47,15 +47,14 @@ class word_list extends \cenozo\ui\pull
     $dictionary = array_filter( $dictionary );
 
     $user_id = $this->get_argument( 'user_id', 0 );
-    $language_list = NULL;
+    $id_list = array();
     if( 0 < $user_id )
     {
       $db_user = lib::create( 'database\user', $user_id );
-      $language_list = $db_user->get_language_list();
-      if( !is_array( $language_list ) || is_null( $language_list ) ) $language_list = array();
-      if( 0 == count( $language_list ) )
+      $id_list = $db_user->get_language_idlist();
+      if( 0 == count( $id_list ) )
       {
-        $language_list[] = lib::create( 'business\session' )->get_service()->get_language();
+        $id_list[] = lib::create( 'business\session' )->get_service()->get_language()->id;
       }
     }
 
@@ -64,7 +63,7 @@ class word_list extends \cenozo\ui\pull
     $modifier = lib::create( 'database\modifier' );
 
     $first = true;
-    $do_where_bracket = ( 1 < count( $dictionary ) ) && ( !is_null( $language_list ) );
+    $do_where_bracket = 1 < count( $dictionary ) && 0 < count( $id_list );
     if( $do_where_bracket )
     {
       $modifier->where_bracket( true );
@@ -86,10 +85,8 @@ class word_list extends \cenozo\ui\pull
       $modifier->where_bracket( false );
     }
 
-    if( !is_null( $language_list ) )
+    if( 0 < count( $id_list ) )
     {
-      $id_list = array();
-      foreach( $language_list as $db_language ) $id_list[] = $db_language->id;
       $modifier->where( 'language_id', 'IN', $id_list );
     }
 
