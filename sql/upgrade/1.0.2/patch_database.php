@@ -605,13 +605,17 @@ class patch
             {
               $sql = sprintf(
                 'SELECT COUNT(*) FROM ( '.
-                'SELECT rank, word_id FROM ( '.
-                'SELECT t1.rank, t1.word_id FROM test_entry_%s t1 '.
+                'SELECT rank, word FROM ( '.
+                'SELECT t1.rank, IF(t1.word_id IS NULL,"NULL", w1.word) as word '.
+                'FROM test_entry_%s t1 '.
+                'LEFT JOIN word w1 on w1.id=t1.word_id '.
                 'WHERE t1.test_entry_id = %d '.
                 'UNION ALL '.
-                'SELECT t2.rank, t2.word_id FROM test_entry_%s t2 '.
+                'SELECT t2.rank, IF(t2.word_id IS NULL,"NULL", w2.word) as word '.
+                'FROM test_entry_%s t2 '.
+                'LEFT JOIN word w2 on w2.id=t2.word_id '.
                 'WHERE t2.test_entry_id = %d ) AS tmp '.
-                'GROUP BY rank, word_id HAVING COUNT(*) = 1 ) AS tmp', $type, $t1['id'], $type, $t2['id'] );
+                'GROUP BY rank, word HAVING COUNT(*) = 1 ) AS tmp', $type, $t1['id'], $type, $t2['id'] );
               $match = 0 == patch::my_get_one( $db, $sql );
             }
             else if( 'confirmation' == $type )
