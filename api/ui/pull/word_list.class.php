@@ -48,7 +48,7 @@ class word_list extends \cenozo\ui\pull
 
     $user_id = $this->get_argument( 'user_id', 0 );
     $id_list = array();
-    if( 0 < $user_id )
+    if( 0 != $user_id )
     {
       $db_user = lib::create( 'database\user', $user_id );
       $id_list = $db_user->get_language_idlist();
