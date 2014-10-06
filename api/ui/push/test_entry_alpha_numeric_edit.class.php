@@ -81,19 +81,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        $db_assignment = $db_test_entry->get_assignment();
-        if( is_null( $db_assignment ) )
-        {
-          $modifier = lib::create( 'database\modifier' );
-          $modifier->where( 'participant_id', '=', $db_test_entry->participant_id );
-          $modifier->limit( 1 );
-          $db_assignment = current( $assignment_class_name::select( $modifier ) );
-        }
-        $db_user = $db_assignment->get_user();
-
-        $db_user_language_list = $db_user->get_language_list();
-        $db_language = ( 1 == count( $db_user_language_list ) ) ?
-          current( $db_user_language_list ) :
+        $db_language =
           $db_test_entry->get_default_participant_language();
 
         // does the word candidate exist in the primary dictionary?

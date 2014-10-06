@@ -264,6 +264,7 @@
           }
 
           args.columns = columns;
+          args.user_id = {{ user_id }};
 
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -302,6 +303,7 @@
           columns["word_id"] = "";
           columns["selection"] = selection;
           args.columns = columns;
+          args.user_id = {{ user_id }};
 
           // push the edits
           ajax_push( "{{ widget.subject }}", "edit", args );
@@ -373,6 +375,7 @@
           blank_id = '#' + $(this).prop( "id" ).replace( "intrusion", "blank" );
         }
         args.columns = columns;
+        args.user_id = {{ user_id }};
 
         // push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {

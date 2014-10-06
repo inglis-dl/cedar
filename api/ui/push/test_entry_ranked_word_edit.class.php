@@ -93,28 +93,27 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        $db_assignment = $db_test_entry->get_assignment();
-        if( is_null( $db_assignment ) )
+        $db_languages = array();
+        $user_id = $this->get_argument( 'user_id', 0 );
+        if( 0 != $user_id )
         {
-          $modifier = lib::create( 'database\modifier' );
-          $modifier->where( 'participant_id', '=', $db_test_entry->participant_id );
-          $modifier->limit( 1 );
-          $db_assignment = current( $assignment_class_name::select( $modifier ) );
+          $db_user = lib::create( 'database\user', $user_id );
+          $db_languages = $db_user->get_language_list();
         }
-        $db_user = $db_assignment->get_user();
 
-        $data = NULL;
-        $db_test = $db_test_entry->get_test();
-        $db_language = $db_test_entry->get_default_participant_language();
-        $language_list = $db_user->get_language_list();
-        if( 0 == count( $language_list ) )
-          $language_list[] = $db_language;
-
-        foreach( $language_list as $db_user_language )
+        if( 0 == count( $db_languages ) )
         {
-          $db_language = $db_user_language;
+          $db_languages[] = $db_test_entry->get_default_participant_language();
+        }
+
+        $db_test = $db_test_entry->get_test();
+        $data = NULL;
+        $db_language = NULL;
+        foreach( $db_languages as $language )
+        {
+          $db_language = $language;
           $data = $db_test->get_word_classification( $word_candidate, NULL, $db_language );
-          if( 'candidate' !== $data['classification'] ) break;
+          if( 'candidate' != $data['classification'] ) break;
         }
 
         $classification = $data['classification'];
@@ -122,14 +121,14 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
         $word_id = $data['word_id'];
 
         // check if mispelled and throw an exception
-        if( 'mispelled' === $classification )
+        if( 'mispelled' == $classification )
           throw lib::create( 'exception\notice',
             'The word "'. $word . '" is a mispelled word and cannot be accepted.',
             __METHOD__ );
 
-        if( 'variant' === $db_test_entry_ranked_word->selection )
+        if( 'variant' == $db_test_entry_ranked_word->selection )
         {
-          if( 'variant' !== $classification )
+          if( 'variant' != $classification )
             throw lib::create( 'exception\notice',
               'The word "' . $word . '" is not one of the '.
               'accepted variant words: add as an intrusion instead.',
@@ -141,14 +140,14 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
         else if( is_null( $db_test_entry_ranked_word->ranked_word_set_id ) )
         {
           // reject words that are in the primary or variant dictionaries
-          if( 'primary' === $classification || 'variant' === $classification )
+          if( 'primary' == $classification || 'variant' == $classification )
             throw lib::create( 'exception\notice',
               'The word "' . $word . '" is one of the '.
               $classification . ' words and cannot be entered as an intrusion.',
               __METHOD__ );
 
           // not a primary or variant
-          if( $classification == 'candidate' )
+          if( 'candidate' == $classification )
           {
             //get the test's intrusion dictionary and add it as an intrusion
             $db_dictionary = $db_test->get_intrusion_dictionary();

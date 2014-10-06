@@ -178,6 +178,7 @@
             columns["word_candidate"] = candidate;
           }
           args.columns = columns;
+          args.user_id = {{ user_id }};
 
           //push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -258,6 +259,7 @@
           args.id = $text_input.prop( "id" ).split( "__" )[0];
           columns["word_id"] = '';
           args.columns = columns;
+          args.user_id = {{ user_id }};
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
            $text_input.val( "" );
            $text_input.attr( "value", "" );

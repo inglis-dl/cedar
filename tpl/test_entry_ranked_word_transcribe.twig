@@ -253,6 +253,7 @@
             columns["ranked_word_set_id"] = $(this).prop( "name" );
           }
           args.columns = columns;
+          args.user_id = {{ user_id }};
 
           // push edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -335,6 +336,8 @@
             columns["word_candidate"] = '';
           }
           args.columns = columns;
+          args.user_id = {{ user_id }};
+
           var do_text = true;
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
             var text_id =
