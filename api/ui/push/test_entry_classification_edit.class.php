@@ -69,7 +69,6 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $word_class_name = lib::get_class_name( 'database\word' );
-    $session = lib::create( 'business\session' );
 
     $db_test_entry_classification = $this->get_record();
     $db_test_entry = $db_test_entry_classification->get_test_entry();
@@ -84,32 +83,27 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        // assign a language to the word based on the original transcribers' language restrictions
-        $db_user = NULL;
-        $db_assignment = $db_test_entry->get_assignment();
-        if( is_null( $db_assignment ) )
+        $db_languages = array();
+        $user_id = $this->get_argument( 'user_id', 0 );
+        if( 0 != $user_id )
         {
-          $modifier = lib::create( 'database\modifier' );
-          $modifier->where( 'participant_id', '=', $db_test_entry->get_participant()->id );
-          $modifier->limit( 1 );
-          $db_assignment = current( $assignment_class_name::select( $modifier ) );
+          $db_user = lib::create( 'database\user', $user_id );
+          $db_languages = $db_user->get_language_list();
         }
-        $db_user = $db_assignment->get_user();
 
-        $data = NULL;
-        $db_test = $db_test_entry->get_test();
-        $db_language = NULL;
-        $language_list = $db_user->get_language_list();
-        if( !is_array( $language_list ) || is_null( $language_list ) ) $language_list = array();
-        if( 0 == count( $language_list ) )
+        if( 0 == count( $db_languages ) ) 
         {
-          $language_list[] = $session->get_service()->get_language();
+          $db_languages[] = $db_test_entry->get_default_participant_language();
         }
-        foreach( $language_list as $db_user_language )
+
+        $db_test = $db_test_entry->get_test();
+        $data = NULL;
+        $db_language = NULL;
+        foreach( $db_languages as $language )
         {
-          $db_language = $db_user_language;
+          $db_language = $language;
           $data = $db_test->get_word_classification( $word_candidate, NULL, $db_language );
-          if( 'candidate' !== $data['classification'] ) break;
+          if( 'candidate' != $data['classification'] ) break;
         }
 
         $classification = $data['classification'];
@@ -180,14 +174,11 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
                 __METHOD__ );
           }
 
+          $session = lib::create( 'business\session' );
           $session->acquire_semaphore();
           $db_new_word = lib::create( 'database\word' );
           $db_new_word->dictionary_id = $db_dictionary->id;
           $db_new_word->word = $word;
-          if( is_null( $db_language ) )
-          {
-            $db_language = $session->get_service()->get_language();
-          }
           $db_new_word->language_id = $db_language->id;
           $db_new_word->save();
           $db_test_entry_classification->word_id = $word_class_name::db()->insert_id();

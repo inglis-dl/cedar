@@ -67,7 +67,6 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
 
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $word_class_name = lib::get_class_name( 'database\word' );
-    $session = lib::create( 'business\session' );
 
     $db_test_entry_alpha_numeric = $this->get_record();
     $db_test_entry = $db_test_entry_alpha_numeric->get_test_entry();
@@ -82,21 +81,8 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        // assign a language to the word based on the original transcribers' language restrictions
-        $db_user = NULL;
-        $db_assignment = $db_test_entry->get_assignment();
-        if( is_null( $db_assignment ) )
-        {
-          $modifier = lib::create( 'database\modifier' );
-          $modifier->where( 'participant_id', '=', $db_test_entry->get_participant()->id );
-          $modifier->limit( 1 );
-          $db_assignment = current( $assignment_class_name::select( $modifier ) );
-        }
-        $db_user = $db_assignment->get_user();
-
-        $db_language = current( $db_user->get_language_list() );
-        if( is_null( $db_language ) )
-          $db_language = $session->get_service()->get_language();
+        $db_language =
+          $db_test_entry->get_default_participant_language();
 
         // does the word candidate exist in the primary dictionary?
         $db_dictionary = $db_test_entry->get_test()->get_dictionary();
@@ -113,6 +99,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
         }
         else
         {
+          $session = lib::create( 'business\session' );
           $session->acquire_semaphore();
           $db_new_word = lib::create( 'database\word' );
           $db_new_word->dictionary_id = $db_dictionary->id;

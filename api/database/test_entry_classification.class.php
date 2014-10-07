@@ -32,8 +32,21 @@ class test_entry_classification extends \cenozo\database\has_rank
       $lhs_list_obj = current( $lhs_list );
       if( false !== $rhs_list_obj && false !== $lhs_list_obj )
       {
-        if( $rhs_list_obj->rank != $lhs_list_obj->rank ||
-            $rhs_list_obj->word_id != $lhs_list_obj->word_id ) $match = false;
+        if( $rhs_list_obj->rank != $lhs_list_obj->rank )
+        {
+          $match = false;
+        }  
+        else
+        {
+           if( $rhs_list_obj->word_id != $lhs_list_obj->word_id )
+           {
+             $match = false;
+             $rhs_word = $rhs_list_obj->get_word();
+             $lhs_word = $lhs_list_obj->get_word();
+             if( !is_null( $rhs_word ) && !is_null( $lhs_word ) 
+                 && $rhs_word->word == $lhs_word->word ) $match = true;
+           }
+        }   
       }
       else
         $match = false;

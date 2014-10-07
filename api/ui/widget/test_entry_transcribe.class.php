@@ -96,7 +96,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $participant_status_list = array_reverse( $participant_status_list, true );
 
     // only classification tests (FAS and AFT) require prompt status
-    if( $test_type_name != 'classification' )
+    if( 'classification' != $test_type_name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
@@ -114,7 +114,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'test_id', $db_test->id );
 
     // set the dictionary id's needed for text autocomplete
-    if( $test_type_name == 'classification' || $test_type_name == 'ranked_word' )
+    if( 'classification' == $test_type_name || 'ranked_word' == $test_type_name )
     {
       $db_dictionary = $db_test->get_dictionary();
       if( !is_null( $db_dictionary ) )
@@ -134,7 +134,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'user_id', $db_assignment->user_id );
 
     // get the audio files from sabretooth
-    if( $db_participant->get_cohort()->name == 'tracking' )
+    if( 'tracking' == $db_participant->get_cohort()->name )
     {
       $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );

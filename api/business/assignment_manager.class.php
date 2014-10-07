@@ -594,13 +594,13 @@ class assignment_manager extends \cenozo\singleton
                    'word_3' => $word_3 );
 
           // get word classfications
-          if( $test_type_name == 'classification' )
+          if( 'classification' == $test_type_name )
           {
             for( $i = 1; $i <= 3; $i++ )
             {
               $classification_i = '';
               $word_id_i = "word_id_$i";
-              if( $$word_id_i !== '' )
+              if( '' !== $$word_id_i )
               {
                 $db_word = lib::create( 'database\word', $$word_id_i );
                 $dictionary_id = $db_word->dictionary_id;
@@ -727,6 +727,9 @@ class assignment_manager extends \cenozo\singleton
 
             $adjudicate = ( $a_obj->word_id != $b_obj->word_id ||
                             $a_obj->selection != $b_obj->selection );
+
+            if( 'variant' == $a_obj->selection && 'variant' == $b_obj->selection &&
+                ( is_null( $a_obj->word_id ) || is_null( $b_obj->word_id ) ) ) $adjudicate = true;
 
             // copy the progenitor to the adjudicate
             if( !$adjudicate )
