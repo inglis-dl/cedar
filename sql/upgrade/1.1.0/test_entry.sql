@@ -42,7 +42,7 @@ CREATE PROCEDURE patch_test_entry()
 
       UPDATE test_entry SET deferred_temp=NULL WHERE deferred=0;
 
-      UPDATE test_entry SET deferred_temp='pending' WHERE deferred=1;
+      UPDATE test_entry SET deferred_temp='requested' WHERE deferred=1;
 
       ALTER TABLE test_entry DROP COLUMN deferred;
 

@@ -27,7 +27,7 @@ $SETTINGS['sabretooth']['role'] = 'cedar';
 $SETTINGS['interface']['classification_max_rank'] = 40;
 
 // the default number of alpha_numeric test entry inputs
-SETTINGS['interface']['alpha_numeric_max_rank'] = 60;
+$SETTINGS['interface']['alpha_numeric_max_rank'] = 60;
 
 // the url of sabretooth (set to NULL to disable sabretooth support)
 $SETTINGS['url']['SABRETOOTH'] = NULL;
@@ -37,4 +37,5 @@ $SETTINGS['path']['APPLICATION'] = '/usr/local/lib/cedar';
 
 // the root directory where comprehensive recordings are located
 // (must be an absolute path that the asterisk server's user has access to)
-$SETTINGS['path']['COMP_RECORDINGS'] = '/var/local/cedar/comp-recordings';
+$SETTINGS['path']['COMP_RECORDINGS'] = NULL;
+$SETTINGS['url']['COMP_RECORDINGS'] = NULL;

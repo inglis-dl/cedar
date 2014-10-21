@@ -89,7 +89,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'test_id', '=', $db_test->id );
-    $modifier->where( 'deferred', '=', false );
+    $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN', array( 'requested', 'pending' ) );
     $modifier->where( 'completed', '=', true );
     $modifier->where( 'adjudicate', '!=', NULL );
     $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
@@ -128,7 +128,9 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     // set the language(s) of dictionary words based on one user id
     $this->set_variable( 'user_id', $db_user->id );
 
-    if( 'tracking' == $db_participant->get_cohort()->name )
+    $cohort_name = $db_participant->get_cohort()->name;
+    $recording_data = array();
+    if( 'tracking' == $cohort_name )
     {
       $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
@@ -152,8 +154,21 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
           $recording_data[] = str_replace( 'localhost', $_SERVER['SERVER_NAME'], $url );
         }
       }
-      $this->set_variable( 'recording_data', $recording_data );
     }
+    else if( 'comprehensive' == $cohort_name )
+    {
+      $recording_class_name = lib::get_class_name( 'database\recording' );
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'participant_id', '=', $db_participant->id );
+      $modifier->where( 'test_id', '=', $db_test->id );
+      $modifier->where( 'visit', '=', 1 );
+      $modifier->limit( 1 );
+      $db_recording = current( $recording_class_name::select( $modifier ) );
+      $url = COMP_RECORDINGS_URL . '/' . $db_recording->get_filename();
+      $recording_data[] = $url;
+    }
+
+    $this->set_variable( 'recording_data', $recording_data );
 
     $this->set_variable( 'test_entry_id_1', $db_test_entry->id );
     $this->set_variable( 'user_1', $db_user->name );

@@ -44,7 +44,8 @@ abstract class base_adjudicate extends \cenozo\ui\widget
     $db_test_entry = $this->parent->get_record();
     $heading = $db_test_entry->get_test()->name . ' test adjudicate form';
 
-    if( $db_test_entry->deferred )
+    if( 'requested' == $db_test_entry->deferred ||
+        'pending' == $db_test_entry->deferred )
       $heading = $heading . ' NOTE: this test is currently deferred';
 
     $this->set_heading( $heading );

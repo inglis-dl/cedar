@@ -107,7 +107,8 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'participant_status', $participant_status );
     $this->set_variable( 'participant_status_list', $participant_status_list );
 
-    $this->set_variable( 'deferred', $db_test_entry->deferred );
+    $this->set_variable( 'deferred',
+      is_null( $db_test_entry->deferred ) ? 'null': $db_test_entry->deferred );
     $this->set_variable( 'completed', $db_test_entry->completed );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $test_type_name );
@@ -133,8 +134,9 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $db_participant = $db_assignment->get_participant();
     $this->set_variable( 'user_id', $db_assignment->user_id );
 
-    // get the audio files from sabretooth
-    if( 'tracking' == $db_participant->get_cohort()->name )
+    $cohort_name = $db_participant->get_cohort()->name;
+    $recording_data = array();
+    if( 'tracking' == $cohort_name )
     {
       $setting_manager = lib::create( 'business\setting_manager' );
       $sabretooth_manager = lib::create( 'business\cenozo_manager', SABRETOOTH_URL );
@@ -147,7 +149,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
       $args['qnaire_rank'] = 1;
       $args['participant_id'] = $db_participant->id;
       $recording_list = $sabretooth_manager->pull( 'recording', 'list', $args );
-      $recording_data = array();
       if( !is_null( $recording_list ) &&
           1 == $recording_list->success && 0 < count( $recording_list->data ) )
       {
@@ -158,8 +159,21 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
           $recording_data[] = str_replace( 'localhost', $_SERVER['SERVER_NAME'], $url );
         }
       }
-      $this->set_variable( 'recording_data', $recording_data );
     }
+    else if( 'comprehensive' == $cohort_name )
+    {
+      $recording_class_name = lib::get_class_name( 'database\recording' );
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'participant_id', '=', $db_participant->id );
+      $modifier->where( 'test_id', '=', $db_test->id );
+      $modifier->where( 'visit', '=', 1 );
+      $modifier->limit( 1 );
+      $db_recording = current( $recording_class_name::select( $modifier ) );
+      $url = COMP_RECORDINGS_URL . '/' . $db_recording->get_filename();
+      $recording_data[] = $url;
+    }
+
+    $this->set_variable( 'recording_data', $recording_data );
 
     // find the ids of the prev and next test_entrys
     $db_prev_test_entry = $db_test_entry->get_previous();
