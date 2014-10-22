@@ -29,6 +29,9 @@ $SETTINGS['interface']['classification_max_rank'] = 40;
 // the default number of alpha_numeric test entry inputs
 $SETTINGS['interface']['alpha_numeric_max_rank'] = 60;
 
+// the default number hours before an assignment can be deleted
+$SETTINGS['interface']['assignment_retention_time'] = 8;
+
 // the url of sabretooth (set to NULL to disable sabretooth support)
 $SETTINGS['url']['SABRETOOTH'] = NULL;
 

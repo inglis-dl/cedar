@@ -109,17 +109,17 @@ class assignment_manager extends \cenozo\singleton
 
     $db_assignment->end_datetime = NULL;
     $db_sibling_assignment->end_datetime = NULL;
-    $date_obj = $util_class_name::get_datetime_object();
+    $now_date_obj = $util_class_name::get_datetime_object();
     if( array_key_exists( $db_assignment->id, $assignment_reset ) )
     {
       $db_assignment->user_id = $assignment_reset[ $db_assignment->id ];
-      $db_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
+      $db_assignment->start_datetime = $now_date_obj->format( 'Y-m-d H:i:s' );
     }
 
     if( array_key_exists( $db_sibling_assignment->id, $assignment_reset ) )
     {
       $db_sibling_assignment->user_id = $assignment_reset[ $db_sibling_assignment->id ];
-      $db_sibling_assignment->start_datetime = $date_obj->format( 'Y-m-d H:i:s' );
+      $db_sibling_assignment->start_datetime = $now_date_obj->format( 'Y-m-d H:i:s' );
     }
     $db_assignment->save();
     $db_sibling_assignment->save();
@@ -149,6 +149,66 @@ class assignment_manager extends \cenozo\singleton
       $db_assignment->initialize();
     if( array_key_exists( $db_sibling_assignment->id, $assignment_reset ) )
       $db_sibling_assignment->initialize();
+  }
+
+  /**
+   * Purge an assigment of its test_entry records including any adjudicates
+   * associated with the participant.  If a sibling assignment exists, reset
+   * its test_entry records' adjudicate states to default (NULL).
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param  database\assignment $db_assignment
+   * @access public
+   */
+  public static function purge_assignment( $db_assignment )
+  {
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
+    // remove any adjudications associated with this participant
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'participant_id', '=', $db_assignment->participant_id );
+    foreach( $test_entry_class_name::select( $modifier ) as $db_adjudicate_entry )
+    {
+      $mod = lib::create( 'database\modifier' );
+      $mod->where( 'test_entry_id', '=', $db_adjudicate_entry->id );
+      $sql = sprintf( 'DELETE FROM test_entry_%s %s',
+        $db_adjudicate_entry->get_test()->get_test_type()->name,
+        $mod->get_sql() );
+      $test_entry_class_name::db()->execute( $sql );
+      $db_adjudicate_entry->delete();
+    }
+
+    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+    if( !is_null( $db_sibling_assignment ) )
+    {
+      $db_sibling_assignment->end_datetime = NULL;
+      $db_sibling_assignment->save();
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
+      // reset adjudicate status to null for all test_entry records
+      $sql = sprintf(
+        'UPDATE test_entry '.
+        'SET adjudicate = NULL %s',
+        $modifier->get_sql() );
+      $test_entry_class_name::db()->execute( $sql );
+    }
+
+    // delete test_entry and daughter entry records
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment_id', '=', $db_assignment->id );
+    foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
+    {
+      $mod = lib::create( 'database\modifier' );
+      $mod->where( 'test_entry_id', '=', $db_test_entry->id );
+      $sql = sprintf( 'DELETE FROM test_entry_note %s',
+        $mod->get_sql() );
+      $test_entry_class_name::db()->execute( $sql );
+      $sql = sprintf( 'DELETE FROM test_entry_%s %s',
+        $db_test_entry->get_test()->get_test_type()->name,
+        $mod->get_sql() );
+      $test_entry_class_name::db()->execute( $sql );
+      $db_test_entry->delete();
+    }
   }
 
   /**

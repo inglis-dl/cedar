@@ -12,6 +12,8 @@ VALUES( "widget", "assignment", "list", true, "Lists assignments." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "assignment", "new", true, "Creates a new assignment." );
 INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "assignment", "delete", true, "Delete an assignment." );
+INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "widget", "assignment", "view", true, "View the details of an assignment." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "assignment", "report", true, "Download an assignment report." );
