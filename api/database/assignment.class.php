@@ -50,7 +50,7 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'assignment_id', '=', $this->id);
     $modifier->where( 'deferred', 'IN', $test_entry_class_name::$deferred_states );
 
-    $sql = sprintf( 'SELECT count(*) FROM test_entry %s', $modifier->get_sql() );
+    $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 !== intval( static::db()->get_one( $sql ) );
   }
 

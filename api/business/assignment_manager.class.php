@@ -46,7 +46,7 @@ class assignment_manager extends \cenozo\singleton
     $db_test_entry->initialize();
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'adjudicate', '=', true );
+    $modifier->where( 'adjudicate', '!=', NULL );
     $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry( $modifier );
     if( !is_null( $db_sibling_test_entry ) )
     {
@@ -170,7 +170,7 @@ class assignment_manager extends \cenozo\singleton
     if( $assignment_class_name::all_tests_complete( $db_assignment->id ) )
     {
       if( !is_null( $db_sibling_assignment ) &&
-          $assignment_class_name->all_tests_complete( $db_sibling_assignment->id ) )
+          $assignment_class_name::all_tests_complete( $db_sibling_assignment->id ) )
       {
         // go through all the tests and look for differences
         // get all the assignment's tests
