@@ -49,6 +49,7 @@ class assignment_delete extends \cenozo\ui\push\base_delete
     $modifier->where( 'user_id', '=', $db_assignment->user_id );
     $modifier->where( 'site_id','=', $db_assignment->site_id );
     $modifier->where( 'operation.subject', 'LIKE', 'test_entry_%' );
+    $modifier->where( 'datetime', '>', $db_assignment->start_datetime );
     $modifier->order( 'datetime', true );
     $modifier->limit( 1 );
     $db_activity = current( $activity_class_name::select( $modifier ) );
