@@ -70,6 +70,10 @@ INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "assignment", "reassign", true,
 "Reassign an assignment to a different user with no language restrictions." );
 
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "assignment", "delete", true,
+"Delete an assignment." );
+
 -- test_entry_ranked_word
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )

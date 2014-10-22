@@ -88,6 +88,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
 
     $this->set_addable( $is_typist );
     $this->set_allow_restrict_state( !$is_typist );
+    $this->set_removable( 'administrator' == $db_role->name );
 
     if( $this->allow_restrict_state )
     {

@@ -441,4 +441,16 @@ class assignment extends \cenozo\database\record
 
     return $id_list;
   }
+
+  /**
+   * Purge the assignment in preparation for deletion.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return boolean
+   * @access public
+   */
+  public function purge()
+  {
+    
+  }
 }
