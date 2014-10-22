@@ -246,14 +246,15 @@
           var is_variant = $(this).prop( "id" ).split( "__" )[1] === "candidate";
           if( undefined !== obj ) {
             columns["word_id"] = obj;
+            args.columns = columns;
           } else {
-            columns["word_candidate"] = candidate;
+            args.candidate = candidate;
           }
           if( is_variant ) {
             columns["selection"] = "variant";
             columns["ranked_word_set_id"] = $(this).prop( "name" );
+            args.columns = columns;
           }
-          args.columns = columns;
           args.user_id = {{ user_id }};
 
           // push edits
@@ -261,9 +262,7 @@
 
             // determine what type of word this is along with its id
             args.id = {{ parent.id }};
-            var columns = new Object();
-            columns["child_id"] = target_entry_id;
-            args.columns = columns;
+            args.child_id = target_entry_id;
 
             var result = ajax_pull( "test_entry", "classify_word", args );
             $(this).addClass( result.classification );
@@ -333,10 +332,10 @@
           var selection = $(this).val();
           args.id = $(this).prop( "id" ).split("__")[0];
           columns["selection"] = selection;
-          if( "variant" !== selection ) {
-            columns["word_candidate"] = '';
-          }
           args.columns = columns;
+          if( "variant" !== selection ) {
+            args.candidate = '';
+          }
           args.user_id = {{ user_id }};
 
           var do_text = true;

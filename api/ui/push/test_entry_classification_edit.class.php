@@ -38,18 +38,17 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
   {
     parent::validate();
 
-    $columns = $this->get_argument( 'columns' );
+    $candidate = $this->get_argument( 'candidate', NULL );
 
-    if( array_key_exists( 'word_candidate', $columns ) )
+    if( !is_null( $candidate ) )
     {
       // empty entries are permitted for adjudicates
-      $word_candidate = $columns['word_candidate'];
-      if( '' !== $word_candidate )
+      if( '' !== $candidate )
       {
         $word_class_name = lib::get_class_name( 'database\word' );
-        if( !$word_class_name::is_valid_word( $word_candidate ) )
+        if( !$word_class_name::is_valid_word( $candidate ) )
           throw lib::create( 'exception\notice',
-            'The word "'. $word_candidate . '" is not a valid word entry.',
+            'The word "'. $candidate . '" is not a valid word entry.',
             __METHOD__ );
       }
     }
@@ -72,12 +71,11 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
 
     $db_test_entry_classification = $this->get_record();
     $db_test_entry = $db_test_entry_classification->get_test_entry();
-    $columns = $this->get_argument( 'columns' );
+    $candidate = $this->get_argument( 'candidate', NULL );
 
-    if( array_key_exists( 'word_candidate', $columns ) )
+    if( !is_null( $candidate ) )
     {
-      $word_candidate = $columns['word_candidate'];
-      if( '' === $word_candidate )
+      if( '' === $candidate )
       {
         $db_test_entry_classification->word_id = NULL;
       }
@@ -91,7 +89,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           $db_languages = $db_user->get_language_list();
         }
 
-        if( 0 == count( $db_languages ) ) 
+        if( 0 == count( $db_languages ) )
         {
           $db_languages[] = $db_test_entry->get_default_participant_language();
         }
@@ -102,7 +100,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         foreach( $db_languages as $language )
         {
           $db_language = $language;
-          $data = $db_test->get_word_classification( $word_candidate, NULL, $db_language );
+          $data = $db_test->get_word_classification( $candidate, NULL, $db_language );
           if( 'candidate' != $data['classification'] ) break;
         }
 

@@ -103,8 +103,8 @@
           var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
           columns["rank"] = rank;
           columns["test_entry_id"] = {{ parent.id }};
-          columns["word_candidate"] = candidate;
           args.columns = columns;
+          args.candidate = candidate;
 
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
