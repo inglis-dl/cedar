@@ -42,6 +42,13 @@
   - can be locked so that editing is restricted to a list of specified users only
   - restrict select reports by collection remains to be implemented
 
+* Adding assignment delete
+  - add assignment delete operation
+  - allow administrators to delete open assignments
+  - assignments cannot be deleted if
+    1) their end_datetime is not null (ie., "closed")
+    2) the last edit activity is within a set retention time (eg., 8 hours)
+
 ====================================================================================================
 1.0.1
 ====================================================================================================
