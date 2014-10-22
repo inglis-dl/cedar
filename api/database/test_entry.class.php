@@ -186,7 +186,7 @@ class test_entry extends \cenozo\database\has_note
       else if( 'classification' == $test_type_name || 'alpha_numeric' == $test_type_name )
       {
         $modifier = clone $base_mod;
-        $modfier->where( 'word_id', '!=', NULL );
+        $modifier->where( 'word_id', '!=', NULL );
         $completed = 0 < $entry_class_name::count( $modifier );
       }
       else if( 'ranked_word' == $test_type_name )
