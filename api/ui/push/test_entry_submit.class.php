@@ -40,7 +40,7 @@ class test_entry_submit extends \cenozo\ui\push\base_record
 
     $db_test_entry = $this->get_record();
 
-    if( !$db_test_entry->completed )
+    if( !$db_test_entry->is_completed() )
       throw lib::create( 'exception\notice',
         'Tried to submit an incomplete adjudication.', __METHOD__ );
   }

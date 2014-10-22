@@ -45,7 +45,7 @@ class test_entry extends \cenozo\database\has_note
             $db_test_entry = static::get_unique_record(
               array( 'test_id', 'assignment_id' ),
               array( $db_prev_test->id, $this->assignment_id ) );
-            if( !is_null( $db_test_entry ) && 1 == $db_test_entry->adjudicate )
+            if( !is_null( $db_test_entry ) && $db_test_entry->adjudicate )
             {
               $db_prev_test_entry = $db_test_entry;
               $found = true;
@@ -64,9 +64,8 @@ class test_entry extends \cenozo\database\has_note
               array( 'test_id', 'assignment_id' ),
               array( $db_prev_test->id, $this->assignment_id ) );
             if( !is_null( $db_test_entry ) &&
-                $db_test_entry->audio_status != 'unusable' &&
-                $db_test_entry->audio_status != 'unavailable' &&
-                $db_test_entry->participant_status != 'refused' )
+                !in_array( $db_test_entry->audio_status, self::$audio_complete_states ) &&
+                'refused' != $db_test_entry->participant_status )
             {
               $db_prev_test_entry = $db_test_entry;
               $found = true;
@@ -110,7 +109,7 @@ class test_entry extends \cenozo\database\has_note
             $db_test_entry = static::get_unique_record(
               array( 'test_id', 'assignment_id' ),
               array( $db_next_test->id, $this->assignment_id ) );
-            if( !is_null( $db_test_entry ) && true == $db_test_entry->adjudicate )
+            if( !is_null( $db_test_entry ) && $db_test_entry->adjudicate )
             {
               $db_next_test_entry = $db_test_entry;
               $found = true;
@@ -129,9 +128,8 @@ class test_entry extends \cenozo\database\has_note
               array( 'test_id', 'assignment_id' ),
               array( $db_next_test->id, $this->assignment_id ) );
             if( !is_null( $db_test_entry ) &&
-                $db_test_entry->audio_status != 'unusable' &&
-                $db_test_entry->audio_status != 'unavailable' &&
-                $db_test_entry->participant_status != 'refused' )
+                !in_array( $db_test_entry->audio_status, self::$audio_complete_states ) &&
+                'refused' != $db_test_entry->participant_status )
             {
               $db_next_test_entry = $db_test_entry;
               $found = true;
@@ -158,7 +156,7 @@ class test_entry extends \cenozo\database\has_note
     // check if the participant refused the test or if
     // the audio was sufficiently faulty
     if( 'refused' == $this->participant_status ||
-        'unavailable' == $this->audio_status || 'unusable' == $this->audio_status )
+        in_array( $this->audio_status, self::$audio_complete_states ) )
     {
       $completed = true;
     }
@@ -179,46 +177,46 @@ class test_entry extends \cenozo\database\has_note
 
       $base_mod = lib::create( 'database\modifier' );
       $base_mod->where( 'test_entry_id', '=', $this->id );
-      if( $test_type_name == 'confirmation' )
+      if( 'confirmation' == $test_type_name )
       {
-        $base_mod->where( 'confirmation', '!=', NULL );
-        $completed = 0 < $entry_class_name::count( $base_mod );
+        $modifier = clone $base_mod;
+        $modifier->where( 'confirmation', '!=', NULL );
+        $completed = 0 < $entry_class_name::count( $modifier );
       }
-      else if( $test_type_name == 'classification' || $test_type_name == 'alpha_numeric' )
+      else if( 'classification' == $test_type_name || 'alpha_numeric' == $test_type_name )
       {
-        $base_mod->where( 'word_id', '!=', NULL );
-        $completed = 0 < $entry_class_name::count( $base_mod );
+        $modifier = clone $base_mod;
+        $modifier->where( 'word_id', '!=', NULL );
+        $completed = 0 < $entry_class_name::count( $modifier );
       }
-      else if( $test_type_name == 'ranked_word' )
+      else if( 'ranked_word' == $test_type_name )
       {
         // custom query for ranked_word test type
-        $id_string = $database_class_name::format_string( $this->id );
+        $modifier = clone $base_mod;
+        $modifier->where( 'ranked_word_set_id', '!=', NULL );
+        $modifier->where( 'selection', '!=', NULL );
         $sql = sprintf(
           'SELECT '.
           '( '.
             '( SELECT MAX(rank) FROM ranked_word_set ) - '.
             '( '.
-              'SELECT COUNT(*) FROM test_entry_ranked_word '.
-              'WHERE test_entry_id = %s '.
-              'AND selection IS NOT NULL '.
+              'SELECT COUNT(*) FROM test_entry_ranked_word %s '.
+              'AND IF( selection = "variant", IF( word_id IS NULL, 0, 1 ), 1 ) '.
             ') '.
           ')',
-          $id_string );
+          $modifier->get_sql() );
 
-        $completed = 0 == static::db()->get_one( $sql );
+        $completed = 0 === intval( static::db()->get_one( $sql ) );
 
-        // check that intrusions are filled in for non-adjucate entries
+        // check that intrusions are filled in for non-adjudicate entries
         if( $completed && is_null( $this->participant_id ) )
         {
-          $sql = sprintf(
-            'SELECT COUNT(*) FROM test_entry_ranked_word '.
-            'WHERE test_entry_id = %s '.
-            'AND selection IS NULL '.
-            'AND word_id IS NULL '.
-            'AND ranked_word_set_id IS NULL',
-            $id_string );
+          $modifier = clone $base_mod;
+          $modifier->where( 'ranked_word_set_id', '=', NULL );
+          $modifier->where( 'selection', '=', NULL );
+          $modifier->where( 'word_id', '=', NULL );
 
-          $completed = 0 == static::db()->get_one( $sql );
+          $completed = 0 === $entry_class_name::count( $modifier );
         }
       }
     }
@@ -303,7 +301,7 @@ class test_entry extends \cenozo\database\has_note
     if( $reset_default )
     {
       $this->completed = false;
-      $this->deferred = false;
+      $this->deferred = NULL;
       $this->adjudicate = NULL;
       $this->audio_status = NULL;
       $this->participant_status = NULL;
@@ -379,13 +377,13 @@ class test_entry extends \cenozo\database\has_note
   {
     $db_test = $this->get_test();
     $test_type_name = $db_test->get_test_type()->name;
-    if( $test_type_name == 'confirmation' ) return 0;
+    if( 'confirmation' == $test_type_name ) return 0;
 
     $database_class_name = lib::get_class_name( 'database\database' );
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
 
     $sql = null;
-    if( $test_type_name == 'classification' || $test_type_name == 'alpha_numeric' )
+    if( 'classification' == $test_type_name || 'alpha_numeric' == $test_type_name )
     {
       $sql = sprintf(
         'SELECT id '.
@@ -433,11 +431,11 @@ class test_entry extends \cenozo\database\has_note
    */
   public function truncate( $size = 0 )
   {
-    if( $size == 0 ) return 0;
+    if( 0 == $size ) return 0;
 
     $db_test = $this->get_test();
     $test_type_name = $db_test->get_test_type()->name;
-    if( $test_type_name == 'confirmation' ) return 0;
+    if( 'confirmation' == $test_type_name ) return 0;
 
     $database_class_name = lib::get_class_name( 'database\database' );
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
@@ -465,4 +463,35 @@ class test_entry extends \cenozo\database\has_note
     }
     return $count;
   }
+
+  /**
+   * Get the id of the participant's preferred language or that of the
+   * service to use for transcribing audio recordings.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return $db_language default language to transcribe in
+   * @access public
+   */
+  public function get_default_participant_language()
+  {
+    $db_participant = is_null( $this->assignment_id ) ?
+      $this->get_participant() : $this->get_assignment()->get_participant();
+    return is_null( $db_participant->language_id ) ?
+      lib::create( 'business\session' )->get_service()->get_language() :
+      $db_participant->get_language();
+  }
+
+  /**
+   * Audio states that allow completion without daughter entry items.
+   * @var audio_complete_states
+   * @access private
+   */
+  public static $audio_complete_states = array( 'unavailable', 'unusable' );
+
+  /**
+   * Deferral states that indicate a deferred status.
+   * @var audio_complete_states
+   * @access private
+   */
+  public static $deferred_states = array( 'requested', 'pending' );
 }

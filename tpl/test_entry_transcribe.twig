@@ -17,7 +17,9 @@
       var participant_state = $( "#{{ widget.full }}__participant_status option:selected" ).val();
       disable = audio_state == 'unusable' || audio_state == 'unavailable' ||
                 participant_state == 'refused';
-      if( {{ deferred }} ) disable = true;
+
+      var is_deferred = "requested" == {{ deferred }};
+      if( is_deferred ) disable = true;
       $( "#{{ widget.full }}__audio_status" ).prop( "disabled", disable );
       $( "#{{ widget.full }}__participant_status" ).prop( "disabled", disable );
     }
@@ -71,7 +73,7 @@
                 callback( true );
               } else {
                 var args = new Object();
-                args.columns = { deferred : 1 };
+                args.columns = { deferred : "requested" };
                 args.id = {{ id }};
                 if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
                   slot_refresh( {{ slot }} );
@@ -108,7 +110,7 @@
           open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
         } );
 
-      } ).button( { disabled : {{ deferred }} } ); // end defer click
+      } ).button( { disabled : "requested" == "{{ deferred }}" } ); // end defer click
 
       $( "#{{ widget.full }}_prev" ).click( function() {
         {% if 0 == prev_test_entry_id %}

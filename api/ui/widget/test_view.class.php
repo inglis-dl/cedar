@@ -45,6 +45,7 @@ class test_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'strict', 'constant', 'Strict' );
     $this->add_item( 'rank_words', 'constant', 'Rank Words' );
     $this->add_item( 'dictionary_id', 'enum', 'Primary Dictionary' );
+    $this->add_item( 'recording_name', 'string', 'Recording Name' );
 
     if( !$db_test->strict )
     {
@@ -116,6 +117,8 @@ class test_view extends \cenozo\ui\widget\base_view
       }
       catch( \cenozo\exception\permission $e ) {}
     }
+
+    $this->set_item( 'recording_name', $db_test->recording_name, true );
   }
 
   /**

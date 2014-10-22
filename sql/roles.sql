@@ -57,6 +57,11 @@ AND role.name IN ( "typist" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "assignment" AND operation.name = "delete"
+AND role.name IN ( "administrator" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "assignment" AND operation.name = "view"
 AND role.name IN ( "administrator", "supervisor" );
 

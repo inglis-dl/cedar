@@ -258,6 +258,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   `strict` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = allow non dictionary words',
   `rank_words` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = requires ranked words',
   `rank` INT UNSIGNED NOT NULL,
+  `recording_name` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_dictionary_id` (`dictionary_id` ASC),
   INDEX `fk_intrusion_dictionary_id` (`intrusion_dictionary_id` ASC),
@@ -266,6 +267,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test` (
   UNIQUE INDEX `uq_rank` (`rank` ASC),
   INDEX `fk_test_type_id` (`test_type_id` ASC),
   INDEX `fk_mispelled_dictionary_id` (`mispelled_dictionary_id` ASC),
+  UNIQUE INDEX `uq_recording_name` (`recording_name` ASC),
   CONSTRAINT `fk_test_dictionary_id`
     FOREIGN KEY (`dictionary_id`)
     REFERENCES `cedar`.`dictionary` (`id`)
@@ -343,11 +345,11 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `test_id` INT UNSIGNED NOT NULL,
   `assignment_id` INT UNSIGNED NULL DEFAULT NULL COMMENT 'NULL id signifies adjudicate entry',
   `participant_id` INT UNSIGNED NULL DEFAULT NULL,
-  `audio_status` ENUM('salvageable','unusable','unavailable') NULL DEFAULT NULL,
+  `audio_status` ENUM('salvable','unusable','unavailable') NULL DEFAULT NULL,
   `participant_status` ENUM('suspected prompt','prompted','refused') NULL DEFAULT NULL,
   `audio_fault` TINYINT(1) NOT NULL DEFAULT 0,
   `completed` TINYINT(1) NOT NULL DEFAULT 0,
-  `deferred` TINYINT(1) NOT NULL DEFAULT 0,
+  `deferred` ENUM('requested','pending','resolved') NULL DEFAULT NULL,
   `adjudicate` TINYINT(1) NULL DEFAULT NULL COMMENT '0 , 1, or NULL (never set)',
   PRIMARY KEY (`id`),
   INDEX `fk_test_id` (`test_id` ASC),
@@ -676,6 +678,8 @@ DROP TABLE IF EXISTS `cedar`.`ranked_word_set_has_language` ;
 CREATE TABLE IF NOT EXISTS `cedar`.`ranked_word_set_has_language` (
   `ranked_word_set_id` INT UNSIGNED NOT NULL,
   `language_id` INT UNSIGNED NOT NULL,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
   `word_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`ranked_word_set_id`, `language_id`),
   INDEX `fk_language_id` (`language_id` ASC),
@@ -694,6 +698,35 @@ CREATE TABLE IF NOT EXISTS `cedar`.`ranked_word_set_has_language` (
   CONSTRAINT `fk_ranked_word_set_has_language_word_id`
     FOREIGN KEY (`word_id`)
     REFERENCES `cedar`.`word` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`recording`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`recording` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`recording` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  `participant_id` INT UNSIGNED NOT NULL,
+  `test_id` INT UNSIGNED NOT NULL,
+  `visit` INT NOT NULL,
+  INDEX `fk_participant_id` (`participant_id` ASC),
+  PRIMARY KEY (`id`),
+  INDEX `fk_test_id` (`test_id` ASC),
+  UNIQUE INDEX `uq_visit_participant_id_test_id` (`participant_id` ASC, `test_id` ASC, `visit` ASC),
+  CONSTRAINT `fk_recording_participant_id`
+    FOREIGN KEY (`participant_id`)
+    REFERENCES `cenozo`.`participant` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_recording_test_id`
+    FOREIGN KEY (`test_id`)
+    REFERENCES `cedar`.`test` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -769,7 +802,7 @@ DROP TABLE IF EXISTS `cedar`.`assignment_total`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `assignment_total` AS
 SELECT assignment_id,
-SUM( deferred ) AS deferred,
+SUM( IF( deferred IS NULL, 0, IF( deferred = 'resolved', 0, 1 ) ) ) AS deferred,
 SUM( IFNULL( adjudicate, 0 ) ) AS adjudicate,
 SUM( completed ) AS completed
 FROM test_entry
@@ -794,10 +827,9 @@ DROP VIEW IF EXISTS `cedar`.`test_entry_total_deferred` ;
 DROP TABLE IF EXISTS `cedar`.`test_entry_total_deferred`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `test_entry_total_deferred` AS
-SELECT assignment_id, SUM( deferred ) AS deferred FROM test_entry
+SELECT assignment_id, SUM( IF( deferred IS NULL, 0, IF( deferred = 'resolved', 0, 1 ) ) ) AS deferred FROM test_entry
 WHERE assignment_id IS NOT NULL
-GROUP BY assignment_id
-;
+GROUP BY assignment_id;
 
 -- -----------------------------------------------------
 -- View `cedar`.`test_entry_total_adjudicate`

@@ -202,8 +202,10 @@ class productivity_report extends \cenozo\ui\pull\base_report
       'SELECT assignment.id, '.
       'assignment.user_id AS user_id, '.
       'IF( ( COUNT( test_entry.id ) - '.
-      'SUM( IF( test_entry.deferred = false, '.
-      'IF( test_entry.completed = true , 1, 0 ), 0 ) ) ) = 0, 1, 0 ) AS complete_status '.
+      'SUM( IF( test_entry.deferred IS NULL, 1, '.
+      'IF( test_entry.deferred = "resolved", 1, '.
+      'IF( test_entry.completed = true, 1, 0 ), 0 ) ) ) ) = 0, 1, 0 ) '.
+      'AS complete_status '.
       'FROM assignment '.
       'LEFT JOIN test_entry ON assignment.id=test_entry.assignment_id %s'.
       'GROUP BY assignment.id '.

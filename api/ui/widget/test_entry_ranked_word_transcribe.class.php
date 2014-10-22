@@ -36,12 +36,11 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     parent::setup();
 
     $db_test_entry = $this->parent->get_record();
-    $db_test = $db_test_entry->get_test();
-    $db_participant = $db_test_entry->get_assignment()->get_participant();
-
-    $db_language = $db_participant->get_language();
-    if( is_null( $db_language ) )
-      $db_language = lib::create( 'business\session' )->get_service()->get_language();
+    $db_user = $db_test_entry->get_assignment()->get_user();
+    $db_language_list = $db_user->get_language_list();
+    $db_language =
+      1 == count( $db_language_list ) ? current( $db_language_list ) :
+      $db_test_entry->get_default_participant_language();
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'ranked_word_set_id', '!=', NULL );
@@ -58,7 +57,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
       $db_word = $db_test_entry_ranked_word->get_word();
       $classification = '';
 
-      if( !is_null( $db_word ) && $selection == 'variant' )
+      if( !is_null( $db_word ) && 'variant' == $selection )
       {
         $classification = 'variant';
       }
