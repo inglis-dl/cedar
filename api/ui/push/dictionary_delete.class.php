@@ -31,6 +31,7 @@ class dictionary_delete extends \cenozo\ui\push\base_delete
    * Validate the operation.  If validation fails this method will throw a notice exception.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
    * @access protected
    */
   protected function validate()
