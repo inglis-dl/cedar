@@ -6,7 +6,7 @@ AuthLDAPURL "ldap://localhost/ou=Users,dc=clsadev,dc=rhpcs,dc=McMaster,dc=CA"
 Require valid-user
 
 AuthzLDAPAuthoritative off
-AuthName "clsadev"
+AuthName "CLSA development"
 SSLRequireSSL
 
 <IfModule mod_rewrite.c>
