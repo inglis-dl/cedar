@@ -194,40 +194,75 @@ class assignment extends \cenozo\database\record
     if( 0 == count( $user_languages ) )
       $user_languages[] = $db_service->language_id;
 
+
     $id = NULL;
     if( $has_tracking )
     {
+\cenozo\database\database::$debug=true;
+      $sql =
+        'CREATE TEMPORARY TABLE temp_completed AS '.
+        'SELECT DISTINCT participant.id AS participant_id '.
+        'FROM participant '.
+        'JOIN event ON event.participant_id = participant.id '.
+        'JOIN event_type ON event_type.id = event.event_type_id '.
+        'JOIN cohort ON cohort.id = participant.cohort_id '.
+        'WHERE event_type.name = "completed (Baseline)" '.
+        'AND participant.active = true '.
+        'AND cohort.name = "tracking"';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_completed ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql =
+        'CREATE TEMPORARY TABLE temp_recording AS '.
+        'SELECT DISTINCT participant_id '.
+        'FROM sabretooth_recording';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_recording ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
       $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'participant.active', '=', true );
-      $modifier->where( 'user_assignment.id', '=', NULL );
-      $modifier->where( 'cohort.name', '=', 'tracking' );
-      $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
+      $modifier->where( 'participant_site.service_id', '=', $db_service->id );
       $modifier->where( 'participant_site.site_id', '=', $db_site->id );
       $modifier->where( 'IFNULL( participant.language_id, ' .
         $database_class_name::format_string( current( $user_languages ) ) . ' )',
         'IN', $user_languages );
-      $modifier->group( 'participant.id' );
+      $modifier->group( 'participant.id ');
 
       $sql = sprintf(
-        'SELECT participant.id FROM participant '.
+        'CREATE TEMPORARY TABLE temp_assignable AS '.
+        'SELECT participant.id AS participant_id FROM participant '.
         'JOIN participant_site ON participant_site.participant_id = participant.id '.
-        'JOIN cohort ON cohort.id = participant.cohort_id '.
-        'JOIN event ON event.participant_id = participant.id '.
-        'JOIN event_type ON event_type.id = event.event_type_id '.
-        'JOIN '.
-        '('.
-          'SELECT participant_id FROM sabretooth_recording '.
-          'GROUP BY participant_id '.
-        ') AS temp ON participant.id = temp.participant_id '.
+        'JOIN temp_completed ON temp_completed.participant_id = participant.id '.
+        'JOIN temp_recording ON temp_recording.participant_id = participant.id '.
         'LEFT JOIN assignment ON assignment.participant_id = participant.id '.
-        'LEFT JOIN assignment AS user_assignment '.
-        'ON user_assignment.participant_id = participant.id '.
-        'AND user_assignment.user_id = %s %s '.
+        '%s '. // where statement here
         'HAVING COUNT(*) < 2 ',
-        $database_class_name::format_string( $db_user->id ),
         $modifier->get_sql() );
 
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_assignable ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql = sprintf(
+        'SELECT participant_id FROM temp_assignable '.
+        'WHERE participant_id NOT IN ( '.
+          'SELECT participant_id FROM assignment '.
+          'WHERE user_id = %s '.
+        ')', $database_class_name::format_string( $db_user->id ) );
+
       $id = static::db()->get_one( $sql );
+
+
+ \cenozo\database\database::$debug=false;
     }
 
     // stub until comprehensive recordings are worked out
@@ -440,17 +475,5 @@ class assignment extends \cenozo\database\record
     }
 
     return $id_list;
-  }
-
-  /**
-   * Purge the assignment in preparation for deletion.
-   *
-   * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @return boolean
-   * @access public
-   */
-  public function purge()
-  {
-    
   }
 }
