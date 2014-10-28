@@ -194,11 +194,9 @@ class assignment extends \cenozo\database\record
     if( 0 == count( $user_languages ) )
       $user_languages[] = $db_service->language_id;
 
-
     $id = NULL;
     if( $has_tracking )
     {
-\cenozo\database\database::$debug=true;
       $sql =
         'CREATE TEMPORARY TABLE temp_completed AS '.
         'SELECT DISTINCT participant.id AS participant_id '.
@@ -260,9 +258,6 @@ class assignment extends \cenozo\database\record
         ')', $database_class_name::format_string( $db_user->id ) );
 
       $id = static::db()->get_one( $sql );
-
-
- \cenozo\database\database::$debug=false;
     }
 
     // stub until comprehensive recordings are worked out
