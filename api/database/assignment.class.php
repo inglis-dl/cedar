@@ -163,9 +163,10 @@ class assignment extends \cenozo\database\record
       'SELECT language_id AS id '.
       'FROM user_has_language uhl '.
       'INNER JOIN ( '.
-      'SELECT l.id FROM language l '.
-      'JOIN region_site rs ON rs.language_id=l.id '.
-      '%s ) x ON x.id=uhl.language_id '.
+        'SELECT l.id FROM language l '.
+        'JOIN region_site rs ON rs.language_id=l.id '.
+      '%s '. // modifier sql
+      ') x ON x.id=uhl.language_id '.
       'WHERE uhl.user_id = %s',
       $modifier->get_sql(),
       $database_class_name::format_string( $db_user->id ) );
@@ -177,68 +178,139 @@ class assignment extends \cenozo\database\record
       $user_languages[] = $db_service->language_id;
 
     $id = NULL;
-    $base_mod = lib::create( 'database\modifier' );
-    $base_mod->where( 'participant.active', '=', true );
-    $base_mod->where( 'user_assignment.id', '=', NULL );
-    $base_mod->where( 'participant_site.site_id', '=', $db_site->id );
-    $base_mod->where( 'IFNULL( participant.language_id, ' .
-      $database_class_name::format_string( current( $user_languages ) ) . ' )',
-      'IN', $user_languages );
-    $base_mod->group( 'participant.id' );
-
-    $sql_pre =
-      'SELECT participant.id AS participant_id, assignment.id AS assignment_id FROM participant '.
-      'JOIN participant_site ON participant_site.participant_id = participant.id '.
-      'JOIN cohort ON cohort.id = participant.cohort_id ';
-    $sql_post =
-      ') AS temp ON participant.id = temp.participant_id '.
-      'LEFT JOIN assignment ON assignment.participant_id = participant.id '.
-      'LEFT JOIN assignment AS user_assignment '.
-      'ON user_assignment.participant_id = participant.id '.
-      'AND user_assignment.user_id = %s %s '.
-      'HAVING COUNT(participant.id) < 2 '.
-      'ORDER BY assignment.id DESC';
-
     $rows = NULL;
     if( $has_tracking )
     {
-      $modifier = clone $base_mod;
-      $modifier->where( 'cohort.name', '=', 'tracking' );
-      $modifier->where( 'event_type.name', '=', 'completed (Baseline)' );
-
-      $sql = sprintf(
-        $sql_pre .
+      $sql =
+        'CREATE TEMPORARY TABLE temp_completed AS '.
+        'SELECT DISTINCT participant.id AS participant_id '.
+        'FROM participant '.
         'JOIN event ON event.participant_id = participant.id '.
         'JOIN event_type ON event_type.id = event.event_type_id '.
-        'JOIN ( '.
-        'SELECT DISTINCT participant_id FROM sabretooth_recording '.
-        $sql_post,
-        $database_class_name::format_string( $db_user->id ),
+        'JOIN cohort ON cohort.id = participant.cohort_id '.
+        'WHERE event_type.name = "completed (Baseline)" '.
+        'AND participant.active = true '.
+        'AND cohort.name = "tracking"';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_completed ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql =
+        'CREATE TEMPORARY TABLE temp_recording AS '.
+        'SELECT DISTINCT participant_id '.
+        'FROM sabretooth_recording';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_recording ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'participant_site.service_id', '=', $db_service->id );
+      $modifier->where( 'participant_site.site_id', '=', $db_site->id );
+      $modifier->where( 'IFNULL( participant.language_id, ' .
+        $database_class_name::format_string( current( $user_languages ) ) . ' )',
+        'IN', $user_languages );
+      $modifier->group( 'participant.id ');
+
+      $sql = sprintf(
+        'CREATE TEMPORARY TABLE temp_assignable AS '.
+        'SELECT participant.id AS participant_id, assignment.id AS assignment_id '.
+        'FROM participant '.
+        'JOIN participant_site ON participant_site.participant_id = participant.id '.
+        'JOIN temp_completed ON temp_completed.participant_id = participant.id '.
+        'JOIN temp_recording ON temp_recording.participant_id = participant.id '.
+        'LEFT JOIN assignment ON assignment.participant_id = participant.id '.
+        '%s '. // where statement here
+        'HAVING COUNT(*) < 2 ',
         $modifier->get_sql() );
 
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_assignable ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql = sprintf(
+        'SELECT participant_id, assignment_id FROM temp_assignable '.
+        'WHERE participant_id NOT IN ( '.
+          'SELECT participant_id FROM assignment '.
+          'WHERE user_id = %s '.
+        ')', $database_class_name::format_string( $db_user->id ) );
+
       $rows = static::db()->get_all( $sql );
-      if( 0 == count( $rows ) ) $rows = NULL;
     }
 
     if( is_null( $rows ) && $has_comprehensive )
     {
-      $modifier = clone $base_mod;
-      $modifier->where( 'cohort.name', '=', 'comprehensive' );
-      $modifier->where( 'event_type1.name', '=', 'completed (Baseline Home)' );
-      $modifier->where( 'event_type2.name', '=', 'completed (Baseline Site)' );
-
-      $sql = sprintf(
-        $sql_pre .
+      $sql =
+        'CREATE TEMPORARY TABLE temp_completed AS '.
+        'SELECT DISTINCT participant.id AS participant_id '.
+        'FROM participant '.
         'JOIN event AS event1 ON event1.participant_id = participant.id '.
         'JOIN event_type AS event_type1 ON event_type1.id = event1.event_type_id '.
         'JOIN event AS event2 ON event2.participant_id = participant.id '.
         'JOIN event_type AS event_type2 ON event_type2.id = event2.event_type_id '.
-        'JOIN ( '.
-        'SELECT DISTINCT participant_id FROM recording '.
-        'WHERE visit = 1 '.
-        $sql_post,
-        $database_class_name::format_string( $db_user->id ),
+        'JOIN cohort ON cohort.id = participant.cohort_id '.
+        'WHERE event_type1.name = "completed (Baseline Home)" '.
+        'AND event_type2.name = "completed (Baseline Site)" '.
+        'AND participant.active = true '.
+        'AND cohort.name = "comprehensive"';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_completed ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql =
+        'CREATE TEMPORARY TABLE temp_recording AS '.
+        'SELECT DISTINCT participant_id '.
+        'FROM recording '.
+        'WHERE visit = 1';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_recording ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'participant_site.service_id', '=', $db_service->id );
+      $modifier->where( 'participant_site.site_id', '=', $db_site->id );
+      $modifier->where( 'IFNULL( participant.language_id, ' .
+        $database_class_name::format_string( current( $user_languages ) ) . ' )',
+        'IN', $user_languages );
+      $modifier->group( 'participant.id ');
+
+      $sql = sprintf(
+        'CREATE TEMPORARY TABLE temp_assignable AS '.
+        'SELECT participant.id AS participant_id, assignment.id AS assignment_id '.
+        'FROM participant '.
+        'JOIN participant_site ON participant_site.participant_id = participant.id '.
+        'JOIN temp_completed ON temp_completed.participant_id = participant.id '.
+        'JOIN temp_recording ON temp_recording.participant_id = participant.id '.
+        'LEFT JOIN assignment ON assignment.participant_id = participant.id '.
+        '%s '. // where statement here
+        'HAVING COUNT(*) < 2 ',
         $modifier->get_sql() );
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_assignable ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql = sprintf(
+        'SELECT participant_id, assignment_id FROM temp_assignable '.
+        'WHERE participant_id NOT IN ( '.
+          'SELECT participant_id FROM assignment '.
+          'WHERE user_id = %s '.
+        ')', $database_class_name::format_string( $db_user->id ) );
 
       $rows = static::db()->get_all( $sql );
 
