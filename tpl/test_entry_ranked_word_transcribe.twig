@@ -27,7 +27,7 @@
 
       function configure_ui( do_text ) {
 
-        var is_deferred = "requested" == {{ deferred }};
+        var is_deferred = "requested" == "{{ deferred }}";
         if( is_deferred || !{{ editable }} ) {
           $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
