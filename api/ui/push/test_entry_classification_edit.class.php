@@ -124,27 +124,25 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           // determine which dictionary to add the candidate to
           $db_dictionary = NULL;
 
-          $is_FAS = preg_match( '/FAS/', $db_test->name );
-          if( $is_FAS )
+          if( false !== strpos( $db_test->name, 'FAS' ) )
           {
             $is_intrusion = false;
-            // any words that do not begin with 'f' or 'ph' are intrusions
-            if( preg_match( '/FAS (f words)/', $db_test->name ) &&
-                !( 0 === strpos( 'f', $word ) ||
-                   0 === strpos( 'ph', $word ) ) )
+            // any f words that do not begin with 'f' or 'ph' are intrusions
+            if( false !== strpos( $db_test->name, 'f word' ) &&
+                0 !== strpos( $word, 'f' ) &&
+                0 !== strpos( $word, 'ph' ) )
             {
               $is_intrusion = true;
             }
-            // any words that do not begin with 'a' are intrusions
-            else if( preg_match( '/FAS (a words)/', $db_test->name ) &&
-                     !( 0 === strpos( 'a', $word ) ) )
+            // any a words that do not begin with 'a' are intrusions
+            else if( false !== strpos( $db_test->name, 'a word' ) &&
+                     0 !== strpos( $word, 'a' ) )
             {
               $is_intrusion = true;
             }
-            // any words that do not begin with 's' or 'c' are intrusions
-            else if( preg_match( '/FAS (s words)/', $db_test->name ) &&
-                     !( 0 === strpos( 's', $word ) ||
-                        0 === strpos( 'c', $word ) ) )
+            // any s words that do not begin with 's' or 'c' are intrusions
+            else if( 0 !== strpos( $word, 's' ) &&
+                     0 !== strpos( $word, 'c' ) )
             {
               $is_intrusion = true;
             }
