@@ -62,7 +62,7 @@ class recording extends \cenozo\database\record
           $name = trim( str_replace( '.wav', '', $parts[0] ) );
           $uid = trim( $parts[1] );
           $visit = intval( ltrim( $parts[2], '0' ) );
-          
+
           $db_test = $test_class_name::get_unique_record( 'recording_name', $name );
           if( is_null( $db_test ) ) continue;
 
@@ -70,7 +70,7 @@ class recording extends \cenozo\database\record
           $modifier->where( 'uid', '=', $uid );
           $modifier->limit( 1 );
           $db_participant = current( $participant_class_name::select( $modifier ) );
-          if( is_null( $db_participant ) )
+          if( false === $db_participant )
             throw lib::create( 'exception\notice',
               'A participant with UID = ' . $uid . ' does not exist.', __METHOD__ );
 
