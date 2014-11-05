@@ -1,4 +1,24 @@
 ====================================================================================================
+1.1.0
+====================================================================================================
+
+* Adding comprehensive recordings
+  - add functionality for comprehensive cohort recordings to be loaded from disk
+  - add new recording table
+  - recordings are stored on disk according to visit, participant UID, and cognitive variable
+    name as stored and identified in Opal (eg., 001/A123456/COG_ALPTME_REC2_COM.wav )
+
+* Workflow improvements
+  - implement new deferral process using expanded deferred states: NULL, requested, pending, 
+    resolved
+  - a typist requests a deferral setting the deferred status of a test to "requested"
+  - administrators review and change the deferred status of a test in the test_entry view to "pending"
+  - a test's deferred status changes to "resolved" after the first typist edit that completes the test
+  - participant allocation is restricted on a complete by complete assigment basis by checking
+    during assignment request if there is a sibling assignment, and if so, that the sibling 
+    assignment has all tests completed
+
+====================================================================================================
 1.0.2
 ====================================================================================================
 

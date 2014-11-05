@@ -38,13 +38,15 @@ abstract class base_adjudicate extends \cenozo\ui\widget
   {
     parent::prepare();
 
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
     if( is_null( $this->parent ) )
       throw lib::create( 'exception\runtime', 'This class must have a parent', __METHOD__ );
 
     $db_test_entry = $this->parent->get_record();
     $heading = $db_test_entry->get_test()->name . ' test adjudicate form';
 
-    if( $db_test_entry->deferred )
+    if( in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
       $heading = $heading . ' NOTE: this test is currently deferred';
 
     $this->set_heading( $heading );

@@ -92,15 +92,15 @@
 
           // push the edit
           var args = new Object();
-          var columns = new Object();
           args.id = target_entry_id;
 
           if( 0 == candidate.length ) {
+            var columns = new Object();
             columns["word_id"] = '';
+            args.columns = columns;
           } else {
-            columns["word_candidate"] = candidate;
+            args.candidate = candidate;
           }
-          args.columns = columns;
 
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -136,14 +136,14 @@
         $(this).attr( "value", candidate );
 
         var args = new Object();
-        var columns = new Object();
         args.id = target_entry_id;
         if( 0 == candidate.length ) {
+          var columns = new Object();
           columns["word_id"] = '';
+          args.columns = columns;
         } else {
-          columns["word_candidate"] = candidate;
+          args.candidate = candidate;
         }
-        args.columns = columns;
 
         // flag to determine the submit button enable state
         var blank_id = '#' + $(this).prop( "id" ).replace( "adjudicate", "blank" );

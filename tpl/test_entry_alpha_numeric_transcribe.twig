@@ -20,7 +20,8 @@
       function configure_ui() {
 
         // disable elements based on deferred status
-        if( {{ deferred }} || !{{ editable }} ) {
+        var is_deferred = "requested" == "{{ deferred }}";
+        if( is_deferred || !{{ editable }} ) {
           $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
@@ -102,8 +103,8 @@
           var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
           columns["rank"] = rank;
           columns["test_entry_id"] = {{ parent.id }};
-          columns["word_candidate"] = candidate;
           args.columns = columns;
+          args.candidate = candidate;
 
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {

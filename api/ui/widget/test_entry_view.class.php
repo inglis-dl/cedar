@@ -40,6 +40,8 @@ class test_entry_view extends \cenozo\ui\widget\base_view
 
     parent::prepare();
 
+    $db_test_entry = $this->get_record();
+
     // add items to the view
     $this->add_item( 'participant.uid', 'constant', 'UID' );
     $this->add_item( 'cohort.name', 'constant', 'Cohort' );
@@ -49,12 +51,16 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->add_item( 'test.name', 'constant', 'Test' );
     $this->add_item( 'audio_status', 'enum', 'Audio Status' );
     $this->add_item( 'participant_status', 'enum', 'Participant Status' );
-    $this->add_item( 'deferred', 'boolean', 'Deferred' );
-    $this->add_item( 'completed', 'boolean', 'Completed' );
+    if( in_array( $db_test_entry->deferred, array( 'requested', 'pending' ) ) )
+      $this->add_item( 'deferred', 'enum', 'Deferred' );
+    else
+      $this->add_item( 'deferred', 'constant', 'Deferred' );
+
+    $this->add_item( 'completed', 'constant', 'Completed' );
     $this->add_item( 'adjudicate', 'constant', 'Adjudicate' );
 
     // create the test_entry_transcribe sub widget
-    if(  lib::create( 'business\session' )->get_role()->name == 'typist' )
+    if( 'typist' ==  lib::create( 'business\session' )->get_role()->name )
       throw lib::create( 'exception\runtime',
         'Only administrators and supervisors can view transcriptions within a test_entry_view',
         __METHOD__ );
@@ -110,7 +116,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $participant_status_list = array_reverse( $participant_status_list, true );
 
     // only classification tests (FAS and AFT) require prompt status
-    if( $db_test->get_test_type()->name != 'classification' )
+    if( 'classification' != $db_test->get_test_type()->name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
@@ -119,10 +125,22 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->set_item( 'participant_status',
       $db_test_entry->participant_status, true, $participant_status_list );
 
-    $this->set_item( 'deferred', $db_test_entry->deferred  );
-    $this->set_item( 'completed', $db_test_entry->completed );
+    if( in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
+    {
+      $deferred_list = $test_entry_class_name::get_enum_values( 'deferred' );
+      $deferred_list = array_combine( $deferred_list, $deferred_list );
+      unset( $deferred_list['resolved'] );
+      $this->set_item( 'deferred',
+        $db_test_entry->deferred, true, $deferred_list );
+    }
+    else
+      $this->set_item( 'deferred',
+        is_null( $db_test_entry->deferred ) ? 'No' : ucwords( $db_test_entry->deferred ) );
+
+
+    $this->set_item( 'completed', $db_test_entry->completed ? 'Yes' : 'No' );
     $this->set_item( 'adjudicate',
-      is_null( $db_test_entry->adjudicate ) || $db_test_entry->adjudicate == false ? 'No' : 'Yes' );
+      is_null( $db_test_entry->adjudicate ) || !$db_test_entry->adjudicate ? 'No' : 'Yes' );
 
     try
     {

@@ -37,8 +37,7 @@ class test_entry_classify_word extends \cenozo\ui\pull\base_record
     parent::execute();
 
     $db_test_entry = $this->get_record();
-    $columns = $this->get_argument( 'columns' );
-    $child_id = $columns['child_id'];
+    $child_id = $this->get_argument( 'child_id', 0 );
     $db_test = $db_test_entry->get_test();
     $test_type_name = $db_test->get_test_type()->name;
     $db_child_entry = lib::create( 'database\test_entry_'.$test_type_name, $child_id );

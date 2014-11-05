@@ -73,8 +73,8 @@ class assignment_new extends \cenozo\ui\push\base_new
   {
     parent::finish();
 
-    $assignment_manager = lib::create( 'business\assignment_manager' );
-    $assignment_manager::initialize_assignment( $this->get_record() );
+    $db_assignment = $this->get_record();
+    $db_assignment->initialize();
 
     $session = lib::create( 'business\session' );
     $session->release_semaphore();

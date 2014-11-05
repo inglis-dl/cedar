@@ -59,9 +59,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       $db_user = $session->get_user();
 
       // which languages can the user process?
-      $user_languages = array();
-      foreach( $db_user->get_language_list() as $db_language )
-        $user_languages[] = $db_language->id;
+      $user_languages = $db_user->get_language_idlist();
 
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'service_id', '=', $db_service->id );
@@ -82,7 +80,8 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       // sanity check that the user can transcribe in a language at the current site
       if( 0 == count( $site_languages ) )
         throw lib::create( 'exception\notice',
-          'There must be one or more region-site languages assigned to user: '.
+          'There must be one or more region-site languages from '.
+          $db_site->name . ' assigned to user: '.
           $db_user->name, __METHOD__ );
     }
 
@@ -134,6 +133,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
   {
     parent::setup();
 
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $language_class_name = lib::get_class_name( 'database\language' );
     $operation_class_name = lib::get_class_name( 'database\operation' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
@@ -150,10 +150,10 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
 
     if( $this->allow_restrict_state )
     {
-      $language_mod = lib::create( 'database\modifier' );
-      $language_mod->where( 'active', '=', true );
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'active', '=', true );
       $languages = array( 'any' => 'any' );
-      foreach( $language_class_name::select( $language_mod ) as $db_language )
+      foreach( $language_class_name::select( $modifier ) as $db_language )
         $languages[$db_language->id] = $db_language->name;
       $this->set_variable( 'languages', $languages );
 
@@ -173,7 +173,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
 
       $deferred   = $db_assignment->has_deferrals();
       $adjudicate = $db_assignment->has_adjudicates();
-      $completed  = $db_assignment->all_tests_complete();
+      $completed  = $assignment_class_name::all_tests_complete( $db_assignment->id );
 
       // select the first test_entry for which we either want to transcribe
       // or adjudicate depending on user role
@@ -182,8 +182,16 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       if( 'typist' == $db_role->name )
       {
         $test_entry_mod = clone $base_mod;
-        $test_entry_mod->where( 'completed', '=', false );
-        $test_entry_mod->where( 'deferred', '=', false );
+        // get the first test that could be pending
+        if( $deferred )
+        {
+          $test_entry_mod->where( 'IFNULL( deferred, "NULL" )', '=', 'pending' );
+        }
+        // otherwise, get the first incomplete test_entry
+        else
+        {
+          $test_entry_mod->where( 'completed', '=', false );
+        }
         $test_entry_mod->order( 'test.rank' );
         $test_entry_mod->limit( 1 );
         $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
@@ -197,24 +205,29 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       else if( 'typist' != $db_role->name && $completed && $adjudicate )
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-        if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() &&
+        if( !is_null( $db_sibling_assignment ) &&
+            $assignment_class_name::all_tests_complete( $db_sibling_assignment->id ) &&
             $db_sibling_assignment->has_adjudicates() )
         {
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
           $test_entry_mod->where( 'adjudicate', '=', true );
-          $test_entry_mod->where( 'deferred', '=', false );
           $test_entry_mod->where( 'completed', '=', true );
-          $test_entry_mod->order( 'test_id' );
+          $test_entry_mod->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
+            $test_entry_class_name::$deferred_states );
+          $test_entry_mod->order( 'test.rank' );
           $test_entry_mod->limit( 1 );
+
           $db_test_entry = current( $test_entry_class_name::select( $test_entry_mod ) );
           if( false !== $db_test_entry )
           {
             // see if the sibling test_entry exists
             $sibling_mod = lib::create( 'database\modifier' );
             $sibling_mod->where( 'adjudicate', '=', true );
-            $sibling_mod->where( 'deferred', '=', false );
             $sibling_mod->where( 'completed', '=', true );
+            $sibling_mod->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
+              $test_entry_class_name::$deferred_states );
+
             if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) &&
                 !$allow_adjudicate )
             {
@@ -270,16 +283,23 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
    */
   public function determine_record_count( $modifier = NULL )
   {
+    if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+    $modifier->join( 'participant', 'participant.id', 'assignment.participant_id' );
+    $modifier->where( 'cohort.id', '=', 'participant.cohort_id', false );
+
     $database_class_name = lib::get_class_name( 'database\database' );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
     $db_role = $session->get_role();
     if( 'typist' == $db_role->name )
     {
-      if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
+      $modifier->where_bracket( true );
       $modifier->where( 'test_entry.completed', '=', false );
+      $modifier->or_where( 'IFNULL(test_entry.deferred, "NULL")', '=', 'pending' );
+      $modifier->where_bracket( false );
     }
 
     if( $this->allow_restrict_state )
@@ -288,7 +308,6 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       if( isset( $restrict_state_id ) &&
           $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
-        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         // Closed
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
@@ -300,7 +319,8 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           $modifier->where( 'end_datetime', '=', NULL );
           if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
           {
-            $modifier->where( 'test_entry.deferred', '=', true );
+            $modifier->where( 'test_entry.deferred', 'IN',
+              $test_entry_class_name::$deferred_states );
           }
           else if( $restrict_state_id == array_search( 'Adjudicate', $this->state_list ) )
           {
@@ -313,14 +333,12 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       // restrict by language
       if( 'any' != $restrict_language_id )
       {
-        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-        $column = sprintf( 'IFNULL( participant.language_id, %s )',
-                           $database_class_name::format_string(
-                             $session->get_service()->language_id ) );
+        $column = sprintf(
+          'IFNULL( participant.language_id, %s )',
+          $database_class_name::format_string( $session->get_service()->language_id ) );
         $modifier->where( $column, '=', $restrict_language_id );
       }
     }
-
     return parent::determine_record_count( $modifier );
   }
 
@@ -335,7 +353,12 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
    */
   public function determine_record_list( $modifier = NULL )
   {
+    if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
+    $modifier->join( 'participant', 'participant.id', 'assignment.participant_id' );
+    $modifier->where( 'cohort.id', '=', 'participant.cohort_id', false );
+
     $database_class_name = lib::get_class_name( 'database\database' );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
@@ -344,7 +367,10 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
     {
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
+      $modifier->where_bracket( true );
       $modifier->where( 'test_entry.completed', '=', false );
+      $modifier->or_where( 'IFNULL(test_entry.deferred, "NULL")', '=', 'pending' );
+      $modifier->where_bracket( false );
     }
 
     if( $this->allow_restrict_state )
@@ -353,7 +379,6 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       if( isset( $restrict_state_id ) &&
           $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
-        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         // Closed
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
@@ -365,7 +390,8 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           $modifier->where( 'end_datetime', '=', NULL );
           if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
           {
-            $modifier->where( 'test_entry.deferred', '=', true );
+            $modifier->where( 'test_entry.deferred', 'IN',
+              $test_entry_class_name::$deferred_states );
           }
           else if( $restrict_state_id == array_search( 'Adjudicate', $this->state_list ) )
           {
@@ -378,7 +404,6 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       // restrict by language
       if( 'any' != $restrict_language_id )
       {
-        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         $column = sprintf( 'IFNULL( participant.language_id, %s )',
                            $database_class_name::format_string(
                              $session->get_service()->language_id ) );

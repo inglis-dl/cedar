@@ -38,13 +38,14 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
   {
     parent::validate();
 
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     $columns = $this->get_argument( 'columns' );
+
     if( array_key_exists( 'participant_status', $columns ) &&
        'refused' == $columns['participant_status'] )
     {
       $db_test_entry = $this->get_record();
-      if( 'unavailable' == $db_test_entry->audio_status ||
-          'unusable'    == $db_test_entry->audio_status )
+      if( in_array( $db_test_entry->audio_status, $test_entry_class_name::$audio_complete_states ) )
       {
         throw lib::create( 'exception\notice',
           'The requested participant status is inconsistent with the current audio status.',
@@ -52,8 +53,7 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
       }
     }
     if( array_key_exists( 'audio_status', $columns ) &&
-       ( 'unavailable' == $columns['audio_status']  ||
-         'unusable'    == $columns['audio_status'] ) )
+        in_array( $columns['audio_status'], $test_entry_class_name::$audio_complete_states ) )
     {
       $db_test_entry = $this->get_record();
       if( 'refused' == $db_test_entry->participant_status )
@@ -81,12 +81,11 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
     $db_test_entry = $this->get_record();
 
     $columns = $this->get_argument( 'columns' );
-    $complete_test = true;
+
     if( ( array_key_exists( 'participant_status', $columns ) &&
           'refused' == $columns['participant_status'] ) ||
         ( array_key_exists( 'audio_status', $columns ) &&
-          ( 'unavailable' == $columns['audio_status']  ||
-            'unusable'    == $columns['audio_status'] ) ) )
+          in_array( $columns['audio_status'], $test_entry_class_name::$audio_complete_states ) ) )
     {
       $db_test_entry->initialize( false );
       // if this record is the progenitor of an adjudicate entry
@@ -102,13 +101,9 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
       }
     }
 
-    if( array_key_exists( 'completed', $columns ) &&
-        ( $db_test_entry->audio_status       != 'unavailable' &&
-          $db_test_entry->audio_status       != 'unusable' &&
-          $db_test_entry->participant_status != 'refused' ) )
-      $complete_test = $columns['completed'];
-
-    if( $complete_test )
+    // if changing deferred from requested to pending, do not complete the entry
+    if( !( array_key_exists( 'deferred', $columns ) && 
+           'pending' == $columns['deferred'] ) )
       $assignment_manager::complete_test_entry( $db_test_entry );
   }
 }

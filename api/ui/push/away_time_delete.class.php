@@ -26,7 +26,7 @@ class away_time_delete extends \cenozo\ui\push\base_delete
   }
 
   /**
-   * Delete any user_time for the day the of the away time so that it is re-calculated
+   * Delete any user_time for the day of the away time so that it is re-calculated
    * next time it is needed.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>

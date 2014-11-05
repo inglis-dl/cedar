@@ -44,15 +44,13 @@ class assignment extends \cenozo\database\record
    */
   public function has_deferrals()
   {
-    if( is_null( $this->id ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to get deferral status for an assignment with no id', __METHOD__ );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id);
-    $modifier->where( 'deferred', '=', true);
-    //$modifier->limit( 1 );
-    $sql = sprintf( 'SELECT count(*) FROM test_entry %s', $modifier->get_sql() );
+    $modifier->where( 'deferred', 'IN', $test_entry_class_name::$deferred_states );
+
+    $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 !== intval( static::db()->get_one( $sql ) );
   }
 
@@ -66,13 +64,9 @@ class assignment extends \cenozo\database\record
    */
   public function get_completed_count()
   {
-    if( is_null( $this->id ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to get completed count for an assignment with no id', __METHOD__ );
-
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id=%s',
+      sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );
   }
 
@@ -86,13 +80,9 @@ class assignment extends \cenozo\database\record
    */
   public function get_adjudicate_count()
   {
-    if( is_null( $this->id ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to get adjudicate count for an assignment with no id', __METHOD__ );
-
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
-      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id=%s',
+      sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
                $database_class_name::format_string( $this->id ) ) );
   }
 
@@ -106,10 +96,6 @@ class assignment extends \cenozo\database\record
    */
   public function has_adjudicates()
   {
-    if( is_null( $this->id ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to get adjudication status for an assignment with no id', __METHOD__ );
-
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id );
     $modifier->where( 'adjudicate', '=', true );
@@ -127,13 +113,9 @@ class assignment extends \cenozo\database\record
    */
   public function get_all_counts()
   {
-    if( is_null( $this->id ) )
-      throw lib::create( 'exception\runtime',
-        'Tried to get counts for an assignment with no id', __METHOD__ );
-
     $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_row( sprintf(
-      'SELECT deferred, adjudicate, completed FROM assignment_total WHERE assignment_id=%s',
+      'SELECT deferred, adjudicate, completed FROM assignment_total WHERE assignment_id = %s',
       $database_class_name::format_string( $this->id ) ) );
   }
 
@@ -141,7 +123,6 @@ class assignment extends \cenozo\database\record
    * Get the next available participant id to create an assignment for.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param  record db_user A user requesting a participant for a new assignment
    * @throws exception\notice
    * @return string (NULL if none available)
    * @access public
@@ -150,6 +131,7 @@ class assignment extends \cenozo\database\record
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
+    $recording_class_name = lib::get_class_name( 'database\recording' );
     $region_site_class_name = lib::get_class_name( 'database\region_site' );
 
     $session = lib::create( 'business\session' );
@@ -163,7 +145,7 @@ class assignment extends \cenozo\database\record
       $has_comprehensive |= 'comprehensive' == $db_cohort->name;
     }
 
-    if( false == $has_tracking && false == $has_comprehensive )
+    if( !$has_tracking && !$has_comprehensive )
       throw lib::create( 'exception\notice',
         'There must be one or more cohorts assigned to user: '. $db_user->name,
           __METHOD__ );
@@ -181,9 +163,10 @@ class assignment extends \cenozo\database\record
       'SELECT language_id AS id '.
       'FROM user_has_language uhl '.
       'INNER JOIN ( '.
-      'SELECT l.id FROM language l '.
-      'JOIN region_site rs ON rs.language_id=l.id '.
-      '%s ) x ON x.id=uhl.language_id '.
+        'SELECT l.id FROM language l '.
+        'JOIN region_site rs ON rs.language_id=l.id '.
+      '%s '. // modifier sql
+      ') x ON x.id=uhl.language_id '.
       'WHERE uhl.user_id = %s',
       $modifier->get_sql(),
       $database_class_name::format_string( $db_user->id ) );
@@ -195,6 +178,7 @@ class assignment extends \cenozo\database\record
       $user_languages[] = $db_service->language_id;
 
     $id = NULL;
+    $rows = NULL;
     if( $has_tracking )
     {
       $sql =
@@ -235,7 +219,8 @@ class assignment extends \cenozo\database\record
 
       $sql = sprintf(
         'CREATE TEMPORARY TABLE temp_assignable AS '.
-        'SELECT participant.id AS participant_id FROM participant '.
+        'SELECT participant.id AS participant_id, assignment.id AS assignment_id '.
+        'FROM participant '.
         'JOIN participant_site ON participant_site.participant_id = participant.id '.
         'JOIN temp_completed ON temp_completed.participant_id = participant.id '.
         'JOIN temp_recording ON temp_recording.participant_id = participant.id '.
@@ -251,18 +236,112 @@ class assignment extends \cenozo\database\record
       static::db()->execute( $sql );
 
       $sql = sprintf(
-        'SELECT participant_id FROM temp_assignable '.
+        'SELECT participant_id, assignment_id FROM temp_assignable '.
         'WHERE participant_id NOT IN ( '.
           'SELECT participant_id FROM assignment '.
           'WHERE user_id = %s '.
         ')', $database_class_name::format_string( $db_user->id ) );
 
-      $id = static::db()->get_one( $sql );
+      $rows = static::db()->get_all( $sql );
     }
 
-    // stub until comprehensive recordings are worked out
-    if( is_null( $id ) && $has_comprehensive )
+    if( is_null( $rows ) && $has_comprehensive )
     {
+      $sql =
+        'CREATE TEMPORARY TABLE temp_completed AS '.
+        'SELECT DISTINCT participant.id AS participant_id '.
+        'FROM participant '.
+        'JOIN event AS event1 ON event1.participant_id = participant.id '.
+        'JOIN event_type AS event_type1 ON event_type1.id = event1.event_type_id '.
+        'JOIN event AS event2 ON event2.participant_id = participant.id '.
+        'JOIN event_type AS event_type2 ON event_type2.id = event2.event_type_id '.
+        'JOIN cohort ON cohort.id = participant.cohort_id '.
+        'WHERE event_type1.name = "completed (Baseline Home)" '.
+        'AND event_type2.name = "completed (Baseline Site)" '.
+        'AND participant.active = true '.
+        'AND cohort.name = "comprehensive"';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_completed ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql =
+        'CREATE TEMPORARY TABLE temp_recording AS '.
+        'SELECT DISTINCT participant_id '.
+        'FROM recording '.
+        'WHERE visit = 1';
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_recording ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'participant_site.service_id', '=', $db_service->id );
+      $modifier->where( 'participant_site.site_id', '=', $db_site->id );
+      $modifier->where( 'IFNULL( participant.language_id, ' .
+        $database_class_name::format_string( current( $user_languages ) ) . ' )',
+        'IN', $user_languages );
+      $modifier->group( 'participant.id ');
+
+      $sql = sprintf(
+        'CREATE TEMPORARY TABLE temp_assignable AS '.
+        'SELECT participant.id AS participant_id, assignment.id AS assignment_id '.
+        'FROM participant '.
+        'JOIN participant_site ON participant_site.participant_id = participant.id '.
+        'JOIN temp_completed ON temp_completed.participant_id = participant.id '.
+        'JOIN temp_recording ON temp_recording.participant_id = participant.id '.
+        'LEFT JOIN assignment ON assignment.participant_id = participant.id '.
+        '%s '. // where statement here
+        'HAVING COUNT(*) < 2 ',
+        $modifier->get_sql() );
+
+      static::db()->execute( $sql );
+
+      $sql = 'ALTER TABLE temp_assignable ADD INDEX (participant_id)';
+
+      static::db()->execute( $sql );
+
+      $sql = sprintf(
+        'SELECT participant_id, assignment_id FROM temp_assignable '.
+        'WHERE participant_id NOT IN ( '.
+          'SELECT participant_id FROM assignment '.
+          'WHERE user_id = %s '.
+        ')', $database_class_name::format_string( $db_user->id ) );
+
+      $rows = static::db()->get_all( $sql );
+
+      if( 0 == count( $rows ) )
+      {
+        $rows = NULL;
+        log::warning(
+          'Tried to get the next available comprehensive cohort participant but there are '.
+          'no more recording files available.  Please try again.' );
+
+        $recording_class_name::update_recording_list();
+      }
+    }
+
+    if( !is_null( $rows ) )
+    {
+      foreach( $rows as $row )
+      {
+        $assignment_id = $row['assignment_id'];
+        $found = false;
+        if( !is_null( $assignment_id ) )
+          $found = static::all_tests_complete( $assignment_id );
+        else
+          $found = true;
+
+        if( $found )
+        {
+          $id = $row['participant_id'];
+          break;
+        }
+      }
     }
 
     return is_null( $id ) ? NULL : lib::create( 'database\participant', $id );
@@ -277,7 +356,7 @@ class assignment extends \cenozo\database\record
    */
   public function get_sibling_assignment()
   {
-    // find a sibling assignment based on participant id and user id uniqueness
+    // find a sibling assignment based on participant and user id uniqueness
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'participant_id', '=', $this->participant_id );
     $modifier->where( 'user_id', '!=', $this->user_id );
@@ -287,16 +366,24 @@ class assignment extends \cenozo\database\record
   }
 
   /**
-   * Returns whether all tests constituting this assignment are complete.
+   * Returns whether all tests constituting the assignment of $id are complete.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param  integer id An assignment id
    * @return boolean
    * @access public
    */
-  public function all_tests_complete()
+  public static function all_tests_complete( $id )
   {
     $database_class_name = lib::get_class_name( 'database\database' );
-    $id_string = $database_class_name::format_string( $this->id );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment.id', '=', $id );
+    $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
+      $test_entry_class_name::$deferred_states );
+    $modifier->where( 'completed', '=', true );
+
     $sql = sprintf(
       'SELECT '.
       '( '.
@@ -307,12 +394,11 @@ class assignment extends \cenozo\database\record
         ') - '.
         '( '.
           'SELECT COUNT(*) FROM test_entry '.
-          'JOIN assignment ON assignment.id = test_entry.assignment_id '.
-          'WHERE assignment.id = %s '.
-          'AND deferred = false '.
-          'AND completed = true '.
+          'JOIN assignment ON assignment.id = test_entry.assignment_id %s'.
         ') '.
-      ')', $id_string, $id_string );
+      ')',
+      $database_class_name::format_string( $id ),
+      $modifier->get_sql() );
 
     return 0 === intval( static::db()->get_one( $sql ) );
   }
@@ -326,7 +412,7 @@ class assignment extends \cenozo\database\record
    */
   public function has_incompletes()
   {
-    return 0 !== $this->all_tests_complete();
+    return 0 !== static::all_tests_complete( $this->id );
   }
 
   /**
@@ -470,5 +556,46 @@ class assignment extends \cenozo\database\record
     }
 
     return $id_list;
+  }
+
+  /**
+   * Initialize an assignment.  All existing test_entry records are deleted
+   * and new test_entry records are created.
+   * Only assigments that have never been adjudicated or finished can be initialized.
+   * This method is typically called during creation of a db_assignment.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
+   * @access public
+   */
+  public function initialize()
+  {
+    $test_class_name = lib::get_class_name( 'database\test' );
+
+    $db_participant = $this->get_participant();
+
+    if( !is_null( $this->end_datetime ) )
+      throw lib::create( 'exception\notice',
+        'The assignment for participant UID ' . $db_participant->uid .
+        'is closed and cannot be initialized', __METHOD__ );
+
+
+    $modifier = NULL;
+    if( 'tracking' == $db_participant->get_cohort()->name )
+    {
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'name', 'NOT LIKE', 'FAS%' );
+    }
+
+    // create test_entry record(s)
+    foreach( $test_class_name::select( $modifier ) as $db_test )
+    {
+      $db_test_entry = lib::create( 'database\test_entry' );
+      $db_test_entry->test_id = $db_test->id;
+      $db_test_entry->assignment_id = $this->id;
+      $db_test_entry->save();
+      // create daughter entry record(s)
+      $db_test_entry->initialize( false );
+    }
   }
 }

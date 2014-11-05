@@ -12,7 +12,7 @@ global $SETTINGS;
 // tagged version
 $SETTINGS['general']['application_name'] = 'cedar';
 $SETTINGS['general']['service_name'] = $SETTINGS['general']['application_name'];
-$SETTINGS['general']['version'] = '1.0.2';
+$SETTINGS['general']['version'] = '1.1.0';
 
 // always leave as false when running as production server
 $SETTINGS['general']['development_mode'] = false;
@@ -37,3 +37,8 @@ $SETTINGS['url']['SABRETOOTH'] = NULL;
 
 // the location of cedar internal path
 $SETTINGS['path']['APPLICATION'] = '/usr/local/lib/cedar';
+
+// the root directory where comprehensive recordings are located
+// (must be an absolute path that the asterisk server's user has access to)
+$SETTINGS['path']['COMP_RECORDINGS'] = NULL;
+$SETTINGS['url']['COMP_RECORDINGS'] = NULL;

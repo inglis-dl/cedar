@@ -25,61 +25,33 @@ class assignment_manager extends \cenozo\singleton
   }
 
   /**
-   * Initialize an assignment.  All existing test_entry records are deleted
-   * and new test_entry records are created.
-   * Only assigments that have never been adjudicated or finished can be initialized.
-   * This method is typically called during creation of a db_assignment or
-   * to reset a db_test_entry.
+   * Reset a test_entry.  All existing test_entry daughter records are deleted
+   * and new ones are created. Only test_entrys belonging to assignments that
+   * have never been finished can be reset.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
-   * @param  database\assignment $db_assignment
    * @param  database\test_entry $db_test_entry
    * @access public
    */
-  public static function initialize_assignment( $db_assignment, $db_test_entry = NULL )
+  public static function reset_test_entry( $db_test_entry )
   {
+    $db_assignment = $db_test_entry->get_assignment();
+
     if( !is_null( $db_assignment->end_datetime ) )
       throw lib::create( 'exception\notice',
         'The assignment for participant UID ' . $db_assignment->get_participant()->uid .
-        'is closed and cannot be initialized', __METHOD__ );
+        'is closed and cannot have any tests reset.', __METHOD__ );
 
-    $test_class_name = lib::get_class_name( 'database\test' );
+    $db_test_entry->initialize();
 
-    // delete test_entry daughter record(s)
-    if( !is_null( $db_test_entry ) )
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'adjudicate', '!=', NULL );
+    $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry( $modifier );
+    if( !is_null( $db_sibling_test_entry ) )
     {
-      $db_test_entry->initialize();
-
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'adjudicate', '=', true );
-      $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry( $modifier );
-      if( !is_null( $db_sibling_test_entry ) )
-      {
-        $db_sibling_test_entry->adjudicate = NULL;
-        $db_sibling_test_entry->save();
-      }
-    }
-    else
-    {
-      $test_mod = NULL;
-      $db_participant = $db_assignment->get_participant();
-      if( $db_participant->get_cohort()->name == 'tracking' )
-      {
-        $test_mod = lib::create( 'database\modifier' );
-        $test_mod->where( 'name', 'NOT LIKE', 'FAS%' );
-      }
-
-      // create test_entry record(s)
-      foreach( $test_class_name::select( $test_mod ) as $db_test )
-      {
-        $db_test_entry = lib::create( 'database\test_entry' );
-        $db_test_entry->test_id = $db_test->id;
-        $db_test_entry->assignment_id = $db_assignment->id;
-        $db_test_entry->save();
-        // create daughter entry record(s)
-        $db_test_entry->initialize( false );
-      }
+      $db_sibling_test_entry->adjudicate = NULL;
+      $db_sibling_test_entry->save();
     }
   }
 
@@ -174,9 +146,9 @@ class assignment_manager extends \cenozo\singleton
 
     // initialize each assignment as required
     if( array_key_exists( $db_assignment->id, $assignment_reset ) )
-      static::initialize_assignment( $db_assignment );
+      $db_assignment->initialize();
     if( array_key_exists( $db_sibling_assignment->id, $assignment_reset ) )
-      static::initialize_assignment( $db_sibling_assignment );
+      $db_sibling_assignment->initialize();
   }
 
   /**
@@ -249,14 +221,16 @@ class assignment_manager extends \cenozo\singleton
    */
   public static function complete_assignment( $db_assignment )
   {
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
 
-    if( $db_assignment->all_tests_complete() )
+    if( $assignment_class_name::all_tests_complete( $db_assignment->id ) )
     {
-      if( !is_null( $db_sibling_assignment ) && $db_sibling_assignment->all_tests_complete() )
+      if( !is_null( $db_sibling_assignment ) &&
+          $assignment_class_name::all_tests_complete( $db_sibling_assignment->id ) )
       {
         // go through all the tests and look for differences
         // get all the assignment's tests
@@ -266,7 +240,9 @@ class assignment_manager extends \cenozo\singleton
         $modifier = lib::create( 'database\modifier' );
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', true );
-        $modifier->where( 'deferred', '=', false );
+        $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
+          $test_entry_class_name::$deferred_states );
+
         $completed = true;
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
@@ -275,8 +251,8 @@ class assignment_manager extends \cenozo\singleton
           {
             if( ( is_null( $db_test_entry->adjudicate ) ||
                   is_null( $db_sibling_test_entry->adjudicate ) ) ||
-                 ( $db_test_entry->adjudicate == true ||
-                   $db_sibling_test_entry->adjudicate == true ) )
+                 ( true == $db_test_entry->adjudicate ||
+                   true == $db_sibling_test_entry->adjudicate ) )
             {
               $db_test_entry->adjudicate = true;
               $db_test_entry->save();
@@ -357,7 +333,7 @@ class assignment_manager extends \cenozo\singleton
   }
 
   /**
-   * Update test_entry, its assigment, its sibling assignment and its sibling
+   * Update test_entry, its assignment, its sibling assignment and its sibling
    * assignment's test_entry based on its complete status.  This method is
    * typically called whenever a daughter table entry is edited.
    *
@@ -367,7 +343,20 @@ class assignment_manager extends \cenozo\singleton
    */
   public static function complete_test_entry( $db_test_entry )
   {
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
     $db_test_entry->completed = $db_test_entry->is_completed();
+    if( in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
+    {
+      if( $db_test_entry->completed && 'pending' == $db_test_entry->deferred )
+        $db_test_entry->deferred = 'resolved';
+    }
+    else if( 'resolved' == $db_test_entry->deferred )
+    {
+      if( !$db_test_entry->completed )
+        $db_test_entry->deferred = NULL;
+    }
+
     $db_test_entry->save();
 
     // no further processing is required for an adjudicate entry
@@ -376,7 +365,8 @@ class assignment_manager extends \cenozo\singleton
       $db_assignment = $db_test_entry->get_assignment();
 
       // check if the assignment can be completed
-      if( $db_test_entry->completed && !$db_test_entry->deferred )
+      if( $db_test_entry->completed &&
+          !in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
       {
         // the assignment will determine the adjudicate status
         static::complete_assignment( $db_assignment );
@@ -387,6 +377,7 @@ class assignment_manager extends \cenozo\singleton
         {
           $db_assignment->end_datetime = NULL;
           $db_assignment->save();
+          log::warning( 'checked assignment null end_datetime in complete_test_entry' );
         }
       }
     }
@@ -415,15 +406,17 @@ class assignment_manager extends \cenozo\singleton
 
     if( is_null( $db_test_entry->adjudicate ) ||
        !$db_test_entry->completed ||
-        $db_test_entry->deferred )
+        in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
       throw lib::create( 'exception\runtime', 'Invalid test entry', __METHOD__ );
 
     // get the sibling entry
     $db_assignment = $db_test_entry->get_assignment();
     $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
 
-    if( is_null( $db_sibling_test_entry ) || is_null( $db_sibling_test_entry->adjudicate ) ||
-        !$db_sibling_test_entry->completed || $db_sibling_test_entry->deferred )
+    if( is_null( $db_sibling_test_entry ) ||
+        is_null( $db_sibling_test_entry->adjudicate ) ||
+        !$db_sibling_test_entry->completed ||
+        in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
       throw lib::create( 'exception\runtime', 'Invalid sibling test entry', __METHOD__ );
 
     $db_test_entry->trim();

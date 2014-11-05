@@ -20,7 +20,8 @@
       function configure_ui() {
 
         //disable elements based on deferred status
-        if( {{ deferred }} || !{{ editable }} ) {
+        var is_deferred = "requested" == "{{ deferred }}";
+        if( is_deferred || !{{ editable }} ) {
           $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
