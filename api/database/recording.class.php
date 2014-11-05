@@ -70,16 +70,15 @@ class recording extends \cenozo\database\record
           $modifier->where( 'uid', '=', $uid );
           $modifier->limit( 1 );
           $db_participant = current( $participant_class_name::select( $modifier ) );
-          if( false === $db_participant )
-            throw lib::create( 'exception\notice',
-              'A participant with UID = ' . $uid . ' does not exist.', __METHOD__ );
-
-          $values .= sprintf( '%s( %d, %d, %d )',
-                              $first ? '' : ', ',
-                              $db_participant->id,
-                              $db_test->id,
-                              $visit );
-          $first = false;
+          if( false !== $db_participant )
+          {
+            $values .= sprintf( '%s( %d, %d, %d )',
+                                $first ? '' : ', ',
+                                $db_participant->id,
+                                $db_test->id,
+                                $visit );
+            $first = false;
+          }
         }
       }
 
