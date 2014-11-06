@@ -145,9 +145,9 @@
         [ 'return1', 'return2', 'submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
     {% from 'macros.twig' import note_widget %}
     {{ note_widget(
-         widget.full, "test_entry", test_entry_id_1, false, ["Notes (",user_1,")"]|join ) }}
+         widget.full, "test_entry", test_entry_id_1, false, ["Notes (",user_1|lower,")"]|join ) }}
     {{ note_widget(
-         widget.full, "test_entry", test_entry_id_2, false, ["Notes (",user_2,")"]|join ) }}
+         widget.full, "test_entry", test_entry_id_2, false, ["Notes (",user_2|lower,")"]|join ) }}
 
   <div id="{{ widget.full }}__note_dialog"></div>
 
