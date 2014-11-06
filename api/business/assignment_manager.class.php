@@ -24,6 +24,63 @@ class assignment_manager extends \cenozo\singleton
   {
   }
 
+  public static function return_test_entry( $db_test_entry )
+  {
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
+    // check if the entry is part of an adjudication
+    // if not throw an error
+    if( !is_null( $db_test_entry->participant_id ) )
+      throw lib::create( 'exception\runtime',
+        'An adjudication test_entry is not returnable', __METHOD__ );
+
+    // check if the entry has daughter table entries
+    // if not, initialize
+    $entry_name = 'test_entry_' . $db_test_entry->get_test()->get_test_type()->name;
+    $entry_class_name = lib::get_class_name( 'database\\'. $entry_name );
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'test_entry_id', '=', $db_test_entry->id );
+    if( 0 == $entry_class_name::count( $modifier ) )
+    {
+      static::reset_test_entry( $db_test_entry );
+    }
+    else
+    {
+      // get the sibling and set its adjudicate status to NULL
+      $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+      if( is_null( $db_sibling_test_entry ) )
+        throw lib::create( 'exception\runtime',
+          'The test_entry being returned must have a sibling', __METHOD__ );
+
+      $db_test_entry->adjudicate = NULL; // save for this record occurs with deferred change
+      $db_sibling_test_entry->adjudicate = NULL;
+      $db_sibling_test_entry->save();
+    }
+
+    // mark the deferred status as pending
+    $db_test_entry->deferred = 'pending';
+    $db_test_entry->save();
+
+    // if there is an adjudicate entry associated with this participant and test
+    // delete it and its daughter entries
+    $db_assignment = $db_test_entry->get_assignment();
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'participant_id', '=', $db_assignment->participant_id );
+    $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
+    $modifier->limit( 1 );
+    $db_adjudicate_entry = current( $test_entry_class_name::select( $modifier ) );
+    if( false !== $db_adjudicate_entry )
+    {
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'test_entry_id', '=', $db_adjudicate_entry->id );
+      $sql = sprintf( 'DELETE FROM %s %s',
+        $entry_name,
+        $modifier->get_sql() );
+      $test_entry_class_name::db()->execute( $sql );
+      $db_adjudicate_entry->delete();
+    }
+  }
+
   /**
    * Reset a test_entry.  All existing test_entry daughter records are deleted
    * and new ones are created. Only test_entrys belonging to assignments that

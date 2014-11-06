@@ -46,6 +46,68 @@
         {% endif %}
       } ); // end Next click
 
+      function return_test_entry( test_entry_id ) {
+        $dialog = $( "#{{ widget.full }}__note_dialog" );
+        var buttons = new Object;
+        buttons.Ok = function() {
+          var note = $("#{{ widget.full }}__note").val();
+          if( 0 == note.length ) {
+            error_dialog( "Error", "You cannot leave a blank note." );
+          } else {
+            $dialog.dialog( "close" );
+
+            var args = new Object();
+            args.id = test_entry_id;
+            if( ajax_push( "{{ widget.subject }}", "return", args ) ) {
+              args = new Object();
+              args.note = note;
+              args.category = "{{ widget.subject }}";
+              args.category_id = test_entry_id;
+              ajax_push( "note", "new", args );
+              slot_load( {{ slot }}, "assignment", "list" );
+            }
+          }
+        };
+
+        buttons.Cancel = function() {
+          $dialog.dialog( "close" );
+        };
+
+        var html = "A note is required indicating the reason for returning.";
+        html += "<textarea id=\"{{ widget.full }}__note\"></textarea>";
+
+        $dialog.html( html );
+
+        $dialog.dialog( {
+          closeOnEscape: true,
+          title: "Return Note",
+          modal: true,
+          dialogClass: "alert",
+          width: 450,
+          buttons: buttons,
+          beforeClose: function( event, ui ) { $(this).html( "" ); },
+          open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
+        } );
+      }
+
+      $( "#{{ widget.full }}_return1" ).css( 'white-space','nowrap'
+        ).button( 'option', 'label',
+        'Return (' + "{{ user_1 }}".toLowerCase() + ')'
+        ).click( function() {
+          return_test_entry( {{ test_entry_id_1 }} );
+      } ); // end return1 click
+
+      $( "#{{ widget.full }}_return2" ).css( 'white-space','nowrap'
+        ).button( 'option', 'label',
+        'Return (' + "{{ user_2 }}".toLowerCase() + ')'
+        ).click( function() {
+        return_test_entry( {{ test_entry_id_2 }} );
+      } ); // end return2 click
+
+      $(':button[id$="quit"]').parent().append(
+        $( '[id^="{{ widget.full }}"][id$="_note"]' )
+      );
+
     } );
   </script>
 
@@ -77,11 +139,16 @@
     {% endif %}
   </div>
   <div class="spacer"></div>
-  <div>
+
     {% from 'macros.twig' import confirm_buttons %}
       {{ confirm_buttons( slot, widget.full,
-        ['submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
-  </div>
+        [ 'return1', 'return2', 'submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
+    {% from 'macros.twig' import note_widget %}
+    {{ note_widget(
+         widget.full, "test_entry", test_entry_id_1, false, ["Notes (",user_1,")"]|join ) }}
+    {{ note_widget(
+         widget.full, "test_entry", test_entry_id_2, false, ["Notes (",user_2,")"]|join ) }}
+
   <div id="{{ widget.full }}__note_dialog"></div>
 
 {% endblock record %}
