@@ -348,9 +348,12 @@ class assignment_manager extends \cenozo\singleton
     $db_test_entry->completed = $db_test_entry->is_completed();
     if( in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
     {
-      if( $db_test_entry->completed && 'pending' ==  $db_test_entry->deferred )
+      if( $db_test_entry->completed && 'pending' == $db_test_entry->deferred )
         $db_test_entry->deferred = 'resolved';
-      else if( !$db_test_entry->completed )
+    }
+    else if( 'resolved' == $db_test_entry->deferred )
+    {
+      if( !$db_test_entry->completed )
         $db_test_entry->deferred = NULL;
     }
 

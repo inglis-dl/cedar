@@ -125,14 +125,14 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->set_item( 'participant_status',
       $db_test_entry->participant_status, true, $participant_status_list );
 
-    if( in_array( $db_test_entry->deferred, array( 'requested', 'pending' ) ) )
+    if( in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
     {
       $deferred_list = $test_entry_class_name::get_enum_values( 'deferred' );
       $deferred_list = array_combine( $deferred_list, $deferred_list );
       unset( $deferred_list['resolved'] );
       $this->set_item( 'deferred',
         $db_test_entry->deferred, true, $deferred_list );
-    } 
+    }
     else
       $this->set_item( 'deferred',
         is_null( $db_test_entry->deferred ) ? 'No' : ucwords( $db_test_entry->deferred ) );

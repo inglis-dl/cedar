@@ -18,7 +18,7 @@
       disable = audio_state == 'unusable' || audio_state == 'unavailable' ||
                 participant_state == 'refused';
 
-      var is_deferred = "requested" == {{ deferred }};
+      var is_deferred = "requested" == "{{ deferred }}";
       if( is_deferred ) disable = true;
       $( "#{{ widget.full }}__audio_status" ).prop( "disabled", disable );
       $( "#{{ widget.full }}__participant_status" ).prop( "disabled", disable );
@@ -180,7 +180,7 @@
         <select id="{{ widget.full }}__audio_status"
           class="ui-state-default"
           style="width: 100%"
-          {% if editable == 0 or deferred == 1 %}
+          {% if editable == 0 or deferred == "requested" %}
             { disabled }
           {% endif %}>
           {% for status_id, status in audio_status_list %}
@@ -197,7 +197,7 @@
         <select id="{{ widget.full }}__participant_status"
           class="ui-state-default"
           style="width: 100%"
-          {% if editable == 0 or deferred == 1 %}
+          {% if editable == 0 or deferred == "requested" %}
             { disabled }
           {% endif %}>
           {% for status_id, status in participant_status_list %}

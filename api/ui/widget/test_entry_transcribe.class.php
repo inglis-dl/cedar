@@ -108,7 +108,7 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $this->set_variable( 'participant_status_list', $participant_status_list );
 
     $this->set_variable( 'deferred',
-      is_null( $db_test_entry->deferred ) ? 'null': $db_test_entry->deferred );
+      is_null( $db_test_entry->deferred ) ? 'null' : $db_test_entry->deferred );
     $this->set_variable( 'completed', $db_test_entry->completed );
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $test_type_name );
