@@ -82,9 +82,9 @@ class word_view extends \cenozo\ui\widget\base_view
     $language_list = array();
     if( 'ranked_word' != $db_test->get_test_type()->name )
     {
-      $language_mod = lib::create( 'database\modifier' );
-      $language_mod->where( 'active', '=', true );
-      foreach( $language_class_name::select( $language_mod ) as $db_language )
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'active', '=', true );
+      foreach( $language_class_name::select( $modifier ) as $db_language )
         $language_list[ $db_language->id ] = $db_language->name;
     }
     else

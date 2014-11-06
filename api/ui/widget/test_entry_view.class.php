@@ -91,9 +91,7 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $db_test = $db_test_entry->get_test();
     $db_participant = $db_assignment->get_participant();
 
-    $db_language = $db_participant->get_language();
-    if( is_null( $db_language ) )
-      $db_language = lib::create( 'business\session' )->get_service()->get_language();
+    $db_language = $db_test_entry->get_default_participant_language();
 
     // set the view's items
     $this->set_item( 'participant.uid', $db_participant->uid );
