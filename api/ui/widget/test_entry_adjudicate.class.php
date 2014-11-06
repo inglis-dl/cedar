@@ -172,9 +172,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'test_entry_id_1', $db_test_entry->id );
     $this->set_variable( 'user_1', $db_user->name );
+    $this->set_variable( 'user_id_1', $db_user->id );
 
     $this->set_variable( 'test_entry_id_2', $db_sibling_test_entry->id );
     $this->set_variable( 'user_2', $db_sibling_user->name );
+    $this->set_variable( 'user_id_2', $db_sibling_user->id );
 
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );

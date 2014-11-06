@@ -61,10 +61,10 @@ class word_add extends \cenozo\ui\widget\base_view
       throw lib::create( 'exception\runtime',
         'Word widget must have a parent with dictionary as the subject.', __METHOD__ );
 
-    $language_mod = lib::create( 'database\modifier' );
-    $language_mod->where( 'active', '=', true );
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'active', '=', true );
     $language_list = array();
-    foreach( $language_class_name::select( $language_mod ) as $db_language )
+    foreach( $language_class_name::select( $modifier ) as $db_language )
       $language_list[ $db_language->id ] = $db_language->name;
 
     // set the view's items

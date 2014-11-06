@@ -51,7 +51,7 @@ class assignment_reassign extends \cenozo\ui\widget\base_view
     {
       $this->add_action( 'reassign', 'Reassign', $db_operation,
         'Reassign this participant\'s assignments to typists '.
-        'with no language restrictions' );
+        'with multiple language restrictions' );
     }
 
     $this->set_heading( 'Reassign Assignment' );
