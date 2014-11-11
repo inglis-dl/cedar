@@ -141,7 +141,8 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
               $is_intrusion = true;
             }
             // any s words that do not begin with 's' or 'c' are intrusions
-            else if( 0 !== strpos( $word, 's' ) &&
+            else if( false !== strpos( $db_test->name, 's word' ) &&
+                     0 !== strpos( $word, 's' ) &&
                      0 !== strpos( $word, 'c' ) )
             {
               $is_intrusion = true;
