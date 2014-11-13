@@ -283,10 +283,6 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
    */
   public function determine_record_count( $modifier = NULL )
   {
-    if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-    $modifier->join( 'participant', 'participant.id', 'assignment.participant_id' );
-    $modifier->where( 'cohort.id', '=', 'participant.cohort_id', false );
-
     $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
@@ -295,6 +291,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
     $db_role = $session->get_role();
     if( 'typist' == $db_role->name )
     {
+      if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where_bracket( true );
       $modifier->where( 'test_entry.completed', '=', false );
@@ -308,6 +305,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       if( isset( $restrict_state_id ) &&
           $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         // Closed
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
@@ -333,6 +331,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       // restrict by language
       if( 'any' != $restrict_language_id )
       {
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         $column = sprintf(
           'IFNULL( participant.language_id, %s )',
           $database_class_name::format_string( $session->get_service()->language_id ) );
@@ -353,10 +352,6 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
    */
   public function determine_record_list( $modifier = NULL )
   {
-    if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
-    $modifier->join( 'participant', 'participant.id', 'assignment.participant_id' );
-    $modifier->where( 'cohort.id', '=', 'participant.cohort_id', false );
-
     $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
@@ -379,6 +374,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       if( isset( $restrict_state_id ) &&
           $restrict_state_id != array_search( 'No restriction', $this->state_list ) )
       {
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         // Closed
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
@@ -404,6 +400,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       // restrict by language
       if( 'any' != $restrict_language_id )
       {
+        if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         $column = sprintf( 'IFNULL( participant.language_id, %s )',
                            $database_class_name::format_string(
                              $session->get_service()->language_id ) );

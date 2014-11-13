@@ -599,3 +599,8 @@ class assignment extends \cenozo\database\record
     }
   }
 }
+
+$assignment_mod = lib::create( 'database\modifier' );
+$assignment_mod->where( 'assignment.participant_id', '=', 'participant.id', false );
+$assignment_mod->where( 'participant.cohort_id', '=', 'cohort.id', false );
+assignment::customize_join( 'cohort', $assignment_mod );
