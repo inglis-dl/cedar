@@ -52,7 +52,10 @@ class recording extends \cenozo\database\record
       $glob_search = sprintf( '%s/*/*/*.wav', COMP_RECORDINGS_PATH );
 
       $values = '';
+      $values_array = array();
       $first = true;
+      $values_count = 0;
+      $values_limit = 200;
       foreach( glob( $glob_search ) as $filename )
       {
         // get the path components from the filename
@@ -78,11 +81,22 @@ class recording extends \cenozo\database\record
                                 $db_test->id,
                                 $visit );
             $first = false;
+            $values_count++;
+            if( $values_count++ >= $values_limit )
+            {
+              $values_count = 0;
+              $first = true;
+              $values = '';
+              $values_array[] = $values;
+            }
           }
         }
       }
 
-      if( !$first )
+      if( $values_count < $values_limit && '' !== $values )
+        $values_array[] = $values;
+
+      foreach( $values_array as $values )
       {
         static::db()->execute( sprintf(
           'INSERT IGNORE INTO recording ( participant_id, test_id, visit ) '.
