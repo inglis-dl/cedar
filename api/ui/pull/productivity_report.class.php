@@ -129,14 +129,14 @@ class productivity_report extends \cenozo\ui\pull\base_report
     }
 
     $sql_queries = array();
+    $column_remove = array( 'id', 'test_entry_id', 'update_timestamp', 'create_timestamp' );
     foreach( $test_class_name::select() as $db_test )
     {
       $table_name = 'test_entry_' . $db_test->get_test_type()->name;
       $table_class_name = lib::get_class_name( 'database\\' . $table_name );
-      $column_names =
-        $table_class_name::db()->get_column_names( $table_class_name::get_table_name() );
-      unset( $column_names[ array_search( 'id', $column_names ) ] );
-      unset( $column_names[ array_search( 'test_entry_id', $column_names ) ] );
+      $column_names = array_diff(
+        $table_class_name::db()->get_column_names( $table_class_name::get_table_name() ),
+        $column_remove );
 
       $sql_pre = 'SELECT COUNT(*) FROM ( SELECT ';
       $sql_columns1 = 'SELECT ';
@@ -174,8 +174,9 @@ class productivity_report extends \cenozo\ui\pull\base_report
 
     $temp_user_mod = clone $base_assignment_mod;
     $temp_user_mod->where( 'assignment.end_datetime', '!=', NULL );
+
     $sql = sprintf(
-      'CREATE TEMPORARY TABLE temp_user_adjudicate '.
+      'CREATE TEMPORARY TABLE temp_user_adjudicate AS '.
       'SELECT assignment.user_id, '.
       't1.id AS adjudicate_entry_id, '.
       't2.id AS progenitor_entry_id, '.
@@ -194,17 +195,19 @@ class productivity_report extends \cenozo\ui\pull\base_report
     $assignment_class_name::db()->execute( $sql );
 
     $sql = sprintf(
-      'CREATE TEMPORARY TABLE temp_user_complete '.
+      'CREATE TEMPORARY TABLE temp_user_complete AS '.
       'SELECT user_id, '.
       'COUNT(*) AS assignment_count, '.
       'SUM( complete_status ) AS complete_count '.
       'FROM ( '.
-      'SELECT assignment.id, '.
-      'assignment.user_id AS user_id, '.
-      'IF( ( COUNT( test_entry.id ) - '.
-      'SUM( IF( test_entry.deferred IS NULL, 1, '.
-      'IF( test_entry.deferred = "resolved", 1, '.
-      'IF( test_entry.completed = true, 1, 0 ), 0 ) ) ) ) = 0, 1, 0 ) '.
+        'SELECT assignment.id, '.
+        'assignment.user_id AS user_id, '.
+        'IF( ( '.
+          'COUNT( test_entry.id ) - '.
+          'SUM( IF( test_entry.completed = true, '.
+            'IF( test_entry.deferred = "requested", 0, '.
+              'IF( test_entry.deferred = "pending", 0, 1 ) ), 0 ) )'.
+          ') = 0, 1, 0 ) '.
       'AS complete_status '.
       'FROM assignment '.
       'LEFT JOIN test_entry ON assignment.id=test_entry.assignment_id %s'.
