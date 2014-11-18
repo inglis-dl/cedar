@@ -132,7 +132,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     $db_assignment = $db_test_entry->get_assignment();
     $db_participant = $db_assignment->get_participant();
-    $this->set_variable( 'user_id', $db_assignment->user_id );
 
     $cohort_name = $db_participant->get_cohort()->name;
     $recording_data = array();

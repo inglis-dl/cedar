@@ -79,8 +79,7 @@ class test_entry_alpha_numeric_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        $db_language =
-          $db_test_entry->get_default_participant_language();
+        $db_language = current( $db_test_entry->get_language_list() );
 
         // does the word candidate exist in the primary dictionary?
         $db_dictionary = $db_test_entry->get_test()->get_dictionary();

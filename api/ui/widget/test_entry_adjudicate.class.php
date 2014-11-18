@@ -125,9 +125,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'participant_id', $db_participant->id );
 
-    // set the language(s) of dictionary words based on one user id
-    $this->set_variable( 'user_id', $db_user->id );
-
     $cohort_name = $db_participant->get_cohort()->name;
     $recording_data = array();
     if( 'tracking' == $cohort_name )

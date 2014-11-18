@@ -97,8 +97,8 @@
     function get_variant_text_complete() {
       var args = new Object();
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      // words are determined according to typist language restrictions
-      args["user_id"] = {{ user_id }};
+      // words are determined according to test language restrictions
+      args["test_entry_id"] = {{ adjudicate_entry_id }};
       args["words_only"] = 1;
       return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
         return {
@@ -111,8 +111,8 @@
     function get_intrusion_text_complete() {
       var args = new Object();
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-      // words are determined according to typist language restrictions
-      args["user_id"] = {{ user_id }};
+      // words are determined according to test language restrictions
+      args["test_entry_id"] = {{ adjudicate_entry_id }};
       args["words_only"] = 1;
       return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
         return {
@@ -266,8 +266,6 @@
             $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );
           }
 
-          args.user_id = {{ user_id }};
-
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
             if( is_intrusion ) {
@@ -305,7 +303,6 @@
           columns["word_id"] = "";
           columns["selection"] = selection;
           args.columns = columns;
-          args.user_id = {{ user_id }};
 
           // push the edits
           ajax_push( "{{ widget.subject }}", "edit", args );
@@ -377,7 +374,6 @@
         } else {
           blank_id = '#' + $(this).prop( "id" ).replace( "intrusion", "blank" );
         }
-        args.user_id = {{ user_id }};
 
         // push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {

@@ -105,22 +105,22 @@
       function get_variant_text_complete() {
         var args = new Object();
         args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-        // words are determined according to typist language restrictions
-        args["user_id"] = {{ user_id }};
+        // words are determined according to test language restrictions
+        args["test_entry_id"] = {{ parent.id }};
         args["words_only"] = 1;
         return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
           return {
             label: value,
             value: key
           };
-        });
+        } );
       }
 
       function get_intrusion_text_complete() {
         var args = new Object();
         args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-        // words are determined according to typist language restrictions
-        args["user_id"] = {{ user_id }};
+        // words are determined according to test language restrictions
+        args["test_entry_id"] = {{ parent.id }};
         args["words_only"] = 1;
         return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
           return {
@@ -255,7 +255,6 @@
             columns["ranked_word_set_id"] = $(this).prop( "name" );
             args.columns = columns;
           }
-          args.user_id = {{ user_id }};
 
           // push edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -336,7 +335,6 @@
           if( "variant" !== selection ) {
             args.candidate = '';
           }
-          args.user_id = {{ user_id }};
 
           var do_text = true;
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {

@@ -97,15 +97,15 @@
         args["dictionary_id"] = {{ dictionary_id }};
         args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
         args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-        // words are determined according to typist language restrictions
-        args["user_id"] = {{ user_id }};
+        // words are determined according to test language restrictions
+        args["test_entry_id"] = {{ parent.id }};
         args["words_only"] = 1;
         return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
           return {
             label: value,
             value: key
           };
-        });
+        } );
       }
 
       function update_input_list() {
@@ -179,7 +179,6 @@
           } else {
             args.candidate = candidate;
           }
-          args.user_id = {{ user_id }};
 
           //push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -258,7 +257,6 @@
           args.id = $text_input.prop( "id" ).split( "__" )[0];
           columns["word_id"] = '';
           args.columns = columns;
-          args.user_id = {{ user_id }};
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
            $text_input.val( "" );
            $text_input.attr( "value", "" );

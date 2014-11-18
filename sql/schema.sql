@@ -584,7 +584,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_note` (
   CONSTRAINT `fk_test_entry_note_test_entry_id`
     FOREIGN KEY (`test_entry_id`)
     REFERENCES `cedar`.`test_entry` (`id`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_test_entry_note_user_id`
     FOREIGN KEY (`user_id`)
@@ -727,6 +727,32 @@ CREATE TABLE IF NOT EXISTS `cedar`.`recording` (
   CONSTRAINT `fk_recording_test_id`
     FOREIGN KEY (`test_id`)
     REFERENCES `cedar`.`test` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `cedar`.`test_entry_has_language`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `cedar`.`test_entry_has_language` ;
+
+CREATE TABLE IF NOT EXISTS `cedar`.`test_entry_has_language` (
+  `test_entry_id` INT UNSIGNED NOT NULL,
+  `language_id` INT UNSIGNED NOT NULL,
+  `update_timestamp` TIMESTAMP NOT NULL,
+  `create_timestamp` TIMESTAMP NOT NULL,
+  PRIMARY KEY (`test_entry_id`, `language_id`),
+  INDEX `fk_language_id` (`language_id` ASC),
+  INDEX `fk_test_entry_id` (`test_entry_id` ASC),
+  CONSTRAINT `fk_test_entry_has_language_test_entry_id`
+    FOREIGN KEY (`test_entry_id`)
+    REFERENCES `cedar`.`test_entry` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_test_entry_has_language_language_id`
+    FOREIGN KEY (`language_id`)
+    REFERENCES `cenozo`.`language` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
