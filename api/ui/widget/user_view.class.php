@@ -59,7 +59,6 @@ class user_view extends \cenozo\ui\widget\user_view
   public function determine_cohort_count( $modifier = NULL )
   {
     $cohort_class_name = lib::get_class_name( 'database\cohort' );
-    $session = lib::create( 'business\session' );
     if( NULL == $modifier ) $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'user_has_cohort.user_id', '=', $this->get_record()->id );
     return $cohort_class_name::count( $modifier );
@@ -76,7 +75,6 @@ class user_view extends \cenozo\ui\widget\user_view
   public function determine_cohort_list( $modifier = NULL )
   {
     $cohort_class_name = lib::get_class_name( 'database\cohort' );
-    $session = lib::create( 'business\session' );
     if( NULL == $modifier ) $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'user_has_cohort.user_id', '=', $this->get_record()->id );
     return $cohort_class_name::select( $modifier );
