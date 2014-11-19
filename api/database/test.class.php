@@ -102,7 +102,10 @@ class test extends \cenozo\database\has_rank
       $data['word'] = $db_word->word;
       $data['word_id'] = $db_word->id;
       if( array_key_exists( $db_word->dictionary_id, $classification ) )
+      {
         $data['classification'] = $classification[$db_word->dictionary_id];
+        if( 'en' != $db_word->get_language()->code ) $data['classification'] .= '_fr';
+      }
     }
     else
     {
@@ -119,6 +122,7 @@ class test extends \cenozo\database\has_rank
         $modifier->where( 'dictionary_id', '=', $this->mispelled_dictionary_id );
         $db_word = current( $word_class_name::select( $modifier ) );
       }
+
       if( false === $db_word )
       {
         $modifier = clone $base_mod;
@@ -137,10 +141,15 @@ class test extends \cenozo\database\has_rank
           }
         }
       }
+
       if( $db_word !== false )
       {
         if( array_key_exists( $db_word->dictionary_id, $classification ) )
+        {
           $data['classification'] = $classification[$db_word->dictionary_id];
+          if( !is_null( $db_language ) && 'en' != $db_language->code )
+            $data['classification'] .= '_fr';
+        }
         $data['word'] = $db_word->word;
         $data['word_id'] = $db_word->id;
       }
