@@ -64,6 +64,31 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   }
 
   /**
+   * Validate the operation.  If validation fails this method will throw a notice exception.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
+   * @access protected
+   */
+  protected function validate()
+  {
+    parent::validate();
+
+    // language restrictions of siblings must match
+    $db_test_entry = $this->get_record();
+    $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+    if( !is_null( $db_sibling_test_entry ) )
+    {
+      if( 0 < count( array_diff(
+        $db_test_entry->get_language_idlist(), $db_sibling_test_entry->get_language_idlist() ) ) )
+      {
+        throw lib::create( 'exception\notice',
+          'The language restrictions must match between sibling tests', __METHOD__ );
+      }
+    }
+  }
+
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
