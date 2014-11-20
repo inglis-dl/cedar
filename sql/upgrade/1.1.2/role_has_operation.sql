@@ -9,7 +9,7 @@ CREATE PROCEDURE patch_role_has_operation()
       WHERE constraint_schema = DATABASE()
       AND constraint_name = "fk_role_has_operation_role_id" );
 
-      SELECT "Removing supervisor access to assignment edit" AS "";
+      SELECT "Removing supervisor access to assignment reassign" AS "";
 
       SET @sql = CONCAT(
         "DELETE FROM role_has_operation ",
@@ -19,6 +19,19 @@ CREATE PROCEDURE patch_role_has_operation()
         "AND operation_id IN ( ",
           "SELECT id FROM operation ",
           "WHERE subject='assignment' ",
+          "AND name='reassign' )" );
+      PREPARE statement FROM @sql;
+      EXECUTE statement;
+      DEALLOCATE PREPARE statement;
+
+      SELECT "Removing assignment reassign push operation" AS "";
+
+      SET @sql = CONCAT(
+        "DELETE FROM role_has_operation ",
+        "WHERE operation_id = ( ",
+          "SELECT id FROM operation ",
+          "WHERE subject='assignment' ",
+          "AND type='push' ",
           "AND name='reassign' )" );
       PREPARE statement FROM @sql;
       EXECUTE statement;
