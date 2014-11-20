@@ -657,6 +657,8 @@ class assignment_manager extends \cenozo\singleton
                 $dictionary_id = $db_word->dictionary_id;
                 $classification_i = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+                if( '' !== $classification_i && 'en' != $db_word->get_language()->code )
+                  $classification_i .= '_fr';
               }
               $row[ 'classification_' . $i ] = $classification_i;
             }
@@ -739,6 +741,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_2 && 'en' != $db_word->get_language()->code )
+                $classification_2 .= '_fr';
             }
           }
           // unequal number of list elements case
@@ -757,6 +761,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_1 && 'en' != $db_word->get_language()->code )
+                $classification_1 .= '_fr';
             }
           }
           else
@@ -799,6 +805,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_1 && 'en' != $db_word->get_language()->code )
+                $classification_1 .= '_fr';
             }
 
             if( !is_null( $b_obj->word_id ) )
@@ -809,6 +817,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_2 && 'en' != $db_word->get_language()->code )
+                $classification_2 .= '_fr';
             }
           }
 
@@ -820,6 +830,8 @@ class assignment_manager extends \cenozo\singleton
             $dictionary_id = $db_word->dictionary_id;
             $classification_3 = array_key_exists( $dictionary_id, $classification ) ?
               $classification[ $dictionary_id ] : '';
+            if( '' !== $classification_3 && 'en' != $db_word->get_language()->code )
+              $classification_3 .= '_fr';
           }
           if( !is_null( $c_obj->selection ) )  $selection_3 = $c_obj->selection;
 
