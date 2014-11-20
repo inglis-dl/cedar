@@ -17,8 +17,8 @@
   {{ parent() }}
   {% from 'macros.twig' import include_list %}
   {{ include_list( 'language', language_list|default(false), true ) }}
-
   {% include "test_entry_transcribe.twig" with test_entry_transcribe %}
+
 {% endblock record %}
 
 {% block actions %}
