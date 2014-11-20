@@ -223,7 +223,7 @@
             if( typeof candidate === 'undefined' ) {
               candidate = "";
             }
-            $( target_text_id ).removeClass( "candidate primary intrusion variant undefined" );
+            $( target_text_id ).removeClass();
             $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
             $( target_text_id ).val( candidate );
             $( target_text_id ).attr( "value", candidate );
@@ -241,7 +241,7 @@
               $( table_selector + ' input:radio[name="' + source_entry_id + '"]:checked').prop( "id" );
             var target_text_id = '#' +
               $( table_selector + ' input:text[id="'+ target_entry_id + '__candidate"]' ).prop( "id" );
-            $( target_text_id ).removeClass( "candidate primary intrusion variant undefined" );
+            $( target_text_id ).removeClass();
             var source_radio_id = '#' + radio_id;
             var selection = $( source_radio_id ).prop( "value" );
             var columns = new Object();
@@ -287,7 +287,7 @@
         var target_entry_id =  $(this).prop( "id" ).split( "__" )[0];
         var selection =  $(this).prop( "value" );
         var target_text_id = '#' + target_entry_id + "__candidate";
-        $( target_text_id ).removeClass( "candidate primary intrusion variant undefined" );
+        $( target_text_id ).removeClass();
 
         if( selection == "variant" ) {
           $( target_text_id ).prop( "disabled", false );
@@ -351,7 +351,7 @@
         $(this).val( candidate );
         // update the value to present state
         $(this).attr( "value", candidate );
-        $(this).removeClass( "candidate primary intrusion variant undefined" );
+        $(this).removeClass();
 
         if( !is_intrusion && 0 == candidate.length ) {
           alert ( "Blank entries are not permitted" );
@@ -425,7 +425,7 @@
           $( table_selector + ' div.adjudicate :radio' ).removeProp( "checked" ).trigger( "change" );
           $text_selector = $( table_selector + ' div.adjudicate :text' );
           $text_selector.prop( "disabled", true );
-          $text_selector.removeClass( "candidate primary intrusion variant undefined" );
+          $text_selector.removeClass();
           // update previous and present state of value
           $text_selector.val( "" );
           $text_selector.attr( "value", "" );

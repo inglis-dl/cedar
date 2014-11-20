@@ -161,7 +161,7 @@
           $(this).val( candidate );
           // update input value to present state
           $(this).attr( "value", candidate );
-          $(this).removeClass( "candidate primary intrusion variant" );
+          $(this).removeClass();
           if( 0 == candidate.length ) {
             alert( "Blank entries are not permitted" );
             $(this).focus();
