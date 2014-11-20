@@ -38,6 +38,8 @@
 * Workflow improvements
   - add test_entry return operation so that a test can be deferred back to a typist
     at the adjudication stage by administrators or supervisors
+  - add "Return (typist name)" and "Notes (typist name)" buttons to button collection at
+    bottom of adjudication pages
 
 ====================================================================================================
 1.1.0
