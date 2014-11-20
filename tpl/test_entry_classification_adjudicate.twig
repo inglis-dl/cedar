@@ -80,8 +80,8 @@
       args["dictionary_id"] = {{ dictionary_id }};
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      // words are determined according to typist language restrictions
-      args["user_id"] = {{ user_id }};
+      // words are determined according to test language restrictions
+      args["test_entry_id"] = {{ adjudicate_entry_id }};
       args["words_only"] = 1;
       return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
         return {

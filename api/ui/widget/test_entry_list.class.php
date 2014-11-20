@@ -42,6 +42,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
 
     $this->add_column( 'test.rank', 'constant', 'Order', true );
     $this->add_column( 'test_id', 'string', 'Test', true );
+    $this->add_column( 'language', 'string', 'Language', false );
     $this->add_column( 'audio_status', 'string', 'Audio Status' );
     $this->add_column( 'participant_status', 'string', 'Participant Status' );
     $this->add_column( 'completed', 'boolean', 'Completed', true );
@@ -53,9 +54,6 @@ class test_entry_list extends \cenozo\ui\widget\base_list
       $this->adjudicate_allowed = true;
       $this->add_column( 'adjudicate', 'boolean', 'Adjudicate', true );
     }
-
-    // TODO consider adding the typist(s) name assigned to the test and their email
-    // contact info
   }
 
   /**
@@ -71,10 +69,14 @@ class test_entry_list extends \cenozo\ui\widget\base_list
     foreach( $this->get_record_list() as $db_test_entry )
     {
       $db_test = $db_test_entry->get_test();
+      $db_language_list = $db_test_entry->get_language_list();
+      $db_language = current( $db_language_list );
 
       $columns = array(
         'test.rank' => $db_test->rank,
         'test_id' => $db_test->name,
+        'language' =>  1 < count( $db_language_list ) ? 'Multiple' :
+          (is_null( $db_language ) ? 'None' : $db_language->name ),
         'audio_status' =>
           is_null( $db_test_entry->audio_status ) ? '(N/A)' : $db_test_entry->audio_status,
         'participant_status' =>

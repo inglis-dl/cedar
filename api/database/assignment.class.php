@@ -213,7 +213,7 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'participant_site.service_id', '=', $db_service->id );
       $modifier->where( 'participant_site.site_id', '=', $db_site->id );
       $modifier->where( 'IFNULL( participant.language_id, ' .
-        $database_class_name::format_string( current( $user_languages ) ) . ' )',
+        $database_class_name::format_string( $db_service->language_id ) . ' )',
         'IN', $user_languages );
       $modifier->group( 'participant.id ');
 
@@ -283,7 +283,7 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'participant_site.service_id', '=', $db_service->id );
       $modifier->where( 'participant_site.site_id', '=', $db_site->id );
       $modifier->where( 'IFNULL( participant.language_id, ' .
-        $database_class_name::format_string( current( $user_languages ) ) . ' )',
+        $database_class_name::format_string( $db_service->language_id  ) . ' )',
         'IN', $user_languages );
       $modifier->group( 'participant.id ');
 
@@ -356,10 +356,11 @@ class assignment extends \cenozo\database\record
    */
   public function get_sibling_assignment()
   {
-    // find a sibling assignment based on participant and user id uniqueness
+    // find a sibling assignment based on participant, site and user id uniqueness
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'participant_id', '=', $this->participant_id );
     $modifier->where( 'user_id', '!=', $this->user_id );
+    $modifier->where( 'site_id', '=', $this->site_id );
     $modifier->limit( 1 );
     $db_assignment = current( static::select( $modifier ) );
     return false === $db_assignment ? NULL : $db_assignment;
@@ -416,13 +417,11 @@ class assignment extends \cenozo\database\record
   }
 
   /**
-   * Returns the id of a user as an array key having language restrictions that the
-   * assignment can be reassigned to with.  The boolean value returned with the key
-   * indicates whether to keep the assignment intact or to reinitialize it.
+   * Returns a list of users that the assignment can be reassigned to.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @throws exception\notice
-   * @return associative array  user_id => boolean
+   * @return associative array  id => name
    * @access public
    */
   public function get_reassign_user()
@@ -430,6 +429,8 @@ class assignment extends \cenozo\database\record
     $user_class_name = lib::get_class_name( 'database\user' );
     $role_class_name = lib::get_class_name( 'database\role' );
     $region_site_name = lib::get_class_name( 'database\region_site' );
+    $user_class_name = lib::get_class_name( 'database\user' );
+
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
 
     $session = lib::create( 'business\session' );
@@ -445,117 +446,24 @@ class assignment extends \cenozo\database\record
     foreach( $region_site_name::select( $modifier ) as $db_region_site )
       $cedar_languages[] = $db_region_site->language_id;
 
-    $num_language = count( $cedar_languages );
+    $user_mod = lib::create( 'database\modifier' );
+    $user_mod->where( 'assignment.participant_id', '=', $this->participant_id );
 
-    // get all typists at this site that can process the current record's participant cohort
-    // that have the required (multiple) language restrictions
+    // get all typists at this site that can process the current record's participant
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'access.role_id', '=', $db_role->id );
     $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
     $modifier->where( 'user_has_language.language_id', 'IN', $cedar_languages );
     $modifier->where( 'user.active', '=', true );
-    $modifier->group( 'user.id' );
-    $modifier->having( 'COUNT( user.id )', '=', $num_language );
+    $modifier->where( 'user.id', 'NOT IN', $user_class_name::select( $user_mod, false, true, true ) );
+    $modifier->order( 'user.name' );
 
-    $db_user_list = $user_class_name::select( $modifier );
+    $user_list = array();
+    foreach( $user_class_name::select( $modifier ) as $db_user )
+      $user_list[$db_user->id] = $db_user->name;
 
-    $id_list = array();
-    foreach( $db_user_list as $db_user )
-      $id_list[] = $db_user->id;
-
-    if( count( $id_list ) < 2 ) return $id_list;
-
-    // if the user assigned to this assignment has the aligned language restrictions
-    // then add them to the front of the returned id_list so as not to
-    // delete their transcriptions during reassign
-    $prepend = in_array( $this->user_id, $id_list );
-
-    // prepare a list of user id's sorted according to the users'
-    // number of open assignments from least to most with the
-    // objective to reassign the assignments over to those typists
-    // with fewer active assignments
-    $id_list = array();
-    $min = PHP_INT_MAX;
-    foreach( $db_user_list as $db_user )
-    {
-      // how many open assignments does this user have
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'user_id', '=', $db_user->id );
-      $modifier->where( 'end_datetime', '=', NULL );
-      $count = static::count( $modifier );
-      if( $count < $min  )
-      {
-        $min = $count;
-        array_unshift( $id_list, $db_user->id );
-      }
-      else
-      {
-        $id_list[] = $db_user->id;
-      }
-    }
-
-    // check if the sibling assignment's user has a language restriction
-    $assignmnet_pool = array();
-    $assignment_pool[] = $this->id;
-
-    $db_sibling_assignment = $this->get_sibling_assignment();
-    if( is_null( $db_sibling_assignment ) )
-      throw lib::create( 'exception\notice',
-        'A sibling assignment is required',  __METHOD__ );
-
-    $assignment_pool[] = $db_sibling_assignment->id;
-    $id = $db_sibling_assignment->user_id;
-    if( in_array( $id, $id_list ) )
-    {
-      unset( $id_list[ array_search( $id, $id_list ) ] );
-      $id_list = array_values( $id_list );
-      array_unshift( $id_list, $id );
-    }
-
-    if( $prepend )
-    {
-      if( in_array( $this->user_id, $id_list )  )
-      {
-        unset( $id_list[ array_search( $this->user_id, $id_list ) ] );
-        $id_list = array_values( $id_list );
-      }
-      array_unshift( $id_list, $this->user_id );
-    }
-
-    // truncate to 2 entries
-    if( count( $id_list ) > 2 )
-      $id_list = array_slice( $id_list, 0, 2 );
-
-    $id_list = array_combine( $id_list, array_fill( 0, 2, true ) );
-
-    if( array_key_exists( $this->user_id, $id_list ) )
-    {
-      $id_list[ $this->user_id ] = array( false, $this->id );
-      unset( $assignment_pool[ array_search( $this->id, $assignment_pool ) ] );
-    }
-
-    if( array_key_exists( $db_sibling_assignment->user_id, $id_list ) )
-    {
-      $id_list[ $db_sibling_assignment->user_id ] = array( false, $db_sibling_assignment->id );
-      unset( $assignment_pool[ array_search( $db_sibling_assignment->id, $assignment_pool ) ] );
-    }
-
-    if( 0 < count( $assignment_pool ) )
-    {
-      //find the id_list key that doesnt have an array value
-      reset( $assignment_pool );
-      foreach( $id_list as $user_id => &$value )
-      {
-        if( !is_array( $value ) )
-        {
-          $value = array( $value, current( $assignment_pool ) );
-          next( $assignment_pool );
-        }
-      }
-    }
-
-    return $id_list;
+    return $user_list;
   }
 
   /**
@@ -579,7 +487,6 @@ class assignment extends \cenozo\database\record
         'The assignment for participant UID ' . $db_participant->uid .
         'is closed and cannot be initialized', __METHOD__ );
 
-
     $modifier = NULL;
     if( 'tracking' == $db_participant->get_cohort()->name )
     {
@@ -594,6 +501,8 @@ class assignment extends \cenozo\database\record
       $db_test_entry->test_id = $db_test->id;
       $db_test_entry->assignment_id = $this->id;
       $db_test_entry->save();
+      $db_language = $db_test_entry->get_default_participant_language();
+      $db_test_entry->add_language( array( $db_language->id ) );
       // create daughter entry record(s)
       $db_test_entry->initialize( false );
     }

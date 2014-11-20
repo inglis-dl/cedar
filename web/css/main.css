@@ -28,6 +28,40 @@ input[type=text][class*=undefined] {
   -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
 }
 
+input[type=text][class*=intrusion_fr] {
+  background: #FFB2D1;
+  border: 1px solid #C0C0C0;
+  text-decoration: underline;
+  -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+}
+
+input[type=text][class*=variant_fr] {
+  background: #A9FFFF;
+  border: 1px solid #C0C0C0;
+  text-decoration: underline;
+  -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+}
+
+input[type=text][class*=candidate_fr] {
+  background: #FFFF66;
+  border: 1px solid #C0C0C0;
+  text-decoration: underline;
+  -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+}
+
+input[type=text][class*=undefined_fr] {
+  background: #FFFFFF;
+  border: 1px solid #C0C0C0;
+  text-decoration: underline;
+  -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+}
+
+input[type=text][class*=primary_fr] {
+  border: 1px solid #C0C0C0;
+  text-decoration: underline;
+  -moz-border-radius: 4px; -webkit-border-radius: 4px; border-radius: 4px;
+}
+
 td[class*=accept] {
   background: #B1F3B1;
   border: 1px solid #C0C0C0;

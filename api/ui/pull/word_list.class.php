@@ -46,16 +46,12 @@ class word_list extends \cenozo\ui\pull
     $dictionary['intrusion_dictionary_id'] = $this->get_argument( 'intrusion_dictionary_id', NULL );
     $dictionary = array_filter( $dictionary );
 
-    $user_id = $this->get_argument( 'user_id', 0 );
+    $test_entry_id = $this->get_argument( 'test_entry_id', 0 );
     $id_list = array();
-    if( 0 != $user_id )
+    if( 0 != $test_entry_id )
     {
-      $db_user = lib::create( 'database\user', $user_id );
-      $id_list = $db_user->get_language_idlist();
-      if( 0 == count( $id_list ) )
-      {
-        $id_list[] = lib::create( 'business\session' )->get_service()->get_language()->id;
-      }
+      $db_test_entry = lib::create( 'database\test_entry', $test_entry_id );
+      $id_list = $db_test_entry->get_language_idlist();
     }
 
     $words_only = $this->get_argument( 'words_only', false );

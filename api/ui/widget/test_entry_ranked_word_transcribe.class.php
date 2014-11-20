@@ -36,11 +36,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     parent::setup();
 
     $db_test_entry = $this->parent->get_record();
-    $db_user = $db_test_entry->get_assignment()->get_user();
-    $db_language_list = $db_user->get_language_list();
-    $db_language =
-      1 == count( $db_language_list ) ? current( $db_language_list ) :
-      $db_test_entry->get_default_participant_language();
+    $db_language = current( $db_test_entry->get_language_list() );
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'ranked_word_set_id', '!=', NULL );

@@ -40,19 +40,14 @@ class assignment_reassign extends \cenozo\ui\widget\base_view
 
     $operation_class_name = lib::get_class_name( 'database\operation' );
 
+    $this->set_editable( true );
+
     // add items to the view
     $this->add_item( 'uid', 'constant', 'UID' );
     $this->add_item( 'cohort', 'constant', 'Cohort' );
-    $this->add_item( 'user1', 'constant', 'User 1' );
-    $this->add_item( 'user2', 'constant', 'User 2' );
-
-    $db_operation = $operation_class_name::get_operation( 'push', 'assignment', 'reassign' );
-    if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
-    {
-      $this->add_action( 'reassign', 'Reassign', $db_operation,
-        'Reassign this participant\'s assignments to typists '.
-        'with multiple language restrictions' );
-    }
+    $this->add_item( 'site', 'constant', 'Site' );
+    $this->add_item( 'current_user', 'constant', 'Current User' );
+    $this->add_item( 'user_id', 'enum', 'New User' );
 
     $this->set_heading( 'Reassign Assignment' );
   }
@@ -73,16 +68,12 @@ class assignment_reassign extends \cenozo\ui\widget\base_view
     $db_participant = $db_assignment->get_participant();
     $this->set_item( 'uid', $db_participant->uid, true );
     $this->set_item( 'cohort', $db_participant->get_cohort()->name, true );
+    $this->set_item( 'site', $db_assignment->get_site()->name, true );
+    $this->set_item( 'current_user', $db_assignment->get_user()->name, true );
 
     // NOTE: this widget is parented by the assignment_view widget.
-    // The check is made during the parent prepare() method to ensure
-    // at least 2 id's are available to reassign to.
-    $user_ids = $db_assignment->get_reassign_user();
-    $i = 1;
-    foreach( $user_ids as $id => $value )
-    {
-      $db_user = lib::create( 'database\user', $id );
-      $this->set_item( 'user' . $i++, $db_user->name, true );
-    }
+    $user_list = $db_assignment->get_reassign_user();
+    $user_list['NULL'] = '';
+    $this->set_item( 'user_id', '', true, $user_list, true );
   }
 }

@@ -1,4 +1,4 @@
-SELECT "Adding new operations" AS "";
+SELECT "Adding new language related operations" AS "";
 
 INSERT IGNORE INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "language", "edit", true,
