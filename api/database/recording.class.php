@@ -46,9 +46,6 @@ class recording extends \cenozo\database\record
     // make sure that all recordings on disk have a corresponding database record
     if( is_dir( COMP_RECORDINGS_PATH ) )
     {
-      // create new recording record based on this interview
-      $db_recording = lib::create( 'database\recording' );
-
       $glob_search = sprintf( '%s/*/*/*.wav', COMP_RECORDINGS_PATH );
 
       $values = '';
@@ -84,10 +81,10 @@ class recording extends \cenozo\database\record
             $values_count++;
             if( $values_count++ >= $values_limit )
             {
+              $values_array[] = $values;
               $values_count = 0;
               $first = true;
               $values = '';
-              $values_array[] = $values;
             }
           }
         }
