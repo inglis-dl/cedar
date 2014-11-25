@@ -355,6 +355,7 @@
 
         if( !is_intrusion && 0 == candidate.length ) {
           alert ( "Blank entries are not permitted" );
+          $(this).focus();
           return false;
         }
 
