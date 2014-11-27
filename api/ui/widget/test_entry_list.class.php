@@ -81,9 +81,8 @@ class test_entry_list extends \cenozo\ui\widget\base_list
           is_null( $db_test_entry->audio_status ) ? '(N/A)' : $db_test_entry->audio_status,
         'participant_status' =>
           is_null( $db_test_entry->participant_status ) ? '(N/A)' : $db_test_entry->participant_status,
-        $db_test_entry->participant_status,
-        'deferred' =>  in_array( $db_test_entry->deferred, array( 'requested', 'pending' ) ),
         'completed' => $db_test_entry->completed,
+        'deferred' =>  in_array( $db_test_entry->deferred, array( 'requested', 'pending' ) ),
         // note count isn't a column, it's used for the note button
         'note_count' => $db_test_entry->get_note_count() );
 
