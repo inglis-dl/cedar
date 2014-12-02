@@ -189,14 +189,30 @@ class patch
     out( 'Creating participant uid to id map' );
 
     $sql =
-      'SELECT DISTINCT uid, id '.
-      'FROM '. $cenozo . '.participant ORDER BY uid';
+      'SELECT DISTINCT p.uid, p.id '.
+      'FROM '. $cenozo . '.participant p '.
+      'JOIN '. $cenozo . '.event e1 ON e1.participant_id = p.id '.
+      'JOIN '. $cenozo . '.event_type et1 ON et1.id = e1.event_type_id '.
+      'JOIN '. $cenozo . '.event e2 ON e2.participant_id = p.id '.
+      'JOIN '. $cenozo . '.event_type et2 ON et2.id = e2.event_type_id '.
+      'JOIN '. $cenozo . '.cohort c ON c.id = p.cohort_id '.
+      'WHERE et1.name = "completed (Baseline Home)" '.
+      'AND et2.name = "completed (Baseline Site)" '.
+      'AND p.active = true '.
+      'AND cohort.name = "comprehensive" '.
+      'ORDER BY uid';
+
     $data_keys = patch::my_get_all( $db, $sql );
     $data_values = $data_keys;
     //convert to associative array
     array_walk( $data_values, function( &$item ){ $item=$item['id'];});
     array_walk( $data_keys, function( &$item ){ $item=$item['uid'];});
     $participant_map = array_combine( $data_keys, $data_values );
+
+    $my_file = fopen( '/tmp/cedar_UID_list.txt', 'w' );
+    foreach( $data_keys as $uid )
+      fwrite( $my_file, $uid . '\n' );
+    fclose( $my_file );
 
     $values_count = 0;
     $values_limit = 200;
