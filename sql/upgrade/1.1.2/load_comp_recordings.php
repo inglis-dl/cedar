@@ -199,7 +199,7 @@ class patch
       'WHERE et1.name = "completed (Baseline Home)" '.
       'AND et2.name = "completed (Baseline Site)" '.
       'AND p.active = true '.
-      'AND cohort.name = "comprehensive" '.
+      'AND c.name = "comprehensive" '.
       'ORDER BY uid';
 
     $data_keys = patch::my_get_all( $db, $sql );
@@ -209,7 +209,7 @@ class patch
     array_walk( $data_keys, function( &$item ){ $item=$item['uid'];});
     $participant_map = array_combine( $data_keys, $data_values );
 
-    $my_file = fopen( '/tmp/cedar_UID_list.txt', 'w' );
+    $my_file = fopen( '/tmp/cedar_comp_uid_list.txt', 'w' );
     foreach( $data_keys as $uid )
       fwrite( $my_file, $uid . '\n' );
     fclose( $my_file );
