@@ -209,10 +209,13 @@ class patch
     array_walk( $data_keys, function( &$item ){ $item=$item['uid'];});
     $participant_map = array_combine( $data_keys, $data_values );
 
+    // uncomment if file is required
+    /*
     $my_file = fopen( '/tmp/cedar_comp_uid_list.txt', 'w' );
     foreach( $data_keys as $uid )
       fwrite( $my_file, $uid . '\n' );
     fclose( $my_file );
+    */
 
     $values_count = 0;
     $values_limit = 200;
