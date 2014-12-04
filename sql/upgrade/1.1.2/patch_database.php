@@ -205,7 +205,7 @@ class patch
       'JOIN test ON test.id = t.test_id '.
       'JOIN test_type tt ON tt.id = test.test_type_id '.
       'JOIN ' . $cenozo . '.participant p ON p.id = t.participant_id '.
-      'LEFT JOIN ' . $cenozo . '.participant_site ps ON ps.participant_id = p.id'.
+      'LEFT JOIN ' . $cenozo . '.participant_site ps ON ps.participant_id = p.id '.
       'AND ps.service_id = @service_id '.
       'WHERE tt.name = "classification" '.
       'AND ( '.
@@ -244,7 +244,7 @@ class patch
       'JOIN test ON test.id = t.test_id '.
       'JOIN test_type tt ON tt.id = test.test_type_id '.
       'JOIN ' . $cenozo . '.participant p ON p.id = t.participant_id '.
-      'LEFT JOIN ' . $cenozo . '.participant_site ps ON ps.participant_id = p.id'.
+      'LEFT JOIN ' . $cenozo . '.participant_site ps ON ps.participant_id = p.id '.
       'AND ps.service_id = @service_id '.
       'WHERE tt.name IN ( "alpha_numeric", "confirmation", "ranked_word" )';
     patch::my_execute( $db, $sql );

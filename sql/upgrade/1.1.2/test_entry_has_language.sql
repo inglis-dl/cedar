@@ -54,7 +54,7 @@ CREATE PROCEDURE patch_test_entry_has_language()
         "SET @default_language_id=( ",
         "SELECT language_id ",
         "FROM ", @cenozo, ".service ",
-        "WHERE name = 'cedar'" );
+        "WHERE name = 'cedar' )" );
 
       PREPARE statement FROM @sql;
       EXECUTE statement;
@@ -100,7 +100,7 @@ CREATE PROCEDURE patch_test_entry_has_language()
       SET @sql = CONCAT(
         "INSERT IGNORE INTO test_entry_has_language ",
         "(test_entry_id, language_id) ",
-        "SELECT DISTINCT tec.test_entry.id, w.language_id ",
+        "SELECT DISTINCT tec.test_entry_id, w.language_id ",
         "FROM test_entry_classification tec ",
         "JOIN word w ON w.id = tec.word_id" );
 
@@ -137,7 +137,7 @@ CREATE PROCEDURE patch_test_entry_has_language()
       EXECUTE statement;
       DEALLOCATE PREPARE statement;
 
-      SELECT "Run patch_database.php to set classification and ranked_word test languages" AS "";
+      SELECT "Run patch_database.php one time only" AS "";
 
     END IF;
   END //
