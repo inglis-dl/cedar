@@ -449,11 +449,18 @@ class assignment_manager extends \cenozo\singleton
     $participant_status_list['NULL'] = '';
     $participant_status_list = array_reverse( $participant_status_list, true );
 
-    // only classification tests (FAS and AFT) require prompt status
+    // classification tests (FAS and AFT) require suspected prompt and prompt status
     if( 'classification' != $test_type_name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
+    }
+
+    // ranked_word tests required prompt middle and prompt end status
+    if( 'ranked_word' != $test_type_name )
+    {
+      unset( $participant_status_list['prompt middle'],
+             $participant_status_list['prompt end'] );
     }
 
     $status_data = array();

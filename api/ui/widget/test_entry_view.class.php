@@ -137,12 +137,24 @@ class test_entry_view extends \cenozo\ui\widget\base_view
       $participant_status_list['NULL'] = '';
       $participant_status_list = array_reverse( $participant_status_list, true );
 
-      // only classification tests (FAS and AFT) require prompt status
-      if( 'classification' != $db_test->get_test_type()->name )
+      log::debug( $participant_status_list );
+
+      $test_type_name = $db_test->get_test_type()->name;
+
+      // classification tests (FAS and AFT) require suspected prompt and prompt status
+      if( 'classification' != $test_type_name )
       {
         unset( $participant_status_list['suspected prompt'],
                $participant_status_list['prompted'] );
       }
+
+      // ranked_word tests required prompt middle and prompt end status
+      if( 'ranked_word' != $test_type_name )
+      {
+        unset( $participant_status_list['prompt middle'],
+               $participant_status_list['prompt end'] );
+      }
+      log::debug( $participant_status_list );
 
       $this->set_item( 'participant_status',
         $db_test_entry->participant_status, true, $participant_status_list );

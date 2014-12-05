@@ -120,11 +120,20 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $participant_status_list['NULL'] = '';
     $participant_status_list = array_reverse( $participant_status_list, true );
 
-    // only classification tests (FAS and AFT) require prompt status
+    $test_type_name = $db_test->get_test_type()->name;
+
+    // classification tests (FAS and AFT) require suspected prompt and prompt status
     if( 'classification' != $test_type_name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
+    }
+
+    // ranked_word tests required prompt middle and prompt end status
+    if( 'ranked_word' != $test_type_name )
+    {
+      unset( $participant_status_list['prompt middle'],
+             $participant_status_list['prompt end'] );
     }
 
     $participant_status =
