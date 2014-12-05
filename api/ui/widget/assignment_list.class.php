@@ -323,6 +323,8 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           }
           else if( $restrict_state_id == array_search( 'Adjudicate', $this->state_list ) )
           {
+            $modifier->where( 'IFNULL( test_entry.deferred, "NULL" )', 'NOT IN',
+              $test_entry_class_name::$deferred_states );
             $modifier->where( 'test_entry.adjudicate', '=', true );
           }
         }
@@ -392,6 +394,8 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           }
           else if( $restrict_state_id == array_search( 'Adjudicate', $this->state_list ) )
           {
+            $modifier->where( 'IFNULL( test_entry.deferred, "NULL" )', 'NOT IN',
+              $test_entry_class_name::$deferred_states );
             $modifier->where( 'test_entry.adjudicate', '=', true );
           }
         }
