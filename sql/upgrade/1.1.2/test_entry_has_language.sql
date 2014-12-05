@@ -15,14 +15,15 @@ CREATE PROCEDURE patch_test_entry_has_language()
       WHERE constraint_schema = DATABASE()
       AND constraint_name = "fk_role_has_operation_role_id" );
 
-    SELECT "Adding new test_entry_has_language table" AS "";
-
     SET @test = (
       SELECT COUNT(*)
       FROM information_schema.TABLES
       WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = "test_entry_has_language" );
     IF @test = 0 THEN
+
+      SELECT "Adding new test_entry_has_language table" AS "";
+
       SET @sql = CONCAT(
         "CREATE TABLE IF NOT EXISTS ", @cedar, ".test_entry_has_language ( ",
           "test_entry_id INT UNSIGNED NOT NULL, ",
