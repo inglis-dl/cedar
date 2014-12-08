@@ -46,7 +46,7 @@
         {% endif %}
       } ); // end Next click
 
-      function return_test_entry( test_entry_id ) {
+      function return_test_entry( test_entry_id_list ) {
         $dialog = $( "#{{ widget.full }}__note_dialog" );
         var buttons = new Object;
         buttons.Ok = function() {
@@ -57,14 +57,16 @@
             $dialog.dialog( "close" );
 
             var args = new Object();
-            args.id = test_entry_id;
-            if( ajax_push( "{{ widget.subject }}", "return", args ) ) {
-              args = new Object();
-              args.note = note;
-              args.category = "{{ widget.subject }}";
-              args.category_id = test_entry_id;
-              ajax_push( "note", "new", args );
-              slot_load( {{ slot }}, "assignment", "list" );
+            for( var i = 0; i < test_entry_id_list.length; i++ ) {
+              args.id = test_entry_id_list[i];
+              if( ajax_push( "{{ widget.subject }}", "return", args ) ) {
+                args = new Object();
+                args.note = note;
+                args.category = "{{ widget.subject }}";
+                args.category_id = args.d;
+                ajax_push( "note", "new", args );
+                slot_load( {{ slot }}, "assignment", "list" );
+              }
             }
           }
         };
@@ -90,18 +92,28 @@
         } );
       }
 
+      $( "#{{ widget.full }}_return12" ).css( 'white-space','nowrap'
+        ).button( 'option', 'label',
+        'Return (both)'
+        ).click( function() {
+          var id_list = [ {{ test_entry_id_1 }}, {{ test_entry_id_2 }} ];
+          //return_test_entry( id_list );
+      } ); // end return12 click
+
       $( "#{{ widget.full }}_return1" ).css( 'white-space','nowrap'
         ).button( 'option', 'label',
         'Return (' + "{{ user_1 }}".toLowerCase() + ')'
         ).click( function() {
-          return_test_entry( {{ test_entry_id_1 }} );
+          var id_list = [ {{ test_entry_id_1 }} ];
+          return_test_entry( id_list );
       } ); // end return1 click
 
       $( "#{{ widget.full }}_return2" ).css( 'white-space','nowrap'
         ).button( 'option', 'label',
         'Return (' + "{{ user_2 }}".toLowerCase() + ')'
         ).click( function() {
-        return_test_entry( {{ test_entry_id_2 }} );
+          var id_list = [ {{ test_entry_id_2 }} ];
+          return_test_entry( id_list );
       } ); // end return2 click
 
       $(':button[id$="quit"]').parent().append(
@@ -142,7 +154,7 @@
 
     {% from 'macros.twig' import confirm_buttons %}
       {{ confirm_buttons( slot, widget.full,
-        [ 'return1', 'return2', 'submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
+        [ 'return12', 'return1', 'return2', 'submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
     {% from 'macros.twig' import note_widget %}
     {{ note_widget(
          widget.full, "test_entry", test_entry_id_1, false, ["Notes (",user_1|lower,")"]|join ) }}
