@@ -179,21 +179,15 @@ class patch
       'AND service_id = @service_id )';
     patch::my_execute( $db, $sql );
 
+
     $sql =
       'INSERT IGNORE INTO test_entry_has_language '.
       '(test_entry_id, language_id) '.
       'SELECT t.id, IFNULL( p.language_id, '.
         'IF( a.site_id = @en_site_id, @en_id, @fr_id ) ) AS language_id '.
       'FROM test_entry t '.
-      'JOIN test ON test.id = t.test_id '.
-      'JOIN test_type tt ON tt.id = test.test_type_id '.
       'JOIN assignment a ON a.id = t.assignment_id '.
-      'JOIN ' . $cenozo . '.participant p ON p.id = a.participant_id '.
-      'WHERE tt.name = "classification" '.
-      'AND ( '.
-        't.audio_status IN ( "unavailable", "unusable" ) '.
-        'OR t.participant_status IN ( "prompted", "refused" ) '.
-      ')';
+      'JOIN ' . $cenozo . '.participant p ON p.id = a.participant_id';
     patch::my_execute( $db, $sql );
 
     $sql =
@@ -202,16 +196,9 @@ class patch
       'SELECT t.id, IFNULL( p.language_id, '.
         'IF( IFNULL( ps.site_id, @en_site_id ) = @en_site_id, @en_id, @fr_id ) ) AS language_id '.
       'FROM test_entry t '.
-      'JOIN test ON test.id = t.test_id '.
-      'JOIN test_type tt ON tt.id = test.test_type_id '.
       'JOIN ' . $cenozo . '.participant p ON p.id = t.participant_id '.
       'LEFT JOIN ' . $cenozo . '.participant_site ps ON ps.participant_id = p.id '.
-      'AND ps.service_id = @service_id '.
-      'WHERE tt.name = "classification" '.
-      'AND ( '.
-        't.audio_status IN ( "unavailable", "unusable" ) '.
-        'OR t.participant_status IN ( "prompted", "refused" ) '.
-      ')';
+      'AND ps.service_id = @service_id';
     patch::my_execute( $db, $sql );
 
     $sql =
@@ -220,33 +207,6 @@ class patch
       'SELECT DISTINCT tec.test_entry_id, w.language_id '.
       'FROM test_entry_classification tec '.
       'JOIN word w ON w.id = tec.word_id ';
-    patch::my_execute( $db, $sql );
-
-    $sql =
-      'INSERT IGNORE INTO test_entry_has_language '.
-      '(test_entry_id, language_id) '.
-      'SELECT t.id, IFNULL( p.language_id, '.
-        'IF( a.site_id = @en_site_id, @en_id, @fr_id ) ) AS language_id '.
-      'FROM test_entry t '.
-      'JOIN test ON test.id = t.test_id '.
-      'JOIN test_type tt ON tt.id = test.test_type_id '.
-      'JOIN assignment a ON a.id = t.assignment_id '.
-      'JOIN ' . $cenozo . '.participant p ON p.id = a.participant_id '.
-      'WHERE tt.name IN ( "alpha_numeric", "confirmation", "ranked_word" )';
-    patch::my_execute( $db, $sql );
-
-    $sql =
-      'INSERT IGNORE INTO test_entry_has_language '.
-      '(test_entry_id, language_id) '.
-      'SELECT t.id, IFNULL( p.language_id, '.
-        'IF( IFNULL( ps.site_id, @en_site_id ) = @en_site_id, @en_id, @fr_id ) ) AS language_id '.
-      'FROM test_entry t '.
-      'JOIN test ON test.id = t.test_id '.
-      'JOIN test_type tt ON tt.id = test.test_type_id '.
-      'JOIN ' . $cenozo . '.participant p ON p.id = t.participant_id '.
-      'LEFT JOIN ' . $cenozo . '.participant_site ps ON ps.participant_id = p.id '.
-      'AND ps.service_id = @service_id '.
-      'WHERE tt.name IN ( "alpha_numeric", "confirmation", "ranked_word" )';
     patch::my_execute( $db, $sql );
 
     out( 'Finished' );

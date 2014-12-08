@@ -66,15 +66,8 @@ CREATE PROCEDURE patch_test_entry_has_language()
         "(test_entry_id, language_id) ",
         "SELECT t.id, IFNULL(p.language_id, @default_language_id) AS language_id ",
         "FROM test_entry t ",
-        "JOIN test ON test.id = t.test_id ",
-        "JOIN test_type tt ON tt.id = test.test_type_id ",
         "JOIN assignment a ON a.id = t.assignment_id ",
-        "JOIN ", @cenozo, ".participant p ON p.id = a.participant_id ",
-        "WHERE tt.name = 'classification' ",
-        "AND (",
-          "t.audio_status IN ('unavailable', 'unusable') ",
-          "OR t.participant_status IN ('prompted', 'refused') ",
-        ")" );
+        "JOIN ", @cenozo, ".participant p ON p.id = a.participant_id" );
 
       PREPARE statement FROM @sql;
       EXECUTE statement;
@@ -85,14 +78,7 @@ CREATE PROCEDURE patch_test_entry_has_language()
         "(test_entry_id, language_id) ",
         "SELECT t.id, IFNULL(p.language_id, @default_language_id) AS language_id ",
         "FROM test_entry t ",
-        "JOIN test ON test.id = t.test_id ",
-        "JOIN test_type tt ON tt.id = test.test_type_id ",
-        "JOIN ", @cenozo, ".participant p ON p.id = t.participant_id ",
-        "WHERE tt.name = 'classification' ",
-        "AND (",
-          "t.audio_status IN ('unavailable', 'unusable') ",
-          "OR t.participant_status IN ('prompted', 'refused') ",
-        ")" );
+        "JOIN ", @cenozo, ".participant p ON p.id = t.participant_id" );
 
       PREPARE statement FROM @sql;
       EXECUTE statement;
@@ -104,35 +90,6 @@ CREATE PROCEDURE patch_test_entry_has_language()
         "SELECT DISTINCT tec.test_entry_id, w.language_id ",
         "FROM test_entry_classification tec ",
         "JOIN word w ON w.id = tec.word_id" );
-
-      PREPARE statement FROM @sql;
-      EXECUTE statement;
-      DEALLOCATE PREPARE statement;
-
-      SET @sql = CONCAT(
-        "INSERT IGNORE INTO test_entry_has_language ",
-        "(test_entry_id, language_id) ",
-        "SELECT t.id, IFNULL(p.language_id, @default_language_id) AS language_id ",
-        "FROM test_entry t ",
-        "JOIN test ON test.id = t.test_id ",
-        "JOIN test_type tt ON tt.id = test.test_type_id ",
-        "JOIN assignment a ON a.id = t.assignment_id ",
-        "JOIN ", @cenozo, ".participant p ON p.id = a.participant_id ",
-        "WHERE tt.name IN ('alpha_numeric', 'confirmation', 'ranked_word') " );
-
-      PREPARE statement FROM @sql;
-      EXECUTE statement;
-      DEALLOCATE PREPARE statement;
-
-      SET @sql = CONCAT(
-        "INSERT IGNORE INTO test_entry_has_language ",
-        "(test_entry_id, language_id) ",
-        "SELECT t.id, IFNULL(p.language_id, @default_language_id) AS language_id ",
-        "FROM test_entry t ",
-        "JOIN test ON test.id = t.test_id ",
-        "JOIN test_type tt ON tt.id = test.test_type_id ",
-        "JOIN ", @cenozo, ".participant p ON p.id = t.participant_id ",
-        "WHERE tt.name IN ('alpha_numeric', 'confirmation', 'ranked_word') " );
 
       PREPARE statement FROM @sql;
       EXECUTE statement;
