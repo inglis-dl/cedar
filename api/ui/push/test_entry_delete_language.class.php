@@ -36,12 +36,18 @@ class test_entry_delete_language extends \cenozo\ui\push\base_record
   {
     parent::validate();
 
+    // do not delete a language if that will leave this record with no language
+
+    $db_test_entry = $this->get_record();
+    if( 1 == count( $db_test_entry->get_language_idlist() ) )
+      throw lib::create( 'exception\notice',
+        'Cannot delete the language.  Try adding another language first.', __METHOD__ );
+
     // do not delete a language if any of this records daughter entries
     // have words of that language in use
-    $db_test_entry = $this->get_record();
     $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
 
-    if( 'confirmation' != $test_type_name )
+    if( in_array( $test_type_name, array( 'ranked_word', 'classification' ) ) )
     {
       $get_count_method = 'get_test_entry_' . $test_type_name . '_count';
       $modifier = lib::create( 'database\modifier' );
@@ -62,6 +68,18 @@ class test_entry_delete_language extends \cenozo\ui\push\base_record
   {
     parent::execute();
 
-    $this->get_record()->remove_language( $this->get_argument( 'remove_id' ) );
+    $id = $this->get_argument( 'remove_id' );
+    $db_test_entry = $this->get_record();
+    $db_test_entry->remove_language( $id );
+
+    // update the sibling
+    $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+    if( !is_null( $db_sibling_test_entry ) ) 
+      $db_sibling_test_entry->remove_language( $id );
+
+    // update the adjudicate
+    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
+    if( !is_null( $db_adjudicate_test_entry ) ) 
+      $db_adjudicate_test_entry->remove_language( $id );
   }
 }

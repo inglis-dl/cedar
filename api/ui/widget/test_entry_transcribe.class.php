@@ -74,16 +74,29 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   {
     parent::validate();
 
-    // language restrictions of siblings must match
     $db_test_entry = $this->get_record();
+    $id_list = $db_test_entry->get_language_idlist();
+
+    $session = lib::create( 'business\session' );
+    $db_role = $session->get_role();
+    if( 'typist' == $db_role->name )
+    {
+      $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
+
+      if( 1 < count( $id_list ) && 'classification' != $test_type_name )
+        throw lib::create( 'exception\notice',
+          'This test can only have one language', __METHOD__ );
+    }    
+
+    // language restrictions of siblings must match
     $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
     if( !is_null( $db_sibling_test_entry ) )
     {
       if( 0 < count( array_diff(
-        $db_test_entry->get_language_idlist(), $db_sibling_test_entry->get_language_idlist() ) ) )
+        $id_list, $db_sibling_test_entry->get_language_idlist() ) ) )
       {
         throw lib::create( 'exception\notice',
-          'The language restrictions must match between sibling tests', __METHOD__ );
+          'Language restrictions must match among siblings', __METHOD__ );
       }
     }
   }

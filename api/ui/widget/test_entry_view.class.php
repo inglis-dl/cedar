@@ -66,11 +66,10 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->language_list = lib::create( 'ui\widget\language_list', $this->arguments );
     $this->language_list->set_parent( $this );
     $this->language_list->set_viewable( false );
-    $this->language_list->set_addable( in_array( $test_type_name,
-      array( 'ranked_word', 'classification' ) ) );
-
-    $this->language_list->remove_column( 'participants' );
-    $this->language_list->remove_column( 'users' );
+    $allow_language_edit = in_array( $test_type_name,
+      array( 'ranked_word', 'classification' ) );
+    $this->language_list->set_addable( $allow_language_edit );
+    $this->language_list->set_removable( $allow_language_edit );
 
     // create the test_entry_transcribe sub widget
     if( 'typist' ==  lib::create( 'business\session' )->get_role()->name )
@@ -241,5 +240,4 @@ class test_entry_view extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $language_list = NULL;
-
 }

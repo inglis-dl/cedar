@@ -34,8 +34,6 @@ class assignment_manager extends \cenozo\singleton
    */
   public static function return_test_entry( $db_test_entry )
   {
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-
     // check if the entry is part of an adjudication
     // if not throw an error
     if( !is_null( $db_test_entry->participant_id ) )
@@ -57,28 +55,20 @@ class assignment_manager extends \cenozo\singleton
     {
       // get the sibling and set its adjudicate status to NULL
       $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
-      if( is_null( $db_sibling_test_entry ) )
-        throw lib::create( 'exception\runtime',
-          'The test_entry being returned must have a sibling', __METHOD__ );
-
-      $db_test_entry->adjudicate = NULL; // save for this record occurs with deferred change
-      $db_sibling_test_entry->adjudicate = NULL;
-      $db_sibling_test_entry->save();
+      if( !is_null( $db_sibling_test_entry ) )
+      {
+        $db_sibling_test_entry->adjudicate = NULL;
+        $db_sibling_test_entry->save();
+      }
     }
 
-    // mark the deferred status as pending
+    $db_test_entry->adjudicate = NULL;
     $db_test_entry->deferred = 'pending';
     $db_test_entry->save();
 
-    // if there is an adjudicate entry associated with this participant and test
-    // delete it and its daughter entries
-    $db_assignment = $db_test_entry->get_assignment();
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'participant_id', '=', $db_assignment->participant_id );
-    $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
-    $modifier->limit( 1 );
-    $db_adjudicate_entry = current( $test_entry_class_name::select( $modifier ) );
-    if( false !== $db_adjudicate_entry )
+    // if there is an adjudicate entry delete it
+    $db_adjudicate_entry = $db_test_entry->get_adjudicate_test_entry();
+    if( !is_null( $db_adjudicate_entry ) )
     {
       $db_adjudicate_entry->delete();
     }
@@ -113,6 +103,10 @@ class assignment_manager extends \cenozo\singleton
       $db_sibling_test_entry->adjudicate = NULL;
       $db_sibling_test_entry->save();
     }
+
+    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
+    if( !is_null( $db_adjudicate_test_entry ) )
+      $db_adjudicate_test_entry->delete();
   }
 
   /**
@@ -258,9 +252,7 @@ class assignment_manager extends \cenozo\singleton
           {
             // if they are identical check if there is an adjudicate entry and delete it
             $db_test = $db_test_entry->get_test();
-            $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
-              array( 'test_id', 'participant_id' ),
-              array( $db_test->id, $db_assignment->get_participant()->id ) );
+            $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
             if( !is_null( $db_adjudicate_test_entry ) )
             {
               $db_adjudicate_test_entry->delete();
@@ -410,10 +402,7 @@ class assignment_manager extends \cenozo\singleton
     $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
 
     // if we havent created the adjudicate entry, do so now
-    $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
-      array( 'test_id', 'participant_id' ),
-      array( $db_test->id, $db_assignment->get_participant()->id ) );
-
+    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
     if( is_null( $db_adjudicate_test_entry ) )
     {
       // create a new test entry to hold the data
