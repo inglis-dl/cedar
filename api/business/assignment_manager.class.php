@@ -431,7 +431,7 @@ class assignment_manager extends \cenozo\singleton
       else
       {
         $db_adjudicate_test_entry->add_language(
-          array( current( $db_test_entry->get_language_idlist() ) ) );
+          $db_test_entry->get_language_idlist() );
       }
 
       $db_adjudicate_test_entry->initialize( false );
@@ -456,7 +456,7 @@ class assignment_manager extends \cenozo\singleton
              $participant_status_list['prompted'] );
     }
 
-    // ranked_word tests required prompt middle and prompt end status
+    // ranked_word tests require prompt middle and prompt end status
     if( 'ranked_word' != $test_type_name )
     {
       unset( $participant_status_list['prompt middle'],
