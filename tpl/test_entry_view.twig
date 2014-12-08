@@ -7,6 +7,59 @@
  #}
 {% extends "base_view.twig" %}
 
+{% block javascript %}
+  {{ parent() }}
+    <script type="text/javascript">
+      $( function() {
+
+        // return button
+        $( "#{{ widget.full }}__return" ).click( function() {
+          $dialog = $( "#{{ widget.full }}__note_dialog" );
+          var buttons = new Object;
+          buttons.Ok = function() {
+            var note = $("#{{ widget.full }}__note").val();
+            if( 0 == note.length ) {
+              error_dialog( "Error", "You cannot leave a blank note." );
+            } else {
+              $dialog.dialog( "close" );
+
+              var args = new Object();
+              args.id = [ {{ id }} ];
+              if( ajax_push( "{{ widget.subject }}", "return", args ) ) {
+                args = new Object();
+                args.note = note;
+                args.category = "{{ widget.subject }}";
+                args.category_id = {{ id }};
+                ajax_push( "note", "new", args );
+                slot_load( {{ slot }}, "assignment", "list" );
+              }
+            }
+          };
+
+          buttons.Cancel = function() {
+            $dialog.dialog( "close" );
+          };
+
+          var html = "A note is required indicating the reason for returning.";
+          html += "<textarea id=\"{{ widget.full }}__note\"></textarea>";
+
+          $dialog.html( html );
+
+          $dialog.dialog( {
+            closeOnEscape: true,
+            title: "Return Note",
+            modal: true,
+            dialogClass: "alert",
+            width: 450,
+            buttons: buttons,
+            beforeClose: function( event, ui ) { $(this).html( "" ); },
+            open: function( event, ui ) { $( ".ui-dialog-titlebar-close", $(this).parent() ).hide(); }
+          } );
+        } );
+      } );
+    </script>
+{% endblock javascript %}
+
 {% block post_edit %}
   if( "audio_status" == column_name ||
       "participant_status" == column_name ) slot_refresh( {{ slot }} );
@@ -18,6 +71,8 @@
   {% from 'macros.twig' import include_list %}
   {{ include_list( 'language', language_list|default(false), true ) }}
   {% include "test_entry_transcribe.twig" with test_entry_transcribe %}
+
+  <div id="{{ widget.full }}__note_dialog"></div>
 
 {% endblock record %}
 

@@ -63,7 +63,7 @@
                 args = new Object();
                 args.note = note;
                 args.category = "{{ widget.subject }}";
-                args.category_id = args.d;
+                args.category_id = test_entry_id_list[i];
                 ajax_push( "note", "new", args );
                 slot_load( {{ slot }}, "assignment", "list" );
               }
