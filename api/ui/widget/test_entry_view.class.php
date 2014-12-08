@@ -64,11 +64,11 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->language_list = lib::create( 'ui\widget\language_list', $this->arguments );
     $this->language_list->set_parent( $this );
     $this->language_list->set_viewable( false );
-    $this->language_list->set_addable( $test_type_name != 'alpha_numeric' );
+    $this->language_list->set_addable( in_array( $test_type_name,
+      array( 'ranked_word', 'classification' ) ) );
 
     $this->language_list->remove_column( 'participants' );
     $this->language_list->remove_column( 'users' );
-
 
     // create the test_entry_transcribe sub widget
     if( 'typist' ==  lib::create( 'business\session' )->get_role()->name )
@@ -137,8 +137,6 @@ class test_entry_view extends \cenozo\ui\widget\base_view
       $participant_status_list['NULL'] = '';
       $participant_status_list = array_reverse( $participant_status_list, true );
 
-      log::debug( $participant_status_list );
-
       $test_type_name = $db_test->get_test_type()->name;
 
       // classification tests (FAS and AFT) require suspected prompt and prompt status
@@ -154,7 +152,6 @@ class test_entry_view extends \cenozo\ui\widget\base_view
         unset( $participant_status_list['prompt middle'],
                $participant_status_list['prompt end'] );
       }
-      log::debug( $participant_status_list );
 
       $this->set_item( 'participant_status',
         $db_test_entry->participant_status, true, $participant_status_list );
