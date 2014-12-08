@@ -72,11 +72,15 @@ class test_entry_list extends \cenozo\ui\widget\base_list
       $db_language_list = $db_test_entry->get_language_list();
       $db_language = current( $db_language_list );
 
+      if( false === $db_language )
+        throw lib::create( 'exception\runtime',
+        $db_test->name . ' test does not have a language', __METHOD__ );
+
       $columns = array(
         'test.rank' => $db_test->rank,
         'test_id' => $db_test->name,
-        'language' =>  1 < count( $db_language_list ) ? 'Multiple' :
-          (is_null( $db_language ) ? 'None' : $db_language->name ),
+        'language' =>
+          1 < count( $db_language_list ) ? 'Multiple' : $db_language->name,
         'audio_status' =>
           is_null( $db_test_entry->audio_status ) ? '(N/A)' : $db_test_entry->audio_status,
         'participant_status' =>
