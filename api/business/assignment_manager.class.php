@@ -421,17 +421,17 @@ class assignment_manager extends \cenozo\singleton
       $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
       $db_adjudicate_test_entry->test_id = $db_test->id;
       $db_adjudicate_test_entry->save();
-      if( 'ranked_word' == $test_type_name || 'alpha_numeric' == $test_type_name )
-      {
-        $db_adjudicate_test_entry->add_language(
-          array( current( $db_test_entry->get_language_idlist() ) ) );
-      }
-      else if( 'classification' == $test_type_name )
+      if( 'classification' == $test_type_name )
       {
         $db_adjudicate_test_entry->add_language(
           array_unique( array_merge(
             $db_test_entry->get_language_idlist(),
             $db_sibling_test_entry->get_language_idlist() ) ) );
+      }
+      else
+      {
+        $db_adjudicate_test_entry->add_language(
+          array( current( $db_test_entry->get_language_idlist() ) ) );
       }
 
       $db_adjudicate_test_entry->initialize( false );
