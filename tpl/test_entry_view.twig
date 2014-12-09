@@ -24,7 +24,7 @@
               $dialog.dialog( "close" );
 
               var args = new Object();
-              args.id = [ {{ id }} ];
+              args.id = {{ id }};
               if( ajax_push( "{{ widget.subject }}", "return", args ) ) {
                 args = new Object();
                 args.note = note;

@@ -57,6 +57,7 @@
             $dialog.dialog( "close" );
 
             var args = new Object();
+            var success = false;
             for( var i = 0; i < test_entry_id_list.length; i++ ) {
               args.id = test_entry_id_list[i];
               if( ajax_push( "{{ widget.subject }}", "return", args ) ) {
@@ -65,8 +66,11 @@
                 args.category = "{{ widget.subject }}";
                 args.category_id = test_entry_id_list[i];
                 ajax_push( "note", "new", args );
-                slot_load( {{ slot }}, "assignment", "list" );
+                success = true;
               }
+            }
+            if( success ) {
+              slot_load( {{ slot }}, "assignment", "list" );
             }
           }
         };
