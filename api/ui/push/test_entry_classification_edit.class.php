@@ -87,10 +87,16 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
         $db_language = NULL;
         foreach( $db_language_list as $language )
         {
-          $db_language = $language;
-          $data = $db_test->get_word_classification( $candidate, NULL, $db_language );
-          if( 'candidate' != $data['classification'] ) break;
+          $data = $db_test->get_word_classification( $candidate, NULL, $language );
+          if( 'candidate' != $data['classification'] )
+          {
+            $db_language = $language;
+            break;
+          }
         }
+
+        if( is_null( $db_language ) )
+          $db_language = $db_test_entry->get_default_participant_language();
 
         $classification = $data['classification'];
         $word = $data['word'];
@@ -152,6 +158,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           {
             // get the test's variant dictionary and add it as a variant
             $db_dictionary = $db_test->get_variant_dictionary();
+
             if( is_null( $db_dictionary ) )
               throw lib::create( 'exception\notice',
                 'Trying to add the word "'. $word . '" to a non-existant variant dictionary. '.
