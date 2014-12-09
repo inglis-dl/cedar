@@ -267,14 +267,19 @@ class productivity_report extends \cenozo\ui\pull\base_report
           'WHERE user_id=%s', $id_string );
 
         $data = $assignment_class_name::db()->get_row( $sql );
-        $num_complete = $data[ 'complete_count' ];
-        $num_incomplete = $data[ 'assignment_count' ] - $num_complete;
+
+        if( array_key_exists( 'complete_count', $data ) )
+          $num_complete = $data[ 'complete_count' ];
+
+        if( array_key_exists( 'assignment_count', $data ) )
+          $num_incomplete = $data[ 'assignment_count' ] - $num_complete;
 
         $sql = sprintf(
           'SELECT * FROM temp_user_adjudicate '.
           'WHERE user_id=%s', $id_string );
 
         $num_adjudicate = 0;
+
         foreach( $assignment_class_name::db()->get_all( $sql ) as $data )
         {
           if( 0 == $data[ 'status_equal' ] )
