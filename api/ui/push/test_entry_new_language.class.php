@@ -43,7 +43,21 @@ class test_entry_new_language extends \cenozo\ui\push\base_record
     $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
     if( in_array( $test_type_name, array( 'alpha_numeric', 'confirmation' ) ) )
       throw lib::create( 'exception\notice',
-        'This test cannot have its language setting modified', __METHOD__ );
+        'This test type cannot have its language setting modified.',
+        __METHOD__ );
+
+    // disallow new language if an adjudication is in progress
+    if( !is_null( $db_test_entry->get_adjudicate_test_entry() ) )
+      throw lib::create( 'exception\notice',
+        'This test is being adjudicated and cannot have its language setting modified.',
+        __METHOD__ );
+
+    // disallow new language if the assignment is closed
+    $db_assignment = $db_test_entry->get_assignment();
+    if( !is_null( $db_assignment ) && !is_null( $db_assignment->end_datetime ) )
+      throw lib::create( 'exception\notice',
+        'This test is part of a closed assignment and cannot have its language setting modified.',
+        __METHOD__ );
   }
 
   /**
@@ -56,18 +70,7 @@ class test_entry_new_language extends \cenozo\ui\push\base_record
   {
     parent::execute();
 
-    $id_list = $this->get_argument( 'id_list' );
     $db_test_entry = $this->get_record();
-    $db_test_entry->add_language( $id_list );
-
-    // update the sibling
-    $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
-    if( !is_null( $db_sibling_test_entry ) )
-      $db_sibling_test_entry->add_language( $id_list );
-
-    // update the adjudicate
-    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
-    if( !is_null( $db_adjudicate_test_entry ) )
-      $db_adjudicate_test_entry->add_language( $id_list );
+    $db_test_entry->add_language( $this->get_argument( 'id_list' ) );
   }
 }

@@ -36,12 +36,28 @@ class test_entry_delete_language extends \cenozo\ui\push\base_record
   {
     parent::validate();
 
-    // do not delete a language if that will leave this record with no language
-
     $db_test_entry = $this->get_record();
+
+    // if the test is already complete, then have the user
+    // reset the test before changing the language
+    if( $db_test_entry->completed )
+      throw lib::create( 'exception\notice',
+        'Tests that meet the minumum level of complete cannot have their language changed. '.
+        'Reset the test first.',
+        __METHOD__ );
+
+    // do not delete a language if that will leave this record with no language
     if( 1 == count( $db_test_entry->get_language_idlist() ) )
       throw lib::create( 'exception\notice',
-        'Cannot delete the language.  Try adding another language first.', __METHOD__ );
+        'Cannot delete the language.  Try adding another language first.',
+        __METHOD__ );
+
+    // do not delete a language if the assignment is closed
+    $db_assignment = $db_test_entry->get_assignment();
+    if( !is_null( $db_assignment ) && !is_null( $db_assignment->end_datetime ) ) 
+      throw lib::create( 'exception\notice',
+        'This test is part of a closed assignment and cannot have its language setting modified.',
+        __METHOD__ );
 
     // do not delete a language if any of this records daughter entries
     // have words of that language in use
@@ -54,7 +70,8 @@ class test_entry_delete_language extends \cenozo\ui\push\base_record
       $modifier->where( 'word.language_id', '=', $this->get_argument( 'remove_id' ) );
       if( 0 < $db_test_entry->$get_count_method( $modifier ) )
         throw lib::create( 'exception\notice',
-          'Cannot delete language.  Try resetting the test entry first.', __METHOD__ );
+          'Cannot delete language.  Reset the test first.',
+          __METHOD__ );
     }
   }
 
@@ -68,18 +85,7 @@ class test_entry_delete_language extends \cenozo\ui\push\base_record
   {
     parent::execute();
 
-    $id = $this->get_argument( 'remove_id' );
     $db_test_entry = $this->get_record();
-    $db_test_entry->remove_language( $id );
-
-    // update the sibling
-    $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
-    if( !is_null( $db_sibling_test_entry ) ) 
-      $db_sibling_test_entry->remove_language( $id );
-
-    // update the adjudicate
-    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
-    if( !is_null( $db_adjudicate_test_entry ) ) 
-      $db_adjudicate_test_entry->remove_language( $id );
+    $db_test_entry->remove_language( $this->get_argument( 'remove_id' ) );
   }
 }
