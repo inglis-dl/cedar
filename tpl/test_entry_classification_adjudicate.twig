@@ -80,8 +80,8 @@
       args["dictionary_id"] = {{ dictionary_id }};
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      // words are determined according to typist language restrictions
-      args["user_id"] = {{ user_id }};
+      // words are determined according to test language restrictions
+      args["test_entry_id"] = {{ adjudicate_entry_id }};
       args["words_only"] = 1;
       return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
         return {
@@ -110,7 +110,7 @@
             candidate = "";
           }
 
-          $( target_text_id ).removeClass( "candidate primary intrusion variant" );
+          $( target_text_id ).removeClass();
           $( target_text_id ).val( candidate );
           $( target_text_id ).attr( "value", candidate );
           $( target_text_id ).prop( "disabled", false );
@@ -213,7 +213,7 @@
         $(this).val( candidate );
         // update the value to present state
         $(this).attr( "value", candidate );
-        $(this).removeClass( "candidate primary intrusion variant" );
+        $(this).removeClass();
 
         var args = new Object();
         args.id = target_entry_id;
@@ -275,7 +275,7 @@
           $( table_selector + ' input:radio[value="accept"]' ).removeProp( "checked" );
           $text_selector = $( table_selector + ' input:text[id$="adjudicate"]' );
           $text_selector.prop( "disabled", true );
-          $text_selector.removeClass( "candidate primary intrusion variant" );
+          $text_selector.removeClass();
           // update previous and present state of value
           $text_selector.val( "" );
           $text_selector.attr( "value", "" );

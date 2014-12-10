@@ -38,6 +38,7 @@ class assignment_view extends \cenozo\ui\widget\base_view
   {
     parent::prepare();
 
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $operation_class_name = lib::get_class_name( 'database\operation' );
 
     // add items to the view
@@ -55,12 +56,11 @@ class assignment_view extends \cenozo\ui\widget\base_view
     if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
     {
       $db_assignment = $this->get_record();
-      if( !is_null( $db_assignment->get_sibling_assignment() ) &&
-          2 == count( $db_assignment->get_reassign_user() ) )
+      if( is_null( $db_assignment->end_datetime ) &&
+          !$assignment_class_name::all_tests_complete( $db_assignment->id ) )
       {
         $this->add_action( 'reassign', 'Reassign', $db_operation,
-          'Reassign this participant\'s assignments to typists '.
-          'with no language restrictions' );
+          'Reassign this assignment to another typist' );
       }
     }
   }

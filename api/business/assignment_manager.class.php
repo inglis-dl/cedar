@@ -25,6 +25,56 @@ class assignment_manager extends \cenozo\singleton
   }
 
   /**
+   * Return a test_entry that was part of an adjudication.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param  database\test_entry $db_test_entry
+   * @throws exception\runtime
+   * @access public
+   */
+  public static function return_test_entry( $db_test_entry )
+  {
+    // check if the entry is part of an adjudication
+    // if not throw an error
+    if( !is_null( $db_test_entry->participant_id ) )
+      throw lib::create( 'exception\runtime',
+        'An adjudication test_entry is not returnable', __METHOD__ );
+
+    // check if the entry has daughter table entries
+    // if not, initialize
+    $entry_name = 'test_entry_' . $db_test_entry->get_test()->get_test_type()->name;
+    $entry_class_name = lib::get_class_name( 'database\\'. $entry_name );
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'test_entry_id', '=', $db_test_entry->id );
+    if( 0 == $entry_class_name::count( $modifier ) )
+    {
+      // the sibling test entry will have its adjudicate status set to NULL
+      static::reset_test_entry( $db_test_entry );
+    }
+    else
+    {
+      // get the sibling and set its adjudicate status to NULL
+      $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+      if( !is_null( $db_sibling_test_entry ) )
+      {
+        $db_sibling_test_entry->adjudicate = NULL;
+        $db_sibling_test_entry->save();
+      }
+    }
+
+    $db_test_entry->adjudicate = NULL;
+    $db_test_entry->deferred = 'pending';
+    $db_test_entry->save();
+
+    // if there is an adjudicate entry delete it
+    $db_adjudicate_entry = $db_test_entry->get_adjudicate_test_entry();
+    if( !is_null( $db_adjudicate_entry ) )
+    {
+      $db_adjudicate_entry->delete();
+    }
+  }
+
+  /**
    * Reset a test_entry.  All existing test_entry daughter records are deleted
    * and new ones are created. Only test_entrys belonging to assignments that
    * have never been finished can be reset.
@@ -53,11 +103,14 @@ class assignment_manager extends \cenozo\singleton
       $db_sibling_test_entry->adjudicate = NULL;
       $db_sibling_test_entry->save();
     }
+
+    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
+    if( !is_null( $db_adjudicate_test_entry ) )
+      $db_adjudicate_test_entry->delete();
   }
 
   /**
-   * Reassign an assigment and its sibling assignment to a pair
-   * of users having no language restrictions
+   * Reassign an assigment.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param  database\assignment $db_assignment
@@ -68,87 +121,36 @@ class assignment_manager extends \cenozo\singleton
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
     $util_class_name = lib::get_class_name( 'util' );
 
-    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
-    if( is_null( $db_sibling_assignment ) )
-      throw lib::create( 'exception\notice',
-        'A sibling assignment is required',  __METHOD__ );
-
-    $user_ids = $db_assignment->get_reassign_user();
-    if( 2 != count( $user_ids ) )
-      throw lib::create( 'exception\notice',
-        'Two users with no language restrictions are required for reassigning',  __METHOD__ );
-
-    // we have two user ids which now need to be identified
-    // with the current two assignments
-    $reset_1 = reset( $user_ids );
-    $user_id_1 = key( $user_ids );
-    unset( $user_ids[ $user_id_1 ] );
-    $reset_2 = reset( $user_ids );
-    $user_id_2 = key( $user_ids );
-
-    $assignment_reset = array();
-    if( $reset_1[0] )
-      $assignment_reset[ $reset_1[1] ] = $user_id_1;
-
-    if( $reset_2[0] )
-      $assignment_reset[ $reset_2[1] ] = $user_id_2;
-
     // remove any adjudications associated with this participant
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'participant_id', '=', $db_assignment->participant_id );
     foreach( $test_entry_class_name::select( $modifier ) as $db_adjudicate_entry )
     {
-      $mod = lib::create( 'database\modifier' );
-      $mod->where( 'test_entry_id', '=', $db_adjudicate_entry->id );
-      $sql = sprintf( 'DELETE FROM test_entry_%s %s',
-        $db_adjudicate_entry->get_test()->get_test_type()->name,
-        $mod->get_sql() );
-      $test_entry_class_name::db()->execute( $sql );
       $db_adjudicate_entry->delete();
     }
 
+    // delete the test_entry records
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment_id', '=', $db_assignment->id );
+    foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
+    {
+      $db_test_entry->delete();
+    }
+
+    // initialize the assignment
+    $db_assignment->initialize();
+
     $db_assignment->end_datetime = NULL;
-    $db_sibling_assignment->end_datetime = NULL;
     $now_date_obj = $util_class_name::get_datetime_object();
-    if( array_key_exists( $db_assignment->id, $assignment_reset ) )
-    {
-      $db_assignment->user_id = $assignment_reset[ $db_assignment->id ];
-      $db_assignment->start_datetime = $now_date_obj->format( 'Y-m-d H:i:s' );
-    }
-
-    if( array_key_exists( $db_sibling_assignment->id, $assignment_reset ) )
-    {
-      $db_sibling_assignment->user_id = $assignment_reset[ $db_sibling_assignment->id ];
-      $db_sibling_assignment->start_datetime = $now_date_obj->format( 'Y-m-d H:i:s' );
-    }
+    $db_assignment->start_datetime = $now_date_obj->format( 'Y-m-d H:i:s' );
     $db_assignment->save();
-    $db_sibling_assignment->save();
 
-    // delete the test_entry records as required
-    if( 0 < count( $assignment_reset ) )
+    $db_sibling_assignment = $db_assignment->get_sibling_assignment();
+    if( !is_null( $db_sibling_assignment ) )
     {
-      $modifier = lib::create( 'database\modifier' );
-      $modifier->where( 'assignment_id', 'IN', array_keys( $assignment_reset ) );
-      foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
-      {
-        $mod = lib::create( 'database\modifier' );
-        $mod->where( 'test_entry_id', '=', $db_test_entry->id );
-        $sql = sprintf( 'DELETE FROM test_entry_note %s',
-          $mod->get_sql() );
-        $test_entry_class_name::db()->execute( $sql );
-        $sql = sprintf( 'DELETE FROM test_entry_%s %s',
-          $db_test_entry->get_test()->get_test_type()->name,
-          $mod->get_sql() );
-        $test_entry_class_name::db()->execute( $sql );
-        $db_test_entry->delete();
-      }
+      $db_sibling_assignment->end_datetime = NULL;
+      $db_sibling_assignment->save();
     }
-
-    // initialize each assignment as required
-    if( array_key_exists( $db_assignment->id, $assignment_reset ) )
-      $db_assignment->initialize();
-    if( array_key_exists( $db_sibling_assignment->id, $assignment_reset ) )
-      $db_sibling_assignment->initialize();
   }
 
   /**
@@ -169,12 +171,6 @@ class assignment_manager extends \cenozo\singleton
     $modifier->where( 'participant_id', '=', $db_assignment->participant_id );
     foreach( $test_entry_class_name::select( $modifier ) as $db_adjudicate_entry )
     {
-      $mod = lib::create( 'database\modifier' );
-      $mod->where( 'test_entry_id', '=', $db_adjudicate_entry->id );
-      $sql = sprintf( 'DELETE FROM test_entry_%s %s',
-        $db_adjudicate_entry->get_test()->get_test_type()->name,
-        $mod->get_sql() );
-      $test_entry_class_name::db()->execute( $sql );
       $db_adjudicate_entry->delete();
     }
 
@@ -198,15 +194,6 @@ class assignment_manager extends \cenozo\singleton
     $modifier->where( 'assignment_id', '=', $db_assignment->id );
     foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
     {
-      $mod = lib::create( 'database\modifier' );
-      $mod->where( 'test_entry_id', '=', $db_test_entry->id );
-      $sql = sprintf( 'DELETE FROM test_entry_note %s',
-        $mod->get_sql() );
-      $test_entry_class_name::db()->execute( $sql );
-      $sql = sprintf( 'DELETE FROM test_entry_%s %s',
-        $db_test_entry->get_test()->get_test_type()->name,
-        $mod->get_sql() );
-      $test_entry_class_name::db()->execute( $sql );
       $db_test_entry->delete();
     }
   }
@@ -265,19 +252,9 @@ class assignment_manager extends \cenozo\singleton
           {
             // if they are identical check if there is an adjudicate entry and delete it
             $db_test = $db_test_entry->get_test();
-            $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
-              array( 'test_id', 'participant_id' ),
-              array( $db_test->id, $db_assignment->get_participant()->id ) );
+            $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
             if( !is_null( $db_adjudicate_test_entry ) )
             {
-              // delete test_entry daughter record(s)
-              $sql = sprintf(
-                'DELETE FROM test_entry_%s '.
-                'WHERE test_entry_id = %s',
-                $db_test->get_test_type()->name,
-                $database_class_name::format_string( $db_adjudicate_test_entry->id ) );
-
-              $test_entry_class_name::db()->execute( $sql );
               $db_adjudicate_test_entry->delete();
             }
 
@@ -425,10 +402,7 @@ class assignment_manager extends \cenozo\singleton
     $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
 
     // if we havent created the adjudicate entry, do so now
-    $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
-      array( 'test_id', 'participant_id' ),
-      array( $db_test->id, $db_assignment->get_participant()->id ) );
-
+    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
     if( is_null( $db_adjudicate_test_entry ) )
     {
       // create a new test entry to hold the data
@@ -436,6 +410,19 @@ class assignment_manager extends \cenozo\singleton
       $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
       $db_adjudicate_test_entry->test_id = $db_test->id;
       $db_adjudicate_test_entry->save();
+      if( 'classification' == $test_type_name )
+      {
+        $db_adjudicate_test_entry->add_language(
+          array_unique( array_merge(
+            $db_test_entry->get_language_idlist(),
+            $db_sibling_test_entry->get_language_idlist() ) ) );
+      }
+      else
+      {
+        $db_adjudicate_test_entry->add_language(
+          $db_test_entry->get_language_idlist() );
+      }
+
       $db_adjudicate_test_entry->initialize( false );
     }
 
@@ -451,11 +438,18 @@ class assignment_manager extends \cenozo\singleton
     $participant_status_list['NULL'] = '';
     $participant_status_list = array_reverse( $participant_status_list, true );
 
-    // only classification tests (FAS and AFT) require prompt status
+    // classification tests (FAS and AFT) require suspected prompt and prompt status
     if( 'classification' != $test_type_name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
+    }
+
+    // ranked_word tests require prompt middle and prompt end status
+    if( 'ranked_word' != $test_type_name )
+    {
+      unset( $participant_status_list['prompt middle'],
+             $participant_status_list['prompt end'] );
     }
 
     $status_data = array();
@@ -659,6 +653,8 @@ class assignment_manager extends \cenozo\singleton
                 $dictionary_id = $db_word->dictionary_id;
                 $classification_i = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+                if( '' !== $classification_i && 'en' != $db_word->get_language()->code )
+                  $classification_i .= '_fr';
               }
               $row[ 'classification_' . $i ] = $classification_i;
             }
@@ -741,6 +737,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_2 && 'en' != $db_word->get_language()->code )
+                $classification_2 .= '_fr';
             }
           }
           // unequal number of list elements case
@@ -759,6 +757,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_1 && 'en' != $db_word->get_language()->code )
+                $classification_1 .= '_fr';
             }
           }
           else
@@ -801,6 +801,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_1 && 'en' != $db_word->get_language()->code )
+                $classification_1 .= '_fr';
             }
 
             if( !is_null( $b_obj->word_id ) )
@@ -811,6 +813,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_2 && 'en' != $db_word->get_language()->code )
+                $classification_2 .= '_fr';
             }
           }
 
@@ -822,6 +826,8 @@ class assignment_manager extends \cenozo\singleton
             $dictionary_id = $db_word->dictionary_id;
             $classification_3 = array_key_exists( $dictionary_id, $classification ) ?
               $classification[ $dictionary_id ] : '';
+            if( '' !== $classification_3 && 'en' != $db_word->get_language()->code )
+              $classification_3 .= '_fr';
           }
           if( !is_null( $c_obj->selection ) )  $selection_3 = $c_obj->selection;
 

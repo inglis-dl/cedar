@@ -92,28 +92,10 @@ class test_entry_ranked_word_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        $db_languages = array();
-        $user_id = $this->get_argument( 'user_id', 0 );
-        if( 0 != $user_id )
-        {
-          $db_user = lib::create( 'database\user', $user_id );
-          $db_languages = $db_user->get_language_list();
-        }
-
-        if( 0 == count( $db_languages ) )
-        {
-          $db_languages[] = $db_test_entry->get_default_participant_language();
-        }
-
+        $db_language = current( $db_test_entry->get_language_list() );
         $db_test = $db_test_entry->get_test();
         $data = NULL;
-        $db_language = NULL;
-        foreach( $db_languages as $language )
-        {
-          $db_language = $language;
-          $data = $db_test->get_word_classification( $candidate, NULL, $db_language );
-          if( 'candidate' != $data['classification'] ) break;
-        }
+        $data = $db_test->get_word_classification( $candidate, NULL, $db_language );
 
         $classification = $data['classification'];
         $word = $data['word'];

@@ -1,6 +1,6 @@
 <?php
 /**
- * assignment_reassign.class.php
+ * test_entry_return.class.php
  *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  * @filesource
@@ -10,11 +10,11 @@ namespace cedar\ui\push;
 use cenozo\lib, cenozo\log, cedar\util;
 
 /**
- * push: assignment edit
+ * push: test_entry return
  *
- * Edit a assignment.
+ * Edit a test entry.
  */
-class assignment_reassign extends \cenozo\ui\push\base_edit
+class test_entry_return extends \cenozo\ui\push\base_record
 {
   /**
    * Constructor.
@@ -24,7 +24,7 @@ class assignment_reassign extends \cenozo\ui\push\base_edit
    */
   public function __construct( $args )
   {
-    parent::__construct( 'assignment', $args );
+    parent::__construct( 'test_entry', 'return', $args );
   }
 
   /**
@@ -35,7 +35,11 @@ class assignment_reassign extends \cenozo\ui\push\base_edit
    */
   protected function execute()
   {
+    parent::execute();
+
+    $db_test_entry = $this->get_record();
+
     $assignment_manager = lib::create( 'business\assignment_manager' );
-    $assignment_manager::reassign( $this->get_record() );
+    $assignment_manager::return_test_entry( $db_test_entry );
   }
 }

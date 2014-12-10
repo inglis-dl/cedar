@@ -125,9 +125,6 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'participant_id', $db_participant->id );
 
-    // set the language(s) of dictionary words based on one user id
-    $this->set_variable( 'user_id', $db_user->id );
-
     $cohort_name = $db_participant->get_cohort()->name;
     $recording_data = array();
     if( 'tracking' == $cohort_name )
@@ -172,9 +169,11 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $this->set_variable( 'test_entry_id_1', $db_test_entry->id );
     $this->set_variable( 'user_1', $db_user->name );
+    $this->set_variable( 'user_id_1', $db_user->id );
 
     $this->set_variable( 'test_entry_id_2', $db_sibling_test_entry->id );
     $this->set_variable( 'user_2', $db_sibling_user->name );
+    $this->set_variable( 'user_id_2', $db_sibling_user->id );
 
     $this->set_variable( 'rank', $db_test->rank );
     $this->set_variable( 'test_type', $db_test->get_test_type()->name );

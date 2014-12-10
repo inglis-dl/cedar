@@ -133,6 +133,9 @@ VALUES( "widget", "test_entry", "list", true, "Lists an assignment's test_entrie
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "pull", "test_entry", "classify_word", false, "Classifies a word candidate as either candidate, primary,
 intrusion or variant." );
+INSERT IGNORE INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "test_entry", "return", true, "Returns a test_entry to a typist
+during an adjudication." );
 
 -- test_entry_alpha_numeric
 
@@ -201,6 +204,12 @@ INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "user", "new_cohort", true, "Add a cohort to a user." );
 INSERT INTO operation( type, subject, name, restricted, description )
 VALUES( "push", "user", "delete_cohort", true, "Remove a user's cohort." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "widget", "user", "add_language", true, "A form to add a language to a user." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "user", "new_language", true, "Add a language to a user." );
+INSERT INTO operation( type, subject, name, restricted, description )
+VALUES( "push", "user", "delete_language", true, "Remove a user's language." );
 
 -- word
 

@@ -260,7 +260,6 @@ class test_entry extends \cenozo\database\has_note
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the selection.
-   * @return db_test_entry (NULL if no sibling)
    * @access public
    * @param database\modifier Modifier to refine the selection
    * @return database\test_entry (NULL if no sibling)
@@ -288,6 +287,30 @@ class test_entry extends \cenozo\database\has_note
   }
 
   /**
+   * Get the adjudication of this test_entry
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param database\modifier $modifier Modifications to the selection.
+   * @access public
+   * @return database\test_entry (NULL if no adjudicate)
+   */
+  public function get_adjudicate_test_entry()
+  {
+    $db_test_entry = NULL;
+    if( !is_null( $this->assignment_id ) )
+    {
+      $db_assignment = $this->get_assignment();
+      if( !is_null( $db_assignment ) )
+      {
+        $db_test_entry = static::get_unique_record(
+          array( 'test_id', 'participant_id' ),
+          array( $this->test_id, $db_assignment->participant_id ) );
+      }
+    }
+    return $db_test_entry;
+  }
+
+  /**
    * Initialize this test_entry by deleting and recreating all daughter table entries.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -311,13 +334,17 @@ class test_entry extends \cenozo\database\has_note
     $db_test = $this->get_test();
     $test_type_name = $db_test->get_test_type()->name;
     $entry_class_name = 'test_entry_' . $test_type_name;
+    $get_count_method = 'get_' . $entry_class_name . '_count';
 
-    $sql = sprintf(
-      'DELETE FROM %s '.
-      'WHERE test_entry_id = %s',
-      $entry_class_name,
-      $database_class_name::format_string( $this->id ) );
-    static::db()->execute( $sql );
+    if( 0 < $this->$get_count_method() )
+    {
+      $sql = sprintf(
+        'DELETE FROM %s '.
+        'WHERE test_entry_id = %s',
+        $entry_class_name,
+        $database_class_name::format_string( $this->id ) );
+      static::db()->execute( $sql );
+    }
 
     if( 'ranked_word' == $test_type_name )
     {

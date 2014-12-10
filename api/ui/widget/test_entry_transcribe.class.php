@@ -64,6 +64,46 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
   }
 
   /**
+   * Validate the operation.  If validation fails this method will throw a notice exception.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\notice
+   * @access protected
+   */
+  protected function validate()
+  {
+    parent::validate();
+
+    $db_test_entry = $this->get_record();
+    $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
+    $id_list = $db_test_entry->get_language_idlist();
+
+    $session = lib::create( 'business\session' );
+    $db_role = $session->get_role();
+    if( 'typist' == $db_role->name )
+    {
+      if( 1 < count( $id_list ) && 'classification' != $test_type_name )
+        throw lib::create( 'exception\notice',
+          'This test can only have one language', __METHOD__ );
+    }
+
+    // language restrictions of siblings must match for ranked word tests
+    if( 'ranked_word' == $test_type_name )
+    {
+      $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+      if( !is_null( $db_sibling_test_entry ) )
+      {
+        if( 0 < count( array_diff(
+          $id_list, $db_sibling_test_entry->get_language_idlist() ) ) )
+        {
+          throw lib::create( 'exception\notice',
+            'Language restrictions must match among siblings', __METHOD__ );
+        }
+      }
+    }
+  }
+
+  /**
    * Sets up the operation with any pre-execution instructions that may be necessary.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -95,11 +135,20 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
     $participant_status_list['NULL'] = '';
     $participant_status_list = array_reverse( $participant_status_list, true );
 
-    // only classification tests (FAS and AFT) require prompt status
+    $test_type_name = $db_test->get_test_type()->name;
+
+    // classification tests (FAS and AFT) require suspected prompt and prompt status
     if( 'classification' != $test_type_name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
+    }
+
+    // ranked_word tests required prompt middle and prompt end status
+    if( 'ranked_word' != $test_type_name )
+    {
+      unset( $participant_status_list['prompt middle'],
+             $participant_status_list['prompt end'] );
     }
 
     $participant_status =
@@ -132,7 +181,6 @@ class test_entry_transcribe extends \cenozo\ui\widget\base_record
 
     $db_assignment = $db_test_entry->get_assignment();
     $db_participant = $db_assignment->get_participant();
-    $this->set_variable( 'user_id', $db_assignment->user_id );
 
     $cohort_name = $db_participant->get_cohort()->name;
     $recording_data = array();

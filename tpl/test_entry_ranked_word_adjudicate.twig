@@ -97,8 +97,8 @@
     function get_variant_text_complete() {
       var args = new Object();
       args["variant_dictionary_id"] = {{ variant_dictionary_id }};
-      // words are determined according to typist language restrictions
-      args["user_id"] = {{ user_id }};
+      // words are determined according to test language restrictions
+      args["test_entry_id"] = {{ adjudicate_entry_id }};
       args["words_only"] = 1;
       return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
         return {
@@ -111,8 +111,8 @@
     function get_intrusion_text_complete() {
       var args = new Object();
       args["intrusion_dictionary_id"] = {{ intrusion_dictionary_id }};
-      // words are determined according to typist language restrictions
-      args["user_id"] = {{ user_id }};
+      // words are determined according to test language restrictions
+      args["test_entry_id"] = {{ adjudicate_entry_id }};
       args["words_only"] = 1;
       return $.map( ajax_pull( "word", "list", args ), function( value, key ) {
         return {
@@ -223,7 +223,7 @@
             if( typeof candidate === 'undefined' ) {
               candidate = "";
             }
-            $( target_text_id ).removeClass( "candidate primary intrusion variant undefined" );
+            $( target_text_id ).removeClass();
             $( target_text_id ).addClass( $( source_text_id ).prop( "class" ) );
             $( target_text_id ).val( candidate );
             $( target_text_id ).attr( "value", candidate );
@@ -241,7 +241,7 @@
               $( table_selector + ' input:radio[name="' + source_entry_id + '"]:checked').prop( "id" );
             var target_text_id = '#' +
               $( table_selector + ' input:text[id="'+ target_entry_id + '__candidate"]' ).prop( "id" );
-            $( target_text_id ).removeClass( "candidate primary intrusion variant undefined" );
+            $( target_text_id ).removeClass();
             var source_radio_id = '#' + radio_id;
             var selection = $( source_radio_id ).prop( "value" );
             var columns = new Object();
@@ -266,8 +266,6 @@
             $( target_radio_id ).prop( "checked", $( source_radio_id ).prop( "checked" ) );
           }
 
-          args.user_id = {{ user_id }};
-
           // push the edits
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
             if( is_intrusion ) {
@@ -289,7 +287,7 @@
         var target_entry_id =  $(this).prop( "id" ).split( "__" )[0];
         var selection =  $(this).prop( "value" );
         var target_text_id = '#' + target_entry_id + "__candidate";
-        $( target_text_id ).removeClass( "candidate primary intrusion variant undefined" );
+        $( target_text_id ).removeClass();
 
         if( selection == "variant" ) {
           $( target_text_id ).prop( "disabled", false );
@@ -305,7 +303,6 @@
           columns["word_id"] = "";
           columns["selection"] = selection;
           args.columns = columns;
-          args.user_id = {{ user_id }};
 
           // push the edits
           ajax_push( "{{ widget.subject }}", "edit", args );
@@ -354,10 +351,11 @@
         $(this).val( candidate );
         // update the value to present state
         $(this).attr( "value", candidate );
-        $(this).removeClass( "candidate primary intrusion variant undefined" );
+        $(this).removeClass();
 
         if( !is_intrusion && 0 == candidate.length ) {
           alert ( "Blank entries are not permitted" );
+          $(this).focus();
           return false;
         }
 
@@ -377,7 +375,6 @@
         } else {
           blank_id = '#' + $(this).prop( "id" ).replace( "intrusion", "blank" );
         }
-        args.user_id = {{ user_id }};
 
         // push the edits
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
@@ -429,7 +426,7 @@
           $( table_selector + ' div.adjudicate :radio' ).removeProp( "checked" ).trigger( "change" );
           $text_selector = $( table_selector + ' div.adjudicate :text' );
           $text_selector.prop( "disabled", true );
-          $text_selector.removeClass( "candidate primary intrusion variant undefined" );
+          $text_selector.removeClass();
           // update previous and present state of value
           $text_selector.val( "" );
           $text_selector.attr( "value", "" );

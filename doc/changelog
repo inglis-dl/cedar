@@ -1,4 +1,48 @@
 ====================================================================================================
+1.1.2
+====================================================================================================
+
+* Language handling revision
+  - remove the dependence of typists' language restrictions on test_entry inputs
+  - a typists language restrictions are now used solely to determine which participant
+    they are assigned during an assignment request
+  - participants with no language preference are assigned the default service language (en)
+  - add linkage from the cedar test_entry table to the cenozo language table so that
+    supervisors and administrators can control by language which words are permitted for
+    data entry
+  - add new test_entry operations: add language, delete language, new language
+
+* Cognate bug fix
+  - handling of cognates (words of different languages spelled the same) is accomplished
+    by underlining all non-english (i.e., french) words in text input fields
+
+* Workflow improvement
+  - assignment reassign procedure is now simplified to changing the user in the assignment record
+    to that selected from a drop down list of candidate users (i.e., all users with compatible
+    language restrictions who are not already assigned to the participant)
+  - assignments can only be reassigned if they are not complete
+  - tests can be returned to typists with a note from test views or adjudications
+
+* Performance improvement
+  - add ON DELETE CASCADE to test_entry_note (already present for all test_entry daughter tables:
+    e.g. test_entry_confirmation) so that when test_entry records are deleted linked
+    records are deleted intrinsically
+
+* Comprehensive recording load script
+  - created a php script to scan the storage system for new UID's and then load
+    those into the cedar recording table
+
+====================================================================================================
+1.1.1
+====================================================================================================
+
+* Workflow improvements
+  - add test_entry return operation so that a test can be deferred back to a typist
+    at the adjudication stage by administrators or supervisors
+  - add "Return (typist name)" and "Notes (typist name)" buttons to button collection at
+    bottom of adjudication pages
+
+====================================================================================================
 1.1.0
 ====================================================================================================
 
@@ -9,13 +53,13 @@
     name as stored and identified in Opal (eg., 001/A123456/COG_ALPTME_REC2_COM.wav )
 
 * Workflow improvements
-  - implement new deferral process using expanded deferred states: NULL, requested, pending, 
+  - implement new deferral process using expanded deferred states: NULL, requested, pending,
     resolved
   - a typist requests a deferral setting the deferred status of a test to "requested"
   - administrators review and change the deferred status of a test in the test_entry view to "pending"
   - a test's deferred status changes to "resolved" after the first typist edit that completes the test
   - participant allocation is restricted on a complete by complete assigment basis by checking
-    during assignment request if there is a sibling assignment, and if so, that the sibling 
+    during assignment request if there is a sibling assignment, and if so, that the sibling
     assignment has all tests completed
 
 ====================================================================================================

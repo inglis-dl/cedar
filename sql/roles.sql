@@ -43,7 +43,7 @@ AND role.name IN ( "administrator" );
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "push" AND subject = "assignment" AND operation.name = "edit"
-AND role.name IN ( "administrator", "supervisor" );
+AND role.name IN ( "administrator" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
@@ -334,7 +334,7 @@ AND role.name IN ( "administrator" );
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "language" AND operation.name = "list"
-AND role.name IN ( "administrator" );
+AND role.name IN ( "administrator", "supervisor" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
@@ -669,6 +669,11 @@ AND role.name IN ( "administrator", "supervisor" );
 
 INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "test_entry" AND operation.name = "return"
+AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "test_entry" AND operation.name = "list"
 AND role.name IN ( "administrator", "supervisor" );
 
@@ -686,6 +691,21 @@ INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "test_entry" AND operation.name = "adjudicate"
 AND role.name IN ( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "widget" AND subject = "test_entry" AND operation.name = "add_language"
+AND role.name IN( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "test_entry" AND operation.name = "delete_language"
+AND role.name IN( "administrator", "supervisor" );
+
+INSERT INTO role_has_operation( role_id, operation_id )
+SELECT role.id, operation.id FROM cenozo.role, operation
+WHERE type = "push" AND subject = "test_entry" AND operation.name = "new_language"
+AND role.name IN( "administrator", "supervisor" );
 
 -- test_entry_alpha_numeric
 
@@ -814,7 +834,7 @@ SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "user" AND operation.name = "add_access"
 AND role.name IN ( "administrator" );
 
-NSERT INTO role_has_operation( role_id, operation_id )
+INSERT INTO role_has_operation( role_id, operation_id )
 SELECT role.id, operation.id FROM cenozo.role, operation
 WHERE type = "widget" AND subject = "user" AND operation.name = "add_language"
 AND role.name IN( "administrator" );

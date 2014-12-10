@@ -81,28 +81,22 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
       }
       else
       {
-        $db_languages = array();
-        $user_id = $this->get_argument( 'user_id', 0 );
-        if( 0 != $user_id )
-        {
-          $db_user = lib::create( 'database\user', $user_id );
-          $db_languages = $db_user->get_language_list();
-        }
-
-        if( 0 == count( $db_languages ) )
-        {
-          $db_languages[] = $db_test_entry->get_default_participant_language();
-        }
-
+        $db_language_list = $db_test_entry->get_language_list();
         $db_test = $db_test_entry->get_test();
         $data = NULL;
         $db_language = NULL;
-        foreach( $db_languages as $language )
+        foreach( $db_language_list as $language )
         {
-          $db_language = $language;
-          $data = $db_test->get_word_classification( $candidate, NULL, $db_language );
-          if( 'candidate' != $data['classification'] ) break;
+          $data = $db_test->get_word_classification( $candidate, NULL, $language );
+          if( 'candidate' != $data['classification'] )
+          {
+            $db_language = $language;
+            break;
+          }
         }
+
+        if( is_null( $db_language ) )
+          $db_language = $db_test_entry->get_default_participant_language();
 
         $classification = $data['classification'];
         $word = $data['word'];
@@ -164,6 +158,7 @@ class test_entry_classification_edit extends \cenozo\ui\push\base_edit
           {
             // get the test's variant dictionary and add it as a variant
             $db_dictionary = $db_test->get_variant_dictionary();
+
             if( is_null( $db_dictionary ) )
               throw lib::create( 'exception\notice',
                 'Trying to add the word "'. $word . '" to a non-existant variant dictionary. '.
