@@ -34,8 +34,6 @@ class assignment_manager extends \cenozo\singleton
    */
   public static function return_test_entry( $db_test_entry )
   {
-    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
-
     // check if the entry is part of an adjudication
     // if not throw an error
     if( !is_null( $db_test_entry->participant_id ) )
@@ -57,28 +55,20 @@ class assignment_manager extends \cenozo\singleton
     {
       // get the sibling and set its adjudicate status to NULL
       $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
-      if( is_null( $db_sibling_test_entry ) )
-        throw lib::create( 'exception\runtime',
-          'The test_entry being returned must have a sibling', __METHOD__ );
-
-      $db_test_entry->adjudicate = NULL; // save for this record occurs with deferred change
-      $db_sibling_test_entry->adjudicate = NULL;
-      $db_sibling_test_entry->save();
+      if( !is_null( $db_sibling_test_entry ) )
+      {
+        $db_sibling_test_entry->adjudicate = NULL;
+        $db_sibling_test_entry->save();
+      }
     }
 
-    // mark the deferred status as pending
+    $db_test_entry->adjudicate = NULL;
     $db_test_entry->deferred = 'pending';
     $db_test_entry->save();
 
-    // if there is an adjudicate entry associated with this participant and test
-    // delete it and its daughter entries
-    $db_assignment = $db_test_entry->get_assignment();
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'participant_id', '=', $db_assignment->participant_id );
-    $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
-    $modifier->limit( 1 );
-    $db_adjudicate_entry = current( $test_entry_class_name::select( $modifier ) );
-    if( false !== $db_adjudicate_entry )
+    // if there is an adjudicate entry delete it
+    $db_adjudicate_entry = $db_test_entry->get_adjudicate_test_entry();
+    if( !is_null( $db_adjudicate_entry ) )
     {
       $db_adjudicate_entry->delete();
     }
@@ -113,6 +103,10 @@ class assignment_manager extends \cenozo\singleton
       $db_sibling_test_entry->adjudicate = NULL;
       $db_sibling_test_entry->save();
     }
+
+    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
+    if( !is_null( $db_adjudicate_test_entry ) )
+      $db_adjudicate_test_entry->delete();
   }
 
   /**
@@ -258,9 +252,7 @@ class assignment_manager extends \cenozo\singleton
           {
             // if they are identical check if there is an adjudicate entry and delete it
             $db_test = $db_test_entry->get_test();
-            $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
-              array( 'test_id', 'participant_id' ),
-              array( $db_test->id, $db_assignment->get_participant()->id ) );
+            $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
             if( !is_null( $db_adjudicate_test_entry ) )
             {
               $db_adjudicate_test_entry->delete();
@@ -410,10 +402,7 @@ class assignment_manager extends \cenozo\singleton
     $get_list_function = 'get_test_entry_' . $test_type_name . '_list';
 
     // if we havent created the adjudicate entry, do so now
-    $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
-      array( 'test_id', 'participant_id' ),
-      array( $db_test->id, $db_assignment->get_participant()->id ) );
-
+    $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
     if( is_null( $db_adjudicate_test_entry ) )
     {
       // create a new test entry to hold the data
@@ -421,17 +410,17 @@ class assignment_manager extends \cenozo\singleton
       $db_adjudicate_test_entry->participant_id = $db_assignment->get_participant()->id;
       $db_adjudicate_test_entry->test_id = $db_test->id;
       $db_adjudicate_test_entry->save();
-      if( 'ranked_word' == $test_type_name || 'alpha_numeric' == $test_type_name )
-      {
-        $db_adjudicate_test_entry->add_language(
-          array( current( $db_test_entry->get_language_idlist() ) ) );
-      }
-      else if( 'classification' == $test_type_name )
+      if( 'classification' == $test_type_name )
       {
         $db_adjudicate_test_entry->add_language(
           array_unique( array_merge(
             $db_test_entry->get_language_idlist(),
             $db_sibling_test_entry->get_language_idlist() ) ) );
+      }
+      else
+      {
+        $db_adjudicate_test_entry->add_language(
+          $db_test_entry->get_language_idlist() );
       }
 
       $db_adjudicate_test_entry->initialize( false );
@@ -449,11 +438,18 @@ class assignment_manager extends \cenozo\singleton
     $participant_status_list['NULL'] = '';
     $participant_status_list = array_reverse( $participant_status_list, true );
 
-    // only classification tests (FAS and AFT) require prompt status
+    // classification tests (FAS and AFT) require suspected prompt and prompt status
     if( 'classification' != $test_type_name )
     {
       unset( $participant_status_list['suspected prompt'],
              $participant_status_list['prompted'] );
+    }
+
+    // ranked_word tests require prompt middle and prompt end status
+    if( 'ranked_word' != $test_type_name )
+    {
+      unset( $participant_status_list['prompt middle'],
+             $participant_status_list['prompt end'] );
     }
 
     $status_data = array();
@@ -657,6 +653,8 @@ class assignment_manager extends \cenozo\singleton
                 $dictionary_id = $db_word->dictionary_id;
                 $classification_i = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+                if( '' !== $classification_i && 'en' != $db_word->get_language()->code )
+                  $classification_i .= '_fr';
               }
               $row[ 'classification_' . $i ] = $classification_i;
             }
@@ -739,6 +737,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_2 && 'en' != $db_word->get_language()->code )
+                $classification_2 .= '_fr';
             }
           }
           // unequal number of list elements case
@@ -757,6 +757,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_1 && 'en' != $db_word->get_language()->code )
+                $classification_1 .= '_fr';
             }
           }
           else
@@ -799,6 +801,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_1 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_1 && 'en' != $db_word->get_language()->code )
+                $classification_1 .= '_fr';
             }
 
             if( !is_null( $b_obj->word_id ) )
@@ -809,6 +813,8 @@ class assignment_manager extends \cenozo\singleton
               $dictionary_id = $db_word->dictionary_id;
               $classification_2 = array_key_exists( $dictionary_id, $classification ) ?
                 $classification[ $dictionary_id ] : '';
+              if( '' !== $classification_2 && 'en' != $db_word->get_language()->code )
+                $classification_2 .= '_fr';
             }
           }
 
@@ -820,6 +826,8 @@ class assignment_manager extends \cenozo\singleton
             $dictionary_id = $db_word->dictionary_id;
             $classification_3 = array_key_exists( $dictionary_id, $classification ) ?
               $classification[ $dictionary_id ] : '';
+            if( '' !== $classification_3 && 'en' != $db_word->get_language()->code )
+              $classification_3 .= '_fr';
           }
           if( !is_null( $c_obj->selection ) )  $selection_3 = $c_obj->selection;
 

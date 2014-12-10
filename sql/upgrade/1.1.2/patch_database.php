@@ -1,9 +1,10 @@
 #!/usr/bin/php
 <?php
 /**
- * This is a special script used when upgrading to version 1.0.1
+ * This is a special script used when upgrading to version 1.1.2 for the CLSA
  * This script should be run once and only once after running patch_database.sql
- * It finds misadjudications and corrects them
+ * It overrides test_entry_has_language entries where participant language is null
+ * and uses the assignment site dominant language instead of the service default languag
  *
  * @author Dean Inglis <inglisd@mcmaster.ca>
  */
@@ -141,10 +142,6 @@ class patch
       die();
     }
 
-    // the current wave of the study
-    $visit = 1;
-    $padded_visit = str_pad( $visit, 3, '0', STR_PAD_LEFT );
-
     // for joining to cenozo tables
     $sql =
       'SELECT unique_constraint_schema '.
@@ -153,124 +150,64 @@ class patch
       'AND constraint_name = "fk_role_has_operation_role_id"';
     $cenozo = patch::my_get_one( $db, $sql );
 
-    // get all the current recordings in the table
-    // get the valid recording_names and test ids from the test table
-    out( 'Getting current recording table data' );
 
     $sql =
-      'SELECT DISTINCT id, recording_name '.
-      'FROM test';
-    $data_keys = patch::my_get_all( $db, $sql );
-    $data_values = $data_keys;
-    //convert to associative array
-    array_walk( $data_keys, function( &$item ){ $item=$item['id'];});
-    array_walk( $data_values, function( &$item ){ $item=$item['recording_name'];});
-    $test_recording_names = array_combine( $data_keys, $data_values );
-
-    // get all the participants currently in the recording table
-    $sql =
-      'SELECT DISTINCT p.uid '.
-      'FROM '. $cenozo . '.participant p '.
-      'JOIN recording r ON r.participant_id=p.id';
-
-    $uid_recordings = patch::my_get_all( $db, $sql );
-    array_walk( $uid_recordings, function( &$item ){ $item=$item['uid']; } );
-
-    // get all the participant uid's from the comp-recordings visit 1 dir
-    $glob_dir = COMP_RECORDINGS_PATH . '/' . $padded_visit . '/*';
-
-    $dirs = array_filter( glob( $glob_dir ), 'is_dir' );
-    $uid_dirs = array_map( function( $item ) { return substr($item,-7); }, $dirs );
-
-    // only insert data that is needed
-    $uids_insert = array_diff( $uid_dirs, $uid_recordings );
-
-    // create an array of participant id, uid values
-    out( 'Creating participant uid to id map' );
+      'SET @service_id = (SELECT id FROM ' . $cenozo . '.service WHERE name = "cedar")';
+    patch::my_execute( $db, $sql );
 
     $sql =
-      'SELECT DISTINCT p.uid, p.id '.
-      'FROM '. $cenozo . '.participant p '.
-      'JOIN '. $cenozo . '.event e1 ON e1.participant_id = p.id '.
-      'JOIN '. $cenozo . '.event_type et1 ON et1.id = e1.event_type_id '.
-      'JOIN '. $cenozo . '.event e2 ON e2.participant_id = p.id '.
-      'JOIN '. $cenozo . '.event_type et2 ON et2.id = e2.event_type_id '.
-      'JOIN '. $cenozo . '.cohort c ON c.id = p.cohort_id '.
-      'WHERE et1.name = "completed (Baseline Home)" '.
-      'AND et2.name = "completed (Baseline Site)" '.
-      'AND p.active = true '.
-      'AND c.name = "comprehensive" '.
-      'ORDER BY uid';
+      'SET @en_id = (SELECT id FROM ' . $cenozo . '.language WHERE code = "en")';
+    patch::my_execute( $db, $sql );
 
-    $data_keys = patch::my_get_all( $db, $sql );
-    $data_values = $data_keys;
-    //convert to associative array
-    array_walk( $data_values, function( &$item ){ $item=$item['id'];});
-    array_walk( $data_keys, function( &$item ){ $item=$item['uid'];});
-    $participant_map = array_combine( $data_keys, $data_values );
+    $sql =
+      'SET @fr_id = (SELECT id FROM ' . $cenozo . '.language WHERE code = "fr")';
+    patch::my_execute( $db, $sql );
 
-    // uncomment if file is required
-    /*
-    $my_file = fopen( '/tmp/cedar_comp_uid_list.txt', 'w' );
-    foreach( $data_keys as $uid )
-      fwrite( $my_file, $uid . '\n' );
-    fclose( $my_file );
-    */
+    $sql =
+      'SET @en_site_id = ('.
+      'SELECT id '.
+      'FROM ' . $cenozo . '.site '.
+      'WHERE name = "McMaster" '.
+      'AND service_id = @service_id )';
+    patch::my_execute( $db, $sql );
 
-    $values_count = 0;
-    $values_limit = 200;
-    $first = true;
-    $values_array = array();
-    $values = '';
-    $total_count = 0;
+    $sql =
+      'SET @fr_site_id = ('.
+      'SELECT id '.
+      'FROM ' . $cenozo . '.site '.
+      'WHERE name = "Sherbrooke"'.
+      'AND service_id = @service_id )';
+    patch::my_execute( $db, $sql );
 
-    out( 'Generating ' . count( $test_recording_names )*count( $uids_insert ) .
-         ' possible recording table rows'  );
 
-    foreach( $uids_insert as $uid )
-    {
-      if( array_key_exists( $uid, $participant_map ) )
-      {
-        $participant_id = $participant_map[$uid];
-        foreach( $test_recording_names as $test_id => $recording_name )
-        {
-          $filename = COMP_RECORDINGS_PATH . '/' . $padded_visit . '/' .
-                      $uid . '/' . $recording_name . '.wav';
+    $sql =
+      'INSERT IGNORE INTO test_entry_has_language '.
+      '(test_entry_id, language_id) '.
+      'SELECT t.id, IFNULL( p.language_id, '.
+        'IF( a.site_id = @en_site_id, @en_id, @fr_id ) ) AS language_id '.
+      'FROM test_entry t '.
+      'JOIN assignment a ON a.id = t.assignment_id '.
+      'JOIN ' . $cenozo . '.participant p ON p.id = a.participant_id';
+    patch::my_execute( $db, $sql );
 
-          if( file_exists( $filename ) )
-          {
-            $values .= sprintf( '%s( %d, %d, %d )',
-                                $first ? '' : ', ',
-                                $participant_id,
-                                $test_id,
-                                $visit );
-            $first = false;
-            $values_count++;
-            $total_count++;
-            if( $values_count++ >= $values_limit )
-            {
-              $values_array[] = $values;
-              $values_count = 0;
-              $first = true;
-              $values = '';
-            }
-          }
-        }
-      }
-    }
+    $sql =
+      'INSERT IGNORE INTO test_entry_has_language '.
+      '(test_entry_id, language_id) '.
+      'SELECT t.id, IFNULL( p.language_id, '.
+        'IF( IFNULL( ps.site_id, @en_site_id ) = @en_site_id, @en_id, @fr_id ) ) AS language_id '.
+      'FROM test_entry t '.
+      'JOIN ' . $cenozo . '.participant p ON p.id = t.participant_id '.
+      'LEFT JOIN ' . $cenozo . '.participant_site ps ON ps.participant_id = p.id '.
+      'AND ps.service_id = @service_id';
+    patch::my_execute( $db, $sql );
 
-    if( $values_count < $values_limit && '' !== $values )
-      $values_array[] = $values;
-
-    out( 'Inserting ' . $total_count . ' recording table rows' );
-
-    foreach( $values_array as $values )
-    {
-      $sql = sprintf(
-        'INSERT IGNORE INTO recording ( participant_id, test_id, visit ) '.
-        'VALUES %s', $values );
-      patch::my_execute( $db, $sql );
-    }
+    $sql =
+      'INSERT IGNORE INTO test_entry_has_language '.
+      '(test_entry_id, language_id) '.
+      'SELECT DISTINCT tec.test_entry_id, w.language_id '.
+      'FROM test_entry_classification tec '.
+      'JOIN word w ON w.id = tec.word_id ';
+    patch::my_execute( $db, $sql );
 
     out( 'Finished' );
   }

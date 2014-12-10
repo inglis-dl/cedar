@@ -38,6 +38,15 @@ CREATE PROCEDURE patch_role_has_operation()
     EXECUTE statement;
     DEALLOCATE PREPARE statement;
 
+    SET @sql = CONCAT(
+      "INSERT IGNORE INTO role_has_operation( role_id, operation_id ) ",
+      "SELECT role.id, operation.id FROM ", @cenozo, ".role, operation ",
+      "WHERE type = 'widget' AND subject = 'language' AND operation.name = 'list' ",
+      "AND role.name IN( 'administrator', 'supervisor' )" );
+    PREPARE statement FROM @sql;
+    EXECUTE statement;
+    DEALLOCATE PREPARE statement;
+
   END //
 DELIMITER ;
 CALL patch_role_has_operation();

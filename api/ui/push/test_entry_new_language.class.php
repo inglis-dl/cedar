@@ -37,16 +37,27 @@ class test_entry_new_language extends \cenozo\ui\push\base_record
     parent::validate();
 
     $db_test_entry = $this->get_record();
-    $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
 
-    if( 'ranked_word' == $test_type_name || 'alpha_numeric' == $test_type_name )
-    {
-      if( 1 == $db_test_entry->get_language_count() );
-        throw lib::create( 'exception\notice',
-          'The ' .  $db_test_entry->get_test()->name .
-          ' test cannot have more than one language. '.
-          'Try removing the other language first.', __METHOD__ );
-    }
+    // alpha_numeric and confirmation type tests cannot have more than 1
+    // langauge
+    $test_type_name = $db_test_entry->get_test()->get_test_type()->name;
+    if( in_array( $test_type_name, array( 'alpha_numeric', 'confirmation' ) ) )
+      throw lib::create( 'exception\notice',
+        'This test type cannot have its language setting modified.',
+        __METHOD__ );
+
+    // disallow new language if an adjudication is in progress
+    if( !is_null( $db_test_entry->get_adjudicate_test_entry() ) )
+      throw lib::create( 'exception\notice',
+        'This test is being adjudicated and cannot have its language setting modified.',
+        __METHOD__ );
+
+    // disallow new language if the assignment is closed
+    $db_assignment = $db_test_entry->get_assignment();
+    if( !is_null( $db_assignment ) && !is_null( $db_assignment->end_datetime ) )
+      throw lib::create( 'exception\notice',
+        'This test is part of a closed assignment and cannot have its language setting modified.',
+        __METHOD__ );
   }
 
   /**
@@ -59,6 +70,7 @@ class test_entry_new_language extends \cenozo\ui\push\base_record
   {
     parent::execute();
 
-    $this->get_record()->add_language( $this->get_argument( 'id_list' ) );
+    $db_test_entry = $this->get_record();
+    $db_test_entry->add_language( $this->get_argument( 'id_list' ) );
   }
 }

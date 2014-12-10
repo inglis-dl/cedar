@@ -36,6 +36,8 @@ class test_entry_view extends \cenozo\ui\widget\base_view
    */
   protected function prepare()
   {
+    $operation_class_name = lib::get_class_name( 'database\operation' );
+
     $this->set_removable( false );
 
     parent::prepare();
@@ -64,11 +66,10 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->language_list = lib::create( 'ui\widget\language_list', $this->arguments );
     $this->language_list->set_parent( $this );
     $this->language_list->set_viewable( false );
-    $this->language_list->set_addable( $test_type_name != 'alpha_numeric' );
-
-    $this->language_list->remove_column( 'participants' );
-    $this->language_list->remove_column( 'users' );
-
+    $allow_language_edit = in_array( $test_type_name,
+      array( 'ranked_word', 'classification' ) );
+    $this->language_list->set_addable( $allow_language_edit );
+    $this->language_list->set_removable( $allow_language_edit );
 
     // create the test_entry_transcribe sub widget
     if( 'typist' ==  lib::create( 'business\session' )->get_role()->name )
@@ -82,6 +83,12 @@ class test_entry_view extends \cenozo\ui\widget\base_view
     $this->test_entry_transcribe->set_validate_access( false );
     $this->test_entry_transcribe->set_editable( false );
     $this->test_entry_transcribe->set_actionable( false );
+
+    $db_operation = $operation_class_name::get_operation( 'push', 'test_entry', 'return' );
+    if( lib::create( 'business\session' )->is_allowed( $db_operation ) )
+    {
+      $this->add_action( 'return', 'Return', NULL, 'Return this test to the typist' );
+    }
   }
 
   /**
@@ -137,11 +144,20 @@ class test_entry_view extends \cenozo\ui\widget\base_view
       $participant_status_list['NULL'] = '';
       $participant_status_list = array_reverse( $participant_status_list, true );
 
-      // only classification tests (FAS and AFT) require prompt status
-      if( 'classification' != $db_test->get_test_type()->name )
+      $test_type_name = $db_test->get_test_type()->name;
+
+      // classification tests (FAS and AFT) require suspected prompt and prompt status
+      if( 'classification' != $test_type_name )
       {
         unset( $participant_status_list['suspected prompt'],
                $participant_status_list['prompted'] );
+      }
+
+      // ranked_word tests required prompt middle and prompt end status
+      if( 'ranked_word' != $test_type_name )
+      {
+        unset( $participant_status_list['prompt middle'],
+               $participant_status_list['prompt end'] );
       }
 
       $this->set_item( 'participant_status',
@@ -224,5 +240,4 @@ class test_entry_view extends \cenozo\ui\widget\base_view
    * @access protected
    */
   protected $language_list = NULL;
-
 }

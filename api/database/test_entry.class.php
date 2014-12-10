@@ -260,7 +260,6 @@ class test_entry extends \cenozo\database\has_note
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param database\modifier $modifier Modifications to the selection.
-   * @return db_test_entry (NULL if no sibling)
    * @access public
    * @param database\modifier Modifier to refine the selection
    * @return database\test_entry (NULL if no sibling)
@@ -285,6 +284,30 @@ class test_entry extends \cenozo\database\has_note
       }
     }
     return false === $db_test_entry ? NULL : $db_test_entry;
+  }
+
+  /**
+   * Get the adjudication of this test_entry
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param database\modifier $modifier Modifications to the selection.
+   * @access public
+   * @return database\test_entry (NULL if no adjudicate)
+   */
+  public function get_adjudicate_test_entry()
+  {
+    $db_test_entry = NULL;
+    if( !is_null( $this->assignment_id ) )
+    {
+      $db_assignment = $this->get_assignment();
+      if( !is_null( $db_assignment ) )
+      {
+        $db_test_entry = static::get_unique_record(
+          array( 'test_id', 'participant_id' ),
+          array( $this->test_id, $db_assignment->participant_id ) );
+      }
+    }
+    return $db_test_entry;
   }
 
   /**

@@ -25,6 +25,7 @@
     to that selected from a drop down list of candidate users (i.e., all users with compatible
     language restrictions who are not already assigned to the participant)
   - assignments can only be reassigned if they are not complete
+  - tests can be returned to typists with a note from test views or adjudications
 
 * Performance improvement
   - add ON DELETE CASCADE to test_entry_note (already present for all test_entry daughter tables:
@@ -42,6 +43,8 @@
 * Workflow improvements
   - add test_entry return operation so that a test can be deferred back to a typist
     at the adjudication stage by administrators or supervisors
+  - add "Return (typist name)" and "Notes (typist name)" buttons to button collection at
+    bottom of adjudication pages
 
 ====================================================================================================
 1.1.0

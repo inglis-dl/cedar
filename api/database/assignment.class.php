@@ -501,8 +501,22 @@ class assignment extends \cenozo\database\record
       $db_test_entry->test_id = $db_test->id;
       $db_test_entry->assignment_id = $this->id;
       $db_test_entry->save();
-      $db_language = $db_test_entry->get_default_participant_language();
-      $db_test_entry->add_language( array( $db_language->id ) );
+      $db_sibling_test_entry =  $db_test_entry->get_sibling_test_entry();
+      $use_default = true;
+      if( !is_null( $db_sibling_test_entry ) )
+      {
+        $idlist = $db_sibling_test_entry->get_language_idlist();
+        if( 0 < count( $idlist ) )
+        {
+          $db_test_entry->add_language( $idlist );
+          $use_default = false;
+        }
+      }
+      if( $use_default )
+      {
+        $db_language = $db_test_entry->get_default_participant_language();
+        $db_test_entry->add_language( array( $db_language->id ) );
+      }
       // create daughter entry record(s)
       $db_test_entry->initialize( false );
     }
