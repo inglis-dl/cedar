@@ -188,8 +188,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
       'LEFT JOIN test_entry t2 ON t2.test_id=t1.test_id %s '.
       'AND t2.assignment_id=assignment.id', $temp_user_mod->get_sql() );
 
-    log::debug( $sql );
-
     $assignment_class_name::db()->execute( $sql );
     $sql =
       'ALTER TABLE temp_user_adjudicate '.
@@ -216,8 +214,6 @@ class productivity_report extends \cenozo\ui\pull\base_report
       'GROUP BY assignment.id '.
       ') AS tmp '.
       'GROUP BY user_id ', $base_assignment_mod->get_sql() );
-
-    log::debug( $sql );
 
     $assignment_class_name::db()->execute( $sql );
     $sql = 'ALTER TABLE temp_user_complete ADD INDEX dk_user_id (user_id)';
