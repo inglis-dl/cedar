@@ -388,7 +388,7 @@
                name="{{ entry.ranked_word_set_id }}"
                value="yes"
                {% if editable == 0 %}
-                 { readonly }
+                 { disabled }
                {% endif %}
                {{ entry.selection == 'yes' ? "checked" : "" }}/></td>
           <td style="width:30px"><input type="radio"
@@ -396,7 +396,7 @@
                name="{{ entry.ranked_word_set_id }}"
                value="no"
                {% if editable == 0 %}
-                 { readonly }
+                 { disabled }
                {% endif %}
                {{ entry.selection == 'no' ? "checked" : "" }}/></td>
           <td style="width:30px"><input type="radio"
@@ -404,7 +404,7 @@
                name="{{ entry.ranked_word_set_id }}"
                value="variant"
                {% if editable == 0 %}
-                 { readonly }
+                 { disabled }
                {% endif %}
                {{ entry.selection == 'variant' ? "checked" : "" }}/></td>
           <td style="width:100px"><input type="text"
