@@ -169,7 +169,7 @@
           }
 
           var args = new Object();
-          var target_entry_id = $(this).prop( "id" ).split( "__" )[0];
+          var target_entry_id = parseInt( $(this).prop( "id" ).split( "__" )[0] );
           args.id = target_entry_id;
           var rank = parseInt( $(this).prop( "id" ).split( "__" )[1] );
           if( undefined !== obj ) {
@@ -254,7 +254,7 @@
 
           var args = new Object();
           var columns = new Object();
-          args.id = $text_input.prop( "id" ).split( "__" )[0];
+          args.id = parseInt( $text_input.prop( "id" ).split( "__" )[0] );
           columns["word_id"] = '';
           args.columns = columns;
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
