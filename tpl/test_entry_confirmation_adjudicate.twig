@@ -75,7 +75,7 @@
         var columns = new Object();
         columns['confirmation'] = undefined == confirmation ? '' : confirmation;
         var args = new Object();
-        args.id = $(this).prop( "name" );
+        args.id = parseInt( $(this).prop( "name" ) );
         args.columns = columns;
         if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
           $( table_selector + ' input:radio[name="adjudicate"]' ).removeProp( "checked" );
@@ -94,7 +94,7 @@
         var columns = new Object();
         columns[ type + '_status' ] = 'NULL' == state ? '' : state;
         var args = new Object();
-        args.id = id;
+        args.id = parseInt( id );
         args.columns = columns;
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $target_select = $( table_selector +
@@ -111,7 +111,7 @@
         var columns = new Object();
         columns[ type + '_status' ] = 'NULL' == state ? '' : state;
         var args = new Object();
-        args.id = id;
+        args.id = parseInt( id );
         args.columns = columns;
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $( table_selector +

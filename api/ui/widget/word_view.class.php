@@ -96,6 +96,6 @@ class word_view extends \cenozo\ui\widget\base_view
     // set the view's items
     $this->set_item( 'word', $db_word->word, true );
     $this->set_item( 'language_id', $db_word->language_id, true, $language_list );
-    $this->set_item( 'dictionary_id', $db_word->get_dictionary()->id, true, $dictionary_list );
+    $this->set_item( 'dictionary_id', $db_word->dictionary_id, true, $dictionary_list );
   }
 }

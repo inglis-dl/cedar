@@ -208,7 +208,7 @@
         function() {
           var target_entry_id = $(this).prop( "name" ).split( "__" )[2];
           var args = new Object();
-          args.id = target_entry_id;
+          args.id = parseInt( target_entry_id );
           var candidate = null;
           var blank_id = null;
           var is_intrusion = -1 != $(this).prop( "id" ).indexOf( "intrusion" );
@@ -299,7 +299,7 @@
           $( target_text_id ).attr( "value", "" );
           var args = new Object();
           var columns = new Object();
-          args.id = target_entry_id;
+          args.id = parseInt( target_entry_id );
           columns["word_id"] = "";
           columns["selection"] = selection;
           args.columns = columns;
@@ -361,7 +361,7 @@
 
         var args = new Object();
         var target_entry_id = $(this).prop( "id" ).split( "__" )[0];
-        args.id = target_entry_id;
+        args.id = parseInt( target_entry_id );
         if( undefined !== obj ) {
           var columns = new Object();
           columns["word_id"] = obj;
@@ -446,7 +446,7 @@
         var columns = new Object();
         columns[ type + '_status' ] = 'NULL' == state ? '' : state;
         var args = new Object();
-        args.id = id;
+        args.id = parseInt( id );
         args.columns = columns;
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $target_select = $( table_selector +
@@ -463,7 +463,7 @@
         var columns = new Object();
         columns[ type + '_status' ] = 'NULL' == state ? '' : state;
         var args = new Object();
-        args.id = id;
+        args.id = parseInt( id );
         args.columns = columns;
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $( table_selector +

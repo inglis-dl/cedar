@@ -92,7 +92,7 @@
 
           // push the edit
           var args = new Object();
-          args.id = target_entry_id;
+          args.id = parseInt( target_entry_id );
 
           if( 0 == candidate.length ) {
             var columns = new Object();
@@ -136,7 +136,7 @@
         $(this).attr( "value", candidate );
 
         var args = new Object();
-        args.id = target_entry_id;
+        args.id = parseInt( target_entry_id );
         if( 0 == candidate.length ) {
           var columns = new Object();
           columns["word_id"] = '';
@@ -197,7 +197,7 @@
         var columns = new Object();
         columns[ type + '_status' ] = 'NULL' == state ? '' : state;
         var args = new Object();
-        args.id = id;
+        args.id = parseInt( id );
         args.columns = columns;
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $target_select = $( table_selector +
@@ -214,7 +214,7 @@
         var columns = new Object();
         columns[ type + '_status' ] = 'NULL' == state ? '' : state;
         var args = new Object();
-        args.id = id;
+        args.id = parseInt( id );
         args.columns = columns;
         if( ajax_push( "{{ parent.subject }}", "edit", args ) ) {
           $( table_selector +
