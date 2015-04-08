@@ -332,15 +332,18 @@ class assignment extends \cenozo\database\record
         $assignment_id = $row['assignment_id'];
         $found = false;
         // a sibling assignment can only be created if the primary assignment
-        // has all tests completed and the language settings of the current user
-        // match those of the primary assignment's user
+        // has all tests completed, has no deferrals and the language settings
+        // of the current user match those of the primary assignment's user
         if( !is_null( $assignment_id ) && static::all_tests_complete( $assignment_id ) )
         {
           $db_assignment = lib::create( 'database\assignment', $assignment_id );
-          $user_list = $db_assignment->get_reassign_user();
-          if( 0 < count( $user_list ) ) 
-            $found = array_key_exists( $db_user->id, $user_list );
-        }  
+          if( !$db_assignment->has_deferrals() )
+          {
+            $user_list = $db_assignment->get_reassign_user();
+            if( 0 < count( $user_list ) )
+              $found = array_key_exists( $db_user->id, $user_list );
+          }
+        }
         else
           $found = true;
 
