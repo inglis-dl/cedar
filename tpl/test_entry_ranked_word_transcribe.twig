@@ -28,16 +28,22 @@
       function configure_ui( do_text ) {
 
         var is_deferred = "requested" == "{{ deferred }}";
-        if( is_deferred || !{{ editable }} ) {
+        var is_submitted = "submitted" == "{{ completed }}";
+
+        if( is_deferred || !{{ editable }} || is_submitted ) {
           $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
           $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
+          $( "#{{ parent.full }}_submit" ).button( { disabled : true } );
           $( "#{{ widget.full }}_add" ).button( { disabled : true } );
+          $( "#{{ parent.full }}_next" ).button( { disabled : false } );
           $( table_selector + " input" ).each( function() {
             $(this).prop( "disabled", true );
           } );
         } else {
+          $( "#{{ parent.full }}_next" ).button( { disabled : !is_submitted } );
+
           var numRadio = $( table_selector + ' input:radio' ).length / 3;
           var numYes = $( table_selector + ' input:radio[value="yes"]:checked' ).length;
           var numNo = $( table_selector + ' input:radio[value="no"]:checked' ).length;
@@ -58,11 +64,11 @@
           // count number of items with value "variant"
           // total yes + no + variant == total radio / 3 => enable next button
 
-          // disable the next and add buttons if the ranked word entries are incomplete
+          // disable the submit and add buttons if the ranked word entries are incomplete
           // or if there are empty intrusion fields
           var disable = (( numYes + numNo + numVariant ) != numRadio && !complete_status ) ||
                         0 != numEmptyIntrusion;
-          $( "#{{ parent.full }}_next" ).button( { disabled : disable } );
+          $( "#{{ parent.full }}_submit" ).button( { disabled : disable } );
           $( "#{{ widget.full }}_add" ).button( { disabled : disable } );
 
           // disable the reset button if there is nothing to reset

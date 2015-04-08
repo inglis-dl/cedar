@@ -332,15 +332,15 @@ class assignment extends \cenozo\database\record
         $assignment_id = $row['assignment_id'];
         $found = false;
         // a sibling assignment can only be created if the primary assignment
-        // has all tests completed and the language settings of the current user
+        // has all tests submitted and the language settings of the current user
         // match those of the primary assignment's user
-        if( !is_null( $assignment_id ) && static::all_tests_complete( $assignment_id ) )
+        if( !is_null( $assignment_id ) && static::all_tests_submitted( $assignment_id ) )
         {
           $db_assignment = lib::create( 'database\assignment', $assignment_id );
           $user_list = $db_assignment->get_reassign_user();
-          if( 0 < count( $user_list ) ) 
+          if( 0 < count( $user_list ) )
             $found = array_key_exists( $db_user->id, $user_list );
-        }  
+        }
         else
           $found = true;
 
@@ -375,14 +375,15 @@ class assignment extends \cenozo\database\record
   }
 
   /**
-   * Returns whether all tests constituting the assignment of $id are complete.
+   * Returns whether all tests constituting the assignment of $id are completed.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @param  integer id An assignment id
+   * @param  boolean submitted Search based on test submitted status
    * @return boolean
    * @access public
    */
-  public static function all_tests_complete( $id )
+  public static function all_tests_complete( $id, $submitted = false )
   {
     $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
@@ -391,7 +392,10 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'assignment.id', '=', $id );
     $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
       $test_entry_class_name::$deferred_states );
-    $modifier->where( 'completed', '=', true );
+    if( $submitted )  
+      $modifier->where( 'completed', '=', 'submitted' );
+    else
+      $modifier->where( 'completed', '!=', 'incomplete' );
 
     $sql = sprintf(
       'SELECT '.
@@ -413,15 +417,16 @@ class assignment extends \cenozo\database\record
   }
 
   /**
-   * Are there any incomplete test_entry records for this assignment?
+   * Returns whether all tests constituting the assignment of $id are submitted.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param  integer id An assignment id
    * @return boolean
    * @access public
    */
-  public function has_incompletes()
+  public static function all_tests_submitted( $id )
   {
-    return 0 !== static::all_tests_complete( $this->id );
+    return static::all_tests_complete( $id, true );
   }
 
   /**

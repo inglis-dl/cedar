@@ -138,6 +138,12 @@
         }
       } ); // end reset click
 
+      $( "#{{ widget.full }}_submit" ).click( function() {
+        if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ id }} } ) ) {
+          slot_refresh( {{ slot }} );
+        }
+      } ); // end submit click
+
     } );
   </script>
 
@@ -219,7 +225,7 @@
       </div>
       {% from 'macros.twig' import confirm_buttons %}
         {{ confirm_buttons( slot, widget.full,
-          ['defer', 'reset', 'prev', 'next', 'quit'], '', 'right', true ) }}
+          ['defer', 'reset', 'submit', 'prev', 'next', 'quit'], '', 'right', true ) }}
     {% endif %}
   </div>
 
