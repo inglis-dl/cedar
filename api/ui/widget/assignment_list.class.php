@@ -208,7 +208,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         if( !is_null( $db_sibling_assignment ) &&
             $db_sibling_assignment->has_adjudicates() &&
             !$db_sibling_assignment->has_deferrals() &&
-            $db_sibling_assignment->all_tests_submitted() )
+            $assignment_class_name::all_tests_submitted( $db_sibling_assignment->id ) )
         {
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
