@@ -777,7 +777,7 @@ class patch
         'JOIN assignment a ON a.id=t.assignment_id '.
         'SET completed_temp="submitted" '.
         'WHERE completed=1 '.
-        'AND deferred NOT IN ("pending","requested") '.
+        'AND IFNULL(deferred,"null") NOT IN ("pending","requested") '.
         'AND a.end_datetime IS NULL';
       patch::my_execute( $db, $sql );
 
