@@ -229,10 +229,11 @@ class assignment_manager extends \cenozo\singleton
           $assignment_class_name::all_tests_submitted( $db_sibling_assignment->id ) )
       {
         // go through all the tests and look for differences
-        // get all the assignment's tests
+        // get all the assignment's tests that have not been adjudicated to completion
         $modifier = lib::create( 'database\modifier' );
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', 'submitted' );
+        $modifier->where( 'IFNULL(adjudicate,true)', '!=', false );
         $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
           $test_entry_class_name::$deferred_states );
 
@@ -336,6 +337,7 @@ class assignment_manager extends \cenozo\singleton
   public static function submit_test_entry( $db_test_entry )
   {
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
     $db_assignment = NULL;
     $ret_val = false;
 
