@@ -347,7 +347,7 @@ CREATE TABLE IF NOT EXISTS `cedar`.`test_entry` (
   `participant_id` INT UNSIGNED NULL DEFAULT NULL,
   `audio_status` ENUM('salvable','unusable','unavailable') NULL DEFAULT NULL,
   `participant_status` ENUM('suspected prompt','prompted','prompt middle','prompt end','refused') NULL DEFAULT NULL,
-  `completed` TINYINT(1) NOT NULL DEFAULT 0,
+  `completed` ENUM('incomplete','complete','submitted') NOT NULL DEFAULT 'incomplete',
   `deferred` ENUM('requested','pending','resolved') NULL DEFAULT NULL,
   `adjudicate` TINYINT(1) NULL DEFAULT NULL COMMENT '0 , 1, or NULL (never set)',
   PRIMARY KEY (`id`),
@@ -829,7 +829,7 @@ CREATE  OR REPLACE VIEW `assignment_total` AS
 SELECT assignment_id,
 SUM( IF( deferred IS NULL, 0, IF( deferred = 'resolved', 0, 1 ) ) ) AS deferred,
 SUM( IFNULL( adjudicate, 0 ) ) AS adjudicate,
-SUM( completed ) AS completed
+SUM( IF( completed = 'incomplete', 0, 1 ) ) AS completed
 FROM test_entry
 WHERE assignment_id IS NOT NULL
 GROUP BY assignment_id;
@@ -841,7 +841,7 @@ DROP VIEW IF EXISTS `cedar`.`test_entry_total_completed` ;
 DROP TABLE IF EXISTS `cedar`.`test_entry_total_completed`;
 USE `cedar`;
 CREATE  OR REPLACE VIEW `test_entry_total_completed` AS
-SELECT assignment_id, SUM( completed ) AS completed FROM test_entry
+SELECT assignment_id, SUM( IF( completed = 'incomplete', 0, 1 ) ) AS completed FROM test_entry
 WHERE assignment_id IS NOT NULL
 GROUP BY assignment_id;
 

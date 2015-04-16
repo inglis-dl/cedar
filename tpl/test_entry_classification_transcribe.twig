@@ -19,19 +19,24 @@
 
       function configure_ui() {
 
-        // disable elements based on deferred status
         var is_deferred = "requested" == "{{ deferred }}";
-        if( is_deferred || !{{ editable }} ) {
+        var is_submitted = "submitted" == "{{ completed }}";
+
+        if( is_deferred || !{{ editable }} || is_submitted ) {
           $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}_defer" ).button( { disabled : true } );
           $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
+          $( "#{{ parent.full }}_submit" ).button( { disabled : true } );
           $( "#{{ widget.full }}_add" ).button( { disabled : true } );
+          $( "#{{ parent.full }}_next" ).button( { disabled : false } );
           $( "#{{ widget.full }}_delete" ).button( { disabled : true } );
           $( table_selector + " input:text" ).each( function() {
             $(this).prop( "disabled", true );
           } );
         } else {
+          $( "#{{ parent.full }}_next" ).button( { disabled : !is_submitted } );
+
           // count the number of inputs, how many have text in them and which is the last
           // empty input ready to receive focus
           var numFilled = 0;
@@ -55,9 +60,9 @@
             numInput++;
           } );
 
-          // enable the next button if there is at least one filled input or the audio
+          // enable the submit button if at least one input is filled or the audio
           // and participant status indicate completion
-          $( "#{{ parent.full }}_next" ).button( { disabled : !(complete_status || 0 < numFilled) } );
+          $("#{{ parent.full }}_submit").button( { disabled : !(complete_status || 0 < numFilled) } );
 
           // disable the reset button if there is nothing to reset
           $( "#{{ parent.full }}_reset" ).button( { disabled : null_status && 0 == numFilled } );

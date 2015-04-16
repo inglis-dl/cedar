@@ -45,7 +45,7 @@ class test_entry_list extends \cenozo\ui\widget\base_list
     $this->add_column( 'language', 'string', 'Language', false );
     $this->add_column( 'audio_status', 'string', 'Audio Status' );
     $this->add_column( 'participant_status', 'string', 'Participant Status' );
-    $this->add_column( 'completed', 'boolean', 'Completed', true );
+    $this->add_column( 'completed', 'string', 'Completed' );
     $this->add_column( 'deferred', 'boolean', 'Deferred', false );
 
     $db_operation = $operation_class_name::get_operation( 'widget', 'test_entry', 'adjudicate' );

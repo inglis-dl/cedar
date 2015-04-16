@@ -204,7 +204,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         'assignment.user_id AS user_id, '.
         'IF( ( '.
           'COUNT( test_entry.id ) - '.
-          'SUM( IF( test_entry.completed = true, '.
+          'SUM( IF( test_entry.completed = "submitted", '.
             'IF( test_entry.deferred = "requested", 0, '.
               'IF( test_entry.deferred = "pending", 0, 1 ) ), 0 ) )'.
           ') = 0, 1, 0 ) '.
