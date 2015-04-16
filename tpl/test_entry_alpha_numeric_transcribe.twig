@@ -201,6 +201,9 @@
       {% if numcell > imax %}
         {% set numcell = imax %}
       {% endif %}
+      {% if numcell == 0 %}
+        {% set numcell = 1 %}
+      {% endif %}
 
       {% for i in range(0, imax, numcell) %}
         <tr>
