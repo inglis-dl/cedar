@@ -51,7 +51,7 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'deferred', 'IN', $test_entry_class_name::$deferred_states );
 
     $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
-    return 0 !== intval( static::db()->get_one( $sql ) );
+    return 0 < intval( static::db()->get_one( $sql ) );
   }
 
   /**
@@ -331,10 +331,26 @@ class assignment extends \cenozo\database\record
       {
         $assignment_id = $row['assignment_id'];
         $found = false;
-        if( !is_null( $assignment_id ) )
-          $found = static::all_tests_complete( $assignment_id );
-        else
+        // null case implies no sibling assignment exists
+        if( is_null( $assignment_id ) )
+        {
           $found = true;
+        }
+        else
+        {
+          // a sibling assignment can only be created if the primary assignment
+          // has all tests completed, has no deferrals and the language settings
+          // of the current user match those of the primary assignment's user
+          $db_assignment = lib::create( 'database\assignment', $assignment_id );
+          if( !$db_assignment->has_deferrals() && static::all_tests_complete( $assignment_id ) )
+          {
+            // get the list of users that have language conditions consistent with
+            // those of the constituent tests
+            $user_list = $db_assignment->get_reassign_user();
+            if( 0 < count( $user_list ) )
+              $found = array_key_exists( $db_user->id, $user_list );
+          }
+        }
 
         if( $found )
         {
@@ -430,6 +446,7 @@ class assignment extends \cenozo\database\record
     $role_class_name = lib::get_class_name( 'database\role' );
     $region_site_name = lib::get_class_name( 'database\region_site' );
     $user_class_name = lib::get_class_name( 'database\user' );
+    $language_class_name = lib::get_class_name( 'database\language' );
 
     $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
 
@@ -437,14 +454,15 @@ class assignment extends \cenozo\database\record
     $db_service = $session->get_service();
     $db_site = $session->get_site();
 
-    // get all the languages cedar has access to
-    $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'service_id', '=', $db_service->id );
-    $modifier->group( 'language_id' );
-
-    $cedar_languages = array();
-    foreach( $region_site_name::select( $modifier ) as $db_region_site )
-      $cedar_languages[] = $db_region_site->language_id;
+    // get all the languages employed by tests within the current assignment
+    $test_language_mod = lib::create( 'database\modifier' );
+    $test_language_mod->where( 'test_entry_has_language.test_entry_id', '=', 'test_entry.id' );
+    $test_language_mod->where( 'test_entry_has_language.language_id', '=', 'id' );
+    $test_language_mod->where( 'test_entry.assignment_id', '=', $this->id );
+    $test_language_mod->group( 'id' );
+    $test_languages = array();
+    foreach( $language_class_name::select( $test_language_mod ) as $db_language )
+      $test_languages[] = $db_language->id;
 
     $user_mod = lib::create( 'database\modifier' );
     $user_mod->where( 'assignment.participant_id', '=', $this->participant_id );
@@ -454,7 +472,8 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'access.role_id', '=', $db_role->id );
     $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
-    $modifier->where( 'user_has_language.language_id', 'IN', $cedar_languages );
+    foreach( $test_languages as $language_id )
+      $modifier->where( 'user_has_language.language_id', '=', $language_id );
     $modifier->where( 'user.active', '=', true );
     $modifier->where( 'user.id', 'NOT IN', $user_class_name::select( $user_mod, false, true, true ) );
     $modifier->order( 'user.name' );

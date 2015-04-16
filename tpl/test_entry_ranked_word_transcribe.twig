@@ -242,7 +242,7 @@
           var args = new Object();
           var columns = new Object();
           var target_entry_id = $(this).prop( "id" ).split( "__" )[0];
-          args.id = target_entry_id;
+          args.id = parseInt( target_entry_id );
           var is_variant = $(this).prop( "id" ).split( "__" )[1] === "candidate";
           if( undefined !== obj ) {
             columns["word_id"] = obj;
@@ -281,7 +281,7 @@
             $(this).attr( "value", "" );
             if( is_variant ) {
               // by default, select the "no" radio button
-              var radio_id = table_selector + ' input:radio[id="' + args.id + '__no"]';
+              var radio_id = table_selector + ' input:radio[id="' + target_entry_id + '__no"]';
               $( radio_id ).focus();
               $( radio_id ).prop( "checked", true );
               $( radio_id ).change();
@@ -329,7 +329,8 @@
           var args = new Object();
           var columns = new Object();
           var selection = $(this).val();
-          args.id = $(this).prop( "id" ).split("__")[0];
+          var target_id = $(this).prop( "id" ).split("__")[0];
+          args.id = parseInt( target_id );
           columns["selection"] = selection;
           args.columns = columns;
           if( "variant" !== selection ) {
@@ -339,7 +340,7 @@
           var do_text = true;
           if( ajax_push( "{{ widget.subject }}", "edit", args ) ) {
             var text_id =
-              table_selector + ' input:text[id="' + args.id + '__candidate"]';
+              table_selector + ' input:text[id="' + target_id + '__candidate"]';
             $( text_id ).removeClass();
             if( "variant" === selection ) {
               // disable inputs until the variant is entered
