@@ -65,7 +65,8 @@ class test_entry extends \cenozo\database\has_note
               array( $db_prev_test->id, $this->assignment_id ) );
             if( !is_null( $db_test_entry ) &&
                 !in_array( $db_test_entry->audio_status, self::$audio_complete_states ) &&
-                'refused' != $db_test_entry->participant_status )
+                'refused' != $db_test_entry->participant_status &&
+                'submitted' != $db_test_entry->completed )
             {
               $db_prev_test_entry = $db_test_entry;
               $found = true;
@@ -129,7 +130,8 @@ class test_entry extends \cenozo\database\has_note
               array( $db_next_test->id, $this->assignment_id ) );
             if( !is_null( $db_test_entry ) &&
                 !in_array( $db_test_entry->audio_status, self::$audio_complete_states ) &&
-                'refused' != $db_test_entry->participant_status )
+                'refused' != $db_test_entry->participant_status &&
+                'submitted' != $db_test_entry->completed )
             {
               $db_next_test_entry = $db_test_entry;
               $found = true;
@@ -222,6 +224,18 @@ class test_entry extends \cenozo\database\has_note
     }
 
     return $completed;
+  }
+
+  /**
+   * Is this test entry and adjudicate entry?
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   * @return bool
+   */
+  public function is_adjudicate()
+  {
+    return ( !is_null( $this->participant_id ) && is_null( $this->assignment_id ) );
   }
 
   /**
@@ -323,7 +337,7 @@ class test_entry extends \cenozo\database\has_note
 
     if( $reset_default )
     {
-      $this->completed = false;
+      $this->completed = 'incomplete';
       $this->deferred = NULL;
       $this->adjudicate = NULL;
       $this->audio_status = NULL;

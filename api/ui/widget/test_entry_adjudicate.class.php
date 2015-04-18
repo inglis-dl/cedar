@@ -89,8 +89,9 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'test_id', '=', $db_test->id );
-    $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN', array( 'requested', 'pending' ) );
-    $modifier->where( 'completed', '=', true );
+    $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
+      $test_entry_class_name::$deferred_states );
+    $modifier->where( 'completed', '=', 'submitted' );
     $modifier->where( 'adjudicate', '!=', NULL );
     $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
     $db_sibling_test_entry = current( $test_entry_class_name::select( $modifier ) );
@@ -201,6 +202,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
       array( $db_test->id,
              $db_participant->id ) );
     $this->set_variable( 'adjudicate_entry_id', $db_adjudicate_test_entry->id );
+    $this->set_variable( 'completed', $db_adjudicate_test_entry->completed );
   }
 
   /**

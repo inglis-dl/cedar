@@ -173,7 +173,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
 
       $deferred   = $db_assignment->has_deferrals();
       $adjudicate = $db_assignment->has_adjudicates();
-      $completed  = $assignment_class_name::all_tests_complete( $db_assignment->id );
+      $completed  = $assignment_class_name::all_tests_submitted( $db_assignment->id );
 
       // select the first test_entry for which we either want to transcribe
       // or adjudicate depending on user role
@@ -187,10 +187,10 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         {
           $test_entry_mod->where( 'IFNULL( deferred, "NULL" )', '=', 'pending' );
         }
-        // otherwise, get the first incomplete test_entry
+        // otherwise, get the first test_entry that hasnt been submitted
         else
         {
-          $test_entry_mod->where( 'completed', '=', false );
+          $test_entry_mod->where( 'completed', '!=', 'submitted' );
         }
         $test_entry_mod->order( 'test.rank' );
         $test_entry_mod->limit( 1 );
@@ -206,16 +206,13 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       {
         $db_sibling_assignment = $db_assignment->get_sibling_assignment();
         if( !is_null( $db_sibling_assignment ) &&
-            $assignment_class_name::all_tests_complete( $db_sibling_assignment->id ) &&
             $db_sibling_assignment->has_adjudicates() &&
-            !$db_sibling_assignment->has_deferrals() )
+            !$db_sibling_assignment->has_deferrals() &&
+            $assignment_class_name::all_tests_submitted( $db_sibling_assignment->id ) )
         {
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
           $test_entry_mod->where( 'adjudicate', '=', true );
-          $test_entry_mod->where( 'completed', '=', true );
-          $test_entry_mod->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
-            $test_entry_class_name::$deferred_states );
           $test_entry_mod->order( 'test.rank' );
           $test_entry_mod->limit( 1 );
 
@@ -225,9 +222,6 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
             // see if the sibling test_entry exists
             $sibling_mod = lib::create( 'database\modifier' );
             $sibling_mod->where( 'adjudicate', '=', true );
-            $sibling_mod->where( 'completed', '=', true );
-            $sibling_mod->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
-              $test_entry_class_name::$deferred_states );
 
             if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) &&
                 !$allow_adjudicate )
@@ -295,7 +289,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where_bracket( true );
-      $modifier->where( 'test_entry.completed', '=', false );
+      $modifier->where( 'test_entry.completed', '!=', 'submitted' );
       $modifier->or_where( 'IFNULL(test_entry.deferred, "NULL")', '=', 'pending' );
       $modifier->where_bracket( false );
     }
@@ -366,7 +360,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where_bracket( true );
-      $modifier->where( 'test_entry.completed', '=', false );
+      $modifier->where( 'test_entry.completed', '!=', 'submitted' );
       $modifier->or_where( 'IFNULL(test_entry.deferred, "NULL")', '=', 'pending' );
       $modifier->where_bracket( false );
     }

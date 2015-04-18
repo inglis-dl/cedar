@@ -90,7 +90,7 @@ class test_entry_edit extends \cenozo\ui\push\base_edit
       $db_test_entry->initialize( false );
       // if this record is the progenitor of an adjudicate entry
       // reset the adjudictate entry
-      if( !is_null( $db_test_entry->assignment_id ) )
+      if( !$db_test_entry->is_adjudicate() )
       {
         $db_adjudicate_test_entry = $test_entry_class_name::get_unique_record(
           array( 'test_id', 'participant_id' ),

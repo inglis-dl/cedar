@@ -24,11 +24,38 @@
     } );
 
     function configure_ui() {
+
+      var is_submitted = "submitted" == "{{ completed }}";
+
       var disable_submit = false;
       var has_non_status_fields =
         0 < $( table_selector + ' input:checkbox[value="all"]' ).length;
       var has_status_fields =
         0 < $( table_selector + ' select[id$="adjudicate"]' ).length;
+
+      if( is_submitted )
+      {
+        if( has_non_status_fields )
+        {
+          $( table_selector + ' input:radio[name$="adjudicate"]' ).prop( "disabled", true );
+          $( table_selector + ' input:text[id$="intrusion"]' ).prop( "disabled", true );
+          $( table_selector + ' input:checkbox[value="all"]' ).prop( "disabled", true );
+          $( table_selector + ' input:text[id$="candidate"]' ).prop( "disabled", true );
+          $( table_selector + ' input:radio[value="accept"]' ).prop( "disabled", true );
+        }
+        if( has_status_fields ) 
+        {
+          $( table_selector + ' select[id$="adjudicate"]' ).prop( "disabled", true );
+        }
+
+        $( "#{{ parent.full }}_return1" ).button( { disabled : true } );
+        $( "#{{ parent.full }}_return2" ).button( { disabled : true } );
+        $( "#{{ parent.full }}_return12" ).button( { disabled : true } );
+        $( "#{{ parent.full }}_submit" ).button( { disabled : true } );
+        $( "#{{ parent.full }}_next" ).button( { disabled : false } );
+
+        return false;
+      }
 
       if( has_non_status_fields ) {
         // check the non-intrusion entries
@@ -83,6 +110,10 @@
       }
 
       $( "#{{ parent.full }}_submit" ).button( { disabled : disable_submit } );
+      $( "#{{ parent.full }}_next" ).button( { disabled : true } );
+      $( "#{{ parent.full }}_return1" ).button( { disabled : false } );
+      $( "#{{ parent.full }}_return2" ).button( { disabled : false } );
+      $( "#{{ parent.full }}_return12" ).button( { disabled : false } );
     }
 
     // overrides the default autocomplete filter function to search only from the beginning

@@ -21,15 +21,21 @@
 
         //disable elements based on deferred status
         var is_deferred = "requested" == "{{ deferred }}";
-        if( is_deferred || !{{ editable }} ) {
+        var is_submitted = "submitted" == "{{ completed }}";
+
+        if( is_deferred || !{{ editable }} || is_submitted ) {
           $( "#{{ parent.full }}__audio_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}__participant_status" ).prop( "disabled", true );
           $( "#{{ parent.full }}_defer" ).button( { disabled :  true } );
           $( "#{{ parent.full }}_reset" ).button( { disabled : true } );
+          $( "#{{ parent.full }}_submit" ).button( { disabled : true } );
+          $( "#{{ parent.full }}_next").button( { disabled : false } );
           $( table_selector + " input" ).each( function() {
             $(this).prop( "disabled", true );
           } );
         } else {
+          $( "#{{ parent.full }}_next" ).button( { disabled : !is_submitted } );
+
           var numFilled = $( table_selector + ' input[type="radio"]:checked' ).length;
           var complete_status =
             "unavailable" == "{{ audio_status }}" || "unusable" == "{{ audio_status }}" ||
@@ -37,9 +43,9 @@
           var null_status =
             'NULL' == "{{ audio_status }}" && 'NULL' == "{{ participant_status }}";
 
-          // enable the next button if there at least one entry is selected or the audio
+          // enable the submit button if there at least one entry is selected or the audio
           // and participant status indicate completion
-          $("#{{ parent.full }}_next").button( { disabled : !(complete_status || 0 < numFilled) } );
+          $("#{{ parent.full }}_submit").button( { disabled : !(complete_status || 0 < numFilled) } );
 
           // disable the reset button if there is nothing to reset
           $( "#{{ parent.full }}_reset" ).button( { disabled : null_status && 0 == numFilled } );

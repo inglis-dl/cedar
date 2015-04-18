@@ -49,7 +49,15 @@ class assignment_manager extends \cenozo\singleton
     if( 0 == $entry_class_name::count( $modifier ) )
     {
       // the sibling test entry will have its adjudicate status set to NULL
-      static::reset_test_entry( $db_test_entry );
+      try
+      {
+        static::reset_test_entry( $db_test_entry );
+      }
+      catch( \cenozo\exception\notice $e )
+      {
+        throw lib::create( 'exception\runtime',
+          $e->get_message(), __METHOD__ );
+      }
     }
     else
     {
@@ -64,14 +72,14 @@ class assignment_manager extends \cenozo\singleton
 
     $db_test_entry->adjudicate = NULL;
     $db_test_entry->deferred = 'pending';
+    if( 'submitted' == $db_test_entry->completed )
+      $db_test_entry->completed = 'complete';
     $db_test_entry->save();
 
     // if there is an adjudicate entry delete it
     $db_adjudicate_entry = $db_test_entry->get_adjudicate_test_entry();
     if( !is_null( $db_adjudicate_entry ) )
-    {
       $db_adjudicate_entry->delete();
-    }
   }
 
   /**
@@ -104,6 +112,7 @@ class assignment_manager extends \cenozo\singleton
       $db_sibling_test_entry->save();
     }
 
+    // if there is an adjudicate entry delete it
     $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
     if( !is_null( $db_adjudicate_test_entry ) )
       $db_adjudicate_test_entry->delete();
@@ -214,84 +223,65 @@ class assignment_manager extends \cenozo\singleton
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();
 
-    if( $assignment_class_name::all_tests_complete( $db_assignment->id ) )
+    if( $assignment_class_name::all_tests_submitted( $db_assignment->id ) )
     {
       if( !is_null( $db_sibling_assignment ) &&
-          $assignment_class_name::all_tests_complete( $db_sibling_assignment->id ) )
+          $assignment_class_name::all_tests_submitted( $db_sibling_assignment->id ) )
       {
         // go through all the tests and look for differences
-        // get all the assignment's tests
-        $session = lib::create( 'business\session' );
-        $session->acquire_semaphore();
-
+        // get all the assignment's tests that have not been adjudicated to completion
         $modifier = lib::create( 'database\modifier' );
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
-        $modifier->where( 'completed', '=', true );
+        $modifier->where( 'completed', '=', 'submitted' );
+        $modifier->where( 'IFNULL(adjudicate,true)', '!=', false );
         $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
           $test_entry_class_name::$deferred_states );
 
         $completed = true;
+        $session = lib::create( 'business\session' );
+        $session->acquire_semaphore();
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+          $adj_update_state = NULL;
           if( !$db_test_entry->compare( $db_sibling_test_entry ) )
           {
-            if( ( is_null( $db_test_entry->adjudicate ) ||
-                  is_null( $db_sibling_test_entry->adjudicate ) ) ||
-                 ( true == $db_test_entry->adjudicate ||
-                   true == $db_sibling_test_entry->adjudicate ) )
-            {
-              $db_test_entry->adjudicate = true;
-              $db_test_entry->save();
-              $db_sibling_test_entry->adjudicate = true;
-              $db_sibling_test_entry->save();
-              $completed = false;
-            }
+            $adj_update_state = true;
+            $completed = false;
           }
           else
           {
             // if they are identical check if there is an adjudicate entry and delete it
-            $db_test = $db_test_entry->get_test();
             $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
             if( !is_null( $db_adjudicate_test_entry ) )
             {
               $db_adjudicate_test_entry->delete();
             }
-
-            if( !is_null( $db_test_entry->adjudicate ) )
-            {
-              $db_test_entry->adjudicate = NULL;
-              $db_test_entry->save();
-            }
-            if( !is_null( $db_sibling_test_entry->adjudicate ) )
-            {
-              $db_sibling_test_entry->adjudicate = NULL;
-              $db_sibling_test_entry->save();
-            }
           }
+          $db_test_entry->adjudicate = $adj_update_state;
+          $db_test_entry->save();
+          $db_sibling_test_entry->adjudicate = $adj_update_state;
+          $db_sibling_test_entry->save();
         }
-        $session->release_semaphore();
 
         if( $completed )
         {
           // both assignments are now complete: set their end datetimes
           $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
           $db_assignment->end_datetime = $end_datetime;
-          $db_sibling_assignment->end_datetime = $end_datetime;
           $db_assignment->save();
+          $db_sibling_assignment->end_datetime = $end_datetime;
           $db_sibling_assignment->save();
         }
         else
         {
-          if( !is_null( $db_assignment->end_datetime ) ||
-              !is_null( $db_sibling_assignment->end_datetime ) )
-          {
-            $db_assignment->end_datetime = NULL;
-            $db_sibling_assignment->end_datetime = NULL;
-            $db_assignment->save();
-            $db_sibling_assignment->save();
-          }
+          $db_assignment->end_datetime = NULL;
+          $db_assignment->save();
+          $db_sibling_assignment->end_datetime = NULL;
+          $db_sibling_assignment->save();
         }
+
+        $session->release_semaphore();
       }
     }
     else
@@ -310,8 +300,7 @@ class assignment_manager extends \cenozo\singleton
   }
 
   /**
-   * Update test_entry, its assignment, its sibling assignment and its sibling
-   * assignment's test_entry based on its complete status.  This method is
+   * Update test_entry complete state.  This method is
    * typically called whenever a daughter table entry is edited.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
@@ -322,7 +311,7 @@ class assignment_manager extends \cenozo\singleton
   {
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
-    $db_test_entry->completed = $db_test_entry->is_completed();
+    $db_test_entry->completed = $db_test_entry->is_completed() ? 'complete' : 'incomplete';
     if( in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
     {
       if( $db_test_entry->completed && 'pending' == $db_test_entry->deferred )
@@ -330,34 +319,68 @@ class assignment_manager extends \cenozo\singleton
     }
     else if( 'resolved' == $db_test_entry->deferred )
     {
-      if( !$db_test_entry->completed )
+      if( 'incomplete' == $db_test_entry->completed )
         $db_test_entry->deferred = NULL;
     }
 
     $db_test_entry->save();
+  }
 
-    // no further processing is required for an adjudicate entry
-    if( is_null( $db_test_entry->participant_id ) )
+  /**
+   * Submit a completed test_entry.
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @param  database\test_entry $db_test_entry
+   * @return bool success status
+   * @access public
+   */
+  public static function submit_test_entry( $db_test_entry )
+  {
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+    $assignment_class_name = lib::get_class_name( 'database\assignment' );
+    $db_assignment = NULL;
+    $ret_val = false;
+
+    if( $db_test_entry->is_adjudicate() )
     {
-      $db_assignment = $db_test_entry->get_assignment();
+      // get the progenitor test entry records
+      // set adjudicate state to false indicating the adjudication was completed
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'assignment.participant_id', '=', $db_test_entry->participant_id );
+      $modifier->where( 'test_id', '=', $db_test_entry->get_test()->id );
+      foreach( $test_entry_class_name::select( $modifier ) as $progenitor_test_entry )
+      {
+        $progenitor_test_entry->adjudicate = false;
+        $progenitor_test_entry->save();
+      }
 
-      // check if the assignment can be completed
-      if( $db_test_entry->completed &&
+      // get one of the assignments of the original test entry based
+      // on participant id
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'participant_id', '=', $db_test_entry->participant_id );
+      $modifier->limit( 1 );
+      $db_assignment = current( $assignment_class_name::select( $modifier ) );
+
+      $ret_val = true;
+    }
+    else
+    {
+      if( 'incomplete' != $db_test_entry->completed &&
           !in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
       {
-        // the assignment will determine the adjudicate status
-        static::complete_assignment( $db_assignment );
-      }
-      else
-      {
-        if( !is_null( $db_assignment->end_datetime ) )
-        {
-          $db_assignment->end_datetime = NULL;
-          $db_assignment->save();
-          log::warning( 'checked assignment null end_datetime in complete_test_entry' );
-        }
+        $db_assignment = $db_test_entry->get_assignment();
+        $ret_val = true;
       }
     }
+
+    if( $ret_val )
+    {
+      $db_test_entry->completed = 'submitted';
+      $db_test_entry->save();
+      static::complete_assignment( $db_assignment );
+    }
+
+    return $ret_val;
   }
 
   /**
@@ -369,7 +392,7 @@ class assignment_manager extends \cenozo\singleton
    * UI layer for adjudication by an administrator or supervisor.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param  database\test_entry $db_test_entry
+   * @param  database\test_entry $db_test_entry A progenitor test_entry record
    * @throws exception\runtime
    * @return array() Data required for adjudication at the UI layer
    * @access public
@@ -382,7 +405,7 @@ class assignment_manager extends \cenozo\singleton
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
 
     if( is_null( $db_test_entry->adjudicate ) ||
-       !$db_test_entry->completed ||
+       'submitted' != $db_test_entry->completed ||
         in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
       throw lib::create( 'exception\runtime', 'Invalid test entry', __METHOD__ );
 
@@ -392,7 +415,7 @@ class assignment_manager extends \cenozo\singleton
 
     if( is_null( $db_sibling_test_entry ) ||
         is_null( $db_sibling_test_entry->adjudicate ) ||
-        !$db_sibling_test_entry->completed ||
+        'submitted' != $db_sibling_test_entry->completed ||
         in_array( $db_test_entry->deferred, $test_entry_class_name::$deferred_states ) )
       throw lib::create( 'exception\runtime', 'Invalid sibling test entry', __METHOD__ );
 
