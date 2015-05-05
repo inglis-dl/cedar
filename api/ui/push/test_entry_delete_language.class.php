@@ -40,7 +40,7 @@ class test_entry_delete_language extends \cenozo\ui\push\base_record
 
     // if the test is already complete, then have the user
     // reset the test before changing the language
-    if( 'incomplete' == $db_test_entry->completed )
+    if( 'complete' == $db_test_entry->completed )
       throw lib::create( 'exception\notice',
         'Tests that meet the minumum level of complete cannot have their language changed. '.
         'Reset the test first.',
