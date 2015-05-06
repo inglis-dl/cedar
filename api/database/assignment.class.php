@@ -339,10 +339,10 @@ class assignment extends \cenozo\database\record
         else
         {
           // a sibling assignment can only be created if the primary assignment
-          // has all tests completed, has no deferrals and the language settings
+          // has all tests submitted, has no deferrals and the language settings
           // of the current user match those of the primary assignment's user
           $db_assignment = lib::create( 'database\assignment', $assignment_id );
-          if( !$db_assignment->has_deferrals() && static::all_tests_complete( $assignment_id ) )
+          if( !$db_assignment->has_deferrals() && static::all_tests_submitted( $assignment_id ) )
           {
             // get the list of users that have language conditions consistent with
             // those of the constituent tests
