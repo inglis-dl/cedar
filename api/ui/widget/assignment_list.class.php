@@ -47,7 +47,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
     $this->add_column( 'participant.uid', 'string', 'UID', true );
     $this->add_column( 'cohort.name', 'string', 'Cohort', true );
     $this->add_column( 'user.name', 'string', 'User', true );
-    $this->add_column( 'deferred', 'boolean', 'Deferred', false );
+    $this->add_column( 'deferred', 'string', 'Deferred', false );
     $this->add_column( 'adjudicate', 'boolean', 'Adjudicate', false );
     $this->add_column( 'completed', 'boolean', 'Completed', false );
 
@@ -239,7 +239,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         'participant.uid' => $db_participant->uid,
         'cohort.name' => $db_participant->get_cohort()->name,
         'user.name' => $db_assignment->get_user()->name,
-        'deferred' => $deferred,
+        'deferred' => $db_assignment->get_deferred_string(),
         'adjudicate' =>  $adjudicate,
         'completed' =>  $completed,
         'allow_transcribe' => $allow_transcribe ? 1 : 0,

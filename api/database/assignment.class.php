@@ -55,6 +55,70 @@ class assignment extends \cenozo\database\record
   }
 
   /**
+   * Are there any deferred(pending) test_entry records for this assignment?
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return boolean
+   * @access public
+   */
+  public function has_pending_deferrals()
+  {
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment_id', '=', $this->id);
+    $modifier->where( 'deferred', '=', 'pending' );
+
+    $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
+    return 0 < intval( static::db()->get_one( $sql ) );
+  }
+
+  /**
+   * Are there any deferred(requested) test_entry records for this assignment?
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @throws exception\runtime
+   * @return boolean
+   * @access public
+   */
+  public function has_requested_deferrals()
+  {
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment_id', '=', $this->id);
+    $modifier->where( 'deferred', '=', 'requested' );
+
+    $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
+    return 0 < intval( static::db()->get_one( $sql ) );
+  }
+
+  /**
+   * Get the status of deferrals as a string for this assignment
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @return string
+   * @access public
+   */
+  public function get_deferred_string()
+  {
+    $str = 'No';
+    $has_pending = $this->has_pending_deferrals();
+    $has_requested = $this->has_requested_deferrals();
+    if( $has_pending || $has_requested )
+    {
+      $states = array();
+      if( $has_requested )
+        $states[]='requested';
+      if( $has_pending )
+        $states[]='pending';
+      $str = 'Yes (' . implode( ',', $states ) . ')';
+    }
+    return $str;
+  }
+
+  /**
    * Get the number of completed test_entry records for this assignment.
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
