@@ -223,6 +223,27 @@ class test_entry extends \cenozo\database\has_note
       }
     }
 
+    if( $this->is_adjudicate() && !$completed )
+    {
+       // compare the progenitors
+       // if they match, assess the audio and participant status's
+       // both of which are allowed to be empty
+       $modifier = lib::create( 'database\modifier' );
+       $modifier->where( 'assignment.participant_id', '=', $this->participant_id );
+       $modifier->where( 'test_id', '=', $this->test_id );
+       $modifier->where( 'participant_id', '=', NULL );
+       $progenitor = $this->get_progenitor_test_entry();
+       $sibling = $progenitor->get_sibling_test_entry();
+       if( $progenitor->compare( $sibling, false ) )
+       {
+         if( ( $progenitor->audio_status == $this->audio_status ||
+               $sibling->audio_status == $this->audio_status ) &&
+             ( $progenitor->participant_status == $this->participant_status ||
+               $sibling->participant_status == $this->participant_status ) )
+           $completed = true;
+       }
+    }
+
     return $completed;
   }
 
@@ -245,13 +266,14 @@ class test_entry extends \cenozo\database\has_note
    * @author Dean Inglis <inglisd@mcmaster.ca>
    * @access public
    * @param database\test_entry $db_test_entry
+   * @param bool Whether to compare participant and audio status's
    * @return bool true if identical
    */
-  public function compare( $db_test_entry )
+  public function compare( $db_test_entry, $status_compare = true )
   {
-    $comparison_result =
-      $this->audio_status == $db_test_entry->audio_status &&
-      $this->participant_status == $db_test_entry->participant_status;
+    $comparison_result =  $status_compare ?
+      ( $this->audio_status == $db_test_entry->audio_status &&
+        $this->participant_status == $db_test_entry->participant_status ) : true;
 
     if( $comparison_result )
     {
@@ -304,7 +326,6 @@ class test_entry extends \cenozo\database\has_note
    * Get the adjudication of this test_entry
    *
    * @author Dean Inglis <inglisd@mcmaster.ca>
-   * @param database\modifier $modifier Modifications to the selection.
    * @access public
    * @return database\test_entry (NULL if no adjudicate)
    */
@@ -322,6 +343,27 @@ class test_entry extends \cenozo\database\has_note
       }
     }
     return $db_test_entry;
+  }
+
+  /**
+   * Get a progenitor of an adjudication test_entry
+   *
+   * @author Dean Inglis <inglisd@mcmaster.ca>
+   * @access public
+   * @return database\test_entry (NULL if not an adjudicate or no progenitor)
+   */
+  public function get_progenitor_test_entry()
+  {
+    $db_test_entry = NULL;
+    if( $this->is_adjudicate() )
+    {
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'assignment.participant_id', '=', $this->participant_id );
+      $modifier->where( 'test_id', '=', $this->test_id );
+      $modifier->limit( 1 );
+      $db_test_entry = current( static::select( $modifier ) );
+    }
+    return false === $db_test_entry ? NULL : $db_test_entry;
   }
 
   /**
