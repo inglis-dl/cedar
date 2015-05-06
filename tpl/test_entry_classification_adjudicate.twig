@@ -33,17 +33,14 @@
       var has_status_fields =
         0 < $( table_selector + ' select[id$="adjudicate"]' ).length;
 
-      if( is_submitted )
-      {
-        if( has_non_status_fields )
-        {
+      if( is_submitted ) {
+        if( has_non_status_fields ) {
           $( table_selector + ' input:radio[name$="adjudicate"]' ).prop( "disabled", true );
           $( table_selector + ' input:checkbox[value="all"]' ).prop( "disabled", true );
           $( table_selector + ' input:text[id$="adjudicate"]' ).prop( "disabled", true );
           $( table_selector + ' input:radio[value="accept"]' ).prop( "disabled", true );
         }
-        if( has_status_fields ) 
-        {
+        if( has_status_fields ) {
           $( table_selector + ' select[id$="adjudicate"]' ).prop( "disabled", true );
         }
 
