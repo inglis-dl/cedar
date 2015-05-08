@@ -39,7 +39,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
     $db_language = current( $db_test_entry->get_language_list() );
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'ranked_word_set_id', '!=', NULL );
+    $modifier->where( 'ranked_word_set_id', 'IS NOT', NULL );
     $modifier->order( 'ranked_word_set.rank' );
     $entry_data = array();
 
@@ -71,7 +71,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
 
     // now get the intrusions
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'ranked_word_set_id', '=', NULL );
+    $modifier->where( 'ranked_word_set_id', '<=>', NULL );
     foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as
              $db_test_entry_ranked_word )
     {

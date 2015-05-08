@@ -104,7 +104,7 @@ class assignment_manager extends \cenozo\singleton
     $db_test_entry->initialize();
 
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'adjudicate', '!=', NULL );
+    $modifier->where( 'adjudicate', 'IS NOT', NULL );
     $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry( $modifier );
     if( !is_null( $db_sibling_test_entry ) )
     {
@@ -233,8 +233,8 @@ class assignment_manager extends \cenozo\singleton
         $modifier = lib::create( 'database\modifier' );
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', 'submitted' );
-        $modifier->where( 'IFNULL(adjudicate,true)', '!=', false );
-        $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
+        $modifier->where( 'adjudicate', '<=>', false );
+        $modifier->where( 'IFNULL(deferred,"NULL")', 'NOT IN',
           $test_entry_class_name::$deferred_states );
 
         $completed = true;

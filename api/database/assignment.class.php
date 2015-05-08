@@ -48,7 +48,7 @@ class assignment extends \cenozo\database\record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id);
-    $modifier->where( 'deferred', 'IN', $test_entry_class_name::$deferred_states );
+    $modifier->where( 'IFNULL(deferred,"NULL")', 'IN', $test_entry_class_name::$deferred_states );
 
     $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 < intval( static::db()->get_one( $sql ) );
@@ -68,7 +68,7 @@ class assignment extends \cenozo\database\record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id);
-    $modifier->where( 'deferred', '=', 'pending' );
+    $modifier->where( 'deferred', '<=>', 'pending' );
 
     $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 < intval( static::db()->get_one( $sql ) );
@@ -88,7 +88,7 @@ class assignment extends \cenozo\database\record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id);
-    $modifier->where( 'deferred', '=', 'requested' );
+    $modifier->where( 'deferred', '<=>', 'requested' );
 
     $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 < intval( static::db()->get_one( $sql ) );
@@ -162,7 +162,7 @@ class assignment extends \cenozo\database\record
   {
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id );
-    $modifier->where( 'adjudicate', '=', true );
+    $modifier->where( 'adjudicate', '<=>', true );
     $sql = sprintf( 'SELECT count(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 !== intval( static::db()->get_one( $sql ) );
   }
@@ -462,7 +462,7 @@ class assignment extends \cenozo\database\record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment.id', '=', $id );
-    $modifier->where( 'IFNULL( deferred, "NULL" )', 'NOT IN',
+    $modifier->where( 'IFNULL(deferred,"NULL")', 'NOT IN',
       $test_entry_class_name::$deferred_states );
     if( $submitted )
       $modifier->where( 'completed', '=', 'submitted' );

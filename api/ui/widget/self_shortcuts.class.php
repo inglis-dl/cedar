@@ -33,7 +33,7 @@ class self_shortcuts extends \cenozo\ui\widget\self_shortcuts
 
       // determine whether the typist is on a break
       $away_time_mod = lib::create( 'database\modifier' );
-      $away_time_mod->where( 'end_datetime', '=', NULL );
+      $away_time_mod->where( 'end_datetime', '<=>', NULL );
       $this->set_variable( 'on_break',
         0 < $db_user->get_away_time_count( $away_time_mod ) );
     }
