@@ -214,9 +214,9 @@ class test_entry extends \cenozo\database\has_note
         if( $completed && is_null( $this->participant_id ) )
         {
           $modifier = clone $base_mod;
-          $modifier->where( 'ranked_word_set_id', '<=>', NULL );
-          $modifier->where( 'selection', '<=>', NULL );
-          $modifier->where( 'word_id', '<=>', NULL );
+          $modifier->where( 'ranked_word_set_id', 'IS', NULL );
+          $modifier->where( 'selection', 'IS', NULL );
+          $modifier->where( 'word_id', 'IS', NULL );
 
           $completed = 0 === $entry_class_name::count( $modifier );
         }
@@ -231,7 +231,7 @@ class test_entry extends \cenozo\database\has_note
        $modifier = lib::create( 'database\modifier' );
        $modifier->where( 'assignment.participant_id', '=', $this->participant_id );
        $modifier->where( 'test_id', '=', $this->test_id );
-       $modifier->where( 'participant_id', '<=>', NULL );
+       $modifier->where( 'participant_id', 'IS', NULL );
        $progenitor = $this->get_progenitor_test_entry();
        $sibling = $progenitor->get_sibling_test_entry();
        if( $progenitor->compare( $sibling, false ) )

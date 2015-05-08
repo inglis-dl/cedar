@@ -46,7 +46,7 @@ class typist_end_break extends \cenozo\ui\push
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'site_id', '=', $db_site->id );
     $modifier->where( 'role_id', '=', $db_role->id );
-    $modifier->where( 'end_datetime', '<=>', NULL );
+    $modifier->where( 'end_datetime', 'IS', NULL );
     $away_time_list = $db_user->get_away_time_list( $modifier );
 
     // report an error of there isn't exactly 1 one open away time

@@ -68,7 +68,7 @@ class assignment extends \cenozo\database\record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id);
-    $modifier->where( 'deferred', '<=>', 'pending' );
+    $modifier->where( 'IFNULL(deferred,"NULL")', '=', 'pending' );
 
     $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 < intval( static::db()->get_one( $sql ) );
@@ -88,7 +88,7 @@ class assignment extends \cenozo\database\record
 
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id);
-    $modifier->where( 'deferred', '<=>', 'requested' );
+    $modifier->where( 'IFNULL(deferred,"NULL")', '=', 'requested' );
 
     $sql = sprintf( 'SELECT COUNT(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 < intval( static::db()->get_one( $sql ) );
@@ -162,7 +162,7 @@ class assignment extends \cenozo\database\record
   {
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'assignment_id', '=', $this->id );
-    $modifier->where( 'adjudicate', '<=>', true );
+    $modifier->where( 'IFNULL(adjudicate,false)', '=', true );
     $sql = sprintf( 'SELECT count(*) FROM test_entry %s', $modifier->get_sql() );
     return 0 !== intval( static::db()->get_one( $sql ) );
   }

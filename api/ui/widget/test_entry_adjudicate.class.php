@@ -92,7 +92,7 @@ class test_entry_adjudicate extends \cenozo\ui\widget\base_record
     $modifier->where( 'IFNULL( deferred,"NULL")', 'NOT IN',
       $test_entry_class_name::$deferred_states );
     $modifier->where( 'completed', '=', 'submitted' );
-    $modifier->where( 'adjudicate', '<=>', true );
+    $modifier->where( 'IFNULL(adjudicate,false)', '=', true );
     $modifier->where( 'assignment_id', '=', $db_sibling_assignment->id );
     $db_sibling_test_entry = current( $test_entry_class_name::select( $modifier ) );
     if( false === $db_sibling_test_entry )

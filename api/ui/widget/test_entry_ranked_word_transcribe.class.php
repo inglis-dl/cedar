@@ -71,7 +71,7 @@ class test_entry_ranked_word_transcribe extends base_transcribe
 
     // now get the intrusions
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'ranked_word_set_id', '<=>', NULL );
+    $modifier->where( 'ranked_word_set_id', 'IS', NULL );
     foreach( $db_test_entry->get_test_entry_ranked_word_list( $modifier ) as
              $db_test_entry_ranked_word )
     {

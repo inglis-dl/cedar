@@ -185,7 +185,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         // get the first test that could be pending
         if( $deferred )
         {
-          $test_entry_mod->where( 'deferred', '<=>', 'pending' );
+          $test_entry_mod->where( 'IFNULL(deferred,"NULL")', '=', 'pending' );
         }
         // otherwise, get the first test_entry that hasnt been submitted
         else
@@ -212,7 +212,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         {
           // get the first test entry of current db_assignment that requires adjudication
           $test_entry_mod = clone $base_mod;
-          $test_entry_mod->where( 'adjudicate', '<=>', true );
+          $test_entry_mod->where( 'IFNULL(adjudicate,false)', '=', true );
           $test_entry_mod->order( 'test.rank' );
           $test_entry_mod->limit( 1 );
 
@@ -221,7 +221,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           {
             // see if the sibling test_entry exists
             $sibling_mod = lib::create( 'database\modifier' );
-            $sibling_mod->where( 'adjudicate', '<=>', true );
+            $sibling_mod->where( 'IFNULL(adjudicate,false)', '=', true );
 
             if( !is_null( $db_test_entry->get_sibling_test_entry( $sibling_mod ) ) &&
                 !$allow_adjudicate )
@@ -290,7 +290,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where_bracket( true );
       $modifier->where( 'test_entry.completed', '!=', 'submitted' );
-      $modifier->or_where( 'test_entry.deferred', '<=>', 'pending' );
+      $modifier->or_where( 'IFNULL(test_entry.deferred,"NULL")', '=', 'pending' );
       $modifier->where_bracket( false );
     }
 
@@ -309,7 +309,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         else
         {
           // Open
-          $modifier->where( 'end_datetime', '<=>', NULL );
+          $modifier->where( 'end_datetime', 'IS', NULL );
           if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
           {
             $modifier->where( 'IFNULL(test_entry.deferred,"NULL")', 'IN',
@@ -319,7 +319,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           {
             $modifier->where( 'IFNULL(test_entry.deferred,"NULL")', 'NOT IN',
               $test_entry_class_name::$deferred_states );
-            $modifier->where( 'test_entry.adjudicate', '<=>', true );
+            $modifier->where( 'IFNULL(test_entry.adjudicate,false)', '=', true );
           }
         }
       }
@@ -361,7 +361,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       $modifier->where( 'user_id', '=', $session->get_user()->id );
       $modifier->where_bracket( true );
       $modifier->where( 'test_entry.completed', '!=', 'submitted' );
-      $modifier->or_where( 'test_entry.deferred', '<=>', 'pending' );
+      $modifier->or_where( 'IFNULL(test_entry.deferred,"NULL")', '=', 'pending' );
       $modifier->where_bracket( false );
     }
 
@@ -380,7 +380,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         else
         {
           // Open
-          $modifier->where( 'end_datetime', '<=>', NULL );
+          $modifier->where( 'end_datetime', 'IS', NULL );
           if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
           {
             $modifier->where( 'IFNULL(test_entry.deferred,"NULL")', 'IN',
@@ -390,7 +390,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
           {
             $modifier->where( 'IFNULL(test_entry.deferred,"NULL")', 'NOT IN',
               $test_entry_class_name::$deferred_states );
-            $modifier->where( 'test_entry.adjudicate', '<=>', true );
+            $modifier->where( 'IFNULL(test_entry.adjudicate,false)', '=', true );
           }
         }
       }
