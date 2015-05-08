@@ -173,7 +173,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
     }
 
     $temp_user_mod = clone $base_assignment_mod;
-    $temp_user_mod->where( 'assignment.end_datetime', 'IS NOT', NULL );
+    $temp_user_mod->where( 'assignment.end_datetime', '!=', NULL );
 
     $sql = sprintf(
       'CREATE TEMPORARY TABLE temp_user_adjudicate AS '.

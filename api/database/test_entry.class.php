@@ -182,21 +182,21 @@ class test_entry extends \cenozo\database\has_note
       if( 'confirmation' == $test_type_name )
       {
         $modifier = clone $base_mod;
-        $modifier->where( 'confirmation', 'IS NOT', NULL );
+        $modifier->where( 'confirmation', '!=', NULL );
         $completed = 0 < $entry_class_name::count( $modifier );
       }
       else if( 'classification' == $test_type_name || 'alpha_numeric' == $test_type_name )
       {
         $modifier = clone $base_mod;
-        $modifier->where( 'word_id', 'IS NOT', NULL );
+        $modifier->where( 'word_id', '!=', NULL );
         $completed = 0 < $entry_class_name::count( $modifier );
       }
       else if( 'ranked_word' == $test_type_name )
       {
         // custom query for ranked_word test type
         $modifier = clone $base_mod;
-        $modifier->where( 'ranked_word_set_id', 'IS NOT', NULL );
-        $modifier->where( 'selection', 'IS NOT', NULL );
+        $modifier->where( 'ranked_word_set_id', '!=', NULL );
+        $modifier->where( 'selection', '!=', NULL );
         $sql = sprintf(
           'SELECT '.
           '( '.
@@ -214,9 +214,9 @@ class test_entry extends \cenozo\database\has_note
         if( $completed && is_null( $this->participant_id ) )
         {
           $modifier = clone $base_mod;
-          $modifier->where( 'ranked_word_set_id', 'IS', NULL );
-          $modifier->where( 'selection', 'IS', NULL );
-          $modifier->where( 'word_id', 'IS', NULL );
+          $modifier->where( 'ranked_word_set_id', '=', NULL );
+          $modifier->where( 'selection', '=', NULL );
+          $modifier->where( 'word_id', '=', NULL );
 
           $completed = 0 === $entry_class_name::count( $modifier );
         }
@@ -231,7 +231,7 @@ class test_entry extends \cenozo\database\has_note
        $modifier = lib::create( 'database\modifier' );
        $modifier->where( 'assignment.participant_id', '=', $this->participant_id );
        $modifier->where( 'test_id', '=', $this->test_id );
-       $modifier->where( 'participant_id', 'IS', NULL );
+       $modifier->where( 'participant_id', '=', NULL );
        $progenitor = $this->get_progenitor_test_entry();
        $sibling = $progenitor->get_sibling_test_entry();
        if( $progenitor->compare( $sibling, false ) )
@@ -465,7 +465,7 @@ class test_entry extends \cenozo\database\has_note
     $database_class_name = lib::get_class_name( 'database\database' );
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
 
-    $sql = null;
+    $sql = NULL;
     if( 'classification' == $test_type_name || 'alpha_numeric' == $test_type_name )
     {
       $sql = sprintf(

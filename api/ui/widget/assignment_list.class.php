@@ -304,12 +304,12 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         // Closed
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
-          $modifier->where( 'end_datetime', 'IS NOT', NULL );
+          $modifier->where( 'end_datetime', '!=', NULL );
         }
         else
         {
           // Open
-          $modifier->where( 'end_datetime', 'IS', NULL );
+          $modifier->where( 'end_datetime', '=', NULL );
           if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
           {
             $modifier->where( 'IFNULL(test_entry.deferred,"NULL")', 'IN',
@@ -375,12 +375,12 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         // Closed
         if( $restrict_state_id == array_search( 'Closed', $this->state_list ) )
         {
-          $modifier->where( 'end_datetime', 'IS NOT', NULL );
+          $modifier->where( 'end_datetime', '!=', NULL );
         }
         else
         {
           // Open
-          $modifier->where( 'end_datetime', 'IS', NULL );
+          $modifier->where( 'end_datetime', '=', NULL );
           if( $restrict_state_id == array_search( 'Deferred', $this->state_list ) )
           {
             $modifier->where( 'IFNULL(test_entry.deferred,"NULL")', 'IN',

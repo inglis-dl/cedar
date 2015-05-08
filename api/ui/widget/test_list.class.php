@@ -40,7 +40,7 @@ class test_list extends \cenozo\ui\widget\base_list
 
     $test_class_name = lib::get_class_name( 'database\test' );
     $modifier = lib::create( 'database\modifier' );
-    $modifier->where( 'dictionary_id', 'IS', NULL );
+    $modifier->where( 'dictionary_id', '=', NULL );
     $allow_primary_sort =
       $test_class_name::count( $modifier ) != $test_class_name::count();
 
