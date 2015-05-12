@@ -14,13 +14,6 @@
 
     $( function () {
 
-      $( "#{{ widget.full }}_submit" ).click( function() {
-        // submit the adjudication
-        if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ adjudicate_entry_id }} } ) ) {
-          slot_refresh( {{ slot }} );
-        }
-      } );// end Submit button click
-
       $( "#{{ widget.full }}_quit" ).click( function() {
         slot_load( {{ slot }}, "assignment", "list" );
       } ); // end Quit click
@@ -44,6 +37,14 @@
             { id : {{ next_test_entry_id }} } );
         {% endif %}
       } ); // end Next click
+
+      $( "#{{ widget.full }}_submit" ).click( function() {
+        // submit the adjudication
+        if( ajax_push( "{{ widget.subject }}", "submit", { "id": {{ adjudicate_entry_id }} } ) ) {
+          $( "#{{ widget.full }}_next" ).button( { disabled : false } );
+          $( "#{{ widget.full }}_next" ).click();
+        }
+      } );// end Submit button click
 
       function return_test_entry( test_entry_id_list ) {
         $dialog = $( "#{{ widget.full }}__note_dialog" );
