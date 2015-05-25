@@ -525,8 +525,7 @@ class assignment extends \cenozo\database\record
 
     // get all the languages employed by tests within the current assignment
     $test_language_mod = lib::create( 'database\modifier' );
-    $test_language_mod->where( 'test_entry_has_language.test_entry_id', '=', 'test_entry.id' );
-    $test_language_mod->where( 'test_entry_has_language.language_id', '=', 'id' );
+    $test_language_mod->where( 'test_entry_has_language.test_entry_id', '=', 'test_entry.id', false );
     $test_language_mod->where( 'test_entry.assignment_id', '=', $this->id );
     $test_language_mod->group( 'id' );
     $test_languages = array();
@@ -541,11 +540,12 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'access.role_id', '=', $db_role->id );
     $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
-    foreach( $test_languages as $language_id )
-      $modifier->where( 'user_has_language.language_id', '=', $language_id );
+    $modifier->where( 'user_has_language.language_id', 'IN', $test_languages );
     $modifier->where( 'user.active', '=', true );
     $modifier->where( 'user.id', 'NOT IN', $user_class_name::select( $user_mod, false, true, true ) );
     $modifier->order( 'user.name' );
+
+    log::debug( $modifier->get_sql() );
 
     $user_list = array();
     foreach( $user_class_name::select( $modifier ) as $db_user )
