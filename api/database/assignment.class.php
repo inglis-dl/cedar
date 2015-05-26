@@ -528,6 +528,7 @@ class assignment extends \cenozo\database\record
     $test_language_mod->where( 'test_entry_has_language.test_entry_id', '=', 'test_entry.id', false );
     $test_language_mod->where( 'test_entry.assignment_id', '=', $this->id );
     $test_language_mod->group( 'id' );
+    $test_language_mod->order( 'id' );
     $test_languages = array();
     foreach( $language_class_name::select( $test_language_mod ) as $db_language )
       $test_languages[] = $db_language->id;
@@ -540,16 +541,25 @@ class assignment extends \cenozo\database\record
     $modifier->where( 'access.role_id', '=', $db_role->id );
     $modifier->where( 'access.site_id', '=', $db_site->id );
     $modifier->where( 'user_has_cohort.cohort_id', '=', $this->get_participant()->get_cohort()->id );
-    $modifier->where( 'user_has_language.language_id', 'IN', $test_languages );
     $modifier->where( 'user.active', '=', true );
     $modifier->where( 'user.id', 'NOT IN', $user_class_name::select( $user_mod, false, true, true ) );
     $modifier->order( 'user.name' );
 
-    log::debug( $modifier->get_sql() );
-
+    $num_languages = count( $test_languages );
     $user_list = array();
     foreach( $user_class_name::select( $modifier ) as $db_user )
-      $user_list[$db_user->id] = $db_user->name;
+    {
+      // for each user, get their languages
+      $language_mod = lib::create( 'database\modifier' );
+      $language_mod->where( 'user_has_language.user_id', '=', $db_user->id );
+      $language_mod->order( 'id' );
+
+      $user_languages = array();
+      foreach( $language_class_name::select( $language_mod ) as $db_language )
+        $user_languages[] = $db_language->id;
+      if( $num_languages == count( array_intersect( $user_languages, $test_languages ) ) )
+          $user_list[$db_user->id] = $db_user->name;
+    }
 
     return $user_list;
   }
