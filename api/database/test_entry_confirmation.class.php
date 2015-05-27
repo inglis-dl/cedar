@@ -23,16 +23,20 @@ class test_entry_confirmation extends \cenozo\database\record
    */
   public static function compare( $lhs_list, $rhs_list )
   {
-    reset( $rhs_list );
-    reset( $lhs_list );
-    while( !is_null( key( $rhs_list ) ) && !is_null( key ( $lhs_list ) ) )
-    {
-      $rhs_list_obj = current( $rhs_list );
-      $lhs_list_obj = current( $lhs_list );
-      if( $rhs_list_obj->confirmation != $lhs_list_obj->confirmation ) return false;
-      next( $rhs_list );
-      next( $lhs_list );
-    }
-    return true;
+    $rhs_data = array();
+    foreach( $rhs_list as $item )
+      $rhs_data[] = is_null($item->confirmation) ? 'null' : $item->confirmation;
+    $lhs_data = array();
+    foreach( $lhs_list as $item )
+      $lhs_data[] = is_null($item->confirmation) ? 'null' : $item->confirmation;
+
+    $rhs_num = count( $rhs_data );
+    $lhs_num = count( $lhs_data );
+    if( $rhs_num > $lhs_num )
+      $lhs_data = array_pad( $lhs_data, $rhs_num, 0 );
+    else if( $lhs_num > $rhs_num )
+      $rhs_data = array_pad( $rhs_data, $lhs_num, 0 );
+
+    return 0 == count( array_diff_assoc( $lhs_data, $rhs_data ) );
   }
 }

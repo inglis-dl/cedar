@@ -23,36 +23,32 @@ class test_entry_ranked_word extends \cenozo\database\record
    */
   public static function compare( $rhs_list, $lhs_list )
   {
-    reset( $rhs_list );
-    reset( $lhs_list );
-    $match = true;
-    while( $match && ( !is_null( key( $rhs_list ) ) || !is_null( key ( $lhs_list ) ) ) )
+    $rhs_data = array();
+    foreach( $rhs_list as $item )
     {
-      $rhs_list_obj = current( $rhs_list );
-      $lhs_list_obj = current( $lhs_list );
-      if( false !== $rhs_list_obj && false !== $lhs_list_obj )
-      {
-        if( $rhs_list_obj->selection != $lhs_list_obj->selection )
-        {
-          $match = false;
-        }  
-        else
-        {
-           if( $rhs_list_obj->word_id != $lhs_list_obj->word_id )
-           {
-             $match = false;
-             $rhs_word = $rhs_list_obj->get_word();
-             $lhs_word = $lhs_list_obj->get_word();
-             if( !is_null( $rhs_word ) && !is_null( $lhs_word ) 
-                 && $rhs_word->word == $lhs_word->word ) $match = true;
-           }
-        }   
-      }
+      if( is_null($item->ranked_word_set_id) )
+        $rhs_data[] = is_null($item->word_id) ? 0 : $item->word_id;
       else
-        $match = false;
-      next( $rhs_list );
-      next( $lhs_list );
+        $rhs_data[] = is_null($item->selection) ?
+          (is_null($item->word_id) ? 0 : $item->word_id) : $item->selection;
     }
-    return $match;
+    $lhs_data = array();
+    foreach( $lhs_list as $item )
+    {
+      if( is_null($item->ranked_word_set_id) )
+        $lhs_data[] = is_null($item->word_id) ? 0 : $item->word_id;
+      else
+        $lhs_data[] = is_null($item->selection) ?
+          (is_null($item->word_id) ? 0 : $item->word_id) : $item->selection;
+    }
+
+    $rhs_num = count( $rhs_data );
+    $lhs_num = count( $lhs_data );
+    if( $rhs_num > $lhs_num )
+      $lhs_data = array_pad( $lhs_data, $rhs_num, 0 );
+    else if( $lhs_num > $rhs_num )
+      $rhs_data = array_pad( $rhs_data, $lhs_num, 0 );
+
+    return 0 == count( array_diff_assoc( $lhs_data, $rhs_data ) );
   }
 }
