@@ -15,12 +15,20 @@
     $( function () {
 
       $( "#{{ widget.full }}_quit" ).click( function() {
-        slot_load( {{ slot }}, "assignment", "list" );
+        var args = new Object;
+        args.restrict_state_id = 4;
+        args.sort_column = "user.name";
+        args.restrictions = { "user.name" : { "compare" : "is", "value" : "{{ user_1 }}" } };
+        slot_load( {{ slot }}, "assignment", "list", args );
       } ); // end Quit click
 
       $( "#{{ widget.full }}_prev" ).click( function() {
         {% if 0 == prev_test_entry_id %}
-          slot_load( {{ slot }}, "assignment", "list", { "restrict_state_id" : 4 } );
+          var args = new Object;
+          args.restrict_state_id = 4;
+          args.sort_column = "user.name";
+          args.restrictions = { "user.name" : { "compare" : "is", "value" : "{{ user_1 }}" } };
+          slot_load( {{ slot }}, "assignment", "list", args );
         {% else %}
           slot_load( {{ slot }},
             "{{ widget.subject }}", "{{ widget.name }}",
@@ -30,7 +38,11 @@
 
       $( "#{{ widget.full }}_next" ).click( function() {
         {% if 0 == next_test_entry_id %}
-          slot_load( {{ slot }}, "assignment", "list", { "restrict_state_id" : 4 } );
+          var args = new Object;
+          args.restrict_state_id = 4;
+          args.sort_column = "user.name";
+          args.restrictions = { "user.name" : { "compare" : "is", "value" : "{{ user_1 }}" } };
+          slot_load( {{ slot }}, "assignment", "list", args );
         {% else %}
           slot_load( {{ slot }},
             "{{ widget.subject }}", "{{ widget.name }}",
