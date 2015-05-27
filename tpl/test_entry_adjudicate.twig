@@ -20,7 +20,7 @@
 
       $( "#{{ widget.full }}_prev" ).click( function() {
         {% if 0 == prev_test_entry_id %}
-          slot_load( {{ slot }}, "assignment", "list" );
+          slot_load( {{ slot }}, "assignment", "list", { "restrict_state_id" : 4 } );
         {% else %}
           slot_load( {{ slot }},
             "{{ widget.subject }}", "{{ widget.name }}",
@@ -30,7 +30,7 @@
 
       $( "#{{ widget.full }}_next" ).click( function() {
         {% if 0 == next_test_entry_id %}
-          slot_load( {{ slot }}, "assignment", "list" );
+          slot_load( {{ slot }}, "assignment", "list", { "restrict_state_id" : 4 } );
         {% else %}
           slot_load( {{ slot }},
             "{{ widget.subject }}", "{{ widget.name }}",
