@@ -82,7 +82,11 @@
               }
             }
             if( success ) {
-              slot_load( {{ slot }}, "assignment", "list" );
+              var args = new Object;
+              args.restrict_state_id = 4;
+              args.sort_column = "user.name";
+              args.restrictions = { "user.name" : { "compare" : "is", "value" : "{{ user_1 }}" } };
+              slot_load( {{ slot }}, "assignment", "list", args );
             }
           }
         };
