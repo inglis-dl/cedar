@@ -17,12 +17,12 @@
           $dialog = $( "#{{ widget.full }}__note_dialog" );
           var buttons = new Object;
           buttons.Ok = function() {
-            var note = $("#{{ widget.full }}__note").val();
-            if( 0 == note.length ) {
+            var note = $("#{{ widget.full }}__note").val().trim();
+            var wordCount = 0 == note.length ? 0 : note.split(' ').length;
+            if( 0 == wordCount ) {
               error_dialog( "Error", "You cannot leave a blank note." );
             } else {
               $dialog.dialog( "close" );
-
               var args = new Object();
               args.id = {{ id }};
               if( ajax_push( "{{ widget.subject }}", "return", args ) ) {
