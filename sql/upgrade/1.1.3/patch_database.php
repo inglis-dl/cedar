@@ -793,7 +793,7 @@ class patch
     }
 
     out( 'Updating test_entry_total_completed view' );
-    $sql = 
+    $sql =
       'CREATE OR REPLACE VIEW test_entry_total_completed AS '.
       'SELECT '.
       'assignment_id, '.
@@ -805,8 +805,8 @@ class patch
 
     out( 'Updating assignment_total view' );
 
-    $sql = 
-      'CREATE  OR REPLACE VIEW assignment_total AS '.
+    $sql =
+      'CREATE OR REPLACE VIEW assignment_total AS '.
       'SELECT assignment_id, '.
       'SUM( IF( deferred IS NULL, 0 , IF( deferred = "resolved", 0, 1 ) ) ) AS deferred, '.
       'SUM( IFNULL( adjudicate, 0 ) ) AS adjudicate, '.
@@ -817,8 +817,8 @@ class patch
     patch::my_execute( $db, $sql );
 
     out( 'Updating operations' );
- 
-    $sql = 
+
+    $sql =
       'UPDATE operation '.
       'SET description = "Submit a completed test_entry" '.
       'WHERE type = "push" '.
@@ -828,7 +828,7 @@ class patch
 
     out( 'Adding roles to operations' );
 
-    $sql = 
+    $sql =
       'INSERT IGNORE INTO '.
       'role_has_operation( role_id, operation_id ) '.
       'SELECT '.
