@@ -233,7 +233,7 @@ class assignment_manager extends \cenozo\singleton
         $modifier = lib::create( 'database\modifier' );
         $modifier->where( 'assignment_id', '=', $db_assignment->id );
         $modifier->where( 'completed', '=', 'submitted' );
-        $modifier->where( 'IFNULL(adjudicate,true)', '!=', false );
+        $modifier->where( 'IFNULL(adjudicate,true)', '=', true );
         $modifier->where( 'IFNULL(deferred,"NULL")', 'NOT IN',
           $test_entry_class_name::$deferred_states );
 
