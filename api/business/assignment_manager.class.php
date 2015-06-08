@@ -238,8 +238,6 @@ class assignment_manager extends \cenozo\singleton
           $test_entry_class_name::$deferred_states );
 
         $completed = true;
-        $session = lib::create( 'business\session' );
-        $session->acquire_semaphore();
         foreach( $test_entry_class_name::select( $modifier ) as $db_test_entry )
         {
           $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
@@ -280,8 +278,6 @@ class assignment_manager extends \cenozo\singleton
           $db_sibling_assignment->end_datetime = NULL;
           $db_sibling_assignment->save();
         }
-
-        $session->release_semaphore();
       }
     }
     else
