@@ -43,13 +43,25 @@ class assignment_delete extends \cenozo\ui\push\base_delete
         'The assignment is closed and cannot be deleted', __METHOD__ );
 
     $activity_class_name = lib::get_class_name( 'database\activity' );
+    $role_class_name = lib::get_class_name( 'database\role' );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
+
+    $db_role = $role_class_name::get_unique_record( 'name', 'typist' );
+
+    $modifier = lib::create( 'database\modifier' );
+    $modifier->where( 'assignment_id', '=', $db_assignment->id );
+    $id_list = $test_entry_class_name::select( $modifier, false, true, true );
+    $regexp = '(' . implode( ')|(', $id_list ) . ')';
 
     // an assignment cannot be deleted if it has seen editing activities within the retention time
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'user_id', '=', $db_assignment->user_id );
     $modifier->where( 'site_id','=', $db_assignment->site_id );
-    $modifier->where( 'operation.subject', 'LIKE', 'test_entry_%' );
+    $modifier->where( 'role_id','=', $db_role->id );
+    $modifier->where( 'operation.subject', '=', 'test_entry' );
+    $modifier->where( 'operation.name', '=', 'transcribe' );
     $modifier->where( 'datetime', '>', $db_assignment->start_datetime );
+    $modifier->where( 'query', 'REGEXP', $regexp );
     $modifier->order( 'datetime', true );
     $modifier->limit( 1 );
     $db_activity = current( $activity_class_name::select( $modifier ) );
