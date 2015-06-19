@@ -146,7 +146,7 @@
           }
         } ).autocomplete( {
           source: get_variant_text_complete(),
-          minLength: 1,
+          minLength: 2,
           delay: 0,
           select: function( event, ui ) {
             $(this).val( ui.item.label );
@@ -181,7 +181,7 @@
           }
         } ).autocomplete( {
           source: get_intrusion_text_complete(),
-          minLength: 1,
+          minLength: 2,
           delay: 0,
           select: function( event, ui ) {
             $(this).val( ui.item.label );

@@ -45,17 +45,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
     $role_class_name = lib::get_class_name( 'database\role' );
     $site_class_name = lib::get_class_name( 'database\site' );
     $user_class_name = lib::get_class_name( 'database\user' );
-
-    $restrict_start_date = $this->get_argument( 'restrict_start_date' );
-    $restrict_end_date = $this->get_argument( 'restrict_end_date' );
-    $now_datetime_obj = util::get_datetime_object();
-    $start_datetime_obj = NULL;
-    $end_datetime_obj = NULL;
-
-    $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
-    $site_mod = lib::create( 'database\modifier' );
-    if( $restrict_site_id )
-      $site_mod->where( 'id', '=', $restrict_site_id );
+    $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     // get the total number of possible participants in each cohort
     // with completed baseline interviews
@@ -89,6 +79,152 @@ class assignment_report extends \cenozo\ui\pull\base_report
 
     $total_available['tracking']      = $participant_class_name::count( $base_cati_mod );
     $total_available['comprehensive'] = $participant_class_name::count( $base_comp_mod );
+
+    $mod = lib::create( 'database\modifier' );
+    $mod->where( 'end_datetime', '=', NULL );
+    $mod->where( 'participant.cohort_id', '=', $cohort_list['comprehensive'] );
+
+    $total_open = $assignment_class_name::count($mod);
+    log::debug( 'number of open comprehensive UIDs: ' . $total_open );
+    $done = array();
+    $assignment_manager = lib::create( 'business\assignment_manager' );
+    $visited = array();
+    $total_visited = 0;
+    $total_corrected = 0;
+    $last_progress = -1;
+    $num_adj = 0;
+    $total_adj_del = 0;
+    $verbose = true;
+    $precheck = true;
+    foreach( $assignment_class_name::select( $mod ) as $db_assignment )
+    {
+      $progress = intval(100.0*$total_visited++ / floatval($total_open));
+      if( $last_progress != $progress && $verbose )
+      {
+        log::debug( 'progress: ' . $progress .
+                    '( assignments corrected: ' . count($done) .
+                    ', tests corrected: ' . $total_corrected .
+                    ', adjudications checked: '. $num_adj . ')');
+        $last_progress = $progress;
+      }
+      if( in_array( $db_assignment->id, $visited ) ) continue;
+      $visited[] = $db_assignment->id;
+      $db_sibling = $db_assignment->get_sibling_assignment();
+      if( is_null( $db_sibling ) ) continue;
+      if( in_array( $db_sibling->id, $visited ) ) continue;
+      $visited[] = $db_sibling->id;
+      $uid = $db_assignment->get_participant()->uid;
+      if($verbose)
+        log::debug( 'processing UID: ' . $uid );
+
+      $testmod = lib::create( 'database\modifier' );
+      $testmod->where( 'assignment_id', '=', $db_assignment->id );
+      $testmod->where( 'completed', '=', 'submitted' );
+      $testmod->where( 'IFNULL(adjudicate,true)', '=', true );
+      $testmod->where( 'IFNULL(deferred,"NULL")', 'NOT IN',
+         $test_entry_class_name::$deferred_states );
+
+      $num_adj_pre = $test_entry_class_name::count( $testmod );
+      if( 0 == $num_adj_pre ) continue;
+      $num_adj+=$num_adj_pre;
+
+      $completed = true;
+      $num_adj_del = 0;
+      $num_adj_post = 0;
+      foreach( $test_entry_class_name::select( $testmod ) as $db_test_entry )
+      {
+        $db_sibling_test_entry = $db_test_entry->get_sibling_test_entry();
+        $adj_update_state = NULL;
+        if( !$db_test_entry->compare( $db_sibling_test_entry ) )
+        {
+          $adj_update_state = true;
+          $completed = false;
+          if($verbose)
+            log::debug( 'test adjudication required for ' . $db_test_entry->get_test()->name );
+        }
+        else
+        {
+          // if they are identical check if there is an adjudicate entry and delete it
+          $db_adjudicate_test_entry = $db_test_entry->get_adjudicate_test_entry();
+          if( !is_null( $db_adjudicate_test_entry ) )
+          {
+            if( !$precheck) 
+              $db_adjudicate_test_entry->delete();
+            $num_adj_del++;
+            if($verbose)
+              log::debug( 'removing adjudication for ' . $db_test_entry->get_test()->name );
+          }
+        }
+        if( !($adj_update_state == $db_test_entry->adjudicate &&
+              $adj_update_state == $db_sibling_test_entry->adjudicate) )
+        {
+          if( $verbose)
+            log::debug( 'updating adjudication state from ' .
+              (is_null($db_test_entry->adjudicate)?'null' : $db_test_entry->adjudicate) .
+              ' to ' . (is_null($adj_update_state)?'null' : $adj_update_state));
+
+          if( !$precheck )    
+          {
+            $db_test_entry->adjudicate = $adj_update_state;
+            $db_test_entry->save();
+            $db_sibling_test_entry->adjudicate = $adj_update_state;
+            $db_sibling_test_entry->save();
+          }  
+          $num_adj_post++;
+        }
+      }
+      $total_adj_del += $num_adj_del;
+      $total_corrected += $num_adj_post;
+      if( $completed )
+      {
+        if( $verbose)
+          log::debug( 'setting ' . $uid . ' assignment end datetimes to close' );
+        // both assignments are now complete: set their end datetimes
+        if( !$precheck )
+        {
+          $end_datetime = util::get_datetime_object()->format( "Y-m-d H:i:s" );
+          $db_assignment->end_datetime = $end_datetime;
+          $db_assignment->save();
+          $db_sibling->end_datetime = $end_datetime;
+          $db_sibling->save();
+        }
+        $done[] = $db_assignment->id;
+        $done[] = $db_sibling->id;
+      }
+      else
+      {
+        if( !(is_null( $db_assignment->end_datetime ) && is_null( $db_sibling->end_datatime ) ) )
+        {
+          if( $verbose )
+            log::debug( 'resetting ' . $uid . ' assignment end datetimes to null' );
+          if( !$precheck ) 
+          {
+            $db_assignment->end_datetime = NULL;
+            $db_assignment->save();
+            $db_sibling->end_datetime = NULL;
+            $db_sibling->save();
+          }  
+        }
+      }
+    }
+    if( $verbose )
+    {
+      log::debug( 'number of comp assignments completed: '.
+        count($done) . ' of ' . $total_visited );
+      log::debug( 'number of deleted adjudications: ' . $total_adj_del );
+      log::debug( 'number of corrected test entries: ' . $total_corrected );
+    }
+
+    $restrict_start_date = $this->get_argument( 'restrict_start_date' );
+    $restrict_end_date = $this->get_argument( 'restrict_end_date' );
+    $now_datetime_obj = util::get_datetime_object();
+    $start_datetime_obj = NULL;
+    $end_datetime_obj = NULL;
+
+    $restrict_site_id = $this->get_argument( 'restrict_site_id', 0 );
+    $site_mod = lib::create( 'database\modifier' );
+    if( $restrict_site_id )
+      $site_mod->where( 'id', '=', $restrict_site_id );
 
     // validate the dates
     if( $restrict_start_date )
