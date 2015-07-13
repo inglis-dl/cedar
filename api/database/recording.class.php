@@ -53,18 +53,28 @@ class recording extends \cenozo\database\record
       $first = true;
       $values_count = 0;
       $values_limit = 200;
-      foreach( glob( $glob_search ) as $filename )
+
+      $modifier = lib::create( 'database\modifier' );
+      $modifier->where( 'recording_name', '!=', NULL );
+      $db_test_list = $test_class_name::select( $modifier );
+      $recording_names = array();
+      foreach( $db_test_list as $db_test )
+      {
+        $recording_names[$db_test->recording_name] = $db_test->id;
+      }
+
+      $glob_result = glob( $glob_search );
+
+      foreach( $glob_result as $filename )
       {
         // get the path components from the filename
         $parts = array_reverse( preg_split( '#/#', $filename ) );
         if( 3 <= count( $parts ) )
         {
           $name = trim( str_replace( '.wav', '', $parts[0] ) );
+          if( !array_key_exists( $name, $recording_names ) ) continue;
           $uid = trim( $parts[1] );
           $visit = intval( ltrim( $parts[2], '0' ) );
-
-          $db_test = $test_class_name::get_unique_record( 'recording_name', $name );
-          if( is_null( $db_test ) ) continue;
 
           $modifier = lib::create( 'database\modifier' );
           $modifier->where( 'uid', '=', $uid );
@@ -75,7 +85,7 @@ class recording extends \cenozo\database\record
             $values .= sprintf( '%s( %d, %d, %d )',
                                 $first ? '' : ', ',
                                 $db_participant->id,
-                                $db_test->id,
+                                $recording_names[$name],
                                 $visit );
             $first = false;
             $values_count++;
