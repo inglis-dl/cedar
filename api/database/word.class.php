@@ -32,7 +32,7 @@ class word extends \cenozo\database\record
       $word_list = explode( ' ', $word_candidate );
       foreach( $word_list as $word )
       {
-        if( !preg_match( '/^[A-Za-z\pL\-\']+$/', $word ) ) return false;
+        if( !preg_match( "/^[\pL`'-]+$/ui", $word ) ) return false;
       }
       return true;
     }
