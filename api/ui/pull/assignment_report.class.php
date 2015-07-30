@@ -193,7 +193,7 @@ class assignment_report extends \cenozo\ui\pull\base_report
       }
       else
       {
-        if( !(is_null( $db_assignment->end_datetime ) && is_null( $db_sibling->end_datatime ) ) )
+        if( !(is_null( $db_assignment->end_datetime ) && is_null( $db_sibling->end_datetime ) ) )
         {
           if( $verbose )
             log::debug( 'resetting ' . $uid . ' assignment end datetimes to null' );
