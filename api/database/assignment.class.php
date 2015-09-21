@@ -224,7 +224,7 @@ class assignment extends \cenozo\database\record
     $modifier->group( 'language_id' );
 
     $sql = sprintf(
-      'SELECT language_id AS id '.
+      'SELECT DISTINCT language_id AS id '.
       'FROM user_has_language uhl '.
       'INNER JOIN ( '.
         'SELECT l.id FROM language l '.
