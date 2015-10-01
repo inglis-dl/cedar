@@ -38,7 +38,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
   {
     $activity_class_name = lib::get_class_name( 'database\activity' );
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
-    $database_class_name = lib::get_class_name( 'database\database' );
+    $db = lib::create( 'business\session' )->get_database();
     $role_class_name = lib::get_class_name( 'database\role' );
     $site_class_name = lib::get_class_name( 'database\site' );
     $test_class_name = lib::get_class_name( 'database\test' );
@@ -256,7 +256,7 @@ class productivity_report extends \cenozo\ui\pull\base_report
         $num_adjudicate  = 0;
         $assignment_time = 0;
 
-        $id_string = $database_class_name::format_string( $db_user->id );
+        $id_string = $db->format_string( $db_user->id );
 
         $sql = sprintf(
           'SELECT * FROM temp_user_complete '.
@@ -286,8 +286,8 @@ class productivity_report extends \cenozo\ui\pull\base_report
           {
             $sql = sprintf(
               $sql_queries[ $data[ 'test_id' ] ],
-              $database_class_name::format_string( $data['progenitor_entry_id'] ),
-              $database_class_name::format_string( $data['adjudicate_entry_id'] ) );
+              $db->format_string( $data['progenitor_entry_id'] ),
+              $db->format_string( $data['adjudicate_entry_id'] ) );
 
             if( 0 < $assignment_class_name::db()->get_one( $sql ) ) $num_adjudicate++;
           }

@@ -72,8 +72,6 @@ class dictionary extends \cenozo\database\record
    */
   public function get_usage_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
-
     $db_test = $this->get_owner_test();
     $usage_count = 0;
     if( !is_null( $db_test ) )
@@ -81,7 +79,7 @@ class dictionary extends \cenozo\database\record
       $sql = sprintf(
         'SELECT( IFNULL((SELECT SUM(total) FROM %s_word_total WHERE dictionary_id=%s), 0))' ,
         $db_test->get_test_type()->name,
-        $database_class_name::format_string( $this->id ) );
+        static::db()->format_string( $this->id ) );
 
       $usage_count = static::db()->get_one( $sql );
     }
@@ -100,7 +98,6 @@ class dictionary extends \cenozo\database\record
    */
   public function transfer_word( $id_list, $db_dictionary = NULL )
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     $sql = '';
     $modifier = lib::create( 'database\modifier' );
     $modifier->where( 'id', 'IN', $id_list );
@@ -114,7 +111,7 @@ class dictionary extends \cenozo\database\record
     {
       $sql = sprintf(
         'UPDATE word SET dictionary_id=%s %s',
-        $database_class_name::format_string( $db_dictionary->id ),
+        static::db()->format_string( $db_dictionary->id ),
         $modifier->get_sql() );
     }
 

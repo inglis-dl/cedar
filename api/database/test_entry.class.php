@@ -167,7 +167,6 @@ class test_entry extends \cenozo\database\has_note
       // what type of test is this ?
       $db_test = $this->get_test();
       $test_type_name = $db_test->get_test_type()->name;
-      $database_class_name = lib::get_class_name( 'database\database' );
       $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
 
       // the test is different depending on type:
@@ -375,8 +374,6 @@ class test_entry extends \cenozo\database\has_note
    */
   public function initialize( $reset_default = true )
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
-
     if( $reset_default )
     {
       $this->completed = 'incomplete';
@@ -398,7 +395,7 @@ class test_entry extends \cenozo\database\has_note
         'DELETE FROM %s '.
         'WHERE test_entry_id = %s',
         $entry_class_name,
-        $database_class_name::format_string( $this->id ) );
+        static::db()->format_string( $this->id ) );
       static::db()->execute( $sql );
     }
 
@@ -462,7 +459,6 @@ class test_entry extends \cenozo\database\has_note
     $test_type_name = $db_test->get_test_type()->name;
     if( 'confirmation' == $test_type_name ) return 0;
 
-    $database_class_name = lib::get_class_name( 'database\database' );
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
 
     $sql = NULL;
@@ -474,7 +470,7 @@ class test_entry extends \cenozo\database\has_note
         'WHERE word_id IS NULL '.
         'AND test_entry_id = %s '.
         'ORDER BY rank DESC',
-        $database_class_name::format_string( $this->id ) );
+        static::db()->format_string( $this->id ) );
     }
     else
     {
@@ -485,7 +481,7 @@ class test_entry extends \cenozo\database\has_note
         'AND ranked_word_set_id IS NULL '.
         'AND test_entry_id = %s '.
         'ORDER BY id DESC',
-        $database_class_name::format_string( $this->id ) );
+        static::db()->format_string( $this->id ) );
     }
     $rows = $entry_class_name::db()->get_all( $sql );
     $count = 0;
@@ -520,7 +516,6 @@ class test_entry extends \cenozo\database\has_note
     $test_type_name = $db_test->get_test_type()->name;
     if( 'confirmation' == $test_type_name ) return 0;
 
-    $database_class_name = lib::get_class_name( 'database\database' );
     $entry_class_name = lib::get_class_name( 'database\test_entry_' . $test_type_name );
 
     $sql = sprintf(
@@ -529,7 +524,7 @@ class test_entry extends \cenozo\database\has_note
       'WHERE test_entry_id = %s '.
       'ORDER BY id DESC '.
       'LIMIT %d',
-      $database_class_name::format_string( $this->id ), $size );
+      static::db()->format_string( $this->id ), $size );
 
     $rows = $entry_class_name::db()->get_all( $sql );
     $count = 0;

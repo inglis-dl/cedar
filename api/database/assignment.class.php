@@ -28,10 +28,9 @@ class assignment extends \cenozo\database\record
       throw lib::create( 'exception\runtime',
         'Tried to get deferred count for an assignment with no id', __METHOD__ );
 
-    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT deferred FROM test_entry_total_deferred WHERE assignment_id=%s',
-               $database_class_name::format_string( $this->id ) ) );
+               static::db()->format_string( $this->id ) ) );
   }
 
   /**
@@ -128,10 +127,9 @@ class assignment extends \cenozo\database\record
    */
   public function get_completed_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT completed FROM test_entry_total_completed WHERE assignment_id = %s',
-               $database_class_name::format_string( $this->id ) ) );
+               static::db()->format_string( $this->id ) ) );
   }
 
   /**
@@ -144,10 +142,9 @@ class assignment extends \cenozo\database\record
    */
   public function get_adjudicate_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_one(
       sprintf( 'SELECT adjudicate FROM test_entry_total_adjudicate WHERE assignment_id = %s',
-               $database_class_name::format_string( $this->id ) ) );
+               static::db()->format_string( $this->id ) ) );
   }
 
   /**
@@ -177,10 +174,9 @@ class assignment extends \cenozo\database\record
    */
   public function get_all_counts()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     return static::db()->get_row( sprintf(
       'SELECT deferred, adjudicate, completed FROM assignment_total WHERE assignment_id = %s',
-      $database_class_name::format_string( $this->id ) ) );
+      static::db()->format_string( $this->id ) ) );
   }
 
   /**
@@ -193,7 +189,6 @@ class assignment extends \cenozo\database\record
    */
   public static function get_next_available_participant()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     $participant_class_name = lib::get_class_name( 'database\participant' );
     $recording_class_name = lib::get_class_name( 'database\recording' );
     $region_site_class_name = lib::get_class_name( 'database\region_site' );
@@ -233,7 +228,7 @@ class assignment extends \cenozo\database\record
       ') x ON x.id=uhl.language_id '.
       'WHERE uhl.user_id = %s',
       $modifier->get_sql(),
-      $database_class_name::format_string( $db_user->id ) );
+      static::db()->format_string( $db_user->id ) );
 
     $user_languages = static::db()->get_all( $sql );
     array_walk( $user_languages, function( &$item ){ $item=$item['id']; } );
@@ -277,7 +272,7 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'participant_site.service_id', '=', $db_service->id );
       $modifier->where( 'participant_site.site_id', '=', $db_site->id );
       $modifier->where( 'IFNULL( participant.language_id, ' .
-        $database_class_name::format_string( $db_service->language_id ) . ' )',
+        static::db()->format_string( $db_service->language_id ) . ' )',
         'IN', $user_languages );
       $modifier->group( 'participant.id ');
 
@@ -304,7 +299,7 @@ class assignment extends \cenozo\database\record
         'WHERE participant_id NOT IN ( '.
           'SELECT participant_id FROM assignment '.
           'WHERE user_id = %s '.
-        ')', $database_class_name::format_string( $db_user->id ) );
+        ')', static::db()->format_string( $db_user->id ) );
 
       $rows = static::db()->get_all( $sql );
     }
@@ -347,7 +342,7 @@ class assignment extends \cenozo\database\record
       $modifier->where( 'participant_site.service_id', '=', $db_service->id );
       $modifier->where( 'participant_site.site_id', '=', $db_site->id );
       $modifier->where( 'IFNULL( participant.language_id, ' .
-        $database_class_name::format_string( $db_service->language_id  ) . ' )',
+        static::db()->format_string( $db_service->language_id  ) . ' )',
         'IN', $user_languages );
       $modifier->group( 'participant.id ');
 
@@ -374,7 +369,7 @@ class assignment extends \cenozo\database\record
         'WHERE participant_id NOT IN ( '.
           'SELECT participant_id FROM assignment '.
           'WHERE user_id = %s '.
-        ')', $database_class_name::format_string( $db_user->id ) );
+        ')', static::db()->format_string( $db_user->id ) );
 
       $rows = static::db()->get_all( $sql );
 
@@ -457,7 +452,6 @@ class assignment extends \cenozo\database\record
    */
   public static function all_tests_complete( $id, $submitted = false )
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $modifier = lib::create( 'database\modifier' );
@@ -482,7 +476,7 @@ class assignment extends \cenozo\database\record
           'JOIN assignment ON assignment.id = test_entry.assignment_id %s'.
         ') '.
       ')',
-      $database_class_name::format_string( $id ),
+      static::db()->format_string( $id ),
       $modifier->get_sql() );
 
     return 0 === intval( static::db()->get_one( $sql ) );

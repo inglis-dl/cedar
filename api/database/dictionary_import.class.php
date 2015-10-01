@@ -79,7 +79,6 @@ class dictionary_import extends \cenozo\database\record
     // now save the data if it is not null
     if( !is_null( $this->id ) )
     {
-      $database_class_name = lib::get_class_name( 'database\database' );
       $modifier = lib::create( 'database\modifier' );
       $modifier->where( 'id', '=', $this->id );
       foreach( $this->data_changed as $column_name => $changed )
@@ -90,7 +89,7 @@ class dictionary_import extends \cenozo\database\record
             'UPDATE %s SET %s = %s %s',
             static::get_table_name(),
             $column_name,
-            $database_class_name::format_string( $this->data_value[ $column_name ] ),
+            static::db()->format_string( $this->data_value[ $column_name ] ),
             $modifier->get_sql() ) );
           $this->data_changed[ $column_name ] = false;
         }

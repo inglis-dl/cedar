@@ -48,8 +48,7 @@ class word extends \cenozo\database\record
    */
   public function get_usage_count()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
-    $id = $database_class_name::format_string( $this->dictionary_id );
+    $id = static::db()->format_string( $this->dictionary_id );
 
     $sql = sprintf(
       'SELECT tt.name FROM test_type tt '.
@@ -70,7 +69,7 @@ class word extends \cenozo\database\record
       'SELECT COUNT(*) FROM test_entry_%s '.
       'WHERE word_id=%s',
       $type_name,
-      $database_class_name::format_string( $this->id ) );
+      static::db()->format_string( $this->id ) );
 
     return static::db()->get_one( $sql );
   }
@@ -84,8 +83,7 @@ class word extends \cenozo\database\record
    */
   public function has_usage()
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
-    $id = $database_class_name::format_string( $this->dictionary_id );
+    $id = static::db()->format_string( $this->dictionary_id );
 
     $sql = sprintf(
       'SELECT tt.name FROM test_type tt '.
@@ -106,7 +104,7 @@ class word extends \cenozo\database\record
       'SELECT COUNT(*) FROM test_entry_%s '.
       'WHERE word_id=%s',
       $type_name,
-      $database_class_name::format_string( $this->id ) );
+      static::db()->format_string( $this->id ) );
 
     return 0 !== intval( static::db()->get_one( $sql ) );
   }

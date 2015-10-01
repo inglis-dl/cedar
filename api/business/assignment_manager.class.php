@@ -218,7 +218,6 @@ class assignment_manager extends \cenozo\singleton
   public static function complete_assignment( $db_assignment )
   {
     $assignment_class_name = lib::get_class_name( 'database\assignment' );
-    $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     $db_sibling_assignment = $db_assignment->get_sibling_assignment();

@@ -278,11 +278,11 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
    */
   public function determine_record_count( $modifier = NULL )
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
+    $db = $session->get_database();
     $db_role = $session->get_role();
     if( 'typist' == $db_role->name )
     {
@@ -331,7 +331,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         $column = sprintf(
           'IFNULL( participant.language_id, %s )',
-          $database_class_name::format_string( $session->get_service()->language_id ) );
+          $db->format_string( $session->get_service()->language_id ) );
         $modifier->where( $column, '=', $restrict_language_id );
       }
     }
@@ -349,11 +349,11 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
    */
   public function determine_record_list( $modifier = NULL )
   {
-    $database_class_name = lib::get_class_name( 'database\database' );
     $test_entry_class_name = lib::get_class_name( 'database\test_entry' );
 
     // for typist role, restrict to their incomplete assignments
     $session = lib::create( 'business\session' );
+    $db = $session->get_database();
     $db_role = $session->get_role();
     if( $db_role->name == 'typist' )
     {
@@ -401,7 +401,7 @@ class assignment_list extends \cenozo\ui\widget\site_restricted_list
       {
         if( is_null( $modifier ) ) $modifier = lib::create( 'database\modifier' );
         $column = sprintf( 'IFNULL( participant.language_id, %s )',
-                           $database_class_name::format_string(
+                           $db->format_string(
                              $session->get_service()->language_id ) );
         $modifier->where( $column, '=', $restrict_language_id );
       }
