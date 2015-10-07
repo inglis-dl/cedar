@@ -3,6 +3,7 @@
 SET AUTOCOMMIT=0;
 
 SOURCE activity.sql;
+SOURCE role_has_operation.sql;
 
 -- after all SOURCES, update service version
 -- NOTE: patch_database.php takes care of this update
